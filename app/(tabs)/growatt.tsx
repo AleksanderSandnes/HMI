@@ -1,7 +1,10 @@
+import React from 'react';
 import Growatt from '../pages/growatt';
 
-export default function Tab() {
+const Tab: React.FC = () => {
     return (
         <Growatt />
     );
 }
+
+export default Tab;

@@ -1,12 +1,12 @@
-import React from "react";
+import React from 'react';
 import { Box, HStack, Text, VStack } from "@gluestack-ui/themed";
 import Background from "../components/background";
 import BigBox from "../components/bigBox";
 import SmallBox from "../components/smallBox";
 
-const WindTurbine = () => {
+const Elhub: React.FC = () => {
     return (
-        <Background style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Background>
             <HStack reversed={false} style={{ flex: 0.90, flexDirection: 'row', width: '95%', margin: 'auto' }}>
                 <VStack style={{ flex: 8, flexDirection: 'column' }} reversed={false}>
                     <BigBox>
@@ -32,4 +32,4 @@ const WindTurbine = () => {
     );
 }
 
-export default WindTurbine;
+export default Elhub;
