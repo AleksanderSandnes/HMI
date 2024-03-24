@@ -6,9 +6,9 @@ import SmallBox from "../components/smallBox";
 import { FontAwesome } from '@expo/vector-icons';
 import PowerProductionChart from "../components/powerProductionChart";
 
-const Growatt = () => {
+const Growatt: React.FC = () => {
     return (
-        <Background style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Background>
             <HStack reversed={false} style={{ flex: 0.90, flexDirection: 'row', width: '95%', margin: 'auto' }}>
                 <VStack style={{ flex: 8, flexDirection: 'column' }} reversed={false}>
                     <BigBox>

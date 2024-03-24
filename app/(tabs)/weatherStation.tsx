@@ -1,7 +1,10 @@
+import React from 'react';
 import WeatherStation from '../pages/weatherStation';
 
-export default function Tab() {
+const Tab: React.FC = () => {
     return (
         <WeatherStation />
     );
 }
+
+export default Tab;

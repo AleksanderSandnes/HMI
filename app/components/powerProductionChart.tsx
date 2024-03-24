@@ -1,5 +1,6 @@
+import React from 'react';
 import { LineChart } from "react-native-chart-kit";
-import { Dimensions } from "react-native";
+import { Dimensions, ViewStyle } from "react-native";
 import { View } from "@gluestack-ui/themed";
 
 const screenWidth = Dimensions.get("window").width;
@@ -37,9 +38,29 @@ const chartConfig = {
     },
 };
 
-const PowerProductionChart = ({ data = defaultData }) => {
+interface ChartData {
+    labels: string[];
+    datasets: {
+        data: number[];
+        color: () => string;
+        strokeWidth: number;
+    }[];
+}
+
+interface PowerProductionChartProps {
+    data?: ChartData;
+}
+
+const PowerProductionChart: React.FC<PowerProductionChartProps> = ({ data = defaultData }) => {
+    const viewStyle: ViewStyle = {
+        width: screenWidth,
+        paddingHorizontal: screenWidth * 0.125,
+        height: screenHeight,
+        paddingVertical: screenHeight * 0.125
+    };
+
     return (
-        <View style={{ width: screenWidth, paddingHorizontal: screenWidth * 0.125, height: screenHeight, paddingVertical: screenHeight * 0.125 }}>
+        <View style={viewStyle}>
             <LineChart
                 data={data}
                 width={screenWidth * 0.84}

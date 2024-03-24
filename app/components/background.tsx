@@ -1,7 +1,11 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 
-const Background = ({ children }) => {
+interface BackgroundProps {
+    children: ReactNode;
+}
+
+const Background: React.FC<BackgroundProps> = ({ children }) => {
     return (
         <LinearGradient
             start={{ x: 0, y: 0 }}
