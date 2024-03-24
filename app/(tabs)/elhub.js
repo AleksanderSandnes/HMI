@@ -1,4 +1,4 @@
-import Elhub from '../components/elhub';
+import Elhub from '../pages/elhub';
 
 export default function Tab() {
     return (
