@@ -21,7 +21,8 @@ const SmallBox: React.FC<SmallBoxProps> = ({ children }) => {
         },
         shadowOpacity: 0.5,
         shadowRadius: 5,
-        elevation: 10
+        elevation: 10,
+        minHeight: 300
     };
 
     return (
