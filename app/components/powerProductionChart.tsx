@@ -52,26 +52,42 @@ interface PowerProductionChartProps {
 }
 
 const PowerProductionChart: React.FC<PowerProductionChartProps> = ({ data = defaultData }) => {
-    const viewStyle: ViewStyle = {
-        width: screenWidth,
-        paddingHorizontal: screenWidth * 0.125,
-        height: screenHeight,
-        paddingVertical: screenHeight * 0.125
-    };
+    if (screenWidth <= 768) {
+        return (
+            <View style={{ marginBottom: -100 }}>
+                <LineChart
+                    data={data}
+                    width={screenWidth}
+                    height={screenHeight * 0.8}
+                    chartConfig={chartConfig}
+                    withDots={false}
+                    withVerticalLines={false}
+                    bezier
+                />
+            </View>
+        )
+    } else {
+        const viewStyle: ViewStyle = {
+            width: screenWidth,
+            paddingHorizontal: screenWidth * 0.125,
+            height: screenHeight,
+            paddingVertical: screenHeight * 0.125
+        };
 
-    return (
-        <View style={viewStyle}>
-            <LineChart
-                data={data}
-                width={screenWidth * 0.84}
-                height={screenHeight * 0.90}
-                chartConfig={chartConfig}
-                withDots={false}
-                withVerticalLines={false}
-                bezier
-            />
-        </View>
-    )
+        return (
+            <View style={viewStyle}>
+                <LineChart
+                    data={data}
+                    width={screenWidth * 0.84}
+                    height={screenHeight * 0.90}
+                    chartConfig={chartConfig}
+                    withDots={false}
+                    withVerticalLines={false}
+                    bezier
+                />
+            </View>
+        )
+    }
 }
 
 export default PowerProductionChart;
