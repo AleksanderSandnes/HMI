@@ -85,8 +85,8 @@ router.get('/weather/current', async (req: Request, res: Response) => {
         const weatherResponse = await axios.get(`${BASE_URL}/observations/current?stationId=ISANDN24&format=json&units=m&apiKey=${process.env.WEATHER_API_KEY}`);
 
         // Store the fetched data in the database
-        const newCurrentData = new Current(weatherResponse.data);
-        await newCurrentData.save();
+        // const newCurrentData = new Current(weatherResponse.data);
+        // await newCurrentData.save();
 
         // Send the fetched data back
         res.json(weatherResponse.data);
