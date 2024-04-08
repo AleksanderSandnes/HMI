@@ -1,10 +1,10 @@
 import React from "react";
 import { Dimensions } from "react-native";
 import { Box, HStack, Text, VStack, ScrollView, View } from "@gluestack-ui/themed";
-import Background from "../components/background";
-import BigBox from "../components/bigBox";
-import SmallBox from "../components/smallBox";
-import PowerProductionChart from "../components/powerProductionChart";
+import Background from "../components/boxes/background";
+import BigBox from "../components/boxes/bigBox";
+import SmallBox from "../components/boxes/smallBox";
+import PowerProductionChart from "../components/charts/powerProductionChart";
 import PowerIcon from "../components/icons/power";
 
 const windowWidth = Dimensions.get('window').width;
