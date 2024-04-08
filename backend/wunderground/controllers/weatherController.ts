@@ -1,14 +1,14 @@
 import dotenv from 'dotenv';
 import express, { Router, Request, Response } from 'express';
 import axios from 'axios';
-import Historical from '../models/weather/Historical';
-import Current from '../models/weather/Current';
+import Historical from '../models/Historical';
+import Current from '../models/Current';
 
 dotenv.config();
 const router: Router = express.Router();
 const BASE_URL: string = 'https://api.weather.com/v2/pws';
 
-router.get('/weather/hourly/:date', async (req: Request, res: Response) => {
+router.get('/hourly/:date', async (req: Request, res: Response) => {
     try {
         // Check if data for this date is already in the database
         const historicalData = await Historical.findOne({ date: req.params.date });
@@ -32,17 +32,22 @@ router.get('/weather/hourly/:date', async (req: Request, res: Response) => {
     }
 });
 
-router.get('/weather/daily/:date', async (req: Request, res: Response) => {
+router.get('/daily/:date', async (req: Request, res: Response) => {
     try {
         // Check if data for this date is already in the database
-        const historicalData = await Historical.findOne({ date: req.params.date });
+        const historicalData = await Historical.findOne({ obsTimeUtc: req.params.date });
 
         if (historicalData) {
             // If data for this date is already in the database, send it back
             return res.json(historicalData);
         } else {
             // If data for this date is not in the database, fetch it from the weather API
-            const weatherResponse = await axios.get(`${BASE_URL}/history/daily?stationId=ISANDN24&format=json&units=m&date=${req.params.date}&apiKey=${process.env.WEATHER_API_KEY}`);
+            const startDate = new Date(req.params.date);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 1);
+            const formattedEndDate = endDate.toISOString().split('T')[0];
+
+            const weatherResponse = await axios.get(`${BASE_URL}/history/daily?stationId=ISANDN24&format=json&units=m&startDate=${req.params.date}&endDate=${formattedEndDate}&numericPrecision=decimal&apiKey=${process.env.WEATHER_API_KEY}`);
 
             // Store the fetched data in the database
             const newHistoricalData = new Historical(weatherResponse.data);
@@ -56,7 +61,7 @@ router.get('/weather/daily/:date', async (req: Request, res: Response) => {
     }
 });
 
-router.get('/weather/all/:date', async (req: Request, res: Response) => {
+router.get('/all/:date', async (req: Request, res: Response) => {
     try {
         // Check if data for this date is already in the database
         const historicalData = await Historical.findOne({ date: req.params.date });
@@ -80,9 +85,9 @@ router.get('/weather/all/:date', async (req: Request, res: Response) => {
     }
 });
 
-router.get('/weather/current', async (req: Request, res: Response) => {
+router.get('/current', async (req: Request, res: Response) => {
     try {
-        const weatherResponse = await axios.get(`${BASE_URL}/observations/current?stationId=ISANDN24&format=json&units=m&apiKey=${process.env.WEATHER_API_KEY}`);
+        const weatherResponse = await axios.get(`${BASE_URL}/observations/current?stationId=ISANDN24&format=json&units=m&numericPrecision=decimal&apiKey=${process.env.WEATHER_API_KEY}`);
 
         // Store the fetched data in the database
         // const newCurrentData = new Current(weatherResponse.data);
@@ -95,7 +100,7 @@ router.get('/weather/current', async (req: Request, res: Response) => {
     }
 });
 
-router.get('/weather/dailysummary', async (req: Request, res: Response) => {
+router.get('/dailysummary', async (req: Request, res: Response) => {
     try {
         const weatherResponse = await axios.get(`${BASE_URL}/dailysummary/7day?stationId=ISANDN24&format=json&units=m&apiKey=${process.env.WEATHER_API_KEY}`);
 
@@ -110,7 +115,7 @@ router.get('/weather/dailysummary', async (req: Request, res: Response) => {
     }
 });
 
-router.get('/weather/recent/day', async (req: Request, res: Response) => {
+router.get('/recent/day', async (req: Request, res: Response) => {
     try {
         // If data for this date is not in the database, fetch it from the weather API
         const weatherResponse = await axios.get(`${BASE_URL}/observations/all/1day?stationId=ISANDN24&format=json&units=m&apiKey=${process.env.WEATHER_API_KEY}`);
@@ -126,7 +131,7 @@ router.get('/weather/recent/day', async (req: Request, res: Response) => {
     }
 });
 
-router.get('/weather/hourly/7day', async (req: Request, res: Response) => {
+router.get('/hourly/7day', async (req: Request, res: Response) => {
     try {
         // If data for this date is not in the database, fetch it from the weather API
         const weatherResponse = await axios.get(`${BASE_URL}/observations/hourly/7day?stationId=ISANDN24&format=json&units=m&apiKey=${process.env.WEATHER_API_KEY}`);

@@ -90,16 +90,14 @@ const WeatherStation: React.FC = () => {
         return (
             <Background>
                 <ScrollView>
-                    <View style={{ flexDirection: windowWidth > 768 ? 'row' : 'column', width: '100%', justifyContent: 'center', alignItems: 'center', paddingTop: 60 }}>
-                        <View style={{ flex: 8, flexDirection: 'column', paddingBottom: 20, width: windowWidth * 0.95 }}>
+                    <View style={{ flexDirection: 'column', width: '100%', justifyContent: 'center', alignItems: 'center', paddingTop: 60 }}>
+                        <View style={{ paddingBottom: 20, width: windowWidth * 0.95 }}>
                             <BigBox>
                                 <PowerProductionChart />
                             </BigBox>
                         </View>
 
-                        {windowWidth > 768 && <Box style={{ width: 20 }} />}
-
-                        <View style={{ flex: 2, flexDirection: 'column', width: windowWidth * 0.95 }}>
+                        <View style={{ flex: 2, width: windowWidth * 0.95 }}>
                             <SmallBox>
                                 <Box style={{ height: 20 }} />
                                 <Text style={{ color: 'white', textAlign: 'center', alignSelf: 'center' }}>{neighborhood}, {countryName}</Text>
@@ -116,7 +114,7 @@ const WeatherStation: React.FC = () => {
                         </View>
                     </View>
                 </ScrollView>
-            </Background>
+            </Background >
         )
     } else {
         return (

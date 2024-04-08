@@ -20,7 +20,7 @@ const WeatherInfo = ({ neighborhood, countryName, precipRate, temp, weatherText,
 
         {precipRate !== null && <WeatherIcon precipRate={precipRate} />}
 
-        <Text style={{ fontSize: 40, color: 'white', marginTop: 20, marginBottom: 5 }}>{temp}°</Text>
+        <Text style={{ fontSize: 40, color: 'white', marginTop: 20, marginBottom: 5 }}>{temp} °C</Text>
         <Text style={{ fontSize: 20, color: 'lightgray', marginBottom: 20 }}>{weatherText}</Text>
 
         <HStack style={{ flexDirection: 'row', alignItems: 'center' }}>
