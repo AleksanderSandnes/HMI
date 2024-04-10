@@ -29,4 +29,4 @@ const links =
 
 }
 
-module.exports = { links }
+module.exports = { links };
