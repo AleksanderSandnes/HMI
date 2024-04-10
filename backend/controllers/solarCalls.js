@@ -3,8 +3,8 @@
  */
 
 const Url = require('url');
-const parameters = require('../util/parameters.js')
-const exceptions = require('../exceptions/exceptions.js');
+const { parameters } = require('../utils/solarParameters.js');
+const { SessionNotInitializedException, ServerResponseException, HTTPRequestException } = require('../exceptions/exceptions.js');
 
 /**
  * @class
@@ -24,7 +24,7 @@ class Calls {
      */
     constructor(session) {
         if (session === undefined || !session.isConnected)
-            throw new exceptions.SessionNotInitializedException("A session is required to make calls!")
+            throw new SessionNotInitializedException("A session is required to make calls!")
         this.session = session;
     }
 
@@ -94,7 +94,7 @@ class Calls {
      */
     checkInvalidHTTPCode(res) {
         if (res.response.status < 200 || res.response.status > 300)
-            throw new exceptions.HTTPRequestException(res.response.status, "Error in HTTP request");
+            throw new HTTPRequestException(res.response.status, "Error in HTTP request");
     }
 
     /**
@@ -104,9 +104,9 @@ class Calls {
      */
     handleRequestProblem(res) {
         if (res.request.path.match('errorMess'))
-            throw new exceptions.ServerResponseException(res.data, `An error occurred during the request: ${res.request.path}`);
+            throw new ServerResponseException(res.data, `An error occurred during the request: ${res.request.path}`);
         else
-            throw new exceptions.ServerResponseException(res.data);
+            throw new ServerResponseException(res.data);
     }
 
     /**

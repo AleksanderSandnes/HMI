@@ -5,13 +5,12 @@ The Session class stores credentials and access options for the server, as well 
 The methods handle login and logout on the server. For each call made, there is a method that validates cookies.
 */
 
-const links = require('../util/links.js')
-
+const { links } = require('../utils/solarLinks.js');
 const Axios = require('axios');
 const Url = require('url');
 const https = require('https');
-const exceptions = require('../exceptions/exceptions.js')
-const calls = require('./calls.js')
+const { HTTPRequestException, SessionAuthenticationException, ServerResponseException, SessionNotInitializedException } = require('../exceptions/exceptions.js');
+const { calls } = require('./solarCalls.js');
 
 const userAgentDefault = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
 
@@ -28,6 +27,7 @@ class Session {
         this.password = password;
         this.isConnected = false;
         this.server = server;
+        this.getUrl = this.getUrl.bind(this); // temp?
 
         if (headers === undefined)
             this.headers = { 'User-Agent': userAgentDefault, Connection: 'keep-alive' };
@@ -54,7 +54,7 @@ class Session {
      */
 
     getUrl(path) {
-        return this.server + links.links[path];
+        return this.server + links[path];
     }
 
     /**
@@ -110,12 +110,12 @@ class Session {
                     }
 
                     else if (res.data && res.data.result)
-                        throw new exceptions.SessionAuthenticationException(res.data);
+                        throw new SessionAuthenticationException(res.data);
 
                     else
                         calls.Calls.prototype.handleRequestProblem(res);
                 })
-                .catch(res => { reject(res); throw new exceptions.SessionAuthenticationException(res); });
+                .catch(res => { reject(res); throw new SessionAuthenticationException(res); });
         });
     }
 
