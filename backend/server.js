@@ -7,7 +7,7 @@ const cors = require('cors'); // Import cors
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-mongoose.connect('mongodb://localhost:27017/HMI');
+// mongoose.connect('mongodb://localhost:27017/HMI');
 
 app.use('/api/weather', weatherRoutes);
 

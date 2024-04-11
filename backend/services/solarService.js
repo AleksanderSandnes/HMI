@@ -45,7 +45,7 @@ async function saveDeviceInformationForPlant(plant, params, calls) {
 
         deviceEnergyData = removeNullValues(deviceEnergyData, paramsList);
 
-        saveDayDataToDB(deviceEnergyData, paramsList);
+        // saveDayDataToDB(deviceEnergyData, paramsList);
     }
 
     return devicesList;
