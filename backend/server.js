@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 5000;
 
 // mongoose.connect('mongodb://localhost:27017/HMI');
 
-app.use('/api/weather', weatherRoutes);
+app.use('/api/weather', cors(), weatherRoutes);
 
 app.use('/api/solar', cors(), solarRoutes);
 

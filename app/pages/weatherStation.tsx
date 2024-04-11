@@ -39,7 +39,7 @@ const WeatherStation: React.FC = () => {
     const dates = getDatesInMonth(Number(year), Number(month));
 
     const fetchData = useCallback(() => {
-        fetch('http://localhost:5000/api/weather/current')
+        fetch('https://hmi-backend.onrender.com/api/weather/current')
             .then(response => response.json())
             .then(data => {
                 setNeighborhood(data.observations[0].neighborhood);
