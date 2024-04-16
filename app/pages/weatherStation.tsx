@@ -93,14 +93,22 @@ const WeatherStation: React.FC = () => {
                     <View style={{ flexDirection: 'column', width: '100%', justifyContent: 'center', alignItems: 'center', paddingTop: 60 }}>
                         <View style={{ paddingBottom: 20, width: windowWidth * 0.95 }}>
                             <BigBox>
-                                <PowerProductionChart />
+                                <Text>Chart</Text>
                             </BigBox>
                         </View>
 
                         <View style={{ flex: 2, width: windowWidth * 0.95 }}>
                             <SmallBox>
-                                <Box style={{ height: 20 }} />
-                                <Text style={{ color: 'white', textAlign: 'center', alignSelf: 'center' }}>{neighborhood}, {countryName}</Text>
+                                <WeatherInfo
+                                    neighborhood={neighborhood}
+                                    countryName={countryName}
+                                    precipRate={precipRate}
+                                    temp={temp ?? 0}
+                                    weatherText={weatherText}
+                                    windSpeed={windSpeed ?? 0}
+                                    windGust={windGust ?? 0}
+                                    humidity={humidity ?? 0}
+                                />
                             </SmallBox>
 
                             <Box style={{ height: 20 }} />
@@ -122,7 +130,7 @@ const WeatherStation: React.FC = () => {
                 <HStack style={web.hStack}>
                     <VStack style={web.bigVStack}>
                         <BigBox>
-                            <PowerProductionChart />
+                            <Text>Chart</Text>
                         </BigBox>
                     </VStack>
 
@@ -150,7 +158,6 @@ const WeatherStation: React.FC = () => {
                             <MonthSelector month={month} setMonth={setMonth} />
                             <DaySelector day={day} setDay={setDay} dates={dates} />
                             <YearSelector year={year} setYear={setYear} />
-                            <FormButton />
                         </SmallBox>
                     </VStack>
                 </HStack>
