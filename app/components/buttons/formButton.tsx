@@ -1,17 +1,14 @@
-import { Button, ButtonText } from '@gluestack-ui/themed';
+import { Button, View } from 'react-native';
 import React from 'react';
 
-const FormButton = () => (
-    <Button
-        size="md"
-        variant="solid"
-        action="primary"
-        isDisabled={false}
-        isFocusVisible={false}
-        style={{ backgroundColor: '#0474e4', marginTop: 20, padding: 10, width: 150, alignItems: 'center' }}
-    >
-        <ButtonText style={{ color: 'white', fontWeight: 'bold' }}>View</ButtonText>
-    </Button>
+const FormButton = ({ onPress }: { onPress: () => void }) => (
+    <View style={{ marginTop: 20, alignItems: 'center' }}>
+        <Button
+            title="View Data"
+            onPress={onPress}
+            color="#0474e4" // Change button color
+        />
+    </View>
 );
 
 export default FormButton;

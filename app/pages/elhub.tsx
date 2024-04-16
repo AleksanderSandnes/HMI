@@ -17,7 +17,7 @@ const Elhub: React.FC = () => {
                     <View style={{ flexDirection: windowWidth > 768 ? 'row' : 'column', width: '100%', justifyContent: 'center', alignItems: 'center', paddingTop: 60 }}>
                         <View style={{ flex: 8, flexDirection: 'column', paddingBottom: 20, width: windowWidth * 0.95 }}>
                             <BigBox>
-                                <PowerProductionChart />
+                                <Text>Chart</Text>
                             </BigBox>
                         </View>
 
@@ -50,7 +50,7 @@ const Elhub: React.FC = () => {
                 <HStack reversed={false} style={{ flex: 0.90, flexDirection: 'row', width: '95%', margin: 'auto' }}>
                     <VStack style={{ flex: 8, flexDirection: 'column' }} reversed={false}>
                         <BigBox>
-                            <PowerProductionChart />
+                            <Text>Chart</Text>
                         </BigBox>
                     </VStack>
 

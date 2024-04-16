@@ -12,7 +12,7 @@ const TabLayout: React.FC = () => {
             headerShown: false,
         }}>
             <Tabs.Screen
-                name="growatt"
+                name="index"
                 options={{
                     title: 'Growatt',
                     tabBarIcon: ({ color }: { color: string }) => <FontAwesome6 size={28} name="solar-panel" color={color} />,

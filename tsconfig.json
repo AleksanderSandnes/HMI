@@ -8,5 +8,8 @@
     "skipLibCheck": true, // Skip type checking of declaration files
     "forceConsistentCasingInFileNames": true // Disallow inconsistently-cased references to the same file
   },
-  "extends": "expo/tsconfig.base"
+  "extends": "expo/tsconfig.base",
+  "exclude": [
+    "backend"
+  ]
 }

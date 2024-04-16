@@ -1,21 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { LineChart } from "react-native-chart-kit";
-import { Dimensions, ViewStyle } from "react-native";
-import { View } from "@gluestack-ui/themed";
+import { Dimensions, StyleSheet } from "react-native";
+import { View, Text } from "@gluestack-ui/themed";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
-
-const defaultData = {
-    labels: ["06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"],
-    datasets: [
-        {
-            data: [1246, 4733, 8865, 9238, 8835, 6773, 3215, 188],
-            color: () => `#329932`,
-            strokeWidth: 1.5
-        }
-    ]
-};
 
 const chartConfig = {
     backgroundGradientFrom: 'rgba(40,38,91,255)',
@@ -38,7 +27,7 @@ const chartConfig = {
     },
 };
 
-interface ChartData {
+export interface ChartData {
     labels: string[];
     datasets: {
         data: number[];
@@ -48,10 +37,10 @@ interface ChartData {
 }
 
 interface PowerProductionChartProps {
-    data?: ChartData;
+    data: ChartData;
 }
 
-const PowerProductionChart: React.FC<PowerProductionChartProps> = ({ data = defaultData }) => {
+const PowerProductionChart: React.FC<PowerProductionChartProps> = ({ data }) => {
     if (screenWidth <= 768) {
         return (
             <View style={{ marginBottom: -100 }}>
@@ -67,19 +56,12 @@ const PowerProductionChart: React.FC<PowerProductionChartProps> = ({ data = defa
             </View>
         )
     } else {
-        const viewStyle: ViewStyle = {
-            width: screenWidth,
-            paddingHorizontal: screenWidth * 0.125,
-            height: screenHeight,
-            paddingVertical: screenHeight * 0.125
-        };
-
         return (
-            <View style={viewStyle}>
+            <View style={{ flex: 1 }}>
                 <LineChart
                     data={data}
-                    width={screenWidth * 0.84}
-                    height={screenHeight * 0.90}
+                    width={screenWidth * 0.75}
+                    height={screenHeight}
                     chartConfig={chartConfig}
                     withDots={false}
                     withVerticalLines={false}
