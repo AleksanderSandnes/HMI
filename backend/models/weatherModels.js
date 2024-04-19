@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 // Define a schema for your data
 const historicalWeatherSchema = new mongoose.Schema({
+    date: String,
     observations: [{
         stationID: String,
         tz: String,

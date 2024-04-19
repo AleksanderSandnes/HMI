@@ -10,10 +10,6 @@ const chartConfig = {
   backgroundGradientToOpacity: 0.5,
   color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`, // solid white
   barPercentage: 0.5,
-  fillShadowGradient: '#329932', // green
-  fillShadowGradientTo: '#329932', // green
-  fillShadowGradientFromOpacity: 0.4,
-  fillShadowGradientToOpacity: 0.4,
   propsForBackgroundLines: {
     stroke: 'rgba(255, 255, 255, 1)',
     strokeWidth: 0.3,
@@ -33,14 +29,13 @@ export interface ChartData {
   }[];
 }
 
-interface PowerProductionChartProps {
+interface WeatherChartProps {
   data: ChartData;
 }
 
-export default function PowerProductionChart({
-  data,
-}: PowerProductionChartProps) {
+export default function WeatherChart({ data }: WeatherChartProps) {
   const windowDimensions = useWindowDimensions();
+
   if (windowDimensions.width <= 768) {
     return (
       <View style={{ marginBottom: -100 }}>
@@ -51,7 +46,6 @@ export default function PowerProductionChart({
           chartConfig={chartConfig}
           withDots={false}
           withVerticalLines={false}
-          bezier
         />
       </View>
     );
@@ -64,8 +58,8 @@ export default function PowerProductionChart({
         height={windowDimensions.height}
         chartConfig={chartConfig}
         withDots={false}
+        withShadow={false}
         withVerticalLines={false}
-        bezier
       />
     </View>
   );

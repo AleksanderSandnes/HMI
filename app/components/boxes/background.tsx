@@ -1,21 +1,19 @@
-import React, { ReactNode } from "react";
-import { LinearGradient } from "expo-linear-gradient";
+import React from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface BackgroundProps {
-    children: ReactNode;
+  children: React.ReactNode;
 }
 
-const Background: React.FC<BackgroundProps> = ({ children }) => {
-    return (
-        <LinearGradient
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            colors={['rgba(48,44,108,1)', 'rgba(46,89,143,1)']}
-            style={{ flex: 1 }}
-        >
-            {children}
-        </LinearGradient>
-    );
-};
-
-export default Background;
+export default function Background({ children }: BackgroundProps) {
+  return (
+    <LinearGradient
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      colors={['rgba(48,44,108,1)', 'rgba(46,89,143,1)']}
+      style={{ flex: 1 }}
+    >
+      {children}
+    </LinearGradient>
+  );
+}

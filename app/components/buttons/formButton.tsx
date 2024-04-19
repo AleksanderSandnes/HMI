@@ -1,14 +1,10 @@
 import { Button, View } from 'react-native';
 import React from 'react';
 
-const FormButton = ({ onPress }: { onPress: () => void }) => (
+export default function FormButton({ onPress }: { onPress: () => void }) {
+  return (
     <View style={{ marginTop: 20, alignItems: 'center' }}>
-        <Button
-            title="View Data"
-            onPress={onPress}
-            color="#0474e4" // Change button color
-        />
+      <Button title="View Data" onPress={onPress} color="#0474e4" />
     </View>
-);
-
-export default FormButton;
+  );
+}

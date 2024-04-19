@@ -282,7 +282,7 @@ class Calls {
      * @param {string} plantId ID of the plant
      * @param {Date} date date for which information is desired
      * @param {string} sn serial number of the device
-     * @param {string} param parameters for which information is desired. It is a string concatenated with ',', where parameters can be obtained from the parametros.js file
+     * @param {string} param parameters for which information is desired. It is a string concatenated with ',', where parameters can be obtained from the parameters.js file
      * @param {string} type device type
      * @param {string} time time period (day/month/year)
      * @returns {Promise<Object>} object with properties given by the parameters in 'param'
