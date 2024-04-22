@@ -1,28 +1,22 @@
 import React, { FC } from 'react';
-import { useWindowDimensions } from 'react-native';
-import {
-  Box,
-  HStack,
-  Text,
-  VStack,
-  View,
-  ScrollView,
-} from '@gluestack-ui/themed';
-import Background from '../components/boxes/background';
-import SmallBox from '../components/boxes/smallBox';
-import BigBox from '../components/boxes/bigBox';
+import { View, Text, ScrollView, useWindowDimensions } from 'react-native';
+import { Box, HStack, VStack } from '@gluestack-ui/themed';
+import Background from '../components/boxes/universal/background';
+import SmallBoxWeb from '../components/boxes/web/smallBoxWeb';
+import SmallBoxMobile from '../components/boxes/mobile/smallBoxMobile';
+import BigBox from '../components/boxes/universal/bigBox';
 import PowerIcon from '../components/icons/power';
 
 const Elhub: FC = function Elhub() {
-  const windowDimensions = useWindowDimensions();
+  const windowWidth = useWindowDimensions().width;
 
-  if (windowDimensions.width <= 768) {
+  if (windowWidth <= 768) {
     return (
       <Background>
         <ScrollView>
           <View
             style={{
-              flexDirection: windowDimensions.width > 768 ? 'row' : 'column',
+              flexDirection: windowWidth > 768 ? 'row' : 'column',
               width: '100%',
               justifyContent: 'center',
               alignItems: 'center',
@@ -34,7 +28,7 @@ const Elhub: FC = function Elhub() {
                 flex: 8,
                 flexDirection: 'column',
                 paddingBottom: 20,
-                width: windowDimensions.width * 0.95,
+                width: windowWidth * 0.95,
               }}
             >
               <BigBox>
@@ -42,16 +36,14 @@ const Elhub: FC = function Elhub() {
               </BigBox>
             </View>
 
-            {windowDimensions.width > 768 && <Box style={{ width: 20 }} />}
-
             <View
               style={{
                 flex: 2,
                 flexDirection: 'column',
-                width: windowDimensions.width * 0.95,
+                width: windowWidth * 0.95,
               }}
             >
-              <SmallBox>
+              <SmallBoxMobile>
                 <PowerIcon />
                 <Box style={{ height: 20 }} />
                 <Text
@@ -63,11 +55,11 @@ const Elhub: FC = function Elhub() {
                 >
                   Strømpris
                 </Text>
-              </SmallBox>
+              </SmallBoxMobile>
 
               <Box style={{ height: 20 }} />
 
-              <SmallBox>
+              <SmallBoxMobile>
                 <PowerIcon />
                 <Box style={{ height: 20 }} />
                 <Text
@@ -79,7 +71,7 @@ const Elhub: FC = function Elhub() {
                 >
                   Gjennomsnittlig strømpris
                 </Text>
-              </SmallBox>
+              </SmallBoxMobile>
 
               <Box style={{ height: 20 }} />
             </View>
@@ -108,7 +100,7 @@ const Elhub: FC = function Elhub() {
         <Box style={{ width: 20 }} />
 
         <VStack style={{ flex: 2, flexDirection: 'column' }} reversed={false}>
-          <SmallBox>
+          <SmallBoxWeb>
             <PowerIcon />
             <Box style={{ height: 20 }} />
             <Text
@@ -120,11 +112,11 @@ const Elhub: FC = function Elhub() {
             >
               Strømpris
             </Text>
-          </SmallBox>
+          </SmallBoxWeb>
 
           <Box style={{ height: 20 }} />
 
-          <SmallBox>
+          <SmallBoxWeb>
             <PowerIcon />
             <Box style={{ height: 20 }} />
             <Text
@@ -136,7 +128,7 @@ const Elhub: FC = function Elhub() {
             >
               Gjennomsnittlig strømpris
             </Text>
-          </SmallBox>
+          </SmallBoxWeb>
         </VStack>
       </HStack>
     </Background>

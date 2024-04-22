@@ -1,18 +1,19 @@
 /* eslint-disable indent */
 import React, { useState, useEffect, useCallback } from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
 import {
-  Box,
-  HStack,
+  Dimensions,
+  StyleSheet,
   Text,
-  VStack,
   View,
   ScrollView,
-} from '@gluestack-ui/themed';
+  useWindowDimensions,
+} from 'react-native';
+import { Box, HStack, VStack } from '@gluestack-ui/themed';
 import { countries } from 'country-data';
-import Background from '../components/boxes/background';
-import SmallBox from '../components/boxes/smallBox';
-import BigBox from '../components/boxes/bigBox';
+import Background from '../components/boxes/universal/background';
+import SmallBoxWeb from '../components/boxes/web/smallBoxWeb';
+import SmallBoxMobile from '../components/boxes/mobile/smallBoxMobile';
+import BigBox from '../components/boxes/universal/bigBox';
 import MonthSelector from '../components/selects/monthSelector';
 import DaySelector from '../components/selects/daySelector';
 import YearSelector from '../components/selects/yearSelector';
@@ -20,6 +21,15 @@ import WeatherInfo from '../components/weather/weatherInfo';
 import WeatherChart, { ChartData } from '../components/charts/weatherChart';
 import TimespanSelector from '../components/selects/timespanSelector';
 import DataTypeSelector from '../components/selects/dataTypeSelector';
+import {
+  TemperatureDataItem,
+  WindSpeedDataItem,
+  WindDirectionDataItem,
+  PrecipDataItem,
+  PressureDataItem,
+  SolarRadiationDataItem,
+  UvIndexDataItem,
+} from '../interface/weatherInterface';
 
 const web = StyleSheet.create({
   hStack: { flex: 0.9, flexDirection: 'row', width: '95%', margin: 'auto' },
@@ -36,43 +46,6 @@ const web = StyleSheet.create({
   },
 });
 
-interface TemperatureDataItem {
-  metric: { tempAvg: number; dewptAvg: number };
-  obsTimeLocal: string;
-}
-
-interface WindSpeedDataItem {
-  metric: { windspeedAvg: number; windgustAvg: number };
-  obsTimeLocal: string;
-}
-
-interface WindDirectionDataItem {
-  winddirAvg: number;
-  obsTimeLocal: string;
-}
-
-interface PrecipDataItem {
-  metric: { precipRate: number; precipTotal: number };
-  obsTimeLocal: string;
-}
-
-interface PressureDataItem {
-  metric: { pressureMax: number };
-  obsTimeLocal: string;
-}
-
-interface SolarRadiationDataItem {
-  solarRadiationHigh: number;
-  obsTimeLocal: string;
-}
-
-interface UvIndexDataItem {
-  uvHigh: number;
-  obsTimeLocal: string;
-}
-
-const windowWidth = Dimensions.get('window').width;
-
 export default function WeatherStation() {
   const [neighborhood, setNeighborhood] = useState('');
   const [countryName, setCountryName] = useState('');
@@ -87,6 +60,9 @@ export default function WeatherStation() {
   const [day, setDay] = useState(`0${today.getDate()}`.slice(-2));
   const [month, setMonth] = useState(String(today.getMonth()));
   const [year, setYear] = useState(today.getFullYear());
+
+  const windowWidth = useWindowDimensions().width;
+  const isMobile = windowWidth <= 768;
 
   function getDatesInMonth(yearParam: number, monthParam: number) {
     const date = new Date(yearParam, monthParam, 1);
@@ -128,7 +104,7 @@ export default function WeatherStation() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fetchDailyWeatherData = async (dateString: string): Promise<any[]> => {
     const response = await fetch(
-      `http://localhost:5000/api/weather/all/${dateString}`
+      `https://hmi-backend.onrender.com/api/weather/all/${dateString}`
     );
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
@@ -156,7 +132,12 @@ export default function WeatherStation() {
       const time = item.hour.split(' ')[1]; // Get the time part of the string
       const [hour, minute] = time.split(':').map(Number);
 
-      return minute === 59 ? `${hour}:${minute}` : ''; // Display only if minute is 59
+      if (isMobile) {
+        // On mobile, only return the label for every 4th hour
+        return minute === 59 && hour % 4 === 0 ? `${hour}:${minute}` : '';
+      }
+      // On desktop, return the label for every hour
+      return minute === 59 ? `${hour}:${minute}` : '';
     });
 
     const tempAvg = formattedData.map(
@@ -456,12 +437,17 @@ export default function WeatherStation() {
           >
             <View style={{ paddingBottom: 20, width: windowWidth * 0.95 }}>
               <BigBox>
-                <Text>Chart</Text>
+                <WeatherChart
+                  data={weatherData}
+                  key={JSON.stringify(weatherData)}
+                />
               </BigBox>
             </View>
 
-            <View style={{ flex: 2, width: windowWidth * 0.95 }}>
-              <SmallBox>
+            <View
+              style={{ paddingBottom: 20, flex: 2, width: windowWidth * 0.95 }}
+            >
+              <SmallBoxMobile>
                 <WeatherInfo
                   neighborhood={neighborhood}
                   countryName={countryName}
@@ -472,11 +458,11 @@ export default function WeatherStation() {
                   windGust={currentWindGust ?? 0}
                   humidity={currentHumidity ?? 0}
                 />
-              </SmallBox>
+              </SmallBoxMobile>
 
               <Box style={{ height: 20 }} />
 
-              <SmallBox>
+              <SmallBoxMobile>
                 <Box style={{ height: 20 }} />
                 <Text
                   style={{
@@ -487,7 +473,7 @@ export default function WeatherStation() {
                 >
                   Vindhastighet
                 </Text>
-              </SmallBox>
+              </SmallBoxMobile>
 
               <Box style={{ height: 20 }} />
             </View>
@@ -511,7 +497,7 @@ export default function WeatherStation() {
         <Box style={web.smallBoxWidth} />
 
         <VStack style={web.smallVStack}>
-          <SmallBox>
+          <SmallBoxWeb>
             <WeatherInfo
               neighborhood={neighborhood}
               countryName={countryName}
@@ -522,18 +508,18 @@ export default function WeatherStation() {
               windGust={currentWindGust ?? 0}
               humidity={currentHumidity ?? 0}
             />
-          </SmallBox>
+          </SmallBoxWeb>
 
           <Box style={web.smallBoxHeight} />
 
-          <SmallBox>
+          <SmallBoxWeb>
             <Text style={web.text}>Chart controls</Text>
             <TimespanSelector timespan={timepspan} setTimespan={setTimespan} />
             <DataTypeSelector dataType={dataType} setDataType={setDataType} />
             <MonthSelector month={month} setMonth={setMonth} />
             <DaySelector selectedDay={day} setDay={setDay} dates={dates} />
             <YearSelector year={year} setYear={setYear} />
-          </SmallBox>
+          </SmallBoxWeb>
         </VStack>
       </HStack>
     </Background>
