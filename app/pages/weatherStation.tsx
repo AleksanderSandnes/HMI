@@ -1,7 +1,6 @@
 /* eslint-disable indent */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Dimensions,
   StyleSheet,
   Text,
   View,
@@ -14,9 +13,6 @@ import Background from '../components/boxes/universal/background';
 import SmallBoxWeb from '../components/boxes/web/smallBoxWeb';
 import SmallBoxMobile from '../components/boxes/mobile/smallBoxMobile';
 import BigBox from '../components/boxes/universal/bigBox';
-import MonthSelector from '../components/selects/monthSelector';
-import DaySelector from '../components/selects/daySelector';
-import YearSelector from '../components/selects/yearSelector';
 import WeatherInfo from '../components/weather/weatherInfo';
 import WeatherChart, { ChartData } from '../components/charts/weatherChart';
 import TimespanSelector from '../components/selects/timespanSelector';
@@ -30,6 +26,9 @@ import {
   SolarRadiationDataItem,
   UvIndexDataItem,
 } from '../interface/weatherInterface';
+import { Button } from 'react-native-paper';
+import { DatePickerModal } from 'react-native-paper-dates';
+import Dropdown, { DropdownSelect } from 'react-native-input-select';
 
 const web = StyleSheet.create({
   hStack: { flex: 0.9, flexDirection: 'row', width: '95%', margin: 'auto' },
@@ -44,6 +43,28 @@ const web = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
   },
+  text2: {
+    fontSize: 20,
+    color: 'white',
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+});
+
+const mobile = StyleSheet.create({
+  outerView: {
+    flexDirection: 'column',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 60,
+  },
+  text: {
+    color: 'white',
+    textAlign: 'center',
+    alignSelf: 'center',
+  },
 });
 
 export default function WeatherStation() {
@@ -57,26 +78,29 @@ export default function WeatherStation() {
 
   const today = new Date();
   const [timepspan, setTimespan] = useState('daily');
-  const [day, setDay] = useState(`0${today.getDate()}`.slice(-2));
-  const [month, setMonth] = useState(String(today.getMonth()));
-  const [year, setYear] = useState(today.getFullYear());
+  const [pickerDate, setPickerDate] = useState(today);
+  const [formattedPickerDate, setFormattedPickerDate] = useState(
+    `${today.getFullYear()}${`0${today.getMonth() + 1}`.slice(-2)}${`0${today.getDate()}`.slice(-2)}`
+  );
+  const [open, setOpen] = useState(false);
+
+  const onDismiss = useCallback(() => {
+    setOpen(false);
+  }, [setOpen]);
+
+  const onConfirm = useCallback(
+    (params) => {
+      setOpen(false);
+      const selectedDate = params.date;
+      const formattedDate = `${selectedDate.getFullYear()}${`0${selectedDate.getMonth() + 1}`.slice(-2)}${`0${selectedDate.getDate()}`.slice(-2)}`;
+      setPickerDate(selectedDate);
+      setFormattedPickerDate(formattedDate);
+    },
+    [setPickerDate]
+  );
 
   const windowWidth = useWindowDimensions().width;
   const isMobile = windowWidth <= 768;
-
-  function getDatesInMonth(yearParam: number, monthParam: number) {
-    const date = new Date(yearParam, monthParam, 1);
-    const datesInMonth = [];
-
-    while (date.getMonth() === monthParam) {
-      datesInMonth.push(new Date(date));
-      date.setDate(date.getDate() + 1);
-    }
-
-    return datesInMonth;
-  }
-
-  const dates = getDatesInMonth(Number(year), Number(month));
 
   const [weatherData, setWeatherData] = useState<ChartData>({
     labels: [],
@@ -102,9 +126,11 @@ export default function WeatherStation() {
   }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const fetchDailyWeatherData = async (dateString: string): Promise<any[]> => {
+  const fetchDailyWeatherData = async (
+    formattedPickerDate: string
+  ): Promise<any[]> => {
     const response = await fetch(
-      `https://hmi-backend.onrender.com/api/weather/all/${dateString}`
+      `https://hmi-backend.onrender.com/api/weather/all/${formattedPickerDate}`
     );
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
@@ -180,6 +206,11 @@ export default function WeatherStation() {
       const time = item.hour.split(' ')[1]; // Get the time part of the string
       const [hour, minute] = time.split(':').map(Number);
 
+      if (isMobile) {
+        // On mobile, only return the label for every 4th hour
+        return minute === 59 && hour % 4 === 0 ? `${hour}:${minute}` : '';
+      }
+
       return minute === 59 ? `${hour}:${minute}` : ''; // Display only if minute is 59
     });
 
@@ -219,6 +250,11 @@ export default function WeatherStation() {
       const time = item.hour.split(' ')[1]; // Get the time part of the string
       const [hour, minute] = time.split(':').map(Number);
 
+      if (isMobile) {
+        // On mobile, only return the label for every 4th hour
+        return minute === 59 && hour % 4 === 0 ? `${hour}:${minute}` : '';
+      }
+
       return minute === 59 ? `${hour}:${minute}` : ''; // Display only if minute is 59
     });
 
@@ -253,6 +289,11 @@ export default function WeatherStation() {
     const labels = formattedData.map((item: { hour: string }) => {
       const time = item.hour.split(' ')[1]; // Get the time part of the string
       const [hour, minute] = time.split(':').map(Number);
+
+      if (isMobile) {
+        // On mobile, only return the label for every 4th hour
+        return minute === 59 && hour % 4 === 0 ? `${hour}:${minute}` : '';
+      }
 
       return minute === 59 ? `${hour}:${minute}` : ''; // Display only if minute is 59
     });
@@ -293,6 +334,11 @@ export default function WeatherStation() {
       const time = item.hour.split(' ')[1]; // Get the time part of the string
       const [hour, minute] = time.split(':').map(Number);
 
+      if (isMobile) {
+        // On mobile, only return the label for every 4th hour
+        return minute === 59 && hour % 4 === 0 ? `${hour}:${minute}` : '';
+      }
+
       return minute === 59 ? `${hour}:${minute}` : ''; // Display only if minute is 59
     });
 
@@ -323,6 +369,11 @@ export default function WeatherStation() {
     const labels = formattedData.map((item: { hour: string }) => {
       const time = item.hour.split(' ')[1]; // Get the time part of the string
       const [hour, minute] = time.split(':').map(Number);
+
+      if (isMobile) {
+        // On mobile, only return the label for every 4th hour
+        return minute === 59 && hour % 4 === 0 ? `${hour}:${minute}` : '';
+      }
 
       return minute === 59 ? `${hour}:${minute}` : ''; // Display only if minute is 59
     });
@@ -355,6 +406,11 @@ export default function WeatherStation() {
       const time = item.hour.split(' ')[1]; // Get the time part of the string
       const [hour, minute] = time.split(':').map(Number);
 
+      if (isMobile) {
+        // On mobile, only return the label for every 4th hour
+        return minute === 59 && hour % 4 === 0 ? `${hour}:${minute}` : '';
+      }
+
       return minute === 59 ? `${hour}:${minute}` : ''; // Display only if minute is 59
     });
 
@@ -373,11 +429,7 @@ export default function WeatherStation() {
   };
 
   useEffect(() => {
-    const dateString = `${year}${String(Number(month) + 1).padStart(
-      2,
-      '0'
-    )}${day}`;
-    fetchDailyWeatherData(dateString).then((data) => {
+    fetchDailyWeatherData(formattedPickerDate).then((data) => {
       switch (dataType) {
         case 'temperature':
           formatTemperatureData(data);
@@ -409,7 +461,7 @@ export default function WeatherStation() {
     fetchCurrentWeatherData();
     const intervalId = setInterval(fetchCurrentWeatherData, 60000);
     return () => clearInterval(intervalId);
-  }, [fetchCurrentWeatherData, day, month, year, dataType]);
+  }, [fetchCurrentWeatherData, pickerDate, dataType]);
 
   const getWeatherText = (precipRate: number | null) => {
     if (precipRate === null) return 'Unknown';
@@ -426,15 +478,13 @@ export default function WeatherStation() {
     return (
       <Background>
         <ScrollView>
-          <View
-            style={{
-              flexDirection: 'column',
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingTop: 60,
-            }}
-          >
+          <View style={mobile.outerView}>
+            <Text style={web.text}>
+              Date:{' '}
+              {pickerDate
+                ? new Date(pickerDate).toDateString()
+                : 'No date selected'}
+            </Text>
             <View style={{ paddingBottom: 20, width: windowWidth * 0.95 }}>
               <BigBox>
                 <WeatherChart
@@ -448,6 +498,53 @@ export default function WeatherStation() {
               style={{ paddingBottom: 20, flex: 2, width: windowWidth * 0.95 }}
             >
               <SmallBoxMobile>
+                <Text style={web.text}>Chart controls</Text>
+                <Button
+                  onPress={() => setOpen(true)}
+                  uppercase={false}
+                  mode="outlined"
+                  buttonColor="#4fd3cc"
+                  textColor="white"
+                  style={{ borderWidth: 0 }}
+                >
+                  Pick a date
+                </Button>
+                <DatePickerModal
+                  locale="en"
+                  mode="single"
+                  visible={open}
+                  onDismiss={onDismiss}
+                  date={new Date(pickerDate)}
+                  onConfirm={onConfirm}
+                />
+
+                <Box style={{ height: 20 }} />
+
+                <Dropdown
+                  options={[
+                    { value: 'temperature', label: 'Temperature' },
+                    { value: 'windSpeed', label: 'Wind Speed' },
+                    { value: 'windDirection', label: 'Wind Direction' },
+                    { value: 'precip', label: 'Precipitation' },
+                    { value: 'pressure', label: 'Pressure' },
+                    { value: 'solarRadiation', label: 'Solar Radiation' },
+                    { value: 'uvIndex', label: 'UV Index' },
+                  ]}
+                  selectedValue={dataType}
+                  onValueChange={(value) => setDataType(value)}
+                  primaryColor={'deepskyblue'}
+                  dropdownStyle={{
+                    width: '40%',
+                    alignSelf: 'center',
+                    backgroundColor: '#4fd3cc',
+                    borderRadius: 50,
+                  }}
+                />
+              </SmallBoxMobile>
+
+              <Box style={{ height: 20 }} />
+
+              <SmallBoxMobile>
                 <WeatherInfo
                   neighborhood={neighborhood}
                   countryName={countryName}
@@ -458,21 +555,6 @@ export default function WeatherStation() {
                   windGust={currentWindGust ?? 0}
                   humidity={currentHumidity ?? 0}
                 />
-              </SmallBoxMobile>
-
-              <Box style={{ height: 20 }} />
-
-              <SmallBoxMobile>
-                <Box style={{ height: 20 }} />
-                <Text
-                  style={{
-                    color: 'white',
-                    textAlign: 'center',
-                    alignSelf: 'center',
-                  }}
-                >
-                  Vindhastighet
-                </Text>
               </SmallBoxMobile>
 
               <Box style={{ height: 20 }} />
@@ -514,11 +596,33 @@ export default function WeatherStation() {
 
           <SmallBoxWeb>
             <Text style={web.text}>Chart controls</Text>
+            <Text style={web.text2}>
+              Selected date:{' '}
+              {pickerDate
+                ? new Date(pickerDate).toDateString()
+                : 'No date selected'}
+            </Text>
             <TimespanSelector timespan={timepspan} setTimespan={setTimespan} />
             <DataTypeSelector dataType={dataType} setDataType={setDataType} />
-            <MonthSelector month={month} setMonth={setMonth} />
-            <DaySelector selectedDay={day} setDay={setDay} dates={dates} />
-            <YearSelector year={year} setYear={setYear} />
+            <Box style={web.smallBoxHeight} />
+            <Button
+              onPress={() => setOpen(true)}
+              uppercase={false}
+              mode="outlined"
+              buttonColor="#4fd3cc"
+              textColor="white"
+              style={{ borderWidth: 0 }}
+            >
+              Pick a date
+            </Button>
+            <DatePickerModal
+              locale="en"
+              mode="single"
+              visible={open}
+              onDismiss={onDismiss}
+              date={new Date(pickerDate)}
+              onConfirm={onConfirm}
+            />
           </SmallBoxWeb>
         </VStack>
       </HStack>

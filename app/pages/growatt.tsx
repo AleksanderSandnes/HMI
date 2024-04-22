@@ -32,6 +32,13 @@ const web = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
   },
+  text2: {
+    fontSize: 20,
+    color: 'white',
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
 });
 
 const mobile = StyleSheet.create({
@@ -240,11 +247,21 @@ function Growatt(): React.ReactElement {
 
           <SmallBoxWeb>
             <Text style={web.text}>Chart controls</Text>
+            <Text style={web.text2}>
+              Selected date:{' '}
+              {pickerDate
+                ? new Date(pickerDate).toDateString()
+                : 'No date selected'}
+            </Text>
             <TimespanSelector timespan={timespan} setTimespan={setTimespan} />
+            <Box style={{ height: 20 }} />
             <Button
               onPress={() => setOpen(true)}
               uppercase={false}
               mode="outlined"
+              buttonColor="#4fd3cc"
+              textColor="white"
+              style={{ borderWidth: 0 }}
             >
               Pick a date
             </Button>
@@ -256,13 +273,6 @@ function Growatt(): React.ReactElement {
               date={new Date(pickerDate)}
               onConfirm={onConfirm}
             />
-
-            <Text>
-              Selected date:{' '}
-              {pickerDate
-                ? new Date(pickerDate).toDateString()
-                : 'No date selected'}
-            </Text>
           </SmallBoxWeb>
         </VStack>
       </HStack>
