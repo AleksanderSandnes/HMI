@@ -6,7 +6,7 @@ interface SmallBoxProps {
   children: ReactNode;
 }
 
-export default function SmallBox({ children }: SmallBoxProps) {
+export default function SmallBoxMobile({ children }: SmallBoxProps) {
   const boxStyle: ViewStyle = {
     flex: 1,
     justifyContent: 'center',
@@ -22,7 +22,8 @@ export default function SmallBox({ children }: SmallBoxProps) {
     shadowOpacity: 0.5,
     shadowRadius: 5,
     elevation: 10,
-    minHeight: 300,
+    paddingTop: 20,
+    paddingBottom: 20,
   };
 
   return <Box style={boxStyle}>{children}</Box>;

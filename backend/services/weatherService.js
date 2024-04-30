@@ -1,20 +1,9 @@
-const axios = require("axios");
-const { Historical, Current } = require("../models/weatherModels");
-require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
-const db_username = process.env.DB_USERNAME;
-const db_password = process.env.DB_PASSWORD;
-const uri = `mongodb+srv://${db_username}:${db_password}@hmi.g7qbf6h.mongodb.net/?retryWrites=true&w=majority&appName=HMI`;
+const axios = require('axios');
+const { Historical, Current } = require('../models/weatherModels');
+require('dotenv').config();
+const client = require('../database/database');
 
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
-
-const BASE_URL = "https://api.weather.com/v2/pws";
+const BASE_URL = 'https://api.weather.com/v2/pws';
 
 const fetchHourlyWeather = async (date) => {
   const historicalData = await Historical.findOne({ date });
@@ -34,12 +23,12 @@ const fetchHourlyWeather = async (date) => {
 const fetchDailyWeather = async (date) => {
   try {
     await client.connect();
-    await client.db("HMI").command({ ping: 1 });
+    await client.db('HMI').command({ ping: 1 });
     console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
+      'Pinged your deployment. You successfully connected to MongoDB!'
     );
 
-    const collection = client.db("HMI").collection("weather_data");
+    const collection = client.db('HMI').collection('weather_data');
 
     let data = await collection.findOne({ date: date });
 
@@ -62,18 +51,18 @@ const fetchAllWeather = async (date) => {
   try {
     await client.connect();
 
-    const collection = client.db("HMI").collection("weather_data");
+    const collection = client.db('HMI').collection('weather_data');
 
     const today = new Date();
     const formattedToday = `${today.getFullYear()}${String(
       today.getMonth() + 1
-    ).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
+    ).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
 
     let dbData = await collection.findOne({ date: date });
 
     if (!dbData || date === formattedToday) {
       const isToday = date === formattedToday;
-      const endpoint = isToday ? "/observations/all/1day" : "/history/all";
+      const endpoint = isToday ? '/observations/all/1day' : '/history/all';
       const url = isToday
         ? `${BASE_URL}${endpoint}?stationId=ISANDN24&format=json&units=m&numericPrecision=decimal&apiKey=${process.env.WEATHER_API_KEY}`
         : `${BASE_URL}${endpoint}?stationId=ISANDN24&format=json&units=m&date=${date}&numericPrecision=decimal&apiKey=${process.env.WEATHER_API_KEY}`;
@@ -91,13 +80,12 @@ const fetchAllWeather = async (date) => {
       ) {
         await collection.updateOne(
           { date: date },
-          { $set: { observations: response.data.observations } }
+          { $set: { observations: response.data.observations } },
+          { upsert: true }
         );
-        console.log("Updated data in DB:");
       }
 
       dbData = await collection.findOne({ date: date });
-      console.log("Fetched updated data from DB:");
     }
 
     return dbData;

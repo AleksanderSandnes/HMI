@@ -1,30 +1,19 @@
-const { fetchPlantData } = require("../services/solarService");
-require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
-const db_username = process.env.DB_USERNAME;
-const db_password = process.env.DB_PASSWORD;
-const uri = `mongodb+srv://${db_username}:${db_password}@hmi.g7qbf6h.mongodb.net/?retryWrites=true&w=majority&appName=HMI`;
-
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
+const { fetchPlantData } = require('../services/solarService');
+require('dotenv').config();
+const client = require('../database/database');
 
 const getDailySolar = async (req, res) => {
   try {
     const username = process.env.GROWATT_USERNAME;
     const password = process.env.GROWATT_PASSWORD;
-    const date = new Date(req.params.date + "T00:00:00Z");
+    const date = new Date(req.params.date + 'T00:00:00Z');
     const formattedToday =
-      new Date().toISOString().split("T")[0] + "T00:00:00.000Z";
+      new Date().toISOString().split('T')[0] + 'T00:00:00.000Z';
 
     try {
       await client.connect();
 
-      const collection = client.db("HMI").collection("solar_data");
+      const collection = client.db('HMI').collection('solar_data');
 
       let data = await collection.findOne({ date: date });
 
@@ -33,7 +22,11 @@ const getDailySolar = async (req, res) => {
         if (data) {
           const operation =
             date.toISOString() === formattedToday
-              ? collection.updateOne({ date: date }, { $set: { ...data } })
+              ? collection.updateOne(
+                  { date: date },
+                  { $set: { ...data } },
+                  { upsert: true }
+                )
               : collection.insertOne({ ...data, date: date });
           await operation;
           data = await collection.findOne({ date: date });

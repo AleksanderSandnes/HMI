@@ -1,12 +1,15 @@
 /* eslint-disable indent */
+import React, { useState, useEffect, useCallback } from 'react';
 import React, { useState } from 'react';
 import {
+  StyleSheet,
   Text,
   View,
   ScrollView,
   useWindowDimensions,
 } from 'react-native';
 import { Box, HStack, VStack } from '@gluestack-ui/themed';
+import { countries } from 'country-data';
 import Background from '../components/boxes/universal/background';
 import SmallBoxWeb from '../components/boxes/web/smallBoxWeb';
 import SmallBoxMobile from '../components/boxes/mobile/smallBoxMobile';
@@ -15,6 +18,20 @@ import WeatherInfo from '../components/weather/weatherInfo';
 import WeatherChart from '../components/charts/weatherChart';
 import TimespanSelector from '../components/selects/timespanSelector';
 import DataTypeSelector from '../components/selects/dataTypeSelector';
+
+import {
+  TemperatureDataItem,
+  WindSpeedDataItem,
+  WindDirectionDataItem,
+  PrecipDataItem,
+  PressureDataItem,
+  SolarRadiationDataItem,
+  UvIndexDataItem,
+} from '../interface/weatherInterface';
+import { Button } from 'react-native-paper';
+import { DatePickerModal } from 'react-native-paper-dates';
+import Dropdown, { DropdownSelect } from 'react-native-input-select';
+
 import { Button } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
 import Dropdown from 'react-native-input-select';
@@ -35,44 +52,29 @@ const web = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
   },
+  text2: {
+    fontSize: 20,
+    color: 'white',
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
 });
 
-interface TemperatureDataItem {
-  metric: { tempAvg: number; dewptAvg: number };
-  obsTimeLocal: string;
-}
-
-interface WindSpeedDataItem {
-  metric: { windspeedAvg: number; windgustAvg: number };
-  obsTimeLocal: string;
-}
-
-interface WindDirectionDataItem {
-  winddirAvg: number;
-  obsTimeLocal: string;
-}
-
-interface PrecipDataItem {
-  metric: { precipRate: number; precipTotal: number };
-  obsTimeLocal: string;
-}
-
-interface PressureDataItem {
-  metric: { pressureMax: number };
-  obsTimeLocal: string;
-}
-
-interface SolarRadiationDataItem {
-  solarRadiationHigh: number;
-  obsTimeLocal: string;
-}
-
-interface UvIndexDataItem {
-  uvHigh: number;
-  obsTimeLocal: string;
-}
-
-const windowWidth = Dimensions.get('window').width;
+const mobile = StyleSheet.create({
+  outerView: {
+    flexDirection: 'column',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 60,
+  },
+  text: {
+    color: 'white',
+    textAlign: 'center',
+    alignSelf: 'center',
+  },
+});
 
 export default function WeatherStation() {
   const {
@@ -105,18 +107,19 @@ export default function WeatherStation() {
     return (
       <Background>
         <ScrollView>
-          <View
-            style={{
-              flexDirection: 'column',
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingTop: 60,
-            }}
-          >
+          <View style={mobile.outerView}>
+            <Text style={web.text}>
+              Date:{' '}
+              {pickerDate
+                ? new Date(pickerDate).toDateString()
+                : 'No date selected'}
+            </Text>
             <View style={{ paddingBottom: 20, width: windowWidth * 0.95 }}>
               <BigBox>
-                <Text>Chart</Text>
+                <WeatherChart
+                  data={weatherData}
+                  key={JSON.stringify(weatherData)}
+                />
               </BigBox>
             </View>
 
@@ -126,7 +129,7 @@ export default function WeatherStation() {
               <SmallBoxMobile>
                 <Text style={web.text}>Chart controls</Text>
                 <Button
-                  onPress={openDatePicker}
+                  onPress={() => setOpen(true)}
                   uppercase={false}
                   mode="outlined"
                   buttonColor="#4fd3cc"
@@ -181,22 +184,7 @@ export default function WeatherStation() {
                   windGust={currentWindGust ?? 0}
                   humidity={currentHumidity ?? 0}
                 />
-              </SmallBox>
-
-              <Box style={{ height: 20 }} />
-
-              <SmallBox>
-                <Box style={{ height: 20 }} />
-                <Text
-                  style={{
-                    color: 'white',
-                    textAlign: 'center',
-                    alignSelf: 'center',
-                  }}
-                >
-                  Vindhastighet
-                </Text>
-              </SmallBox>
+              </SmallBoxMobile>
 
               <Box style={{ height: 20 }} />
             </View>
@@ -220,7 +208,7 @@ export default function WeatherStation() {
         <Box style={web.smallBoxWidth} />
 
         <VStack style={web.smallVStack}>
-          <SmallBox>
+          <SmallBoxWeb>
             <WeatherInfo
               neighborhood={neighborhood}
               countryName={countryName}
@@ -231,11 +219,11 @@ export default function WeatherStation() {
               windGust={currentWindGust ?? 0}
               humidity={currentHumidity ?? 0}
             />
-          </SmallBox>
+          </SmallBoxWeb>
 
           <Box style={web.smallBoxHeight} />
 
-          <SmallBox>
+          <SmallBoxWeb>
             <Text style={web.text}>Chart controls</Text>
             <Text style={web.text2}>
               Selected date:{' '}
@@ -243,11 +231,11 @@ export default function WeatherStation() {
                 ? new Date(pickerDate).toDateString()
                 : 'No date selected'}
             </Text>
-            <TimespanSelector timespan={timespan} setTimespan={setTimespan} />
+            <TimespanSelector timespan={timepspan} setTimespan={setTimespan} />
             <DataTypeSelector dataType={dataType} setDataType={setDataType} />
             <Box style={web.smallBoxHeight} />
             <Button
-              onPress={openDatePicker}
+              onPress={() => setOpen(true)}
               uppercase={false}
               mode="outlined"
               buttonColor="#4fd3cc"

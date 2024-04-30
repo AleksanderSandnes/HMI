@@ -1,24 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, useWindowDimensions } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Box,
-  HStack,
-  Text,
-  VStack,
-  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
   View,
-} from '@gluestack-ui/themed';
-import Background from '../components/boxes/background';
-import BigBox from '../components/boxes/bigBox';
-import SmallBox from '../components/boxes/smallBox';
+  Text,
+  ScrollView,
+} from 'react-native';
+import { Box, HStack, VStack } from '@gluestack-ui/themed';
+import Background from '../components/boxes/universal/background';
+import BigBox from '../components/boxes/universal/bigBox';
+import SmallBoxWeb from '../components/boxes/web/smallBoxWeb';
 import PowerProductionChart, {
   ChartData,
 } from '../components/charts/powerProductionChart';
 import PowerIcon from '../components/icons/power';
-import MonthSelector from '../components/selects/monthSelector';
-import DaySelector from '../components/selects/daySelector';
-import YearSelector from '../components/selects/yearSelector';
 import TimespanSelector from '../components/selects/timespanSelector';
+import { Button } from 'react-native-paper';
+import { DatePickerModal } from 'react-native-paper-dates';
+import SmallBoxMobile from '../components/boxes/mobile/smallBoxMobile';
 
 const web = StyleSheet.create({
   hStack: { flex: 0.9, flexDirection: 'row', width: '95%', margin: 'auto' },
@@ -33,37 +32,57 @@ const web = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
   },
+  text2: {
+    fontSize: 20,
+    color: 'white',
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+});
+
+const mobile = StyleSheet.create({
+  outerView: {
+    flexDirection: 'column',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 60,
+  },
+  text: {
+    color: 'white',
+    textAlign: 'center',
+    alignSelf: 'center',
+  },
 });
 
 function Growatt(): React.ReactElement {
   const today = new Date();
   const [data, setData] = useState<ChartData>({ labels: [], datasets: [] });
   const [timespan, setTimespan] = useState('daily');
-  const [day, setDay] = useState(`0${today.getDate()}`.slice(-2));
-  const [month, setMonth] = useState(String(today.getMonth()));
-  const [year, setYear] = useState(today.getFullYear());
+  const [pickerDate, setPickerDate] = useState(
+    today.toISOString().split('T')[0]
+  );
+  const [open, setOpen] = useState(false);
 
-  function getDatesInMonth(yearParam: number, monthParam: number) {
-    const date = new Date(yearParam, monthParam, 1);
-    const datesInMonth = [];
+  const onDismiss = useCallback(() => {
+    setOpen(false);
+  }, [setOpen]);
 
-    while (date.getMonth() === monthParam) {
-      datesInMonth.push(new Date(date));
-      date.setDate(date.getDate() + 1);
-    }
+  const onConfirm = useCallback(
+    (params) => {
+      setOpen(false);
+      const selectedDate = params.date;
+      const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+      setPickerDate(formattedDate);
+    },
+    [setOpen, setPickerDate]
+  );
 
-    return datesInMonth;
-  }
-
-  const dates = getDatesInMonth(Number(year), Number(month));
+  const windowWidth = useWindowDimensions().width;
 
   const fetchSolarData = () => {
-    const dateString = `${year}-${String(Number(month) + 1).padStart(
-      2,
-      '0'
-    )}-${day}`;
-
-    fetch(`http://localhost:5000/api/solar/daily/${dateString}`)
+    fetch(`https://hmi-backend.onrender.com/api/solar/daily/${pickerDate}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
@@ -71,31 +90,42 @@ function Growatt(): React.ReactElement {
         return response.json();
       })
       .then((json) => {
-        const formattedData = json.data.map(
-          (item: { hour: string; pac: string }) => ({
-            hour: item.hour,
-            pac: parseFloat(item.pac.replace(',', '.')),
-          })
-        );
+        if (json && json.data) {
+          const formattedData = json.data.map(
+            (item: { hour: string; pac: string }) => ({
+              hour: item.hour,
+              pac: parseFloat(item.pac.replace(',', '.')),
+            })
+          );
 
-        const labels = formattedData.map((item: { hour: string }) => {
-          const [, minute] = item.hour.split(':').map(Number);
+          const isMobile = windowWidth <= 768;
 
-          return minute === 0 ? item.hour : '';
-        });
+          const labels = formattedData.map((item: { hour: string }) => {
+            const [hour, minute] = item.hour.split(':').map(Number);
 
-        const pacData = formattedData.map((item: { pac: string }) => item.pac);
+            if (isMobile) {
+              // On mobile, only return the label for every other hour
+              return minute === 0 && hour % 2 === 0 ? item.hour : '';
+            }
+            // On desktop, return the label for every hour
+            return minute === 0 ? item.hour : '';
+          });
 
-        setData({
-          labels,
-          datasets: [
-            {
-              data: pacData,
-              color: () => `#329932`,
-              strokeWidth: 1.5,
-            },
-          ],
-        });
+          const pacData = formattedData.map(
+            (item: { pac: number }) => item.pac
+          );
+
+          setData({
+            labels,
+            datasets: [
+              {
+                data: pacData,
+                color: () => `#329932`,
+                strokeWidth: 1.5,
+              },
+            ],
+          });
+        }
       });
   };
 
@@ -103,23 +133,19 @@ function Growatt(): React.ReactElement {
     if (timespan === 'daily') {
       fetchSolarData();
     }
-  }, [day, month, year]);
-
-  const windowWidth = useWindowDimensions().width;
+  }, [pickerDate]);
 
   if (windowWidth <= 768) {
     return (
       <Background>
         <ScrollView>
-          <View
-            style={{
-              flexDirection: windowWidth > 768 ? 'row' : 'column',
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingTop: 60,
-            }}
-          >
+          <View style={mobile.outerView}>
+            <Text style={web.text}>
+              Date:{' '}
+              {pickerDate
+                ? new Date(pickerDate).toDateString()
+                : 'No date selected'}
+            </Text>
             <View
               style={{
                 flex: 8,
@@ -129,11 +155,9 @@ function Growatt(): React.ReactElement {
               }}
             >
               <BigBox>
-                <PowerProductionChart data={data} />
+                <PowerProductionChart data={data} key={JSON.stringify(data)} />
               </BigBox>
             </View>
-
-            {windowWidth > 768 && <Box style={{ width: 20 }} />}
 
             <View
               style={{
@@ -142,35 +166,45 @@ function Growatt(): React.ReactElement {
                 width: windowWidth * 0.95,
               }}
             >
-              <SmallBox>
-                <PowerIcon />
-                <Box style={{ height: 20 }} />
-                <Text
-                  style={{
-                    color: 'white',
-                    textAlign: 'center',
-                    alignSelf: 'center',
-                  }}
+              <SmallBoxMobile>
+                <Text style={web.text}>Chart controls</Text>
+                <Button
+                  onPress={() => setOpen(true)}
+                  uppercase={false}
+                  mode="outlined"
+                  buttonColor="#4fd3cc"
+                  textColor="white"
+                  style={{ borderWidth: 0 }}
                 >
-                  Strømproduksjon basert på valgt tidsintervall
-                </Text>
-              </SmallBox>
+                  Pick a date
+                </Button>
+                <DatePickerModal
+                  locale="en"
+                  mode="single"
+                  visible={open}
+                  onDismiss={onDismiss}
+                  date={new Date(pickerDate)}
+                  onConfirm={onConfirm}
+                />
+              </SmallBoxMobile>
 
               <Box style={{ height: 20 }} />
 
-              <SmallBox>
+              <SmallBoxMobile>
                 <PowerIcon />
                 <Box style={{ height: 20 }} />
-                <Text
-                  style={{
-                    color: 'white',
-                    textAlign: 'center',
-                    alignSelf: 'center',
-                  }}
-                >
-                  Strømproduksjon totalt
+                <Text style={mobile.text}>
+                  Strømproduksjon basert på valgt tidsintervall
                 </Text>
-              </SmallBox>
+              </SmallBoxMobile>
+
+              <Box style={{ height: 20 }} />
+
+              <SmallBoxMobile>
+                <PowerIcon />
+                <Box style={{ height: 20 }} />
+                <Text style={mobile.text}>Strømproduksjon totalt</Text>
+              </SmallBoxMobile>
 
               <Box style={{ height: 20 }} />
             </View>
@@ -179,6 +213,7 @@ function Growatt(): React.ReactElement {
       </Background>
     );
   }
+
   return (
     <Background>
       <HStack
@@ -199,24 +234,46 @@ function Growatt(): React.ReactElement {
         <Box style={{ width: 20 }} />
 
         <VStack style={{ flex: 2, flexDirection: 'column' }} reversed={false}>
-          <SmallBox>
+          <SmallBoxWeb>
             <PowerIcon />
             <Box style={{ height: 20 }} />
             <Text style={web.text}>
               Strømproduksjon basert på valgt tidsintervall
             </Text>
             <Text style={web.text}>kWh</Text>
-          </SmallBox>
+          </SmallBoxWeb>
 
           <Box style={{ height: 20 }} />
 
-          <SmallBox>
+          <SmallBoxWeb>
             <Text style={web.text}>Chart controls</Text>
+            <Text style={web.text2}>
+              Selected date:{' '}
+              {pickerDate
+                ? new Date(pickerDate).toDateString()
+                : 'No date selected'}
+            </Text>
             <TimespanSelector timespan={timespan} setTimespan={setTimespan} />
-            <MonthSelector month={month} setMonth={setMonth} />
-            <DaySelector selectedDay={day} setDay={setDay} dates={dates} />
-            <YearSelector year={year} setYear={setYear} />
-          </SmallBox>
+            <Box style={{ height: 20 }} />
+            <Button
+              onPress={() => setOpen(true)}
+              uppercase={false}
+              mode="outlined"
+              buttonColor="#4fd3cc"
+              textColor="white"
+              style={{ borderWidth: 0 }}
+            >
+              Pick a date
+            </Button>
+            <DatePickerModal
+              locale="en"
+              mode="single"
+              visible={open}
+              onDismiss={onDismiss}
+              date={new Date(pickerDate)}
+              onConfirm={onConfirm}
+            />
+          </SmallBoxWeb>
         </VStack>
       </HStack>
     </Background>
