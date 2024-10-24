@@ -8,6 +8,8 @@ const userController = {
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
+      console.log(username, email, password);
+      console.log(req.body);
       throw new Error('Please fill in all fields');
     }
 

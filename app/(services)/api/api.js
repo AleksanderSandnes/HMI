@@ -1,21 +1,28 @@
 import axios from 'axios';
 
-const loginUser = async (email, password) => {
-  const response = await axios.post('http://localhost:5000/api/user/login', {
-    email,
-    password,
-  });
+export const registerUser = async (user) => {
+  const response = await axios.post(
+    'https://hmi-backend.onrender.com/api/user/register',
+    user,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
 
   return response.data;
 };
-
-const registerUser = async (email, password) => {
-  const response = await axios.post('http://localhost:5000/api/user/register', {
-    email,
-    password,
-  });
+export const loginUser = async (user) => {
+  const response = await axios.post(
+    'https://hmi-backend.onrender.com/api/user/login',
+    user,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
 
   return response.data;
 };
-
-export { loginUser, registerUser };

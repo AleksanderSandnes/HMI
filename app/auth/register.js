@@ -15,6 +15,7 @@ import { registerUser } from '../(services)/api/api';
 
 const validationSchema = Yup.object().shape({
   email: Yup.string().required('Email is required').email().label('Email'),
+  username: Yup.string().required('Username is required').label('Username'),
   password: Yup.string()
     .required('Password is required')
     .min(4)
@@ -30,7 +31,6 @@ const Register = () => {
     mutationKey: ['register'],
   });
   const dispatch = useDispatch();
-  console.log('mutation', mutation);
 
   return (
     <View style={styles.container}>
@@ -44,19 +44,22 @@ const Register = () => {
         <Text style={styles.successText}>Registration is successful</Text>
       )}
       <Formik
-        initialValues={{ email: '', password: '', password: '' }}
+        initialValues={{
+          email: 'nomail@nomail.com',
+          username: 'Alex',
+          password: '1243',
+          confirmPassword: '1243',
+        }}
         onSubmit={(values) => {
-          console.log(values);
           mutation
             .mutateAsync(values)
             .then((data) => {
-              console.log('data', data);
               dispatch(registerUser(data));
             })
             .catch((error) => {
               //console.log('error', error);
             });
-          //router.push('/(tabs)');
+          router.push('/(tabs)');
         }}
         validationSchema={validationSchema}
       >
@@ -79,6 +82,18 @@ const Register = () => {
             />
             {errors.email && touched.email && (
               <Text style={styles.errorText}>{errors.email}</Text>
+            )}
+
+            <TextInput
+              style={styles.input}
+              placeholder="Username"
+              onChangeText={handleChange('username')}
+              onBlur={handleBlur('username')}
+              value={values.username}
+              keyboardType="email-address"
+            />
+            {errors.username && touched.username && (
+              <Text style={styles.errorText}>{errors.username}</Text>
             )}
 
             <TextInput

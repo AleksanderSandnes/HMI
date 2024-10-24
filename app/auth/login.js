@@ -29,7 +29,6 @@ const Login = () => {
     mutationKey: ['login'],
   });
   const dispatch = useDispatch();
-  console.log('mutation', mutation);
 
   const router = useRouter();
   useSelector((state) => console.log('Store data: ', state));
@@ -46,7 +45,7 @@ const Login = () => {
         <Text style={styles.successText}>Logged in successfully</Text>
       )}
       <Formik
-        initialValues={{ email: 'aleks@gmail.com', password: '1234' }}
+        initialValues={{ email: 'nomail@nomail.com', password: '1243' }}
         onSubmit={(values) => {
           console.log(values);
           mutation
