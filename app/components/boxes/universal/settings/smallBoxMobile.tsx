@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
-import { ViewStyle } from 'react-native';
 import { Box } from '@gluestack-ui/themed';
+import { ViewStyle } from 'react-native';
 
 interface SmallBoxProps {
   children: ReactNode;
@@ -11,8 +11,17 @@ export default function SmallBoxMobile({ children }: SmallBoxProps) {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(39,64,112,255)',
+    backgroundColor: 'rgba(39,41,42,255)',
     borderRadius: 10,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 10,
     paddingTop: 20,
     paddingBottom: 20,
   };

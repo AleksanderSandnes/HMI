@@ -1,10 +1,17 @@
-import React from 'react';
-import { Stack } from 'expo-router/stack';
+import { Stack } from 'expo-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import AppWrapper from './(redux)/appWrapper';
+import { Provider } from 'react-redux';
+import { store } from './(redux)/store';
 
-export default function AppLayout() {
+const queryClient = new QueryClient();
+
+export default function RootLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <AppWrapper />
+      </QueryClientProvider>
+    </Provider>
   );
 }
