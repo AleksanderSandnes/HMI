@@ -88,7 +88,7 @@ const Login = () => {
               onChangeText={handleChange('password')}
               onBlur={handleBlur('password')}
               value={values.password}
-              securedTextEntry
+              secureTextEntry
             />
             {errors.password && touched.password && (
               <Text style={styles.errorText}>{errors.password}</Text>
