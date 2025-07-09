@@ -19,6 +19,10 @@ function WindIcon({ color }: { color: string }) {
   return <FontAwesome6 size={28} name="wind" color={color} />;
 }
 
+function SettingsIcon({ color }: { color: string }) {
+  return <FontAwesome6 size={28} name="gear" color={color} />;
+}
+
 export default function TabLayout() {
   return (
     <Tabs
@@ -32,6 +36,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          headerShown: false,
           title: 'Growatt',
           tabBarIcon: SolarPanelIcon,
         }}
@@ -39,6 +44,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="elhub"
         options={{
+          headerShown: false,
           title: 'Elhub',
           tabBarIcon: ElectricBoltIcon,
         }}
@@ -46,6 +52,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="weatherStation"
         options={{
+          headerShown: false,
           title: 'Weather Station',
           tabBarIcon: CloudSunIcon,
         }}
@@ -53,8 +60,17 @@ export default function TabLayout() {
       <Tabs.Screen
         name="windTurbine"
         options={{
+          headerShown: false,
           title: 'Wind Turbine',
           tabBarIcon: WindIcon,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          headerShown: false,
+          title: 'Settings',
+          tabBarIcon: SettingsIcon,
         }}
       />
     </Tabs>

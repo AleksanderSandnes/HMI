@@ -1,5 +1,4 @@
 /* eslint-disable indent */
-import React, { useState, useEffect, useCallback } from 'react';
 import React, { useState } from 'react';
 import {
   StyleSheet,
@@ -9,7 +8,6 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Box, HStack, VStack } from '@gluestack-ui/themed';
-import { countries } from 'country-data';
 import Background from '../components/boxes/universal/background';
 import SmallBoxWeb from '../components/boxes/web/smallBoxWeb';
 import SmallBoxMobile from '../components/boxes/mobile/smallBoxMobile';
@@ -18,20 +16,6 @@ import WeatherInfo from '../components/weather/weatherInfo';
 import WeatherChart from '../components/charts/weatherChart';
 import TimespanSelector from '../components/selects/timespanSelector';
 import DataTypeSelector from '../components/selects/dataTypeSelector';
-
-import {
-  TemperatureDataItem,
-  WindSpeedDataItem,
-  WindDirectionDataItem,
-  PrecipDataItem,
-  PressureDataItem,
-  SolarRadiationDataItem,
-  UvIndexDataItem,
-} from '../interface/weatherInterface';
-import { Button } from 'react-native-paper';
-import { DatePickerModal } from 'react-native-paper-dates';
-import Dropdown, { DropdownSelect } from 'react-native-input-select';
-
 import { Button } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
 import Dropdown from 'react-native-input-select';
@@ -129,7 +113,7 @@ export default function WeatherStation() {
               <SmallBoxMobile>
                 <Text style={web.text}>Chart controls</Text>
                 <Button
-                  onPress={() => setOpen(true)}
+                  onPress={openDatePicker}
                   uppercase={false}
                   mode="outlined"
                   buttonColor="#4fd3cc"
@@ -231,11 +215,11 @@ export default function WeatherStation() {
                 ? new Date(pickerDate).toDateString()
                 : 'No date selected'}
             </Text>
-            <TimespanSelector timespan={timepspan} setTimespan={setTimespan} />
+            <TimespanSelector timespan={timespan} setTimespan={setTimespan} />
             <DataTypeSelector dataType={dataType} setDataType={setDataType} />
             <Box style={web.smallBoxHeight} />
             <Button
-              onPress={() => setOpen(true)}
+              onPress={openDatePicker}
               uppercase={false}
               mode="outlined"
               buttonColor="#4fd3cc"
