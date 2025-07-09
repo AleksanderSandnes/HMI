@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import AppWrapper from './(redux)/appWrapper';
+import AppWrapper from './(redux)/AppWrapper';
 import { Provider } from 'react-redux';
 import { store } from './(redux)/store';
 
