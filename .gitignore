@@ -1,5 +1,200 @@
+# ==============================================
+# EXPO & REACT NATIVE
+# ==============================================
 /.expo
+.vercel
+
+# ==============================================
+# NODE.JS & NPM
+# ==============================================
 /node_modules
 /backend/node_modules
+/backend/weatherAPI/node_modules
+package-lock.json
+/backend/weatherAPI/package-lock.json
+
+# ==============================================
+# JAVA & MAVEN (GrowattAPI)
+# ==============================================
+# Generated files and build artifacts
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ==============================================
+# SECURITY & SENSITIVE DATA - CRITICAL TO IGNORE
+# ==============================================
+
+# Environment files with credentials
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
 /backend/.env
-.vercel
+/backend/weatherAPI/.env
+
+# Application properties with sensitive data
+**/application.properties
+**/application-local.properties
+**/application-dev.properties
+**/application-prod.properties
+**/application-staging.properties
+
+# Backup files of sensitive configurations
+src/main/resources/application.properties.backup
+src/main/resources/application.properties.bak
+src/test/resources/application.properties.backup
+src/test/resources/application.properties.bak
+
+# Any files containing credentials or API keys
+**/credentials.properties
+**/secrets.properties
+**/config.properties
+**/*-credentials.properties
+**/*-secrets.properties
+
+# ==============================================
+# LOGS AND TEMPORARY FILES
+# ==============================================
+
+# Log files
+logs/
+*.log
+*.log.*
+/log/
+application.log
+error.log
+debug.log
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ==============================================
+# OPERATING SYSTEM FILES
+# ==============================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+
+# Linux
+*~
+.directory
+
+# ==============================================
+# DOCKER & DEPLOYMENT
+# ==============================================
+
+# Docker
+*.dockerfile.local
+docker-compose.override.yml
+docker-compose.local.yml
+.dockerignore.local
+
+# Kubernetes
+k8s-local/
+*.k8s.local.yaml
+
+# ==============================================
+# DEVELOPMENT & TESTING
+# ==============================================
+
+# Test coverage reports
+/coverage/
+*.lcov
+jacoco.exec
+
+# Database files (if using embedded DB for testing)
+*.db
+*.sqlite
+*.h2.db
+
+# Maven wrapper (if you want to exclude it)
+# .mvn/wrapper/maven-wrapper.jar
+
+# ==============================================
+# RUNTIME & DEPLOYMENT ARTIFACTS
+# ==============================================
+
+# JAR files (built artifacts)
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Exclude built JAR but keep original dependencies
+!**/target/original-*.jar
+
+# ==============================================
+# DEVELOPMENT TOOLS & IDEs
+# ==============================================
+
+### VS Code ###
+.vscode/
+
+# JRebel
+rebel.xml
+
+# Eclipse
+.metadata
+.recommenders/
+RemoteSystemsTempFiles/
+
+# Spring Boot DevTools
+.spring-boot-devtools.properties
+
+# ==============================================
+# PERFORMANCE & PROFILING
+# ==============================================
+
+# JVM crash logs
+hs_err_pid*
+replay_pid*
+
+# Profiling files
+*.prof
+*.hprof
