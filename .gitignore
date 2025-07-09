@@ -3,3 +3,6 @@
 /backend/node_modules
 /backend/.env
 .vercel
+
+### VS Code ###
+.vscode/
