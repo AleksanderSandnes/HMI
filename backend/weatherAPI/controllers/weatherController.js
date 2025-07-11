@@ -4,72 +4,109 @@ const {
   fetchAllWeather,
   fetchCurrentWeather,
   fetchDailySummary,
-  fetchRecentDayWeather,
-  fetch7DayHourlyWeather,
-} = require("../services/weatherService");
+  fetchWeeklyData,
+  fetchMonthlyHistoricalData,
+  fetchYearlyHistoricalData,
+  getOptimalEndpointForTimeRange,
+} = require('../services/weatherService');
 
 const getHourlyWeather = async (req, res) => {
   try {
-    const weatherData = await fetchHourlyWeather(req.params.date);
+    const userId = req.user; // Get user ID from authentication middleware
+    const weatherData = await fetchHourlyWeather(req.params.date, userId);
     res.json(weatherData);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching hourly weather data" });
+    console.error(
+      '[WeatherController] Error fetching hourly weather data:',
+      error
+    );
+    res.status(500).json({
+      message: 'Error fetching hourly weather data',
+      error: error.message,
+    });
   }
 };
 
 const getDailyWeather = async (req, res) => {
   try {
-    const weatherData = await fetchDailyWeather(req.params.date);
+    const userId = req.user; // Get user ID from authentication middleware
+    const weatherData = await fetchDailyWeather(req.params.date, userId);
     res.json(weatherData);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching daily weather data" });
+    console.error(
+      '[WeatherController] Error fetching daily weather data:',
+      error
+    );
+    res.status(500).json({
+      message: 'Error fetching daily weather data',
+      error: error.message,
+    });
   }
 };
 
 const getAllWeather = async (req, res) => {
   try {
-    const weatherData = await fetchAllWeather(req.params.date);
+    const userId = req.user; // Get user ID from authentication middleware
+    const weatherData = await fetchAllWeather(req.params.date, userId);
     res.json(weatherData);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching all weather data" });
+    console.error(
+      '[WeatherController] Error fetching all weather data:',
+      error
+    );
+    res.status(500).json({
+      message: 'Error fetching all weather data',
+      error: error.message,
+    });
   }
 };
 
-const getCurrentWeather = async (_req, res) => {
+const getCurrentWeather = async (req, res) => {
   try {
-    const weatherData = await fetchCurrentWeather();
+    const userId = req.user; // Get user ID from authentication middleware
+    const weatherData = await fetchCurrentWeather(userId);
     res.json(weatherData);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching current weather" });
+    console.error('[WeatherController] Error fetching current weather:', error);
+    res.status(500).json({
+      message: 'Error fetching current weather',
+      error: error.message,
+    });
   }
 };
 
-const getDailySummary = async (_req, res) => {
+// New optimized controller functions
+const getWeeklyWeather = async (req, res) => {
   try {
-    const weatherData = await fetchDailySummary();
+    const userId = req.user; // Get user ID from authentication middleware
+    const weatherData = await fetchWeeklyData(userId);
     res.json(weatherData);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching 7-day weather summary" });
+    console.error(
+      '[WeatherController] Error fetching weekly weather data:',
+      error
+    );
+    res.status(500).json({
+      message: 'Error fetching weekly weather data',
+      error: error.message,
+    });
   }
 };
 
-const getRecentDayWeather = async (_req, res) => {
+// Utility endpoint to get optimal endpoint info for debugging
+const getEndpointInfo = async (req, res) => {
   try {
-    const weatherData = await fetchRecentDayWeather();
-    res.json(weatherData);
+    const { timeRange, date } = req.query;
+    const endpointInfo = getOptimalEndpointForTimeRange(timeRange, date);
+    res.json({
+      timeRange,
+      date,
+      recommendation: endpointInfo,
+      timestamp: new Date().toISOString(),
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching recent weather data" });
-  }
-};
-
-const get7DayHourlyWeather = async (_req, res) => {
-  try {
-    const weatherData = await fetch7DayHourlyWeather();
-    res.json(weatherData);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching 7-day hourly weather data" });
+    console.error('[WeatherController] Error getting endpoint info:', error);
+    res.status(500).json({ message: 'Error getting endpoint information' });
   }
 };
 
@@ -78,7 +115,6 @@ module.exports = {
   getDailyWeather,
   getAllWeather,
   getCurrentWeather,
-  getDailySummary,
-  getRecentDayWeather,
-  get7DayHourlyWeather,
+  getWeeklyWeather,
+  getEndpointInfo,
 };

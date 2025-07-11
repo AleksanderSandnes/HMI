@@ -114,14 +114,13 @@ public class GrowattWebClient {
             .exchangeToMono(response -> readCookies(cookieJar, response))
             .block();
 		
-		/*
+		// Get plant list to populate plantId in cookies
 		var plantListTitle = client
 			.get()
 			.uri("/index/getPlantListTitle")
 			.cookies(cookies -> writeCookies(cookieJar, cookies))
 			.exchangeToMono(response -> readCookies(cookieJar, response))
 	        .block();
-		*/
 		
 		return login;
 	}

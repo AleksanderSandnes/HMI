@@ -1,138 +1,135 @@
 import React from 'react';
-import { useWindowDimensions, Text, View, ScrollView } from 'react-native';
+import { Text, View, ScrollView, StyleSheet } from 'react-native';
 import { Box, HStack, VStack } from '@gluestack-ui/themed';
 import Background from '../components/boxes/universal/background';
-import SmallBoxWeb from '../components/boxes/web/smallBoxWeb';
-import SmallBoxMobile from '../components/boxes/mobile/smallBoxMobile';
+import UnifiedBox from '../components/boxes/UnifiedBox';
 import DollarIcon from '../components/icons/dollar';
-import BigBox from '../components/boxes/universal/bigBox';
 import PowerIcon from '../components/icons/power';
+import { useResponsive } from '../utils/responsive';
+import { solarTheme } from '../theme/solarTheme';
+import { SPACING } from '../constants';
 
 const WindTurbine: React.FC = function WindTurbineComponent() {
-  const windowWidth = useWindowDimensions().width;
-  if (windowWidth <= 768) {
+  const { isMobile, width } = useResponsive();
+
+  if (isMobile) {
     return (
       <Background>
         <ScrollView>
-          <View
-            style={{
-              flexDirection: 'column',
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingTop: 60,
-            }}
-          >
-            <View
-              style={{
-                flex: 8,
-                flexDirection: 'column',
-                paddingBottom: 20,
-                width: windowWidth * 0.95,
-              }}
-            >
-              <BigBox>
-                <Text>Chart</Text>
-              </BigBox>
+          <View style={styles.mobileContainer}>
+            <View style={[styles.chartSection, { width: width * 0.95 }]}>
+              <UnifiedBox variant="big">
+                <Text style={styles.placeholderText}>Wind Turbine Chart</Text>
+              </UnifiedBox>
             </View>
 
-            <View
-              style={{
-                flex: 2,
-                flexDirection: 'column',
-                width: windowWidth * 0.95,
-              }}
-            >
-              <SmallBoxMobile>
+            <View style={[styles.metricsSection, { width: width * 0.95 }]}>
+              <UnifiedBox variant="small">
                 <PowerIcon />
-                <Box style={{ height: 20 }} />
-                <Text
-                  style={{
-                    color: 'white',
-                    textAlign: 'center',
-                    alignSelf: 'center',
-                  }}
-                >
+                <Box style={{ height: SPACING.md }} />
+                <Text style={styles.metricText}>
                   Strømproduksjon basert på valgt tidsintervall
                 </Text>
-              </SmallBoxMobile>
+              </UnifiedBox>
 
-              <Box style={{ height: 20 }} />
+              <Box style={{ height: SPACING.md }} />
 
-              <SmallBoxMobile>
+              <UnifiedBox variant="small">
                 <DollarIcon />
-                <Box style={{ height: 20 }} />
-                <Text
-                  style={{
-                    color: 'white',
-                    textAlign: 'center',
-                    alignSelf: 'center',
-                  }}
-                >
+                <Box style={{ height: SPACING.md }} />
+                <Text style={styles.metricText}>
                   Inntekt basert på valgt tidsintervall
                 </Text>
-              </SmallBoxMobile>
+              </UnifiedBox>
 
-              <Box style={{ height: 20 }} />
+              <Box style={{ height: SPACING.md }} />
             </View>
           </View>
         </ScrollView>
       </Background>
     );
   }
+
+  // Desktop version
   return (
     <Background>
-      <HStack
-        reversed={false}
-        style={{
-          flex: 0.9,
-          flexDirection: 'row',
-          width: '95%',
-          margin: 'auto',
-        }}
-      >
-        <VStack style={{ flex: 8, flexDirection: 'column' }} reversed={false}>
-          <BigBox>
-            <Text>Chart</Text>
-          </BigBox>
+      <HStack style={styles.desktopContainer}>
+        <VStack style={styles.chartColumn}>
+          <UnifiedBox variant="big">
+            <Text style={styles.placeholderText}>Wind Turbine Chart</Text>
+          </UnifiedBox>
         </VStack>
 
-        <Box style={{ width: 20 }} />
+        <Box style={{ width: SPACING.md }} />
 
-        <VStack style={{ flex: 2, flexDirection: 'column' }} reversed={false}>
-          <SmallBoxWeb>
+        <VStack style={styles.metricsColumn}>
+          <UnifiedBox variant="small">
             <PowerIcon />
-            <Box style={{ height: 20 }} />
-            <Text
-              style={{
-                color: 'white',
-                textAlign: 'center',
-                alignSelf: 'center',
-              }}
-            >
+            <Box style={{ height: SPACING.md }} />
+            <Text style={styles.metricText}>
               Strømproduksjon basert på valgt tidsintervall
             </Text>
-          </SmallBoxWeb>
+          </UnifiedBox>
 
-          <Box style={{ height: 20 }} />
+          <Box style={{ height: SPACING.md }} />
 
-          <SmallBoxWeb>
+          <UnifiedBox variant="small">
             <DollarIcon />
-            <Box style={{ height: 20 }} />
-            <Text
-              style={{
-                color: 'white',
-                textAlign: 'center',
-                alignSelf: 'center',
-              }}
-            >
+            <Box style={{ height: SPACING.md }} />
+            <Text style={styles.metricText}>
               Inntekt basert på valgt tidsintervall
             </Text>
-          </SmallBoxWeb>
+          </UnifiedBox>
         </VStack>
       </HStack>
     </Background>
   );
 };
+
+const styles = StyleSheet.create({
+  mobileContainer: {
+    flexDirection: 'column',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: SPACING.xxl,
+  },
+  chartSection: {
+    flex: 8,
+    flexDirection: 'column',
+    paddingBottom: SPACING.md,
+  },
+  metricsSection: {
+    flex: 2,
+    flexDirection: 'column',
+  },
+  desktopContainer: {
+    flex: 0.9,
+    flexDirection: 'row',
+    width: '95%',
+    margin: 'auto',
+  },
+  chartColumn: {
+    flex: 8,
+    flexDirection: 'column',
+  },
+  metricsColumn: {
+    flex: 2,
+    flexDirection: 'column',
+  },
+  placeholderText: {
+    color: solarTheme.text.primary,
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  metricText: {
+    color: solarTheme.text.primary,
+    textAlign: 'center',
+    alignSelf: 'center',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+});
 
 export default WindTurbine;

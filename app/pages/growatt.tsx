@@ -6,277 +6,690 @@ import {
   Text,
   ScrollView,
 } from 'react-native';
-import { Box, HStack, VStack } from '@gluestack-ui/themed';
-import Background from '../components/boxes/universal/background';
-import BigBox from '../components/boxes/universal/bigBox';
-import SmallBoxWeb from '../components/boxes/web/smallBoxWeb';
+import { StatusBar } from 'expo-status-bar';
+import { useSelector } from 'react-redux';
 import PowerProductionChart, {
   ChartData,
 } from '../components/charts/powerProductionChart';
-import PowerIcon from '../components/icons/power';
+import CombinedMetricsCard from '../components/cards/combinedMetricsCard';
+import ModernDateSelector from '../components/selects/modernDateSelector';
 import TimespanSelector from '../components/selects/timespanSelector';
-import { Button } from 'react-native-paper';
-import { DatePickerModal } from 'react-native-paper-dates';
-import SmallBoxMobile from '../components/boxes/mobile/smallBoxMobile';
+import { fetchSolarData as fetchSolarDataFromService } from '../services/dataService';
+import { selectDataMode } from '../(redux)/settingsSlice';
+import { solarTheme } from '../theme/solarTheme';
 
 const web = StyleSheet.create({
-  hStack: { flex: 0.9, flexDirection: 'row', width: '95%', margin: 'auto' },
-  bigVStack: { flex: 8, flexDirection: 'column' },
-  smallVStack: { flex: 2, flexDirection: 'column' },
-  smallBoxWidth: { width: 20 },
-  smallBoxHeight: { height: 20 },
-  text: {
-    fontSize: 24,
-    color: 'white',
-    textAlign: 'center',
-    alignSelf: 'center',
+  container: {
+    flex: 1,
+    backgroundColor: solarTheme.background.main,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 15,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: solarTheme.text.primary,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: solarTheme.text.secondary,
+    marginTop: 4,
+  },
+  weatherInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: solarTheme.background.card,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  weatherText: {
+    color: solarTheme.text.primary,
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  mainContent: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    gap: 20,
+  },
+  chartContainer: {
+    flex: 2.5,
+    backgroundColor: solarTheme.background.card,
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  chartHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
   },
-  text2: {
+  chartTitle: {
     fontSize: 20,
-    color: 'white',
+    fontWeight: '600',
+    color: solarTheme.text.primary,
+  },
+  chartSubtitle: {
+    fontSize: 14,
+    color: solarTheme.text.secondary,
+    marginTop: 4,
+  },
+  sidePanel: {
+    flex: 1.2,
+    gap: 24,
+  },
+  metricCard: {
+    backgroundColor: solarTheme.background.card,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+    alignItems: 'center',
+  },
+  metricIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  metricValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: solarTheme.text.primary,
+    marginBottom: 4,
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: solarTheme.text.secondary,
     textAlign: 'center',
-    alignSelf: 'center',
-    marginBottom: 20,
+  },
+  metricUnit: {
+    fontSize: 14,
+    color: solarTheme.text.tertiary,
+    marginTop: 2,
+  },
+  controlsCard: {
+    backgroundColor: solarTheme.background.card,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  controlsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: solarTheme.text.primary,
+    marginBottom: 16,
+  },
+  quickDateButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  quickDateButton: {
+    backgroundColor: solarTheme.background.cardLight,
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(79, 211, 204, 0.3)',
+  },
+  quickDateButtonActive: {
+    backgroundColor: solarTheme.secondary.accent,
+    borderColor: solarTheme.secondary.accent,
+  },
+  quickDateButtonText: {
+    color: solarTheme.text.secondary,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  quickDateButtonTextActive: {
+    color: solarTheme.text.primary,
+    fontWeight: '600',
+  },
+  dateDisplay: {
+    backgroundColor: solarTheme.background.cardLight,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(79, 211, 204, 0.3)',
+  },
+  dateText: {
+    color: solarTheme.text.primary,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  controlButton: {
+    backgroundColor: solarTheme.secondary.accent,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 8,
+  },
+  controlButtonText: {
+    color: solarTheme.text.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  dataSourceIndicator: {
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(79, 211, 204, 0.3)',
+  },
+  dataSourceText: {
+    color: solarTheme.text.accent,
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 
 const mobile = StyleSheet.create({
-  outerView: {
-    flexDirection: 'column',
-    width: '100%',
+  container: {
+    flex: 1,
+    backgroundColor: solarTheme.background.main,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 20,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: solarTheme.text.primary,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: solarTheme.text.secondary,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    gap: 20,
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: solarTheme.background.card,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  metricIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 60,
+    marginBottom: 8,
   },
-  text: {
-    color: 'white',
+  metricValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: solarTheme.text.primary,
+    marginBottom: 2,
+  },
+  metricLabel: {
+    fontSize: 10,
+    color: solarTheme.text.secondary,
     textAlign: 'center',
+  },
+  metricUnit: {
+    fontSize: 12,
+    color: solarTheme.text.tertiary,
+  },
+  chartCard: {
+    backgroundColor: solarTheme.background.card,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  chartHeader: {
+    marginBottom: 16,
+  },
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: solarTheme.text.primary,
+    marginBottom: 4,
+  },
+  chartSubtitle: {
+    fontSize: 12,
+    color: solarTheme.text.secondary,
+  },
+  controlsCard: {
+    backgroundColor: solarTheme.background.card,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  controlsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: solarTheme.text.primary,
+    marginBottom: 12,
+  },
+  quickDateButtons: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 12,
+  },
+  quickDateButton: {
+    backgroundColor: solarTheme.background.cardLight,
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(79, 211, 204, 0.3)',
+  },
+  quickDateButtonActive: {
+    backgroundColor: solarTheme.secondary.accent,
+    borderColor: solarTheme.secondary.accent,
+  },
+  quickDateButtonText: {
+    color: solarTheme.text.secondary,
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  quickDateButtonTextActive: {
+    color: solarTheme.text.primary,
+    fontWeight: '600',
+  },
+  dateDisplay: {
+    backgroundColor: solarTheme.background.cardLight,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(79, 211, 204, 0.3)',
+  },
+  dateText: {
+    color: solarTheme.text.primary,
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  controlButton: {
+    backgroundColor: solarTheme.secondary.accent,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  controlButtonText: {
+    color: solarTheme.text.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  dataSourceIndicator: {
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(79, 211, 204, 0.3)',
     alignSelf: 'center',
+  },
+  dataSourceText: {
+    color: solarTheme.text.accent,
+    fontSize: 11,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 
 function Growatt(): React.ReactElement {
   const today = new Date();
+  // Use yesterday as default since today might not have data yet
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
   const [data, setData] = useState<ChartData>({ labels: [], datasets: [] });
   const [timespan, setTimespan] = useState('daily');
   const [pickerDate, setPickerDate] = useState(
-    today.toISOString().split('T')[0]
-  );
-  const [open, setOpen] = useState(false);
-
-  const onDismiss = useCallback(() => {
-    setOpen(false);
-  }, [setOpen]);
-
-  const onConfirm = useCallback(
-    (params) => {
-      setOpen(false);
-      const selectedDate = params.date;
-      const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
-      setPickerDate(formattedDate);
-    },
-    [setOpen, setPickerDate]
+    yesterday.toISOString().split('T')[0]
   );
 
-  const windowWidth = useWindowDimensions().width;
+  // Debug wrapper for setPickerDate
+  const handleDateChange = (newDate: string) => {
+    console.log(`[Growatt] Date changed from ${pickerDate} to ${newDate}`);
+    setPickerDate(newDate);
+  };
+  const [isLoading, setIsLoading] = useState(false);
+  const [metricsLoading, setMetricsLoading] = useState(false);
+  const [dataSource, setDataSource] = useState<
+    'production' | 'development' | 'mock'
+  >('production');
+  const [metrics, setMetrics] = useState({
+    todayGeneration: 0,
+    totalGeneration: 0,
+    todayRevenue: 0,
+    totalRevenue: 0,
+  });
 
-  const fetchSolarData = () => {
-    fetch(`https://hmi-backend.onrender.com/api/solar/daily/${pickerDate}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((json) => {
-        if (json && json.data) {
-          const formattedData = json.data.map(
-            (item: { hour: string; pac: string }) => ({
-              hour: item.hour,
-              pac: parseFloat(item.pac.replace(',', '.')),
-            })
-          );
+  // Get current data mode from Redux
+  const currentDataMode = useSelector(selectDataMode);
 
-          const isMobile = windowWidth <= 768;
+  const windowWidth = useWindowDimensions();
+  const isMobile = windowWidth.width <= 768;
+  const fetchSolarData = async () => {
+    console.log(
+      `[Growatt] Starting fetchSolarData - timespan: ${timespan}, date: ${pickerDate}`
+    );
+    console.log(`[Growatt] Current data mode from Redux: ${currentDataMode}`);
+    setIsLoading(true);
+    setMetricsLoading(true);
+    try {
+      console.log(`[Growatt] Fetching ${timespan} data for ${pickerDate}`);
 
-          const labels = formattedData.map((item: { hour: string }) => {
-            const [hour, minute] = item.hour.split(':').map(Number);
+      const response = await fetchSolarDataFromService(
+        timespan,
+        pickerDate,
+        isMobile
+      );
 
-            if (isMobile) {
-              // On mobile, only return the label for every other hour
-              return minute === 0 && hour % 2 === 0 ? item.hour : '';
-            }
-            // On desktop, return the label for every hour
-            return minute === 0 ? item.hour : '';
-          });
-
-          const pacData = formattedData.map(
-            (item: { pac: number }) => item.pac
-          );
-
-          setData({
-            labels,
-            datasets: [
-              {
-                data: pacData,
-                color: () => `#329932`,
-                strokeWidth: 1.5,
-              },
-            ],
-          });
-        }
+      console.log(`[Growatt] Data fetched from ${response.source}`, {
+        chartLabels: response.chartData.labels.length,
+        chartData: response.chartData.datasets[0].data.length,
+        metrics: response.metrics,
       });
+      setDataSource(response.source);
+
+      setData(response.chartData);
+      setMetrics({
+        todayGeneration: response.metrics.todayGeneration,
+        totalGeneration: response.metrics.totalGeneration,
+        todayRevenue: response.metrics.todayRevenue,
+        totalRevenue: response.metrics.totalRevenue,
+      });
+    } catch (error) {
+      console.error('[Growatt] Error fetching solar data:', error);
+
+      // Keep the current data source setting (don't change it)
+      // Show empty data to indicate error state
+      setData({
+        labels: [],
+        datasets: [
+          {
+            data: [],
+            color: () => '#ef4444',
+            strokeWidth: 2,
+          },
+        ],
+      });
+
+      setMetrics({
+        todayGeneration: 0,
+        totalGeneration: 0,
+        todayRevenue: 0,
+        totalRevenue: 0,
+      });
+    } finally {
+      setIsLoading(false);
+      setMetricsLoading(false);
+    }
   };
 
+  const dataMode = useSelector(selectDataMode);
+
   useEffect(() => {
-    if (timespan === 'daily') {
+    console.log(
+      `[Growatt] useEffect triggered - timespan: ${timespan}, pickerDate: ${pickerDate}`
+    );
+    if (
+      timespan === 'hourly' ||
+      timespan === 'daily' ||
+      timespan === 'weekly' ||
+      timespan === 'monthly' ||
+      timespan === 'yearly'
+    ) {
       fetchSolarData();
     }
-  }, [pickerDate]);
+  }, [pickerDate, timespan]);
 
-  if (windowWidth <= 768) {
+  // Separate useEffect to handle data mode changes from settings
+  useEffect(() => {
+    console.log(`[Growatt] Data mode changed to: ${currentDataMode}`);
+    console.log(`[Growatt] Previous dataSource state: ${dataSource}`);
+    // Force data refresh when data mode changes
+    if (currentDataMode) {
+      fetchSolarData();
+    }
+  }, [currentDataMode]);
+
+  // Fetch data when the data mode changes
+  useEffect(() => {
+    console.log(
+      `[Growatt] Data mode changed to ${dataMode}, refetching data...`
+    );
+    fetchSolarData();
+  }, [dataMode]);
+
+  if (isMobile) {
     return (
-      <Background>
-        <ScrollView>
-          <View style={mobile.outerView}>
-            <Text style={web.text}>
-              Date:{' '}
-              {pickerDate
-                ? new Date(pickerDate).toDateString()
-                : 'No date selected'}
+      <View style={mobile.container}>
+        <StatusBar style="light" />
+
+        {/* Header */}
+        <View style={mobile.header}>
+          <Text style={mobile.title}>Solar Power Generation</Text>
+          <Text style={mobile.subtitle}>
+            {new Date(pickerDate).toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </Text>
+          <View style={mobile.dataSourceIndicator}>
+            <Text style={mobile.dataSourceText}>
+              Data:{' '}
+              {currentDataMode === 'production'
+                ? '🟢 Production'
+                : currentDataMode === 'development'
+                  ? '🟡 Development'
+                  : '🔴 Mock'}
             </Text>
-            <View
-              style={{
-                flex: 8,
-                flexDirection: 'column',
-                paddingBottom: 20,
-                width: windowWidth * 0.95,
+          </View>
+        </View>
+
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+          <View style={mobile.scrollContent}>
+            {/* Combined Metrics Card */}
+            <CombinedMetricsCard
+              powerGeneration={{
+                today: metrics.todayGeneration,
+                total: metrics.totalGeneration,
               }}
-            >
-              <BigBox>
-                <PowerProductionChart data={data} key={JSON.stringify(data)} />
-              </BigBox>
+              revenue={{
+                today: metrics.todayRevenue,
+                total: metrics.totalRevenue,
+              }}
+              isLoading={metricsLoading}
+              isMobile={true}
+              timespan={timespan}
+            />
+
+            {/* Chart */}
+            <View style={mobile.chartCard}>
+              <View style={mobile.chartHeader}>
+                <Text style={mobile.chartTitle}>Power Generation (W)</Text>
+                <Text style={mobile.chartSubtitle}>
+                  {timespan === 'hourly' &&
+                    `Real-time output for ${new Date(pickerDate).toLocaleDateString()}`}
+                  {timespan === 'daily' &&
+                    `Hourly output for ${new Date(pickerDate).toLocaleDateString()}`}
+                  {timespan === 'weekly' &&
+                    `Daily aggregated output for the last 7 days`}
+                  {timespan === 'monthly' &&
+                    `Monthly aggregated output for ${new Date(pickerDate).getFullYear()}`}
+                  {timespan === 'yearly' &&
+                    `Yearly aggregated output for the last 5 years`}
+                </Text>
+              </View>
+              <PowerProductionChart
+                data={data}
+                loading={isLoading}
+                timespan={timespan}
+                key={JSON.stringify(data)}
+              />
             </View>
 
-            <View
-              style={{
-                flex: 2,
-                flexDirection: 'column',
-                width: windowWidth * 0.95,
-              }}
-            >
-              <SmallBoxMobile>
-                <Text style={web.text}>Chart controls</Text>
-                <Button
-                  onPress={() => setOpen(true)}
-                  uppercase={false}
-                  mode="outlined"
-                  buttonColor="#4fd3cc"
-                  textColor="white"
-                  style={{ borderWidth: 0 }}
-                >
-                  Pick a date
-                </Button>
-                <DatePickerModal
-                  locale="en"
-                  mode="single"
-                  visible={open}
-                  onDismiss={onDismiss}
-                  date={new Date(pickerDate)}
-                  onConfirm={onConfirm}
-                />
-              </SmallBoxMobile>
+            {/* Modern Date Selector */}
+            <ModernDateSelector
+              selectedDate={pickerDate}
+              onDateSelect={handleDateChange}
+              disabled={isLoading}
+            />
 
-              <Box style={{ height: 20 }} />
-
-              <SmallBoxMobile>
-                <PowerIcon />
-                <Box style={{ height: 20 }} />
-                <Text style={mobile.text}>
-                  Strømproduksjon basert på valgt tidsintervall
-                </Text>
-              </SmallBoxMobile>
-
-              <Box style={{ height: 20 }} />
-
-              <SmallBoxMobile>
-                <PowerIcon />
-                <Box style={{ height: 20 }} />
-                <Text style={mobile.text}>Strømproduksjon totalt</Text>
-              </SmallBoxMobile>
-
-              <Box style={{ height: 20 }} />
+            {/* Time Range Selector */}
+            <View style={mobile.controlsCard}>
+              <Text style={mobile.controlsTitle}>Time Range</Text>
+              <TimespanSelector timespan={timespan} setTimespan={setTimespan} />
             </View>
           </View>
         </ScrollView>
-      </Background>
+      </View>
     );
   }
 
+  // Desktop version
   return (
-    <Background>
-      <HStack
-        reversed={false}
-        style={{
-          flex: 0.9,
-          flexDirection: 'row',
-          width: '95%',
-          margin: 'auto',
-        }}
-      >
-        <VStack style={{ flex: 8, flexDirection: 'column' }} reversed={false}>
-          <BigBox>
-            <PowerProductionChart data={data} key={JSON.stringify(data)} />
-          </BigBox>
-        </VStack>
+    <View style={web.container}>
+      <StatusBar style="light" />
 
-        <Box style={{ width: 20 }} />
-
-        <VStack style={{ flex: 2, flexDirection: 'column' }} reversed={false}>
-          <SmallBoxWeb>
-            <PowerIcon />
-            <Box style={{ height: 20 }} />
-            <Text style={web.text}>
-              Strømproduksjon basert på valgt tidsintervall
+      {/* Header */}
+      <View style={web.header}>
+        <View>
+          <Text style={web.title}>Solar Power Dashboard</Text>
+          <Text style={web.subtitle}>
+            Real-time photovoltaic monitoring and analytics
+          </Text>
+          <View style={web.dataSourceIndicator}>
+            <Text style={web.dataSourceText}>
+              Data Source:{' '}
+              {currentDataMode === 'production'
+                ? '🟢 Production API'
+                : currentDataMode === 'development'
+                  ? '🟡 Development API'
+                  : '🔴 Mock Data'}
             </Text>
-            <Text style={web.text}>kWh</Text>
-          </SmallBoxWeb>
+          </View>
+        </View>
+        <View style={web.weatherInfo}>
+          <Text style={web.weatherText}>18°C</Text>
+          <Text style={web.weatherText}>Sunny • Sandnes</Text>
+        </View>
+      </View>
 
-          <Box style={{ height: 20 }} />
+      {/* Main Content */}
+      <View style={web.mainContent}>
+        {/* Chart Section */}
+        <View style={web.chartContainer}>
+          <View style={web.chartHeader}>
+            <View>
+              <Text style={web.chartTitle}>Power Generation</Text>
+              <Text style={web.chartSubtitle}>
+                {timespan === 'hourly' &&
+                  `Real-time output for ${new Date(pickerDate).toLocaleDateString()}`}
+                {timespan === 'daily' &&
+                  `Hourly output for ${new Date(pickerDate).toLocaleDateString()}`}
+                {timespan === 'weekly' &&
+                  `Daily aggregated output for the last 7 days`}
+                {timespan === 'monthly' &&
+                  `Monthly aggregated output for ${new Date(pickerDate).getFullYear()}`}
+                {timespan === 'yearly' &&
+                  `Yearly aggregated output for the last 5 years`}
+              </Text>
+            </View>
+            <View style={web.dateDisplay}>
+              <Text style={web.dateText}>
+                {new Date(pickerDate).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </Text>
+            </View>
+          </View>
+          <PowerProductionChart
+            data={data}
+            loading={isLoading}
+            timespan={timespan}
+            key={JSON.stringify(data)}
+          />
+        </View>
 
-          <SmallBoxWeb>
-            <Text style={web.text}>Chart controls</Text>
-            <Text style={web.text2}>
-              Selected date:{' '}
-              {pickerDate
-                ? new Date(pickerDate).toDateString()
-                : 'No date selected'}
-            </Text>
+        {/* Side Panel */}
+        <View style={web.sidePanel}>
+          {/* Combined Metrics Card */}
+          <CombinedMetricsCard
+            powerGeneration={{
+              today: metrics.todayGeneration,
+              total: metrics.totalGeneration,
+            }}
+            revenue={{
+              today: metrics.todayRevenue,
+              total: metrics.totalRevenue,
+            }}
+            isLoading={metricsLoading}
+            isMobile={false}
+            timespan={timespan}
+          />
+
+          {/* Modern Date Selector */}
+          <ModernDateSelector
+            selectedDate={pickerDate}
+            onDateSelect={handleDateChange}
+            disabled={isLoading}
+          />
+
+          {/* Time Range Selector */}
+          <View style={web.controlsCard}>
+            <Text style={web.controlsTitle}>Time Range</Text>
             <TimespanSelector timespan={timespan} setTimespan={setTimespan} />
-            <Box style={{ height: 20 }} />
-            <Button
-              onPress={() => setOpen(true)}
-              uppercase={false}
-              mode="outlined"
-              buttonColor="#4fd3cc"
-              textColor="white"
-              style={{ borderWidth: 0 }}
-            >
-              Pick a date
-            </Button>
-            <DatePickerModal
-              locale="en"
-              mode="single"
-              visible={open}
-              onDismiss={onDismiss}
-              date={new Date(pickerDate)}
-              onConfirm={onConfirm}
-            />
-          </SmallBoxWeb>
-        </VStack>
-      </HStack>
-    </Background>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }
 

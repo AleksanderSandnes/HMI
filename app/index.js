@@ -1,11 +1,69 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import React from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Animated,
+} from 'react-native';
+import React, { useEffect, useRef } from 'react';
 import { Video, ResizeMode } from 'expo-av';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { solarTheme } from './theme/solarTheme';
+import { useResponsive } from './utils/responsive';
+import { ANIMATION_DURATION, SPACING } from './constants';
 
 const Home = () => {
   const video = React.useRef(null);
   const router = useRouter();
+  const { isMobile, getFontSize, getSpacing } = useResponsive();
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: ANIMATION_DURATION.extraSlow,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: ANIMATION_DURATION.slow,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const dynamicStyles = {
+    mainText: {
+      ...styles.mainText,
+      fontSize: isMobile ? 42 : 68,
+      marginBottom: isMobile ? 10 : 20,
+    },
+    subText: {
+      ...styles.subText,
+      fontSize: isMobile ? 18 : 24,
+      marginBottom: isMobile ? 5 : 10,
+    },
+    buttonsContainer: {
+      ...styles.buttonsContainer,
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? 15 : 30,
+      paddingHorizontal: isMobile ? 40 : 60,
+      position: isMobile ? 'absolute' : 'relative',
+      bottom: isMobile ? 60 : 'auto',
+      marginTop: isMobile ? 0 : 40,
+    },
+    button: {
+      ...styles.button,
+      paddingVertical: isMobile ? 16 : 14,
+      paddingHorizontal: isMobile ? 40 : 32,
+      minWidth: isMobile ? 200 : 180,
+    },
+  };
 
   return (
     <View style={styles.container}>
@@ -18,26 +76,110 @@ const Home = () => {
         resizeMode={ResizeMode.COVER}
         shouldPlay
         isLooping
+        isMuted={true}
       />
-      <View style={styles.overlay}>
-        <Text style={styles.mainText}>Home Production Interface</Text>
-        <Text style={styles.subText}>Created by</Text>
-        <Text style={styles.subText}>Aleksander Sandnes</Text>
-      </View>
-      <View style={styles.buttons}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push('/auth/login')}
+
+      <LinearGradient
+        colors={[
+          'rgba(0, 0, 0, 0.3)',
+          'rgba(0, 0, 0, 0.6)',
+          'rgba(0, 0, 0, 0.3)',
+        ]}
+        style={styles.overlay}
+      >
+        <View style={styles.contentWrapper}>
+          <Animated.View
+            style={[
+              styles.contentContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <Text style={dynamicStyles.mainText}>
+              Home Production Interface
+            </Text>
+            <Text style={dynamicStyles.subText}>Created by</Text>
+            <Text style={dynamicStyles.subText}>Aleksander Sandnes</Text>
+            <Text style={styles.tagline}>
+              Monitor your energy production and consumption in real-time
+            </Text>
+
+            {/* Feature highlights */}
+            <View style={styles.featuresContainer}>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>⚡</Text>
+                <Text style={styles.featureText}>Real-time</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>📊</Text>
+                <Text style={styles.featureText}>Analytics</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>🌱</Text>
+                <Text style={styles.featureText}>Sustainable</Text>
+              </View>
+            </View>
+
+            {/* Buttons - positioned differently for web vs mobile */}
+            {!isMobile && (
+              <Animated.View
+                style={[
+                  dynamicStyles.buttonsContainer,
+                  {
+                    opacity: fadeAnim,
+                    transform: [{ translateY: slideAnim }],
+                  },
+                ]}
+              >
+                <TouchableOpacity
+                  style={[dynamicStyles.button, styles.primaryButton]}
+                  onPress={() => router.push('/auth/login')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.buttonText}>Login</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[dynamicStyles.button, styles.secondaryButton]}
+                  onPress={() => router.push('/auth/register')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.buttonText}>Register</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            )}
+          </Animated.View>
+        </View>
+      </LinearGradient>
+
+      {/* Mobile buttons - positioned at bottom */}
+      {isMobile && (
+        <Animated.View
+          style={[
+            dynamicStyles.buttonsContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
         >
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push('/auth/register')}
-        >
-          <Text style={styles.buttonText}>Register</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[dynamicStyles.button, styles.primaryButton]}
+            onPress={() => router.push('/auth/login')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>Login</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[dynamicStyles.button, styles.secondaryButton]}
+            onPress={() => router.push('/auth/register')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>Register</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
     </View>
   );
 };
@@ -56,46 +198,124 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  contentWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 20,
+  },
+  contentContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
   },
   mainText: {
     color: 'white',
-    fontSize: 68,
     fontWeight: 'bold',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 10,
+    letterSpacing: 1,
   },
   subText: {
-    color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '600',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
   },
   tagline: {
-    color: 'white',
-    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 16,
     fontStyle: 'italic',
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: 20,
+    maxWidth: 400,
+    lineHeight: 24,
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
   },
-  buttons: {
+  featuresContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    marginTop: SPACING.lg,
+    paddingHorizontal: SPACING.md,
+    flexWrap: 'wrap',
+    marginBottom: SPACING.lg,
+  },
+  featureItem: {
     alignItems: 'center',
-    position: 'absolute',
-    bottom: 30,
-    left: 0,
-    right: 0,
+    marginHorizontal: SPACING.sm,
+    marginVertical: SPACING.xs,
+  },
+  featureIcon: {
+    fontSize: 24,
+    marginBottom: SPACING.xs,
+  },
+  featureText: {
+    color: solarTheme.text.tertiary,
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: '500',
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  buttonsContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    paddingVertical: SPACING.md,
   },
   button: {
-    backgroundColor: '#6200ea',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    elevation: 3, // Adds a shadow effect on Android
+    borderRadius: 30,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    transform: [{ scale: 1 }],
+    transition: 'all 0.3s ease', // Web-specific smooth transitions
+  },
+  primaryButton: {
+    backgroundColor: '#00bfa5',
+    borderWidth: 2,
+    borderColor: 'rgba(0, 191, 165, 0.3)',
+    // Web-specific hover effects
+    cursor: 'pointer',
+    ':hover': {
+      backgroundColor: '#26a69a',
+      transform: 'scale(1.05)',
+    },
+  },
+  secondaryButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.6)',
+    backdropFilter: 'blur(10px)',
+    // Web-specific hover effects
+    cursor: 'pointer',
+    ':hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.25)',
+      borderColor: 'rgba(255, 255, 255, 0.8)',
+    },
   },
   buttonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
 });

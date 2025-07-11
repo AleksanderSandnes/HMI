@@ -11,12 +11,14 @@ export function useDatePicker(initialDate = new Date()) {
     setOpen(false);
   }, []);
 
-  const onConfirm = useCallback((params) => {
+  const onConfirm = useCallback((params: { date: Date | undefined }) => {
     setOpen(false);
-    const selectedDate = params.date;
-    const formattedDate = `${selectedDate.getFullYear()}${`0${selectedDate.getMonth() + 1}`.slice(-2)}${`0${selectedDate.getDate()}`.slice(-2)}`;
-    setPickerDate(selectedDate);
-    setFormattedPickerDate(formattedDate);
+    if (params.date) {
+      const selectedDate = params.date;
+      const formattedDate = `${selectedDate.getFullYear()}${`0${selectedDate.getMonth() + 1}`.slice(-2)}${`0${selectedDate.getDate()}`.slice(-2)}`;
+      setPickerDate(selectedDate);
+      setFormattedPickerDate(formattedDate);
+    }
   }, []);
 
   const openDatePicker = useCallback(() => {

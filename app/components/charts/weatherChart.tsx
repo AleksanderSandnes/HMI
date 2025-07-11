@@ -1,23 +1,49 @@
 import React from 'react';
-import { LineChart } from 'react-native-chart-kit';
-import { useWindowDimensions } from 'react-native';
-import { View } from '@gluestack-ui/themed';
+import { LineChart, BarChart } from 'react-native-chart-kit';
+import {
+  useWindowDimensions,
+  View,
+  StyleSheet,
+  Text,
+  Platform,
+} from 'react-native';
+import { solarTheme } from '../../theme/solarTheme';
 
 const chartConfig = {
-  backgroundGradientFrom: 'rgba(40,38,91,255)',
+  backgroundGradientFrom: solarTheme.background.main,
   backgroundGradientFromOpacity: 0,
-  backgroundGradientTo: 'rgba(39,56,106,255)',
-  backgroundGradientToOpacity: 0.5,
-  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`, // solid white
-  barPercentage: 0.5,
+  backgroundGradientTo: solarTheme.background.card,
+  backgroundGradientToOpacity: 0.1,
+  color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`, // blue to match theme
+  strokeWidth: 3, // Increased stroke width for better visibility
+  barPercentage: 0.7,
+  fillShadowGradient: 'rgba(59, 130, 246, 0.6)',
+  fillShadowGradientTo: 'rgba(59, 130, 246, 0.3)',
+  fillShadowGradientFromOpacity: 0.4,
+  fillShadowGradientToOpacity: 0.1,
   propsForBackgroundLines: {
-    stroke: 'rgba(255, 255, 255, 1)',
-    strokeWidth: 0.3,
-    strokeDasharray: '0',
+    stroke: solarTheme.chart.grid,
+    strokeWidth: 0.5,
+    strokeDasharray: '5,5',
   },
   propsForLabels: {
-    dy: 5,
+    fill: solarTheme.chart.label,
+    fontSize: 14,
+    fontWeight: '600',
   },
+  propsForVerticalLabels: {
+    fill: solarTheme.chart.label,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  propsForHorizontalLabels: {
+    fill: solarTheme.chart.label,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  decimalPlaces: 1,
+  formatYLabel: (value: any) => `${Math.round(value * 10) / 10}`,
+  formatXLabel: (value: any) => value,
 };
 
 export interface ChartData {
@@ -31,36 +57,207 @@ export interface ChartData {
 
 interface WeatherChartProps {
   data: ChartData;
+  timespan?: string; // 'hourly', 'daily', 'weekly', 'monthly', 'yearly'
 }
 
-export default function WeatherChart({ data }: WeatherChartProps) {
-  const windowDimensions = useWindowDimensions();
+// Function to limit and format labels based on timespan and screen size
+const processChartData = (
+  data: ChartData,
+  timespan: string,
+  isMobile: boolean
+): ChartData => {
+  if (!data.labels || data.labels.length === 0) {
+    return data;
+  }
 
-  if (windowDimensions.width <= 768) {
+  let processedLabels = [...data.labels];
+  let showEvery = 1;
+
+  // Determine label frequency based on timespan and screen size
+  switch (timespan) {
+    case 'hourly':
+      showEvery = isMobile ? 4 : 2; // Show every 4th hour on mobile, every 2nd on desktop
+      break;
+    case 'daily':
+      showEvery = isMobile ? 3 : 2; // Show every 3rd hour on mobile, every 2nd on desktop
+      break;
+    case 'weekly':
+      showEvery = 1; // Show all days for weekly (should only be 7 days)
+      break;
+    case 'monthly':
+      showEvery = isMobile ? 3 : 2; // Show fewer labels for monthly
+      break;
+    case 'yearly':
+      showEvery = isMobile ? 2 : 1; // Show fewer labels for yearly
+      break;
+    default:
+      showEvery = isMobile ? 3 : 2;
+  }
+
+  // Create sparse labels array
+  processedLabels = data.labels.map((label, index) => {
+    return index % showEvery === 0 ? label : '';
+  });
+
+  return {
+    ...data,
+    labels: processedLabels,
+  };
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+  },
+  chartContainer: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16,
+  },
+  noDataContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  noDataText: {
+    color: solarTheme.text.secondary,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+});
+
+export default function WeatherChart({
+  data,
+  timespan = 'hourly',
+}: WeatherChartProps) {
+  const windowDimensions = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const isMobile = windowDimensions.width <= 768;
+
+  // Process chart data to reduce label clutter
+  const processedData = processChartData(data, timespan, isMobile);
+
+  // Calculate chart dimensions based on container
+  const chartWidth =
+    windowDimensions.width <= 768
+      ? windowDimensions.width - 40 // Mobile: full width minus padding
+      : windowDimensions.width * 0.6; // Desktop: larger width for better fill
+
+  const chartHeight =
+    windowDimensions.width <= 768
+      ? windowDimensions.height * 0.4 // Mobile: reasonable height
+      : windowDimensions.height * 0.7; // Desktop: taller to fill more space
+
+  // Bar chart configuration for non-hourly time ranges
+  const barChartConfig = {
+    ...chartConfig,
+    barPercentage: 0.6,
+    fillShadowGradient: '#3b82f6',
+    fillShadowGradientTo: '#60a5fa',
+    fillShadowGradientFromOpacity: 0.9,
+    fillShadowGradientToOpacity: 0.7,
+  };
+
+  // Mobile-specific chart config with readable font sizes
+  const mobileChartConfig = {
+    ...chartConfig,
+    propsForHorizontalLabels: {
+      fill: solarTheme.chart.label,
+      fontSize: 12, // Larger font for better mobile readability
+      fontWeight: '500',
+    },
+    propsForVerticalLabels: {
+      fill: solarTheme.chart.label,
+      fontSize: 12, // Larger font for better mobile readability
+      fontWeight: '500',
+    },
+  };
+
+  const mobileBarChartConfig = {
+    ...barChartConfig,
+    propsForHorizontalLabels: {
+      fill: solarTheme.chart.label,
+      fontSize: 12,
+      fontWeight: '500',
+    },
+    propsForVerticalLabels: {
+      fill: solarTheme.chart.label,
+      fontSize: 12,
+      fontWeight: '500',
+    },
+  };
+
+  const currentLineChartConfig =
+    windowDimensions.width <= 768 ? mobileChartConfig : chartConfig;
+
+  const currentBarChartConfig =
+    windowDimensions.width <= 768 ? mobileBarChartConfig : barChartConfig;
+
+  // Show no data state
+  if (
+    !processedData ||
+    !processedData.datasets ||
+    processedData.datasets.length === 0 ||
+    processedData.datasets[0].data.length === 0
+  ) {
     return (
-      <View style={{ marginBottom: -100 }}>
-        <LineChart
-          data={data}
-          width={windowDimensions.width}
-          height={windowDimensions.height * 0.8}
-          chartConfig={chartConfig}
-          withDots={false}
-          withVerticalLines={false}
-        />
+      <View style={styles.noDataContainer}>
+        <Text style={styles.noDataText}>
+          No data available for the selected date
+        </Text>
       </View>
     );
   }
+
   return (
-    <View style={{ flex: 1 }}>
-      <LineChart
-        data={data}
-        width={windowDimensions.width * 0.75}
-        height={windowDimensions.height}
-        chartConfig={chartConfig}
-        withDots={false}
-        withShadow={false}
-        withVerticalLines={false}
-      />
+    <View style={styles.container}>
+      {/* Chart Container */}
+      <View style={styles.chartContainer}>
+        {timespan === 'hourly' ? (
+          <LineChart
+            data={processedData}
+            width={chartWidth}
+            height={chartHeight}
+            chartConfig={currentLineChartConfig}
+            withDots={false}
+            withVerticalLines={false}
+            withHorizontalLines={true}
+            withVerticalLabels={true}
+            withHorizontalLabels={true}
+            yAxisLabel=""
+            yAxisSuffix=""
+            bezier
+            style={styles.chart}
+            onDataPointClick={(data) => {
+              // Handle hover/click for tooltip functionality
+              console.log('Data point clicked:', data);
+            }}
+          />
+        ) : (
+          <BarChart
+            data={processedData}
+            width={chartWidth}
+            height={chartHeight}
+            chartConfig={currentBarChartConfig}
+            withVerticalLabels={true}
+            withHorizontalLabels={true}
+            fromZero={true}
+            showValuesOnTopOfBars={false}
+            yAxisLabel=""
+            yAxisSuffix=""
+            style={styles.chart}
+          />
+        )}
+      </View>
     </View>
   );
 }

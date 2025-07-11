@@ -1,23 +1,53 @@
 const jwt = require('jsonwebtoken');
 
 const isAuthenticated = async (req, res, next) => {
-  const headerObject = req.headers;
-  const token = headerObject.authorization.split(' ')[1];
+  try {
+    const headerObject = req.headers;
+    const authHeader = headerObject.authorization;
 
-  const verifyToken = jwt.verify(token, 'anykey', (err, decoded) => {
-    if (err) {
-      return false;
-    } else {
-      return decoded;
+    if (!authHeader) {
+      return res
+        .status(401)
+        .json({ error: 'No authorization header provided' });
     }
-  });
 
-  if (verifyToken) {
-    req.user = verifyToken.id;
-    next();
-  } else {
-    const err = new Error('Token expired, please login again');
-    next(err);
+    if (!authHeader.startsWith('Bearer ')) {
+      return res
+        .status(401)
+        .json({ error: 'Invalid authorization header format' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const verifyToken = jwt.verify(token, 'anykey', (err, decoded) => {
+      if (err) {
+        console.error('JWT verification error:', err.message);
+        return false;
+      } else {
+        return decoded;
+      }
+    });
+
+    if (verifyToken) {
+      console.log('[Auth] Token decoded successfully:', {
+        userId: verifyToken.id,
+        tokenData: verifyToken,
+      });
+      req.user = verifyToken.id;
+      next();
+    } else {
+      console.log('[Auth] Token verification failed');
+      return res
+        .status(401)
+        .json({ error: 'Token expired, please login again' });
+    }
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(401).json({ error: 'Authentication failed' });
   }
 };
 

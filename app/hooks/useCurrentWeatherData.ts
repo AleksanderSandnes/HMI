@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { countries } from 'country-data';
+import { getCurrentWeatherData } from '../services/weatherApiService';
+import { getDataMode } from '../services/dataConfig';
 
 function useCurrentWeatherData() {
   const [neighborhood, setNeighborhood] = useState('');
@@ -10,20 +12,42 @@ function useCurrentWeatherData() {
   const [currentWindGust, setCurrentWindGust] = useState(null);
   const [currentHumidity, setCurrentHumidity] = useState(null);
 
-  const fetchCurrentWeatherData = useCallback(() => {
-    fetch('https://hmi-backend.onrender.com/api/weather/current')
-      .then((response) => response.json())
-      .then((data) => {
-        setNeighborhood(data.observations[0].neighborhood);
-        const countryCode = data.observations[0].country;
+  const fetchCurrentWeatherData = useCallback(async () => {
+    const dataMode = getDataMode();
+
+    console.log(
+      `[CurrentWeatherHook] Fetching weather data in ${dataMode} mode`
+    );
+
+    try {
+      const data = await getCurrentWeatherData();
+      console.log(
+        `[CurrentWeatherHook] Successfully fetched weather data in ${dataMode} mode`,
+        data
+      );
+
+      if (data?.observations?.[0]) {
+        const observation = data.observations[0];
+        setNeighborhood(observation.neighborhood);
+        const countryCode = observation.country;
         const country = countries[countryCode];
         setCountryName(country ? country.name : 'Unknown country');
-        setCurrentPrecipRate(data.observations[0].metric.precipRate);
-        setCurrentTemp(data.observations[0].metric.temp);
-        setCurrentWindSpeed(data.observations[0].metric.windSpeed);
-        setCurrentWindGust(data.observations[0].metric.windGust);
-        setCurrentHumidity(data.observations[0].humidity);
-      });
+        setCurrentPrecipRate(observation.metric.precipRate);
+        setCurrentTemp(observation.metric.temp);
+        setCurrentWindSpeed(observation.metric.windSpeed);
+        setCurrentWindGust(observation.metric.windGust);
+        setCurrentHumidity(observation.humidity);
+      } else {
+        console.warn(
+          '[CurrentWeatherHook] No observation data found in response'
+        );
+      }
+    } catch (error) {
+      console.error(
+        `[CurrentWeatherHook] Error fetching weather data in ${dataMode} mode:`,
+        error
+      );
+    }
   }, []);
 
   const getWeatherText = (precipRate: number | null) => {
@@ -38,10 +62,15 @@ function useCurrentWeatherData() {
   const weatherText = getWeatherText(currentPrecipRate);
 
   useEffect(() => {
+    const dataMode = getDataMode();
+    console.log(
+      `[CurrentWeatherHook] Setting up weather data fetching in ${dataMode} mode`
+    );
+
     fetchCurrentWeatherData();
     const intervalId = setInterval(fetchCurrentWeatherData, 60000);
     return () => clearInterval(intervalId);
-  }, [fetchCurrentWeatherData]);
+  }, [fetchCurrentWeatherData, getDataMode()]);
 
   return {
     neighborhood,

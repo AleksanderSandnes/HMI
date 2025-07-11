@@ -33,4 +33,8 @@ public class LoginRequest {
     public void setAccount(String account) {
         this.account = account;
     }
+    
+    public void setPasswordCrc(String passwordCrc) {
+        this.passwordCrc = passwordCrc;
+    }
 }

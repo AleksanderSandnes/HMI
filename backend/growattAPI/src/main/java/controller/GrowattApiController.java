@@ -1,15 +1,27 @@
 package controller;
 
-import entity.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import entity.DayResponse;
+import entity.EnergyRequest;
+import entity.LoginRequest;
+import entity.MonthResponse;
+import entity.TotalDataInvResponse;
+import entity.TotalDataResponse;
+import entity.YearResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/growatt")
@@ -19,6 +31,18 @@ import jakarta.validation.Valid;
 public class GrowattApiController {
 
     private final GrowattWebClient growattWebClient;
+
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, Object>> health() {
+        Map<String, Object> healthStatus = new HashMap<>();
+        healthStatus.put("status", "healthy");
+        healthStatus.put("service", "growatt-api");
+        healthStatus.put("timestamp", LocalDateTime.now().toString());
+        healthStatus.put("version", "1.0.0");
+        
+        log.info("Health check requested");
+        return ResponseEntity.ok(healthStatus);
+    }
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@Valid @RequestBody LoginRequest loginRequest) {

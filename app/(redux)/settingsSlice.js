@@ -1,0 +1,98 @@
+import { createSlice } from '@reduxjs/toolkit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+/**
+ * Settings Redux Slice
+ * Manages application settings including data mode
+ */
+
+const SETTINGS_STORAGE_KEY = '@solar_dashboard_settings';
+
+// Initial state
+const initialState = {
+  dataMode: 'production', // 'production' | 'development' | 'mock'
+  isLoading: false,
+  error: null,
+};
+
+// Settings slice
+const settingsSlice = createSlice({
+  name: 'settings',
+  initialState,
+  reducers: {
+    setDataMode: (state, action) => {
+      state.dataMode = action.payload;
+      state.error = null;
+    },
+    setLoading: (state, action) => {
+      state.isLoading = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+      state.isLoading = false;
+    },
+    resetSettings: () => {
+      return initialState;
+    },
+  },
+});
+
+// Action creators
+export const { setDataMode, setLoading, setError, resetSettings } =
+  settingsSlice.actions;
+
+// Async thunks for persistence
+export const loadSettings = () => async (dispatch) => {
+  try {
+    dispatch(setLoading(true));
+    const storedSettings = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
+
+    if (storedSettings) {
+      const parsedSettings = JSON.parse(storedSettings);
+      if (
+        parsedSettings.dataMode &&
+        ['production', 'development', 'mock'].includes(parsedSettings.dataMode)
+      ) {
+        dispatch(setDataMode(parsedSettings.dataMode));
+      }
+    }
+  } catch (error) {
+    console.error('[Settings] Error loading settings:', error);
+    dispatch(setError('Failed to load settings'));
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const saveDataMode = (dataMode) => async (dispatch) => {
+  try {
+    dispatch(setLoading(true));
+
+    // Validate data mode
+    if (!['production', 'development', 'mock'].includes(dataMode)) {
+      throw new Error('Invalid data mode');
+    }
+
+    // Save to AsyncStorage
+    const settings = { dataMode };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+
+    // Update Redux state
+    dispatch(setDataMode(dataMode));
+
+    console.log(`[Settings] Data mode saved: ${dataMode}`);
+  } catch (error) {
+    console.error('[Settings] Error saving data mode:', error);
+    dispatch(setError('Failed to save settings'));
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+// Selectors
+export const selectDataMode = (state) => state.settings.dataMode;
+export const selectSettingsLoading = (state) => state.settings.isLoading;
+export const selectSettingsError = (state) => state.settings.error;
+
+// Reducer
+export const settingsReducer = settingsSlice.reducer;
