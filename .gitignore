@@ -198,3 +198,5 @@ replay_pid*
 # Profiling files
 *.prof
 *.hprof
+backend/weatherAPI/.env
+backend/weatherAPI/.env
