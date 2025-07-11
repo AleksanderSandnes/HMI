@@ -176,7 +176,10 @@ async function fetchDevelopmentSolarData(
 
     // Extract session cookies from login response
     const sessionCookies = loginResponse.headers.get('set-cookie') || '';
-    console.log('[UnifiedSolarAPI] Login successful, session cookies:', sessionCookies ? 'Present' : 'None');
+    console.log(
+      '[UnifiedSolarAPI] Login successful, session cookies:',
+      sessionCookies ? 'Present' : 'None'
+    );
 
     // Step 2: Fetch day chart data with session
     const requestBody = {
@@ -193,7 +196,7 @@ async function fetchDevelopmentSolarData(
     if (sessionCookies) {
       chartHeaders['Cookie'] = sessionCookies;
     }
-    
+
     console.log('[UnifiedSolarAPI] Sending dayChart request:', {
       url: `${config.baseUrl}${config.endpoints.dayChart}`,
       body: requestBody,
@@ -201,7 +204,7 @@ async function fetchDevelopmentSolarData(
       dateReceived: date,
       plantId: config.credentials.plantId,
       hasSessionCookies: !!sessionCookies,
-      sessionCookiesLength: sessionCookies.length
+      sessionCookiesLength: sessionCookies.length,
     });
 
     const response = await fetch(
@@ -223,23 +226,25 @@ async function fetchDevelopmentSolarData(
           url: `${config.baseUrl}${config.endpoints.dayChart}`,
           requestBody,
           headers: chartHeaders,
-          errorResponse: errorData
+          errorResponse: errorData,
         });
-        
+
         // Try to parse as JSON for more detailed error info
         try {
           const jsonError = JSON.parse(errorData);
           console.error('[UnifiedSolarAPI] Parsed error details:', jsonError);
         } catch (e) {
           // Not JSON, just log the text
-          console.error('[UnifiedSolarAPI] Error response (raw text):', errorData);
+          console.error(
+            '[UnifiedSolarAPI] Error response (raw text):',
+            errorData
+          );
         }
-        
       } catch (e) {
         console.error('[UnifiedSolarAPI] Could not read error response:', e);
         errorData = 'Could not read error response';
       }
-      
+
       throw new Error(
         `Development API error: ${response.status} ${response.statusText}. Details: ${errorData}`
       );
@@ -263,7 +268,7 @@ async function fetchDevelopmentSolarData(
     // Use the same label filtering approach as mock data service
     const rawData = cleanPowerValues;
     const rawLabels = labels.slice(0, cleanPowerValues.length);
-    
+
     // Apply the same filtering logic as mock data service
     let displayLabels: string[] = [];
     let displayData: number[] = [];
@@ -272,8 +277,12 @@ async function fetchDevelopmentSolarData(
       // For hourly, show every 2 hours on mobile, every hour on desktop
       if (isMobile) {
         // Mobile: show every 2 hours (12 labels)
-        displayLabels = rawLabels.filter((_: string, index: number) => index % 2 === 0);
-        displayData = rawData.filter((_: number, index: number) => index % 2 === 0);
+        displayLabels = rawLabels.filter(
+          (_: string, index: number) => index % 2 === 0
+        );
+        displayData = rawData.filter(
+          (_: number, index: number) => index % 2 === 0
+        );
       } else {
         // Desktop: show every hour (24 labels)
         displayLabels = rawLabels;
@@ -283,12 +292,20 @@ async function fetchDevelopmentSolarData(
       // For daily, show every 2-3 hours
       if (isMobile) {
         // Mobile: show every 3 hours (8 labels)
-        displayLabels = rawLabels.filter((_: string, index: number) => index % 3 === 0);
-        displayData = rawData.filter((_: number, index: number) => index % 3 === 0);
+        displayLabels = rawLabels.filter(
+          (_: string, index: number) => index % 3 === 0
+        );
+        displayData = rawData.filter(
+          (_: number, index: number) => index % 3 === 0
+        );
       } else {
         // Desktop: show every 2 hours (12 labels)
-        displayLabels = rawLabels.filter((_: string, index: number) => index % 2 === 0);
-        displayData = rawData.filter((_: number, index: number) => index % 2 === 0);
+        displayLabels = rawLabels.filter(
+          (_: string, index: number) => index % 2 === 0
+        );
+        displayData = rawData.filter(
+          (_: number, index: number) => index % 2 === 0
+        );
       }
     } else {
       // For weekly, monthly, yearly - use all labels
@@ -373,10 +390,10 @@ async function fetchProductionSolarData(
     // Clean and process production data using the same approach as mock data service
     const rawData = cleanPowerData(data.values || []);
     const rawLabels = data.labels || [];
-    
+
     // Ensure labels match data length
     const alignedLabels = rawLabels.slice(0, rawData.length);
-    
+
     // Apply the same filtering logic as mock data service
     let displayLabels: string[] = [];
     let displayData: number[] = [];
@@ -385,8 +402,12 @@ async function fetchProductionSolarData(
       // For hourly, show every 2 hours on mobile, every hour on desktop
       if (isMobile) {
         // Mobile: show every 2 hours (12 labels)
-        displayLabels = alignedLabels.filter((_: string, index: number) => index % 2 === 0);
-        displayData = rawData.filter((_: number, index: number) => index % 2 === 0);
+        displayLabels = alignedLabels.filter(
+          (_: string, index: number) => index % 2 === 0
+        );
+        displayData = rawData.filter(
+          (_: number, index: number) => index % 2 === 0
+        );
       } else {
         // Desktop: show every hour (24 labels)
         displayLabels = alignedLabels;
@@ -396,12 +417,20 @@ async function fetchProductionSolarData(
       // For daily, show every 2-3 hours
       if (isMobile) {
         // Mobile: show every 3 hours (8 labels)
-        displayLabels = alignedLabels.filter((_: string, index: number) => index % 3 === 0);
-        displayData = rawData.filter((_: number, index: number) => index % 3 === 0);
+        displayLabels = alignedLabels.filter(
+          (_: string, index: number) => index % 3 === 0
+        );
+        displayData = rawData.filter(
+          (_: number, index: number) => index % 3 === 0
+        );
       } else {
         // Desktop: show every 2 hours (12 labels)
-        displayLabels = alignedLabels.filter((_: string, index: number) => index % 2 === 0);
-        displayData = rawData.filter((_: number, index: number) => index % 2 === 0);
+        displayLabels = alignedLabels.filter(
+          (_: string, index: number) => index % 2 === 0
+        );
+        displayData = rawData.filter(
+          (_: number, index: number) => index % 2 === 0
+        );
       }
     } else {
       // For weekly, monthly, yearly - use all labels
