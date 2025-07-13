@@ -39,8 +39,12 @@ console.log('FRONTEND_URL=https://hmi-frontend.vercel.app');
 console.log('\n📱 Frontend Environment Variables (Vercel):');
 console.log('EXPO_PUBLIC_DATA_MODE=production');
 console.log('EXPO_PUBLIC_PRODUCTION_API=https://hmi-backend.onrender.com/api');
-console.log('EXPO_PUBLIC_WEATHER_API_PRODUCTION=https://hmi-backend.onrender.com');
-console.log('EXPO_PUBLIC_GROWATT_API_PRODUCTION=https://hmi-java-api.onrender.com/api');
+console.log(
+  'EXPO_PUBLIC_WEATHER_API_PRODUCTION=https://hmi-backend.onrender.com'
+);
+console.log(
+  'EXPO_PUBLIC_GROWATT_API_PRODUCTION=https://hmi-java-api.onrender.com/api'
+);
 
 console.log('\n🔧 Next Steps:');
 console.log('1. Copy environment variables to Render.com dashboard');
@@ -53,5 +57,5 @@ console.log('6. Configure user credentials in app settings');
 console.log('\n💡 Remember:');
 console.log('- Users should configure their own API credentials in the app');
 console.log('- Environment variables serve as fallback only');
-console.log('- Keep these credentials secure and don\'t commit them to Git');
+console.log("- Keep these credentials secure and don't commit them to Git");
 console.log('\n🎉 Ready for production deployment!');
