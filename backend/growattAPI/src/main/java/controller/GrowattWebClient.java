@@ -117,20 +117,20 @@ public class GrowattWebClient {
 
 		log.info("[GrowattWebClient] Raw login response: {}", login);
 
-		if (login == null || login.isEmpty() || !login.contains("result")) {
-			log.error("[GrowattWebClient] Login failed: Empty or invalid response from Growatt server for account: {}", loginRequest.getAccount());
-			throw new IllegalArgumentException("Growatt login failed: Invalid credentials or server error");
+		// If plantId is provided in the login request, use it directly
+		if (loginRequest.getPlantId() != null && !loginRequest.getPlantId().isEmpty()) {
+			log.info("[GrowattWebClient] Using plantId from LoginRequest: {}", loginRequest.getPlantId());
+			cookieJar.set(ONE_PLANT_ID, loginRequest.getPlantId());
+		} else {
+			// Get plant list to populate plantId in cookies
+			var plantListTitle = client
+				.get()
+				.uri("/index/getPlantListTitle")
+				.cookies(cookies -> writeCookies(cookieJar, cookies))
+				.exchangeToMono(response -> readCookies(cookieJar, response))
+				.block();
+			log.info("[GrowattWebClient] Plant list response: {}", plantListTitle);
 		}
-
-		// Get plant list to populate plantId in cookies
-		var plantListTitle = client
-			.get()
-			.uri("/index/getPlantListTitle")
-			.cookies(cookies -> writeCookies(cookieJar, cookies))
-			.exchangeToMono(response -> readCookies(cookieJar, response))
-			.block();
-
-		log.info("[GrowattWebClient] Plant list response: {}", plantListTitle);
 
 		if (getPlantId() == null || getPlantId().isEmpty()) {
 			log.error("[GrowattWebClient] Login succeeded but plantId is missing for account: {}", loginRequest.getAccount());

@@ -16,6 +16,10 @@ public class LoginRequest {
     @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     private String passwordCrc;
 
+    private String plantId;
+    public String getPlantId() { return plantId; }
+    public void setPlantId(String plantId) { this.plantId = plantId; }
+
     // Default constructor for Jackson
     public LoginRequest() {}
 

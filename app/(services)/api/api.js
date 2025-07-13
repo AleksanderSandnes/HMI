@@ -92,6 +92,8 @@ export const growattLogin = async (credentials) => {
     const loginData = {
       account: credentials.account,
       passwordCrc: hashedPassword,
+      // Add plantId if present
+      ...(credentials.plantId ? { plantId: credentials.plantId } : {}),
     };
 
     const response = await axios.post(
