@@ -200,3 +200,4 @@ replay_pid*
 *.hprof
 backend/weatherAPI/.env
 backend/weatherAPI/.env
+.env.production.template

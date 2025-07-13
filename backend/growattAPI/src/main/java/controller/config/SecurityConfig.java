@@ -13,7 +13,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -59,15 +58,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // In production, replace with your actual frontend domains
+        // Production domains for CORS
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:*",
             "https://localhost:*",
             "http://127.0.0.1:*",
-            "https://127.0.0.1:*"
-            // Add your production domains here
-            // "https://yourdomain.com",
-            // "https://app.yourdomain.com"
+            "https://127.0.0.1:*",
+            "https://hmi-git-main-apsandnes-projects.vercel.app",
+            "https://weatherAPI.onrender.com",
+            "https://growattAPI.onrender.com" // Your Java API domain on Render
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

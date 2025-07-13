@@ -59,7 +59,7 @@ export function getDataConfig(): DataConfig {
     apiEndpoints: {
       production:
         process.env.EXPO_PUBLIC_PRODUCTION_API ||
-        'https://solar-api.onrender.com/api',
+        'https://weatherAPI.onrender.com/api',
       development:
         process.env.EXPO_PUBLIC_DEVELOPMENT_API || 'http://localhost:5000/api',
     },

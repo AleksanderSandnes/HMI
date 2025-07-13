@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: hmi-java-api
+    runtime: docker
+    plan: free
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -jar target/growatt-1.0-SNAPSHOT.jar
+    envVars:
+      - key: SERVER_PORT
+        value: '8080'
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: FRONTEND_URL
+        value: https://hmi-git-main-apsandnes-projects.vercel.app
+      - key: BACKEND_URL
+        value: https://weatherAPI.onrender.com
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    branch: main

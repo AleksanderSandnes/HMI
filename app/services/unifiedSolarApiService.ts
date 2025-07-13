@@ -35,21 +35,81 @@ const API_CONFIG = {
       health: '/api/growatt/health',
     },
     credentials: {
-      account: 'charles.sandnes@lyse.net', // TODO: Get from user settings
-      password: '8382Napp', // TODO: Get from user settings
-      plantId: '1907049', // TODO: Get from user settings
+      // These will be retrieved from user settings in production
+      account: null,
+      password: null,
+      plantId: null,
     },
   },
   production: {
     baseUrl:
       process.env.EXPO_PUBLIC_PRODUCTION_API ||
-      'https://solar-api.onrender.com/api',
+      'https://weatherAPI.onrender.com/api',
+    javaApiUrl:
+      process.env.EXPO_PUBLIC_JAVA_API || 'https://growattAPI.onrender.com',
     endpoints: {
       daily: '/solar/daily',
       health: '/health',
+      javaHealth: '/actuator/health',
+      javaLogin: '/api/growatt/login',
+      javaDayChart: '/api/growatt/dayChart',
     },
   },
 };
+
+/**
+ * Get user's Growatt credentials from MongoDB via backend API
+ */
+async function getGrowattCredentials(): Promise<{
+  account: string | null;
+  password: string | null;
+  plantId: string | null;
+}> {
+  try {
+    const token = await getAuthToken();
+
+    if (!token) {
+      console.warn(
+        '[UnifiedSolarAPI] No auth token available - user not logged in'
+      );
+      return { account: null, password: null, plantId: null };
+    }
+
+    // Fetch user settings from MongoDB via backend API
+    const response = await fetch(
+      'https://weatherAPI.onrender.com/api/settings',
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.error(
+        '[UnifiedSolarAPI] Failed to fetch user settings:',
+        response.status
+      );
+      return { account: null, password: null, plantId: null };
+    }
+
+    const userSettings = await response.json();
+
+    return {
+      account: userSettings.growattAccount || null,
+      password: userSettings.growattPassword || null,
+      plantId: userSettings.plantId || null,
+    };
+  } catch (error) {
+    console.error(
+      '[UnifiedSolarAPI] Error getting Growatt credentials from backend:',
+      error
+    );
+    return { account: null, password: null, plantId: null };
+  }
+}
 
 /**
  * Get authentication token from storage
@@ -147,6 +207,15 @@ async function fetchDevelopmentSolarData(
   );
 
   try {
+    // Get user credentials from settings
+    const credentials = await getGrowattCredentials();
+
+    if (!credentials.account || !credentials.password || !credentials.plantId) {
+      throw new Error(
+        'Growatt credentials not found in user settings. Please configure your Growatt account in settings.'
+      );
+    }
+
     // Step 1: Login to Java API and capture session
     console.log('[UnifiedSolarAPI] Logging in to Java API...');
     const loginResponse = await fetch(
@@ -158,8 +227,8 @@ async function fetchDevelopmentSolarData(
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          account: config.credentials.account,
-          password: config.credentials.password,
+          account: credentials.account,
+          password: credentials.password,
         }),
       }
     );
@@ -183,7 +252,7 @@ async function fetchDevelopmentSolarData(
 
     // Step 2: Fetch day chart data with session
     const requestBody = {
-      plantId: config.credentials.plantId,
+      plantId: credentials.plantId,
       date: date, // YYYY-MM-DD format
     };
 
@@ -346,55 +415,121 @@ async function fetchProductionSolarData(
   const config = API_CONFIG.production;
 
   console.log(
-    `[UnifiedSolarAPI] Fetching ${timespan} data from production API: ${config.baseUrl}`
+    `[UnifiedSolarAPI] Fetching ${timespan} data from production Java API: ${config.javaApiUrl}`
   );
 
   try {
-    const token = await getAuthToken();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    // Get user credentials from MongoDB via backend API
+    const credentials = await getGrowattCredentials();
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-      console.log('[UnifiedSolarAPI] Making authenticated request');
-    } else {
-      console.warn('[UnifiedSolarAPI] No auth token available');
+    if (!credentials.account || !credentials.password || !credentials.plantId) {
+      throw new Error(
+        'Growatt credentials not found in user settings. Please configure your Growatt account in settings.'
+      );
     }
 
-    const response = await fetch(
-      `${config.baseUrl}${config.endpoints.daily}/${date}`,
+    // Step 1: Login to Java API and capture session
+    console.log('[UnifiedSolarAPI] Logging in to production Java API...');
+    const loginResponse = await fetch(
+      `${config.javaApiUrl}${config.endpoints.javaLogin}`,
       {
-        method: 'GET',
-        headers,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          account: credentials.account,
+          password: credentials.password,
+        }),
+      }
+    );
+
+    if (!loginResponse.ok) {
+      const errorData = await loginResponse.text();
+      console.error(
+        '[UnifiedSolarAPI] Production login failed:',
+        loginResponse.status,
+        errorData
+      );
+      throw new Error(
+        `Production Java API login failed: ${loginResponse.status}`
+      );
+    }
+
+    // Extract session cookies from login response
+    const sessionCookies = loginResponse.headers.get('set-cookie') || '';
+    console.log(
+      '[UnifiedSolarAPI] Production login successful, session cookies:',
+      sessionCookies ? 'Present' : 'None'
+    );
+
+    // Step 2: Fetch day chart data with session
+    const requestBody = {
+      plantId: credentials.plantId,
+      date: date, // YYYY-MM-DD format
+    };
+
+    const chartHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+
+    // Include session cookies if available
+    if (sessionCookies) {
+      chartHeaders['Cookie'] = sessionCookies;
+    }
+
+    console.log('[UnifiedSolarAPI] Sending production dayChart request:', {
+      url: `${config.javaApiUrl}${config.endpoints.javaDayChart}`,
+      body: requestBody,
+      headers: chartHeaders,
+      dateReceived: date,
+      plantId: credentials.plantId,
+      hasSessionCookies: !!sessionCookies,
+    });
+
+    const response = await fetch(
+      `${config.javaApiUrl}${config.endpoints.javaDayChart}`,
+      {
+        method: 'POST',
+        headers: chartHeaders,
+        body: JSON.stringify(requestBody),
       }
     );
 
     if (!response.ok) {
       const errorData = await response.text();
       console.error(
-        '[UnifiedSolarAPI] Request failed:',
+        '[UnifiedSolarAPI] Production request failed:',
         response.status,
         errorData
       );
       throw new Error(
-        `Production API error: ${response.status} ${response.statusText}`
+        `Production Java API error: ${response.status} ${response.statusText}`
       );
     }
 
     const data = await response.json();
     console.log(
-      '[UnifiedSolarAPI] Successfully fetched solar data from production API'
+      '[UnifiedSolarAPI] Successfully fetched solar data from production Java API'
     );
 
-    // Clean and process production data using the same approach as mock data service
-    const rawData = cleanPowerData(data.values || []);
-    const rawLabels = data.labels || [];
+    // Step 3: Process Java API response (same as development)
+    if (data.result !== 1) {
+      throw new Error('Production Java API returned error result');
+    }
 
-    // Ensure labels match data length
-    const alignedLabels = rawLabels.slice(0, rawData.length);
+    const powerValues = data.obj?.pac || [];
+    const cleanPowerValues = cleanPowerData(powerValues);
+    const labels = generateTimeLabels();
+    const metrics = calculateMetrics(cleanPowerValues);
 
-    // Apply the same filtering logic as mock data service
+    // Use the same label filtering approach as development
+    const rawData = cleanPowerValues;
+    const rawLabels = labels.slice(0, cleanPowerValues.length);
+
+    // Apply the same filtering logic as development
     let displayLabels: string[] = [];
     let displayData: number[] = [];
 
@@ -402,7 +537,7 @@ async function fetchProductionSolarData(
       // For hourly, show every 2 hours on mobile, every hour on desktop
       if (isMobile) {
         // Mobile: show every 2 hours (12 labels)
-        displayLabels = alignedLabels.filter(
+        displayLabels = rawLabels.filter(
           (_: string, index: number) => index % 2 === 0
         );
         displayData = rawData.filter(
@@ -410,14 +545,14 @@ async function fetchProductionSolarData(
         );
       } else {
         // Desktop: show every hour (24 labels)
-        displayLabels = alignedLabels;
+        displayLabels = rawLabels;
         displayData = rawData;
       }
     } else if (timespan === 'daily') {
       // For daily, show every 2-3 hours
       if (isMobile) {
         // Mobile: show every 3 hours (8 labels)
-        displayLabels = alignedLabels.filter(
+        displayLabels = rawLabels.filter(
           (_: string, index: number) => index % 3 === 0
         );
         displayData = rawData.filter(
@@ -425,7 +560,7 @@ async function fetchProductionSolarData(
         );
       } else {
         // Desktop: show every 2 hours (12 labels)
-        displayLabels = alignedLabels.filter(
+        displayLabels = rawLabels.filter(
           (_: string, index: number) => index % 2 === 0
         );
         displayData = rawData.filter(
@@ -434,7 +569,7 @@ async function fetchProductionSolarData(
       }
     } else {
       // For weekly, monthly, yearly - use all labels
-      displayLabels = alignedLabels;
+      displayLabels = rawLabels;
       displayData = rawData;
     }
 
@@ -445,16 +580,11 @@ async function fetchProductionSolarData(
           {
             data: displayData,
             color: () => '#10b981', // Green - same as development for consistency
-            strokeWidth: 2, // Same as mock data for consistency
+            strokeWidth: 2, // Same as development for consistency
           },
         ],
       },
-      metrics: {
-        todayGeneration: data.metrics?.todayGeneration || 0,
-        totalGeneration: data.metrics?.totalGeneration || 0,
-        todayRevenue: data.metrics?.todayRevenue || 0,
-        totalRevenue: data.metrics?.totalRevenue || 0,
-      },
+      metrics,
     };
   } catch (error) {
     console.error(
@@ -502,7 +632,8 @@ export async function checkSolarApiHealth(): Promise<boolean> {
     if (dataMode === 'development') {
       healthUrl = `${API_CONFIG.development.baseUrl}${API_CONFIG.development.endpoints.health}`;
     } else if (dataMode === 'production') {
-      healthUrl = `${API_CONFIG.production.baseUrl}${API_CONFIG.production.endpoints.health}`;
+      // In production, check the Java API health
+      healthUrl = `${API_CONFIG.production.javaApiUrl}${API_CONFIG.production.endpoints.javaHealth}`;
     } else {
       return false;
     }

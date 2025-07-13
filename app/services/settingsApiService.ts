@@ -14,12 +14,12 @@ function getApiBaseUrl(): string {
   } else if (dataMode === 'production') {
     return (
       process.env.EXPO_PUBLIC_PRODUCTION_API_URL ||
-      'https://your-production-api.com'
+      'https://weatherAPI.onrender.com'
     );
   }
 
   // Default fallback
-  return 'http://localhost:5000';
+  return 'https://weatherAPI.onrender.com';
 }
 
 export interface ApiSettingsData {

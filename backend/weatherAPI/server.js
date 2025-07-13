@@ -36,7 +36,10 @@ app.use(
       'http://localhost:8081',
       'http://localhost:19006',
       'http://localhost:3000',
-    ],
+      'https://hmi-git-main-apsandnes-projects.vercel.app', // Your Vercel frontend domain
+      'https://weatherAPI.onrender.com', // Your Render backend domain
+      process.env.FRONTEND_URL, // Environment variable for production frontend URL
+    ].filter(Boolean), // Remove undefined values
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
