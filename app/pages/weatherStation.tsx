@@ -162,10 +162,9 @@ const web = StyleSheet.create({
     borderColor: 'rgba(59, 130, 246, 0.3)',
     flexDirection: 'column',
     alignItems: 'stretch',
-    minHeight: 'auto',
-    height: 'auto',
-    flexGrow: 1,
     justifyContent: 'flex-start',
+    // Removed flexGrow, minHeight, height
+    marginTop: 0, // Remove extra space above
   },
   controlsTitle: {
     fontSize: 18,
