@@ -43,7 +43,7 @@ class GrowattWebClientTest {
 		
 		GrowattWebClient client = StringUtils.isBlank(proxyUrl) ? new GrowattWebClient() : new GrowattWebClient(proxyUrl, Integer.valueOf(proxyPort));
 		
-		String login = client.login(new LoginRequest(account, password));
+		String login = client.login(new LoginRequest(account, password), "");
 		assertEquals("{\"result\":1}", login);
 		assertNotNull(client.getPlantId());
 		
