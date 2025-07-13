@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import entity.DayResponse;
@@ -45,21 +46,21 @@ public class GrowattApiController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<String> login(
+        @RequestHeader("Authorization") String authHeader,
+        @Valid @RequestBody LoginRequest loginRequest
+    ) {
         long startTime = System.currentTimeMillis();
         log.info("=== LOGIN REQUEST START ===");
         log.info("Account: {}", loginRequest.getAccount());
-        
         try {
-            String result = growattWebClient.login(loginRequest);
+            String result = growattWebClient.login(loginRequest, authHeader);
             String plantId = growattWebClient.getPlantId();
             long duration = System.currentTimeMillis() - startTime;
-            
             log.info("Login successful in {}ms", duration);
             log.info("PlantId obtained: {}", plantId);
             log.info("Login result length: {} characters", result != null ? result.length() : 0);
             log.info("=== LOGIN REQUEST END ===");
-            
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;

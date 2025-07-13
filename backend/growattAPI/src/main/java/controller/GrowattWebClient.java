@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.ProxyProvider;
+import org.springframework.http.HttpHeaders;
 
 @Slf4j
 @Component
@@ -101,7 +102,7 @@ public class GrowattWebClient {
 	 * @param loginRequest
 	 * @return
 	 */
-	public String login(LoginRequest loginRequest) {
+	public String login(LoginRequest loginRequest, String jwtToken) {
 		LinkedMultiValueMap<String, String> loginData = new LinkedMultiValueMap<>();
 		loginData.add("account", loginRequest.getAccount());
 		loginData.add("passwordCrc", loginRequest.getPasswordCrc());
@@ -122,14 +123,42 @@ public class GrowattWebClient {
 			log.info("[GrowattWebClient] Using plantId from LoginRequest: {}", loginRequest.getPlantId());
 			cookieJar.set(ONE_PLANT_ID, loginRequest.getPlantId());
 		} else {
-			// Get plant list to populate plantId in cookies
-			var plantListTitle = client
-				.get()
-				.uri("/index/getPlantListTitle")
-				.cookies(cookies -> writeCookies(cookieJar, cookies))
-				.exchangeToMono(response -> readCookies(cookieJar, response))
-				.block();
-			log.info("[GrowattWebClient] Plant list response: {}", plantListTitle);
+			// Try to fetch plantId from Node backend user settings
+			try {
+				String nodeApiUrl = System.getenv().getOrDefault("NODE_API_URL", "https://weatherapi-sbwb.onrender.com/api/settings/api");
+				String token = jwtToken.replace("Bearer ", "");
+				log.info("[GrowattWebClient] Fetching plantId from Node backend: {}", nodeApiUrl);
+				WebClient nodeClient = WebClient.builder().build();
+				String response = nodeClient.get()
+					.uri(nodeApiUrl)
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+					.header(HttpHeaders.CONTENT_TYPE, "application/json")
+					.retrieve()
+					.bodyToMono(String.class)
+					.block();
+				log.info("[GrowattWebClient] Node backend response: {}", response);
+				if (response != null && response.contains("plantId")) {
+					ObjectMapper om = new ObjectMapper();
+					String plantId = om.readTree(response)
+						.path("apiSettings").path("growatt").path("plantId").asText("");
+					if (!plantId.isEmpty()) {
+						log.info("[GrowattWebClient] Using plantId from Node backend: {}", plantId);
+						cookieJar.set(ONE_PLANT_ID, plantId);
+					}
+				}
+			} catch (Exception e) {
+				log.error("[GrowattWebClient] Failed to fetch plantId from Node backend", e);
+			}
+			// If still missing, try to get from cookies as before
+			if (getPlantId() == null || getPlantId().isEmpty()) {
+				var plantListTitle = client
+					.get()
+					.uri("/index/getPlantListTitle")
+					.cookies(cookies -> writeCookies(cookieJar, cookies))
+					.exchangeToMono(response2 -> readCookies(cookieJar, response2))
+					.block();
+				log.info("[GrowattWebClient] Plant list response: {}", plantListTitle);
+			}
 		}
 
 		if (getPlantId() == null || getPlantId().isEmpty()) {
