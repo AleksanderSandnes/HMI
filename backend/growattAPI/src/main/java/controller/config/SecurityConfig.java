@@ -63,6 +63,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
             "https://hmi-seven.vercel.app",
+            "https://weatherapi-sbwb.onrender.com",
             "https://hmi-git-main-apsandnes-projects.vercel.app",
             "http://localhost:3000",
             "http://localhost:8080"

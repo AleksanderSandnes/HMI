@@ -105,23 +105,38 @@ public class GrowattWebClient {
 		LinkedMultiValueMap<String, String> loginData = new LinkedMultiValueMap<>();
 		loginData.add("account", loginRequest.getAccount());
 		loginData.add("passwordCrc", loginRequest.getPasswordCrc());
-		
+
+		log.info("[GrowattWebClient] Attempting login for account: {}", loginRequest.getAccount());
 		String login = client
 			.post()
 			.uri("/login")
 			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 			.body(BodyInserters.fromFormData(loginData))
-            .exchangeToMono(response -> readCookies(cookieJar, response))
-            .block();
-		
+			.exchangeToMono(response -> readCookies(cookieJar, response))
+			.block();
+
+		log.info("[GrowattWebClient] Raw login response: {}", login);
+
+		if (login == null || login.isEmpty() || !login.contains("result")) {
+			log.error("[GrowattWebClient] Login failed: Empty or invalid response from Growatt server for account: {}", loginRequest.getAccount());
+			throw new IllegalArgumentException("Growatt login failed: Invalid credentials or server error");
+		}
+
 		// Get plant list to populate plantId in cookies
 		var plantListTitle = client
 			.get()
 			.uri("/index/getPlantListTitle")
 			.cookies(cookies -> writeCookies(cookieJar, cookies))
 			.exchangeToMono(response -> readCookies(cookieJar, response))
-	        .block();
-		
+			.block();
+
+		log.info("[GrowattWebClient] Plant list response: {}", plantListTitle);
+
+		if (getPlantId() == null || getPlantId().isEmpty()) {
+			log.error("[GrowattWebClient] Login succeeded but plantId is missing for account: {}", loginRequest.getAccount());
+			throw new IllegalArgumentException("Growatt login failed: Plant ID not found after login");
+		}
+
 		return login;
 	}
 	
