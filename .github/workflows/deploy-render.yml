@@ -96,7 +96,7 @@ jobs:
         run: |
           echo "🔍 Checking backend health (with cold start handling)..."
           echo "🔗 Target: https://hmi-backend.onrender.com/api/health"
-          
+
           for i in {1..5}; do
             echo "🔄 Health check attempt $i/5..."
             if curl -sf --max-time 30 https://hmi-backend.onrender.com/api/health; then
@@ -116,7 +116,7 @@ jobs:
         run: |
           echo "🔍 Checking Java API health (with cold start handling)..."
           echo "🔗 Target: https://hmi-java-api.onrender.com/actuator/health"
-          
+
           for i in {1..6}; do
             echo "🔄 Health check attempt $i/6..."
             if curl -sf --max-time 30 https://hmi-java-api.onrender.com/actuator/health; then

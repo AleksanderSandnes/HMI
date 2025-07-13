@@ -45,7 +45,9 @@ public class SecurityConfig {
             
             // Configure authorization
             .authorizeHttpRequests(auth -> auth
-                // Allow only our specific API endpoints
+                // Allow health check endpoint for monitoring
+                .requestMatchers("/actuator/health").permitAll()
+                // Allow our specific API endpoints
                 .requestMatchers("/api/growatt/**").permitAll()
                 // Block all other requests
                 .anyRequest().denyAll()
@@ -65,8 +67,8 @@ public class SecurityConfig {
             "http://127.0.0.1:*",
             "https://127.0.0.1:*",
             "https://hmi-git-main-apsandnes-projects.vercel.app",
-            "https://weatherapi-sbwb.onrender.com",
-            "https://growattapi.onrender.com"
+            "https://hmi-backend.onrender.com",
+            "https://hmi-java-api.onrender.com"
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
