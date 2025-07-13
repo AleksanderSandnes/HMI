@@ -791,11 +791,6 @@ export default function WeatherStation() {
                 <Text style={styles.chartTitle}>Weather Analytics</Text>
                 <Text style={styles.chartSubtitle}>{getDataTypeLabel()}</Text>
               </View>
-              <View style={styles.dataSourceIndicator}>
-                <Text style={styles.dataSourceText}>
-                  Data Source: {getDataModeDisplay().label}
-                </Text>
-              </View>
             </View>
             <View style={styles.chartWrapper}>
               <WeatherChart
@@ -891,6 +886,11 @@ export default function WeatherStation() {
           <Text style={styles.subtitle}>
             Real-time weather monitoring and analytics
           </Text>
+          <View style={styles.dataSourceIndicator}>
+            <Text style={styles.dataSourceText}>
+              Data Source: {getDataModeDisplay().label}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -901,11 +901,6 @@ export default function WeatherStation() {
             <View>
               <Text style={styles.chartTitle}>Weather Analytics</Text>
               <Text style={styles.chartSubtitle}>{getDataTypeLabel()}</Text>
-            </View>
-            <View style={styles.dataSourceIndicator}>
-              <Text style={styles.dataSourceText}>
-                Data Source: {getDataModeDisplay().label}
-              </Text>
             </View>
           </View>
           <View style={styles.chartWrapper}>

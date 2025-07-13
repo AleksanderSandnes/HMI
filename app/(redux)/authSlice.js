@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createSlice } from '@reduxjs/toolkit';
 import { Platform } from 'react-native';
+import { clearStoredCredentials } from '../services/credentialsService';
 
 const getStorage = () => {
   if (Platform.OS === 'web') {
@@ -80,6 +81,7 @@ const authSlice = createSlice({
       state.user = null;
       state.isLoading = false;
       removeUserFromStorage();
+      clearStoredCredentials();
     },
     setUserAction: (state, action) => {
       state.user = action.payload;

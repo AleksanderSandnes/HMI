@@ -77,7 +77,7 @@ async function getGrowattCredentials(): Promise<{
 
     // Fetch user settings from MongoDB via backend API
     const response = await fetch(
-      'https://weatherapi-sbwb.onrender.com/api/settings',
+      'https://weatherapi-sbwb.onrender.com/api/settings/api',
       {
         method: 'GET',
         headers: {
@@ -96,11 +96,11 @@ async function getGrowattCredentials(): Promise<{
     }
 
     const userSettings = await response.json();
-
+    const growatt = userSettings.apiSettings?.growatt || {};
     return {
-      account: userSettings.growattAccount || null,
-      password: userSettings.growattPassword || null,
-      plantId: userSettings.plantId || null,
+      account: growatt.email || null,
+      password: growatt.hasPassword ? '••••••••' : null, // Password is not returned for security
+      plantId: growatt.plantId || null,
     };
   } catch (error) {
     console.error(
