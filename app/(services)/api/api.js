@@ -71,6 +71,33 @@ const createApiRequest = (getUrl, method = 'GET', logPrefix = '') => {
   };
 };
 
+// Helper to get JWT token from storage (web or React Native)
+async function getAuthToken() {
+  try {
+    if (typeof window !== 'undefined') {
+      // Web: Use localStorage
+      const userInfo = localStorage.getItem('userInfo');
+      if (userInfo) {
+        const user = JSON.parse(userInfo);
+        return user.token || null;
+      }
+    } else {
+      // React Native: Use AsyncStorage
+      const AsyncStorage =
+        require('@react-native-async-storage/async-storage').default;
+      const userInfo = await AsyncStorage.getItem('userInfo');
+      if (userInfo) {
+        const user = JSON.parse(userInfo);
+        return user.token || null;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('[GrowattAPI] Error getting auth token:', error);
+    return null;
+  }
+}
+
 // User Authentication API endpoints
 export const registerUser = createApiRequest(
   (config) => `${config.BACKEND_URL}/api/user/register`,
@@ -96,10 +123,16 @@ export const growattLogin = async (credentials) => {
       ...(credentials.plantId ? { plantId: credentials.plantId } : {}),
     };
 
+    const token = await getAuthToken();
+    const headers = {
+      ...API_CONFIG.HEADERS,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+
     const response = await axios.post(
       `${API_CONFIG.GROWATT_API_URL}/api/growatt/login`,
       loginData,
-      { headers: API_CONFIG.HEADERS }
+      { headers }
     );
     return response.data;
   } catch (error) {
@@ -111,11 +144,15 @@ export const getGrowattTotalData = async (request) => {
   try {
     const API_CONFIG = getApiConfig();
     console.log('[API] Sending totalData request:', request);
-
+    const token = await getAuthToken();
+    const headers = {
+      ...API_CONFIG.HEADERS,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
     const response = await axios.post(
       `${API_CONFIG.GROWATT_API_URL}/api/growatt/totalData`,
       request,
-      { headers: API_CONFIG.HEADERS }
+      { headers }
     );
     return response.data;
   } catch (error) {
@@ -127,11 +164,15 @@ export const getGrowattDayChart = async (request) => {
   try {
     const API_CONFIG = getApiConfig();
     console.log('[API] Sending dayChart request:', request);
-
+    const token = await getAuthToken();
+    const headers = {
+      ...API_CONFIG.HEADERS,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
     const response = await axios.post(
       `${API_CONFIG.GROWATT_API_URL}/api/growatt/dayChart`,
       request,
-      { headers: API_CONFIG.HEADERS }
+      { headers }
     );
     return response.data;
   } catch (error) {
@@ -143,11 +184,15 @@ export const getGrowattMonthChart = async (request) => {
   try {
     const API_CONFIG = getApiConfig();
     console.log('[API] Sending monthChart request:', request);
-
+    const token = await getAuthToken();
+    const headers = {
+      ...API_CONFIG.HEADERS,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
     const response = await axios.post(
       `${API_CONFIG.GROWATT_API_URL}/api/growatt/monthChart`,
       request,
-      { headers: API_CONFIG.HEADERS }
+      { headers }
     );
     return response.data;
   } catch (error) {
@@ -159,11 +204,15 @@ export const getGrowattYearChart = async (request) => {
   try {
     const API_CONFIG = getApiConfig();
     console.log('[API] Sending yearChart request:', request);
-
+    const token = await getAuthToken();
+    const headers = {
+      ...API_CONFIG.HEADERS,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
     const response = await axios.post(
       `${API_CONFIG.GROWATT_API_URL}/api/growatt/yearChart`,
       request,
-      { headers: API_CONFIG.HEADERS }
+      { headers }
     );
     return response.data;
   } catch (error) {
