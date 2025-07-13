@@ -10,16 +10,18 @@ function getApiBaseUrl(): string {
   const dataMode = getDataMode();
 
   if (dataMode === 'development') {
-    return process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+    return (
+      process.env.EXPO_PUBLIC_WEATHER_API_DEVELOPMENT || 'http://localhost:5000'
+    );
   } else if (dataMode === 'production') {
     return (
-      process.env.EXPO_PUBLIC_PRODUCTION_API_URL ||
-      'https://weatherAPI.onrender.com'
+      process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION ||
+      'https://weatherapi-sbwb.onrender.com'
     );
   }
 
   // Default fallback
-  return 'https://weatherAPI.onrender.com';
+  return 'https://weatherapi-sbwb.onrender.com';
 }
 
 export interface ApiSettingsData {

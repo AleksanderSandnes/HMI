@@ -1,13 +1,18 @@
 {
-    "buildCommand": "expo export -p web",
-    "outputDirectory": "dist",
-    "devCommand": "expo",
-    "cleanUrls": true,
-    "framework": null,
-    "rewrites": [
-        {
-            "source": "/:path*",
-            "destination": "/"
-        }
-    ]
+  "buildCommand": "expo export -p web",
+  "outputDirectory": "dist",
+  "devCommand": "expo",
+  "cleanUrls": true,
+  "framework": null,
+  "env": {
+    "EXPO_PUBLIC_DATA_MODE": "production",
+    "EXPO_PUBLIC_WEATHER_API_PRODUCTION": "https://weatherapi-sbwb.onrender.com",
+    "EXPO_PUBLIC_JAVA_API": "https://growattapi.onrender.com"
+  },
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "destination": "/"
+    }
+  ]
 }

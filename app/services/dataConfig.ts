@@ -58,8 +58,8 @@ export function getDataConfig(): DataConfig {
     mode,
     apiEndpoints: {
       production:
-        process.env.EXPO_PUBLIC_PRODUCTION_API ||
-        'https://weatherAPI.onrender.com/api',
+        process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION ||
+        'https://weatherapi-sbwb.onrender.com/api',
       development:
         process.env.EXPO_PUBLIC_DEVELOPMENT_API || 'http://localhost:5000/api',
     },

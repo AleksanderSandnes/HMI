@@ -43,10 +43,10 @@ const API_CONFIG = {
   },
   production: {
     baseUrl:
-      process.env.EXPO_PUBLIC_PRODUCTION_API ||
-      'https://weatherAPI.onrender.com/api',
+      process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION ||
+      'https://weatherapi-sbwb.onrender.com/api',
     javaApiUrl:
-      process.env.EXPO_PUBLIC_JAVA_API || 'https://growattAPI.onrender.com',
+      process.env.EXPO_PUBLIC_JAVA_API || 'https://growattapi.onrender.com',
     endpoints: {
       daily: '/solar/daily',
       health: '/health',
@@ -77,7 +77,7 @@ async function getGrowattCredentials(): Promise<{
 
     // Fetch user settings from MongoDB via backend API
     const response = await fetch(
-      'https://weatherAPI.onrender.com/api/settings',
+      'https://weatherapi-sbwb.onrender.com/api/settings',
       {
         method: 'GET',
         headers: {

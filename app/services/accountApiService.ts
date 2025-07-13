@@ -7,9 +7,21 @@ import { getDataMode } from './dataConfig';
 
 // Get the correct API URL based on mode
 function getApiBaseUrl(): string {
-  // For user account management, always use localhost in development
-  // Since user data should always be handled by the local backend
-  return 'http://localhost:5000';
+  const dataMode = getDataMode();
+
+  if (dataMode === 'production') {
+    return (
+      process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION ||
+      'https://weatherapi-sbwb.onrender.com'
+    );
+  } else if (dataMode === 'development') {
+    return (
+      process.env.EXPO_PUBLIC_WEATHER_API_DEVELOPMENT || 'http://localhost:5000'
+    );
+  } else {
+    // Mock mode fallback to development
+    return 'http://localhost:5000';
+  }
 }
 
 /**
