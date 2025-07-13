@@ -24,7 +24,7 @@ export function getWeatherApiConfig(): WeatherApiConfig {
   if (dataMode === 'production') {
     baseUrl =
       process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION ||
-      'https://hmi-backend.onrender.com';
+      'https://weatherapi-sbwb.onrender.com';
   } else if (dataMode === 'development') {
     baseUrl =
       process.env.EXPO_PUBLIC_WEATHER_API_DEVELOPMENT ||

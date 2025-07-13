@@ -67,8 +67,8 @@ public class SecurityConfig {
             "http://127.0.0.1:*",
             "https://127.0.0.1:*",
             "https://hmi-git-main-apsandnes-projects.vercel.app",
-            "https://hmi-backend.onrender.com",
-            "https://hmi-java-api.onrender.com"
+            "https://weatherapi-sbwb.onrender.com",
+            "https://growattapi.onrender.com"
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

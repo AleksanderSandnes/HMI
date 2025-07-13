@@ -20,7 +20,7 @@ WORKDIR /app
 COPY --from=build /app/target/growatt-1.0-SNAPSHOT.jar app.jar
 
 # Expose port
-EXPOSE 8080
+# EXPOSE 8080 (Render sets the port via $PORT)
 
 # Run the application
 CMD ["java", "-jar", "app.jar"]

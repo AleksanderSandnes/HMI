@@ -1,22 +1,29 @@
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
-import { getDataMode } from '../dataConfig';
+import { getDataMode } from '../../services/dataConfig';
 
 // API Configuration - respects data mode
 const getApiConfig = () => {
   const dataMode = getDataMode();
-  
+
   let backendUrl = 'http://localhost:5000';
   let growattUrl = 'http://localhost:8080';
-  
+
   if (dataMode === 'production') {
-    backendUrl = process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION || 'https://weatherapi-sbwb.onrender.com';
-    growattUrl = process.env.EXPO_PUBLIC_JAVA_API || 'https://growattapi.onrender.com';
+    backendUrl =
+      process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION ||
+      'https://weatherapi-sbwb.onrender.com';
+    growattUrl =
+      process.env.EXPO_PUBLIC_JAVA_API || 'https://growattapi.onrender.com';
   } else if (dataMode === 'development') {
-    backendUrl = process.env.EXPO_PUBLIC_DEVELOPMENT_API?.replace('/api', '') || 'http://localhost:5000';
-    growattUrl = process.env.EXPO_PUBLIC_GROWATT_API?.replace('/api', '') || 'http://localhost:8080';
+    backendUrl =
+      process.env.EXPO_PUBLIC_DEVELOPMENT_API?.replace('/api', '') ||
+      'http://localhost:5000';
+    growattUrl =
+      process.env.EXPO_PUBLIC_GROWATT_API?.replace('/api', '') ||
+      'http://localhost:8080';
   }
-  
+
   return {
     BACKEND_URL: backendUrl,
     GROWATT_API_URL: growattUrl,
@@ -41,7 +48,7 @@ const createApiRequest = (getUrl, method = 'GET', logPrefix = '') => {
     try {
       const API_CONFIG = getApiConfig();
       const url = typeof getUrl === 'function' ? getUrl(API_CONFIG) : getUrl;
-      
+
       if (logPrefix) {
         console.log(`[API] ${logPrefix}:`, data);
       }
