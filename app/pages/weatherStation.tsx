@@ -160,7 +160,11 @@ const web = StyleSheet.create({
     padding: 16, // Reduced from 20 to give more space for buttons
     borderWidth: 1,
     borderColor: 'rgba(59, 130, 246, 0.3)',
-    flex: 1, // Make it fill available height to align with chart bottom
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    minHeight: 'auto',
+    height: 'auto',
+    flexGrow: 1,
     justifyContent: 'flex-start',
   },
   controlsTitle: {
@@ -278,12 +282,10 @@ const web = StyleSheet.create({
     borderColor: 'rgba(79, 211, 204, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
-    flexBasis: '32%', // 3 per row, no overflow
-    maxWidth: 160,
-    minWidth: 100,
+    width: '32%', // 3 per row, with 2% left for spacing
+    marginBottom: 12,
+    marginRight: '2%', // Except for every third button
     minHeight: 65,
-    marginBottom: 6,
-    // Removed marginHorizontal
   },
   dataTypeButtonActive: {
     backgroundColor: solarTheme.secondary.accent,
@@ -1012,11 +1014,12 @@ export default function WeatherStation() {
                 { key: 'pressure', label: 'Press', icon: '🔽' },
                 { key: 'solarRadiation', label: 'Solar', icon: '☀️' },
                 { key: 'uvIndex', label: 'UV', icon: '🟣' },
-              ].map((type) => (
+              ].map((type, idx) => (
                 <TouchableOpacity
                   key={type.key}
                   style={[
                     styles.dataTypeButton,
+                    (idx + 1) % 3 === 0 && { marginRight: 0 },
                     dataType === type.key && styles.dataTypeButtonActive,
                   ]}
                   onPress={() => setDataType(type.key)}
