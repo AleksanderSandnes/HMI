@@ -38,10 +38,16 @@ const userController = {
 
       console.log('User created successfully:', userCreated.id);
 
+      // Generate JWT token for the new user (same as login)
+      const token = jwt.sign({ id: userCreated._id }, 'anykey', {
+        expiresIn: '30d',
+      });
+
       res.status(201).json({
         username: userCreated.username,
         email: userCreated.email,
         id: userCreated.id,
+        token, // include token in response
       });
     } catch (error) {
       console.error('Registration error:', error);
