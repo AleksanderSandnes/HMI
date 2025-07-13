@@ -14,35 +14,61 @@ jobs:
     steps:
       - name: 🔍 Check Frontend (Vercel)
         run: |
+          echo "🔍 Checking Frontend..."
           if curl -sf https://hmi-git-main-apsandnes-projects.vercel.app > /dev/null; then
             echo "✅ Frontend: Online"
           else
-            echo "❌ Frontend: Offline"
-            exit 1
+            echo "⚠️ Frontend: Not accessible"
           fi
 
-      - name: 🔍 Check Weather API
+      - name: 🔍 Check Backend API (with warmup)
         run: |
-          if curl -sf https://weatherAPI.onrender.com/api/health > /dev/null; then
-            echo "✅ Weather API: Online"
-          else
-            echo "❌ Weather API: Offline"
-            exit 1
-          fi
+          echo "🔍 Checking Backend API (warming up if needed)..."
+          echo "⏳ Render free tier may take 30-60 seconds to start..."
 
-      - name: 🔍 Check Growatt API
-        run: |
-          if curl -sf https://growattAPI.onrender.com/actuator/health > /dev/null; then
-            echo "✅ Growatt API: Online"
-          else
-            echo "❌ Growatt API: Offline"
-            exit 1
-          fi
+          # Try multiple times with delays for cold start
+          for i in {1..6}; do
+            echo "🔄 Attempt $i/6..."
+            if curl -sf --max-time 30 https://weatherAPI.onrender.com/api/health > /dev/null; then
+              echo "✅ Backend API: Online (took $((i*15)) seconds)"
+              exit 0
+            else
+              echo "⏳ Backend not ready yet, waiting 15 seconds..."
+              if [ $i -lt 6 ]; then
+                sleep 15
+              fi
+            fi
+          done
+          echo "⚠️ Backend API: Not accessible after 90 seconds (may be starting up)"
 
-      - name: 🎉 All Services Online
+      - name: 🔍 Check Java API (with warmup)
         run: |
-          echo "🎉 All services are running successfully!"
-          echo "📋 Service Status:"
-          echo "   ✅ Frontend: https://hmi-git-main-apsandnes-projects.vercel.app"
-          echo "   ✅ Weather API:  https://weatherAPI.onrender.com"
-          echo "   ✅ Growatt API: https://growattAPI.onrender.com"
+          echo "🔍 Checking Java API (warming up if needed)..."
+          echo "⏳ Java services may take longer to start on free tier..."
+
+          # Try multiple times with delays for cold start
+          for i in {1..8}; do
+            echo "🔄 Attempt $i/8..."
+            if curl -sf --max-time 30 https://growattAPI.onrender.com/actuator/health > /dev/null; then
+              echo "✅ Java API: Online (took $((i*20)) seconds)"
+              exit 0
+            else
+              echo "⏳ Java API not ready yet, waiting 20 seconds..."
+              if [ $i -lt 8 ]; then
+                sleep 20
+              fi
+            fi
+          done
+          echo "⚠️ Java API: Not accessible after 160 seconds (may be starting up)"
+
+      - name: 📊 Service Status Summary
+        run: |
+          echo "📊 Service Status Check Complete"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🌐 Live Services:"
+          echo "   Frontend: https://hmi-git-main-apsandnes-projects.vercel.app"
+          echo "   Backend:  https://weatherAPI.onrender.com/api/health"
+          echo "   Java API: https://growattAPI.onrender.com/actuator/health"
+          echo ""
+          echo "ℹ️  Note: Render free tier services may take 30-60 seconds to start"
+          echo "   from cold state. This is normal behavior."

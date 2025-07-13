@@ -3,8 +3,8 @@
 [![Vercel Deploy](https://deploy-badge.vercel.app/vercel/hmi-git-main-apsandnes-projects)](https://hmi-git-main-apsandnes-projects.vercel.app)
 [![Deploy to Render](https://github.com/APSandnes/HMI/actions/workflows/deploy-render.yml/badge.svg)](https://github.com/APSandnes/HMI/actions/workflows/deploy-render.yml)
 [![Service Status](https://github.com/APSandnes/HMI/actions/workflows/status-badges.yml/badge.svg)](https://github.com/APSandnes/HMI/actions/workflows/status-badges.yml)
-[![Backend Health](https://img.shields.io/website?down_color=red&down_message=offline&up_color=green&up_message=online&url=https%3A%2F%2Fhmi-backend.onrender.com%2Fapi%2Fhealth)](https://hmi-backend.onrender.com/api/health)
-[![Java API Health](https://img.shields.io/website?down_color=red&down_message=offline&up_color=green&up_message=online&url=https%3A%2F%2Fhmi-java-api.onrender.com%2Factuator%2Fhealth)](https://hmi-java-api.onrender.com/actuator/health)
+
+> ⚠️ **Note**: Backend services run on Render's free tier and may take 30-60 seconds to start from cold state.
 
 A comprehensive home management interface with solar monitoring, weather tracking, and IoT integration.
 
