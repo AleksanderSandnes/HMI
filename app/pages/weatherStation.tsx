@@ -266,7 +266,8 @@ const web = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginHorizontal: -2, // Small negative margin for spacing
+    alignItems: 'flex-start',
+    marginHorizontal: 0,
   },
   dataTypeButton: {
     backgroundColor: solarTheme.background.cardLight,
@@ -277,7 +278,7 @@ const web = StyleSheet.create({
     borderColor: 'rgba(79, 211, 204, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '32%', // Slightly larger to account for no gaps
+    width: '31%', // 3 per row with spacing
     minHeight: 65,
     marginBottom: 6,
     marginHorizontal: 2,
@@ -549,20 +550,23 @@ const mobile = StyleSheet.create({
   dataTypeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginHorizontal: 0,
   },
   dataTypeButton: {
     backgroundColor: solarTheme.background.cardLight,
     borderRadius: 8,
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     borderWidth: 1,
     borderColor: 'rgba(79, 211, 204, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '31%',
+    width: '31%', // 3 per row with spacing
     minHeight: 60,
+    marginBottom: 6,
+    marginHorizontal: 2,
   },
   dataTypeButtonActive: {
     backgroundColor: solarTheme.secondary.accent,
