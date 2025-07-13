@@ -793,7 +793,7 @@ export default function WeatherStation() {
               </View>
               <View style={styles.dataSourceIndicator}>
                 <Text style={styles.dataSourceText}>
-                  {getDataModeDisplay().label}
+                  Data Source: {getDataModeDisplay().label}
                 </Text>
               </View>
             </View>
@@ -904,7 +904,7 @@ export default function WeatherStation() {
             </View>
             <View style={styles.dataSourceIndicator}>
               <Text style={styles.dataSourceText}>
-                {getDataModeDisplay().label}
+                Data Source: {getDataModeDisplay().label}
               </Text>
             </View>
           </View>

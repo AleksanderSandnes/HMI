@@ -117,7 +117,10 @@ router.put('/api', isAuthenticated, async (req, res) => {
 
       user.apiSettings.growatt.email = growatt.email;
       user.apiSettings.growatt.plantId = growatt.plantId || '';
-      console.log('[API Settings] Set email and plantId');
+      console.log(
+        '[API Settings] Set email and plantId:',
+        user.apiSettings.growatt
+      );
 
       // Only update password if provided
       if (growatt.password && growatt.password.trim()) {
@@ -175,6 +178,10 @@ router.put('/api', isAuthenticated, async (req, res) => {
     console.log('[API Settings] Saving user to database...');
     await user.save();
     console.log('[API Settings] User saved successfully');
+    console.log(
+      '[API Settings] User document after save:',
+      JSON.stringify(user, null, 2)
+    );
 
     console.log(
       `[API Settings] Updated API settings for user ${user.email}${growatt ? ' (Growatt)' : ''}${weather ? ' (Weather)' : ''}`
