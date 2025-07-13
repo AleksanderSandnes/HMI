@@ -20,8 +20,8 @@ if (environment === 'development') {
   uri = process.env.MONGODB_LOCAL_URI || 'mongodb://localhost:27017/hmi-dev';
   console.log('🟡 [MongoDB] Using local development database:', uri);
 } else {
-  uri = `mongodb+srv://${db_username}:${db_password}@hmi.g7qbf6h.mongodb.net/?retryWrites=true&w=majority&appName=HMI`;
-  console.log('🟢 [MongoDB] Using production cluster');
+  uri = `mongodb+srv://${db_username}:${db_password}@hmi.g7qbf6h.mongodb.net/HMI?retryWrites=true&w=majority&appName=HMI`;
+  console.log('🟢 [MongoDB] Using production cluster (HMI database)');
 }
 
 mongoose
