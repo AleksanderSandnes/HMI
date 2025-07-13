@@ -267,7 +267,7 @@ const web = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginHorizontal: 0,
+    // Removed marginHorizontal to prevent overflow
   },
   dataTypeButton: {
     backgroundColor: solarTheme.background.cardLight,
@@ -278,10 +278,12 @@ const web = StyleSheet.create({
     borderColor: 'rgba(79, 211, 204, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '31%', // 3 per row with spacing
+    flexBasis: '32%', // 3 per row, no overflow
+    maxWidth: 160,
+    minWidth: 100,
     minHeight: 65,
     marginBottom: 6,
-    marginHorizontal: 2,
+    // Removed marginHorizontal
   },
   dataTypeButtonActive: {
     backgroundColor: solarTheme.secondary.accent,
