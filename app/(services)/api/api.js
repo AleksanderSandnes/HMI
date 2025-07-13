@@ -1,17 +1,29 @@
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
+import { getDataMode } from '../dataConfig';
 
-// API Configuration
-const API_CONFIG = {
-  BACKEND_URL:
-    process.env.EXPO_PUBLIC_DEVELOPMENT_API?.replace('/api', '') ||
-    'http://localhost:5000',
-  GROWATT_API_URL:
-    process.env.EXPO_PUBLIC_GROWATT_API?.replace('/api', '') ||
-    'http://localhost:8080',
-  HEADERS: {
-    'Content-Type': 'application/json',
-  },
+// API Configuration - respects data mode
+const getApiConfig = () => {
+  const dataMode = getDataMode();
+  
+  let backendUrl = 'http://localhost:5000';
+  let growattUrl = 'http://localhost:8080';
+  
+  if (dataMode === 'production') {
+    backendUrl = process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION || 'https://weatherapi-sbwb.onrender.com';
+    growattUrl = process.env.EXPO_PUBLIC_JAVA_API || 'https://growattapi.onrender.com';
+  } else if (dataMode === 'development') {
+    backendUrl = process.env.EXPO_PUBLIC_DEVELOPMENT_API?.replace('/api', '') || 'http://localhost:5000';
+    growattUrl = process.env.EXPO_PUBLIC_GROWATT_API?.replace('/api', '') || 'http://localhost:8080';
+  }
+  
+  return {
+    BACKEND_URL: backendUrl,
+    GROWATT_API_URL: growattUrl,
+    HEADERS: {
+      'Content-Type': 'application/json',
+    },
+  };
 };
 
 // Helper function for standardized error handling
@@ -24,9 +36,12 @@ const handleApiError = (operation, error) => {
 };
 
 // Helper function to create consistent request function
-const createApiRequest = (url, method = 'GET', logPrefix = '') => {
+const createApiRequest = (getUrl, method = 'GET', logPrefix = '') => {
   return async (data = null) => {
     try {
+      const API_CONFIG = getApiConfig();
+      const url = typeof getUrl === 'function' ? getUrl(API_CONFIG) : getUrl;
+      
       if (logPrefix) {
         console.log(`[API] ${logPrefix}:`, data);
       }
@@ -51,18 +66,19 @@ const createApiRequest = (url, method = 'GET', logPrefix = '') => {
 
 // User Authentication API endpoints
 export const registerUser = createApiRequest(
-  `${API_CONFIG.BACKEND_URL}/api/user/register`,
+  (config) => `${config.BACKEND_URL}/api/user/register`,
   'POST'
 );
 
 export const loginUser = createApiRequest(
-  `${API_CONFIG.BACKEND_URL}/api/user/login`,
+  (config) => `${config.BACKEND_URL}/api/user/login`,
   'POST'
 );
 
 // Growatt API endpoints (Java Spring Boot)
 export const growattLogin = async (credentials) => {
   try {
+    const API_CONFIG = getApiConfig();
     // Hash the password with MD5 as expected by the backend
     const hashedPassword = CryptoJS.MD5(credentials.password).toString();
 
@@ -84,6 +100,7 @@ export const growattLogin = async (credentials) => {
 
 export const getGrowattTotalData = async (request) => {
   try {
+    const API_CONFIG = getApiConfig();
     console.log('[API] Sending totalData request:', request);
 
     const response = await axios.post(
@@ -99,6 +116,7 @@ export const getGrowattTotalData = async (request) => {
 
 export const getGrowattDayChart = async (request) => {
   try {
+    const API_CONFIG = getApiConfig();
     console.log('[API] Sending dayChart request:', request);
 
     const response = await axios.post(
@@ -114,6 +132,7 @@ export const getGrowattDayChart = async (request) => {
 
 export const getGrowattMonthChart = async (request) => {
   try {
+    const API_CONFIG = getApiConfig();
     console.log('[API] Sending monthChart request:', request);
 
     const response = await axios.post(
@@ -129,6 +148,7 @@ export const getGrowattMonthChart = async (request) => {
 
 export const getGrowattYearChart = async (request) => {
   try {
+    const API_CONFIG = getApiConfig();
     console.log('[API] Sending yearChart request:', request);
 
     const response = await axios.post(
@@ -144,6 +164,6 @@ export const getGrowattYearChart = async (request) => {
 
 // Weather API endpoints
 export const getWeatherData = createApiRequest(
-  `${API_CONFIG.BACKEND_URL}/api/weather/current`,
+  (config) => `${config.BACKEND_URL}/api/weather/current`,
   'GET'
 );

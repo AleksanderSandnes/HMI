@@ -44,9 +44,9 @@ const API_CONFIG = {
   production: {
     baseUrl:
       process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION ||
-      'https://weatherapi-sbwb.onrender.com/api',
+      'https://hmi-backend.onrender.com/api',
     javaApiUrl:
-      process.env.EXPO_PUBLIC_JAVA_API || 'https://growattapi.onrender.com',
+      process.env.EXPO_PUBLIC_JAVA_API || 'https://hmi-java-api.onrender.com',
     endpoints: {
       daily: '/solar/daily',
       health: '/health',
