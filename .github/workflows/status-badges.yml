@@ -1,0 +1,48 @@
+name: 🔍 Service Status Check
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 */6 * * *' # Check every 6 hours
+  workflow_dispatch:
+
+jobs:
+  service-status:
+    name: 📊 Check Service Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔍 Check Frontend (Vercel)
+        run: |
+          if curl -sf https://hmi-git-main-apsandnes-projects.vercel.app > /dev/null; then
+            echo "✅ Frontend: Online"
+          else
+            echo "❌ Frontend: Offline"
+            exit 1
+          fi
+
+      - name: 🔍 Check Weather API
+        run: |
+          if curl -sf https://weatherAPI.onrender.com/api/health > /dev/null; then
+            echo "✅ Weather API: Online"
+          else
+            echo "❌ Weather API: Offline"
+            exit 1
+          fi
+
+      - name: 🔍 Check Growatt API
+        run: |
+          if curl -sf https://growattAPI.onrender.com/actuator/health > /dev/null; then
+            echo "✅ Growatt API: Online"
+          else
+            echo "❌ Growatt API: Offline"
+            exit 1
+          fi
+
+      - name: 🎉 All Services Online
+        run: |
+          echo "🎉 All services are running successfully!"
+          echo "📋 Service Status:"
+          echo "   ✅ Frontend: https://hmi-git-main-apsandnes-projects.vercel.app"
+          echo "   ✅ Weather API:  https://weatherAPI.onrender.com"
+          echo "   ✅ Growatt API: https://growattAPI.onrender.com"
