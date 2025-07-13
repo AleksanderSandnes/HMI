@@ -31,6 +31,17 @@ jobs:
       - name: ✅ Backend Ready for Deployment
         run: echo "✅ Backend build successful - Render will auto-deploy from main branch"
 
+      - name: 🚀 Trigger Render Deployment (Backend)
+        run: |
+          echo "🚀 Triggering Render deployment for backend..."
+          # Render auto-deploys on push to main, but we can also trigger via webhook
+          # This ensures deployment happens even if Render missed the GitHub webhook
+          if [ -n "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}" ]; then
+            curl -X POST "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}" || echo "⚠️ Deploy hook failed, relying on auto-deploy"
+          else
+            echo "ℹ️  Using Render auto-deploy (no deploy hook configured)"
+          fi
+
   deploy-java-api:
     name: ☕ Deploy growatt API
     runs-on: ubuntu-latest
@@ -58,6 +69,16 @@ jobs:
       - name: ✅ Java API Ready for Deployment
         run: echo "✅ Java API build successful - Render will auto-deploy from main branch"
 
+      - name: 🚀 Trigger Render Deployment (Java API)
+        run: |
+          echo "🚀 Triggering Render deployment for Java API..."
+          # Render auto-deploys on push to main, but we can also trigger via webhook
+          if [ -n "${{ secrets.RENDER_JAVA_DEPLOY_HOOK }}" ]; then
+            curl -X POST "${{ secrets.RENDER_JAVA_DEPLOY_HOOK }}" || echo "⚠️ Deploy hook failed, relying on auto-deploy"
+          else
+            echo "ℹ️  Using Render auto-deploy (no deploy hook configured)"
+          fi
+
   health-check:
     name: 🏥 Health Check Services
     runs-on: ubuntu-latest
@@ -66,24 +87,26 @@ jobs:
       - name: ⏳ Wait for initial deployment
         run: |
           echo "⏳ Waiting for Render services to deploy..."
-          echo "ℹ️  Free tier services may take several minutes to start"
-          sleep 60
+          echo "ℹ️  Render auto-deploy typically takes 2-5 minutes"
+          echo "ℹ️  Free tier services may take additional time to start"
+          echo "⏳ Waiting 3 minutes for deployment to complete..."
+          sleep 180
 
       - name: 🏥 Check Backend Health (with retries)
         run: |
           echo "🔍 Checking backend health (with cold start handling)..."
-          echo "🔗 Target: https://weatherAPI.onrender.com/api/health"
-
+          echo "🔗 Target: https://hmi-backend.onrender.com/api/health"
+          
           for i in {1..5}; do
             echo "🔄 Health check attempt $i/5..."
-            if curl -sf --max-time 30 https://weatherAPI.onrender.com/api/health; then
-              echo "✅ Weather API is healthy!"
+            if curl -sf --max-time 30 https://hmi-backend.onrender.com/api/health; then
+              echo "✅ Backend is healthy!"
               break
             else
               if [ $i -eq 5 ]; then
-                echo "⚠️ Weather API not responding after 5 attempts (likely still starting up)"
+                echo "⚠️ Backend not responding after 5 attempts (likely still starting up)"
               else
-                echo "⏳ Weather API not ready, waiting 30 seconds..."
+                echo "⏳ Backend not ready, waiting 30 seconds..."
                 sleep 30
               fi
             fi
@@ -92,18 +115,18 @@ jobs:
       - name: 🏥 Check Java API Health (with retries)
         run: |
           echo "🔍 Checking Java API health (with cold start handling)..."
-          echo "🔗 Target: https://growattAPI.onrender.com/actuator/health"
-
+          echo "🔗 Target: https://hmi-java-api.onrender.com/actuator/health"
+          
           for i in {1..6}; do
             echo "🔄 Health check attempt $i/6..."
-            if curl -sf --max-time 30 https://growattAPI.onrender.com/actuator/health; then
+            if curl -sf --max-time 30 https://hmi-java-api.onrender.com/actuator/health; then
               echo "✅ Java API is healthy!"
               break
             else
               if [ $i -eq 6 ]; then
-                echo "⚠️ Growatt API not responding after 6 attempts (likely still starting up)"
+                echo "⚠️ Java API not responding after 6 attempts (likely still starting up)"
               else
-                echo "⏳ Growatt API not ready, waiting 45 seconds..."
+                echo "⏳ Java API not ready, waiting 45 seconds..."
                 sleep 45
               fi
             fi
@@ -114,5 +137,5 @@ jobs:
           echo "🎉 Deployment workflow completed!"
           echo "📋 Services will be available at:"
           echo "   Frontend: https://hmi-git-main-apsandnes-projects.vercel.app"
-          echo "   Backend:  https://weatherAPI.onrender.com"
-          echo "   Java API: https://growattAPI.onrender.com"
+          echo "   Backend:  https://hmi-backend.onrender.com"
+          echo "   Java API: https://hmi-java-api.onrender.com"

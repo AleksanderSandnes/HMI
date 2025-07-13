@@ -28,11 +28,11 @@ services:
     branch: main
 
   - type: web
-    name: growattAPI
+    name: hmi-java-api
     runtime: docker
     plan: free
     rootDir: backend/growattAPI
-    dockerfilePath: backend/growattAPI/Dockerfile
+    dockerfilePath: Dockerfile
     envVars:
       - key: SERVER_PORT
         value: '8080'
@@ -41,7 +41,7 @@ services:
       - key: FRONTEND_URL
         value: https://hmi-git-main-apsandnes-projects.vercel.app
       - key: BACKEND_URL
-        value: https://weatherAPI.onrender.com
+        value: https://hmi-backend.onrender.com
     healthCheckPath: /actuator/health
     autoDeploy: true
     branch: main

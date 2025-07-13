@@ -1,21 +1,26 @@
-# Use OpenJDK 17 as base image
-FROM openjdk:17-jdk-slim
+# Use Maven with OpenJDK 17 for build
+FROM maven:3.9.4-eclipse-temurin-17-alpine AS build
 
-# Set working directory
 WORKDIR /app
 
-# Install Maven
-RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
-
-# Copy Maven files
+# Copy pom.xml first for dependency caching
 COPY pom.xml .
-COPY src ./src
+RUN mvn dependency:go-offline
 
-# Build the application
+# Copy source and build
+COPY src ./src
 RUN mvn clean package -DskipTests
+
+# Runtime image
+FROM eclipse-temurin:17-jre-alpine
+
+WORKDIR /app
+
+# Copy the JAR file
+COPY --from=build /app/target/growatt-1.0-SNAPSHOT.jar app.jar
 
 # Expose port
 EXPOSE 8080
 
 # Run the application
-CMD ["java", "-jar", "target/growatt-1.0-SNAPSHOT.jar"]
+CMD ["java", "-jar", "app.jar"]

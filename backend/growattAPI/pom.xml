@@ -16,7 +16,7 @@
 	<name>growatt</name>
 	<description>API to query data from server.growatt.com</description>
 	<properties>
-		<java.version>21</java.version>
+		<java.version>17</java.version>
 	</properties>
 	
 	<dependencies>
