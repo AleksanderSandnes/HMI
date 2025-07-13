@@ -16,9 +16,29 @@ const router = express.Router();
  */
 router.get('/api', isAuthenticated, async (req, res) => {
   try {
+    // Log the incoming JWT (if present)
+    const authHeader =
+      req.headers['authorization'] || req.headers['Authorization'];
+    console.log(
+      '[API Settings][GET /api/settings/api] Incoming JWT:',
+      authHeader ? authHeader.substring(0, 40) + '...' : 'None'
+    );
+    console.log(
+      '[API Settings][GET /api/settings/api] Authenticated user ID:',
+      req.user
+    );
+
     const user = await User.findById(req.user).select('apiSettings');
+    console.log(
+      '[API Settings][GET /api/settings/api] User lookup result:',
+      user ? 'Found' : 'Not found'
+    );
 
     if (!user) {
+      console.log(
+        '[API Settings][GET /api/settings/api] User not found for ID:',
+        req.user
+      );
       return res.status(404).json({ message: 'User not found' });
     }
 
@@ -35,12 +55,20 @@ router.get('/api', isAuthenticated, async (req, res) => {
       },
     };
 
+    console.log(
+      '[API Settings][GET /api/settings/api] Returning apiSettings:',
+      JSON.stringify(apiSettings)
+    );
+
     res.status(200).json({
       success: true,
       apiSettings,
     });
   } catch (error) {
-    console.error('Error fetching API settings:', error);
+    console.error(
+      '[API Settings][GET /api/settings/api] Error fetching API settings:',
+      error
+    );
     res.status(500).json({
       success: false,
       message: 'Failed to fetch API settings',

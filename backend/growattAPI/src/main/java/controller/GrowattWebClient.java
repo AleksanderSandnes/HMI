@@ -108,6 +108,7 @@ public class GrowattWebClient {
 		loginData.add("passwordCrc", loginRequest.getPasswordCrc());
 
 		log.info("[GrowattWebClient] Attempting login for account: {}", loginRequest.getAccount());
+		log.info("[GrowattWebClient] Incoming JWT: {}", jwtToken != null ? (jwtToken.length() > 40 ? jwtToken.substring(0, 40) + "..." : jwtToken) : "null");
 		String login = client
 			.post()
 			.uri("/login")
@@ -128,6 +129,7 @@ public class GrowattWebClient {
 				String nodeApiUrl = System.getenv().getOrDefault("NODE_API_URL", "https://weatherapi-sbwb.onrender.com/api/settings/api");
 				String token = jwtToken.replace("Bearer ", "");
 				log.info("[GrowattWebClient] Fetching plantId from Node backend: {}", nodeApiUrl);
+				log.info("[GrowattWebClient] Sending JWT to Node backend: {}", token.length() > 40 ? token.substring(0, 40) + "..." : token);
 				WebClient nodeClient = WebClient.builder().build();
 				String response = nodeClient.get()
 					.uri(nodeApiUrl)
@@ -144,7 +146,11 @@ public class GrowattWebClient {
 					if (!plantId.isEmpty()) {
 						log.info("[GrowattWebClient] Using plantId from Node backend: {}", plantId);
 						cookieJar.set(ONE_PLANT_ID, plantId);
+					} else {
+						log.error("[GrowattWebClient] Node backend response did not contain plantId");
 					}
+				} else {
+					log.error("[GrowattWebClient] Node backend response was null or did not contain plantId");
 				}
 			} catch (Exception e) {
 				log.error("[GrowattWebClient] Failed to fetch plantId from Node backend", e);
@@ -166,6 +172,7 @@ public class GrowattWebClient {
 			throw new IllegalArgumentException("Growatt login failed: Plant ID not found after login");
 		}
 
+		log.info("[GrowattWebClient] Final plantId used: {}", getPlantId());
 		return login;
 	}
 	
