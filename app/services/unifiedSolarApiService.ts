@@ -427,6 +427,9 @@ async function fetchProductionSolarData(
 
     // Call Node.js backend API endpoint which handles Java API communication
     console.log('[UnifiedSolarAPI] Calling Node.js backend for solar data...');
+    console.log('[UnifiedSolarAPI] Request URL:', `${config.baseUrl}${config.endpoints.daily}/${date}`);
+    console.log('[UnifiedSolarAPI] JWT Token preview:', token ? token.substring(0, 30) + '...' : 'No token');
+    
     const response = await fetch(`${config.baseUrl}${config.endpoints.daily}/${date}`, {
       method: 'GET',
       headers: {
@@ -438,11 +441,23 @@ async function fetchProductionSolarData(
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error(
-        '[UnifiedSolarAPI] Production request failed:',
-        response.status,
-        errorData
-      );
+      console.error('[UnifiedSolarAPI] Production request failed:');
+      console.error('- Status:', response.status);
+      console.error('- Status Text:', response.statusText);
+      console.error('- URL:', `${config.baseUrl}${config.endpoints.daily}/${date}`);
+      console.error('- Response Headers:', Object.fromEntries(response.headers.entries()));
+      console.error('- Error Data:', errorData);
+      
+      // If it's a 401, the issue is authentication
+      if (response.status === 401) {
+        throw new Error('Authentication failed - please log in again');
+      }
+      
+      // If it's a 404, the route doesn't exist
+      if (response.status === 404) {
+        throw new Error('Solar data endpoint not found on server - please contact support');
+      }
+      
       throw new Error(
         `Production API error: ${response.status} ${response.statusText}. Details: ${errorData}`
       );
