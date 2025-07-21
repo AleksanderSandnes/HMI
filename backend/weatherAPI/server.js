@@ -3,6 +3,7 @@ const express = require('express');
 const weatherRoutes = require('./routes/weatherRoutes.js');
 const userRoutes = require('./routes/user.js');
 const apiSettingsRoutes = require('./routes/apiSettings.js');
+const solarRoutes = require('./routes/solarRoutes.js');
 const cors = require('cors');
 const { default: mongoose } = require('mongoose');
 const errorHandler = require('./middleware/errorHandler.js');
@@ -64,6 +65,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/weather', weatherRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/settings', apiSettingsRoutes);
+app.use('/api/solar', solarRoutes);
 
 app.use(errorHandler);
 
