@@ -111,16 +111,22 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     height: '100%',
+    paddingBottom: 0,
+    marginBottom: 0,
   },
   chartContainer: {
     width: '100%',
     height: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingBottom: 0,
+    marginBottom: 0,
   },
   chart: {
-    marginVertical: 8,
+    marginVertical: 0,
     borderRadius: 16,
+    marginBottom: 0,
+    paddingBottom: 0,
   },
   noDataContainer: {
     flex: 1,
@@ -149,13 +155,13 @@ export default function WeatherChart({
   // Calculate chart dimensions based on container
   const chartWidth =
     windowDimensions.width <= 768
-      ? windowDimensions.width - 40 // Mobile: full width minus padding
-      : windowDimensions.width * 0.6; // Desktop: larger width for better fill
+      ? windowDimensions.width - 24 // Mobile: full width minus padding
+      : windowDimensions.width * 0.735; // Desktop: even larger width to expand left
 
   const chartHeight =
     windowDimensions.width <= 768
-      ? windowDimensions.height * 0.4 // Mobile: reasonable height
-      : windowDimensions.height * 0.7; // Desktop: taller to fill more space
+      ? Math.min(windowDimensions.height * 0.35, 300) // Mobile: reasonable height
+      : windowDimensions.height * 0.8; // Desktop: taller to expand downward
 
   // Bar chart configuration for non-hourly time ranges
   const barChartConfig = {

@@ -14,7 +14,7 @@ export const solarTheme = {
     main: '#1e293b',
     light: '#334155',
     dark: '#0f172a',
-    accent: '#4fd3cc',
+    accent: '#2563eb',
   },
   background: {
     main: '#0f172a',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   StyleSheet,
   useWindowDimensions,
@@ -26,8 +26,8 @@ const web = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 15,
+    paddingTop: 12,
+    paddingBottom: 8,
   },
   title: {
     fontSize: 28,
@@ -76,16 +76,17 @@ const web = StyleSheet.create({
   mainContent: {
     flex: 1,
     flexDirection: 'row',
-    paddingHorizontal: 12, // Reduced from 20 to move chart left
-    paddingTop: 8, // Added top padding to move chart down
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 20,
-    gap: 20,
+    gap: 10,
+    height: '100%',
   },
   chartContainer: {
-    flex: 3, // Reduced from 3.2 to give more space to sidebar
+    flex: 1.4,
     backgroundColor: solarTheme.background.card,
     borderRadius: 16,
-    padding: 20, // Reduced from 24 to give more space for chart
+    padding: 20,
     borderWidth: 1,
     borderColor: 'rgba(59, 130, 246, 0.3)',
     shadowColor: '#000',
@@ -93,19 +94,25 @@ const web = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
-    overflow: 'hidden', // Ensure chart doesn't overflow container
+    overflow: 'hidden',
+    height: '100%',
   },
   chartWrapper: {
     flex: 1,
-    minHeight: 450, // Increased from 400 for larger chart
+    minHeight: 500,
+    maxHeight: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    width: '100%',
+    paddingBottom: 0,
   },
   chartHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 4,
+    paddingHorizontal: 0,
+    paddingTop: 0,
   },
   chartTitle: {
     fontSize: 20,
@@ -118,9 +125,12 @@ const web = StyleSheet.create({
     marginTop: 4,
   },
   sidePanel: {
-    flex: 1, // Increased from 0.9 to give more space for controls
-    gap: 24,
-    minWidth: 300, // Ensure minimum width for proper button layout
+    flex: 2,
+    gap: 12,
+    minWidth: 320,
+    maxWidth: 480,
+    height: '100%',
+    overflow: 'hidden',
   },
   metricCard: {
     backgroundColor: solarTheme.background.card,
@@ -157,32 +167,32 @@ const web = StyleSheet.create({
   controlsCard: {
     backgroundColor: solarTheme.background.card,
     borderRadius: 16,
-    padding: 16, // Reduced from 20 to give more space for buttons
+    padding: 12,
     borderWidth: 1,
     borderColor: 'rgba(59, 130, 246, 0.3)',
     flexDirection: 'column',
     alignItems: 'stretch',
     justifyContent: 'flex-start',
-    // Removed flexGrow, minHeight, height
-    marginTop: 0, // Remove extra space above
+    flex: 1,
+    minHeight: 0,
   },
   controlsTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: solarTheme.text.primary,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   quickDateButtons: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 12, // Reduced from 20 to bring sections closer
+    gap: 8,
+    marginBottom: 8,
     justifyContent: 'space-between',
   },
   quickDateButton: {
     backgroundColor: solarTheme.background.cardLight,
     borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
     borderWidth: 1,
     borderColor: 'rgba(79, 211, 204, 0.3)',
     flex: 1,
@@ -268,23 +278,22 @@ const web = StyleSheet.create({
   dataTypeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    // Removed marginHorizontal to prevent overflow
+    gap: 8,
+    marginBottom: 8,
   },
   dataTypeButton: {
     backgroundColor: solarTheme.background.cardLight,
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 8,
     paddingHorizontal: 4,
     borderWidth: 1,
     borderColor: 'rgba(79, 211, 204, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '32%', // 3 per row, with 2% left for spacing
-    marginBottom: 12,
-    marginRight: '2%', // Except for every third button
-    minHeight: 65,
+    flex: 1,
+    minWidth: '30%',
+    maxWidth: '32%',
+    minHeight: 55,
   },
   dataTypeButtonActive: {
     backgroundColor: solarTheme.secondary.accent,
@@ -592,9 +601,12 @@ const mobile = StyleSheet.create({
 });
 
 export default function WeatherStation() {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isMobile = width < 768;
   const styles = isMobile ? mobile : web;
+
+  // Calculate available height for main content (total height minus header and tab bar)
+  const availableHeight = height - (isMobile ? 140 : 110); // More accurate space calculation
 
   // Get current data mode from Redux
   const dataMode = useSelector(
@@ -643,13 +655,45 @@ export default function WeatherStation() {
     setRefreshKey((prev) => prev + 1);
   }, [dataMode]);
 
+  // Memoize data type configuration to prevent re-renders
+  const dataTypeConfig = useMemo(
+    () => [
+      { key: 'temperature', label: 'Temp', icon: '🌡️' },
+      { key: 'windSpeed', label: 'Wind', icon: '💨' },
+      { key: 'precip', label: 'Rain', icon: '🌧️' },
+      { key: 'pressure', label: 'Press', icon: '🔽' },
+      { key: 'solarRadiation', label: 'Solar', icon: '☀️' },
+      { key: 'uvIndex', label: 'UV', icon: '🟣' },
+    ],
+    []
+  );
+
+  // Memoize timespan options
+  const timespanOptions = useMemo(() => ['Hourly', 'Daily', 'Weekly'], []);
+
   // Debug wrapper for setPickerDate (matching Growatt implementation)
-  const handleDateChange = (newDate: string) => {
-    console.log(
-      `[WeatherStation] Date changed from ${pickerDate} to ${newDate} (mode: ${dataMode})`
-    );
-    onConfirm({ date: new Date(newDate) });
-  };
+  const handleDateChange = useCallback(
+    (newDate: string) => {
+      console.log(
+        `[WeatherStation] Date changed from ${pickerDate} to ${newDate} (mode: ${dataMode})`
+      );
+      onConfirm({ date: new Date(newDate) });
+    },
+    [pickerDate, dataMode, onConfirm]
+  );
+
+  // Memoize timespan change handler
+  const handleTimespanChange = useCallback((newTimespan: string) => {
+    setTimespan(newTimespan);
+  }, []);
+
+  // Memoize data type change handler
+  const handleDataTypeChange = useCallback(
+    (newDataType: string) => {
+      setDataType(newDataType);
+    },
+    [setDataType]
+  );
 
   const getDataTypeLabel = () => {
     const labels: { [key: string]: string } = {
@@ -819,7 +863,7 @@ export default function WeatherStation() {
           <View style={styles.controlsCard}>
             <Text style={styles.controlsTitle}>Time Range</Text>
             <View style={styles.quickDateButtons}>
-              {['Hourly', 'Daily', 'Weekly'].map((period) => (
+              {timespanOptions.map((period) => (
                 <TouchableOpacity
                   key={period.toLowerCase()}
                   style={[
@@ -827,7 +871,7 @@ export default function WeatherStation() {
                     timespan === period.toLowerCase() &&
                       styles.quickDateButtonActive,
                   ]}
-                  onPress={() => setTimespan(period.toLowerCase())}
+                  onPress={() => handleTimespanChange(period.toLowerCase())}
                 >
                   <Text
                     style={[
@@ -849,21 +893,14 @@ export default function WeatherStation() {
               Data Type
             </Text>
             <View style={styles.dataTypeGrid}>
-              {[
-                { key: 'temperature', label: 'Temp', icon: '🌡️' },
-                { key: 'windSpeed', label: 'Wind', icon: '💨' },
-                { key: 'precip', label: 'Rain', icon: '🌧️' },
-                { key: 'pressure', label: 'Press', icon: '🔽' },
-                { key: 'solarRadiation', label: 'Solar', icon: '☀️' },
-                { key: 'uvIndex', label: 'UV', icon: '🟣' },
-              ].map((type) => (
+              {dataTypeConfig.map((type) => (
                 <TouchableOpacity
                   key={type.key}
                   style={[
                     styles.dataTypeButton,
                     dataType === type.key && styles.dataTypeButtonActive,
                   ]}
-                  onPress={() => setDataType(type.key)}
+                  onPress={() => handleDataTypeChange(type.key)}
                 >
                   <Text style={styles.dataTypeIcon}>{type.icon}</Text>
                   <Text
@@ -901,7 +938,7 @@ export default function WeatherStation() {
         </View>
       </View>
 
-      <View style={styles.mainContent}>
+      <View style={[styles.mainContent, { height: availableHeight }]}>
         {/* Chart Section */}
         <View style={styles.chartContainer}>
           <View style={styles.chartHeader}>
@@ -921,121 +958,120 @@ export default function WeatherStation() {
 
         {/* Side Panel */}
         <View style={styles.sidePanel}>
-          {/* Compact Weather Info */}
-          <View style={styles.metricCard}>
-            {/* Location and Icon Row */}
-            <View style={styles.weatherInfo}>
-              <Text style={styles.weatherIcon}>{getWeatherIcon()}</Text>
-              <Text style={styles.locationText}>
-                {neighborhood && countryName
-                  ? `${neighborhood}, ${countryName}`
-                  : 'Loading...'}
-              </Text>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ gap: 12, paddingBottom: 12 }}
+            style={{ flex: 1 }}
+          >
+            {/* Compact Weather Info */}
+            <View style={styles.metricCard}>
+              {/* Location and Icon Row */}
+              <View style={styles.weatherInfo}>
+                <Text style={styles.weatherIcon}>{getWeatherIcon()}</Text>
+                <Text style={styles.locationText}>
+                  {neighborhood && countryName
+                    ? `${neighborhood}, ${countryName}`
+                    : 'Loading...'}
+                </Text>
+              </View>
+
+              {/* Weather Metrics Grid */}
+              <View style={styles.compactWeatherMetrics}>
+                <View style={styles.compactWeatherMetric}>
+                  <Text style={styles.weatherMetricValue}>
+                    {currentTemp || 0}°C
+                  </Text>
+                  <Text style={styles.weatherMetricLabel}>Temperature</Text>
+                </View>
+                <View style={styles.compactWeatherMetric}>
+                  <Text style={styles.weatherMetricValue}>
+                    {currentWindSpeed || 0} km/h
+                  </Text>
+                  <Text style={styles.weatherMetricLabel}>Wind Speed</Text>
+                </View>
+                <View style={styles.compactWeatherMetric}>
+                  <Text style={styles.weatherMetricValue}>
+                    {currentWindGust || 0} km/h
+                  </Text>
+                  <Text style={styles.weatherMetricLabel}>Wind Gust</Text>
+                </View>
+                <View style={styles.compactWeatherMetric}>
+                  <Text style={styles.weatherMetricValue}>
+                    {currentHumidity || 0}%
+                  </Text>
+                  <Text style={styles.weatherMetricLabel}>Humidity</Text>
+                </View>
+              </View>
             </View>
 
-            {/* Weather Metrics Grid */}
-            <View style={styles.compactWeatherMetrics}>
-              <View style={styles.compactWeatherMetric}>
-                <Text style={styles.weatherMetricValue}>
-                  {currentTemp || 0}°C
-                </Text>
-                <Text style={styles.weatherMetricLabel}>Temperature</Text>
-              </View>
-              <View style={styles.compactWeatherMetric}>
-                <Text style={styles.weatherMetricValue}>
-                  {currentWindSpeed || 0} km/h
-                </Text>
-                <Text style={styles.weatherMetricLabel}>Wind Speed</Text>
-              </View>
-              <View style={styles.compactWeatherMetric}>
-                <Text style={styles.weatherMetricValue}>
-                  {currentWindGust || 0} km/h
-                </Text>
-                <Text style={styles.weatherMetricLabel}>Wind Gust</Text>
-              </View>
-              <View style={styles.compactWeatherMetric}>
-                <Text style={styles.weatherMetricValue}>
-                  {currentHumidity || 0}%
-                </Text>
-                <Text style={styles.weatherMetricLabel}>Humidity</Text>
-              </View>
-            </View>
-          </View>
+            {/* Modern Date Selector */}
+            <ModernDateSelector
+              selectedDate={pickerDate.toISOString().split('T')[0]}
+              onDateSelect={handleDateChange}
+              disabled={isLoading}
+            />
 
-          {/* Modern Date Selector */}
-          <ModernDateSelector
-            selectedDate={pickerDate.toISOString().split('T')[0]}
-            onDateSelect={handleDateChange}
-            disabled={isLoading}
-          />
-
-          {/* Time Range Selector */}
-          <View style={styles.controlsCard}>
-            <Text style={styles.controlsTitle}>Time Range</Text>
-            <View style={styles.quickDateButtons}>
-              {['Hourly', 'Daily', 'Weekly'].map((period) => (
-                <TouchableOpacity
-                  key={period.toLowerCase()}
-                  style={[
-                    styles.quickDateButton,
-                    timespan === period.toLowerCase() &&
-                      styles.quickDateButtonActive,
-                  ]}
-                  onPress={() => setTimespan(period.toLowerCase())}
-                >
-                  <Text
+            {/* Time Range Selector */}
+            <View style={styles.controlsCard}>
+              <Text style={styles.controlsTitle}>Time Range</Text>
+              <View style={styles.quickDateButtons}>
+                {timespanOptions.map((period) => (
+                  <TouchableOpacity
+                    key={period.toLowerCase()}
                     style={[
-                      styles.quickDateButtonText,
+                      styles.quickDateButton,
                       timespan === period.toLowerCase() &&
-                        styles.quickDateButtonTextActive,
+                        styles.quickDateButtonActive,
                     ]}
+                    onPress={() => handleTimespanChange(period.toLowerCase())}
                   >
-                    {period}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                    <Text
+                      style={[
+                        styles.quickDateButtonText,
+                        timespan === period.toLowerCase() &&
+                          styles.quickDateButtonTextActive,
+                      ]}
+                    >
+                      {period}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-            {/* Data Type Selector */}
-            <Text
-              style={[
-                styles.controlsTitle,
-                { marginTop: 12, marginBottom: 12 },
-              ]}
-            >
-              Data Type
-            </Text>
-            <View style={styles.dataTypeGrid}>
-              {[
-                { key: 'temperature', label: 'Temp', icon: '🌡️' },
-                { key: 'windSpeed', label: 'Wind', icon: '💨' },
-                { key: 'precip', label: 'Rain', icon: '🌧️' },
-                { key: 'pressure', label: 'Press', icon: '🔽' },
-                { key: 'solarRadiation', label: 'Solar', icon: '☀️' },
-                { key: 'uvIndex', label: 'UV', icon: '🟣' },
-              ].map((type, idx) => (
-                <TouchableOpacity
-                  key={type.key}
-                  style={[
-                    styles.dataTypeButton,
-                    (idx + 1) % 3 === 0 && { marginRight: 0 },
-                    dataType === type.key && styles.dataTypeButtonActive,
-                  ]}
-                  onPress={() => setDataType(type.key)}
-                >
-                  <Text style={styles.dataTypeIcon}>{type.icon}</Text>
-                  <Text
+              {/* Data Type Selector */}
+              <Text
+                style={[
+                  styles.controlsTitle,
+                  { marginTop: 8, marginBottom: 8 },
+                ]}
+              >
+                Data Type
+              </Text>
+              <View style={styles.dataTypeGrid}>
+                {dataTypeConfig.map((type) => (
+                  <TouchableOpacity
+                    key={type.key}
                     style={[
-                      styles.dataTypeButtonText,
-                      dataType === type.key && styles.dataTypeButtonTextActive,
+                      styles.dataTypeButton,
+                      dataType === type.key && styles.dataTypeButtonActive,
                     ]}
+                    onPress={() => handleDataTypeChange(type.key)}
                   >
-                    {type.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text style={styles.dataTypeIcon}>{type.icon}</Text>
+                    <Text
+                      style={[
+                        styles.dataTypeButtonText,
+                        dataType === type.key &&
+                          styles.dataTypeButtonTextActive,
+                      ]}
+                    >
+                      {type.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-          </View>
+          </ScrollView>
         </View>
       </View>
     </View>
