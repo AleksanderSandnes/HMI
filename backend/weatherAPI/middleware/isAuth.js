@@ -2,16 +2,19 @@ const jwt = require('jsonwebtoken');
 
 const isAuthenticated = async (req, res, next) => {
   try {
+    console.log(`[Auth] Processing request to: ${req.path}`);
     const headerObject = req.headers;
     const authHeader = headerObject.authorization;
 
     if (!authHeader) {
+      console.log('[Auth] ❌ No authorization header provided');
       return res
         .status(401)
         .json({ error: 'No authorization header provided' });
     }
 
     if (!authHeader.startsWith('Bearer ')) {
+      console.log('[Auth] ❌ Invalid authorization header format');
       return res
         .status(401)
         .json({ error: 'Invalid authorization header format' });
@@ -20,6 +23,7 @@ const isAuthenticated = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     if (!token) {
+      console.log('[Auth] ❌ No token provided');
       return res.status(401).json({ error: 'No token provided' });
     }
 
