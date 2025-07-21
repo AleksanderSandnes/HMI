@@ -5,6 +5,7 @@
  */
 
 import { getDataMode } from './dataConfig';
+import CryptoJS from 'crypto-js';
 
 export interface SolarData {
   chartData: {
@@ -430,6 +431,16 @@ async function fetchProductionSolarData(
 
     // Step 1: Login to Java API and capture session
     console.log('[UnifiedSolarAPI] Logging in to production Java API...');
+    
+    // Get JWT token for authentication
+    const token = await getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token available - user not logged in');
+    }
+    
+    // MD5 hash the password as required by Java API
+    const passwordCrc = CryptoJS.MD5(credentials.password).toString();
+    
     const loginResponse = await fetch(
       `${config.javaApiUrl}${config.endpoints.javaLogin}`,
       {
@@ -437,10 +448,11 @@ async function fetchProductionSolarData(
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${token}`,  // Add JWT authentication
         },
         body: JSON.stringify({
           account: credentials.account,
-          password: credentials.password,
+          passwordCrc: passwordCrc,  // Use MD5 hashed password as expected by Java API
         }),
       }
     );
@@ -473,6 +485,7 @@ async function fetchProductionSolarData(
     const chartHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
+      Authorization: `Bearer ${token}`,  // Add JWT authentication
     };
 
     // Include session cookies if available
