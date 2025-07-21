@@ -3,7 +3,17 @@ const express = require('express');
 const weatherRoutes = require('./routes/weatherRoutes.js');
 const userRoutes = require('./routes/user.js');
 const apiSettingsRoutes = require('./routes/apiSettings.js');
+
+console.log('🔄 [Server] Loading solar routes module...');
+try {
+  const solarRoutes = require('./routes/solarRoutes.js');
+  console.log('✅ [Server] Solar routes module loaded successfully');
+} catch (error) {
+  console.error('❌ [Server] Error loading solar routes module:', error);
+  console.error('❌ [Server] Stack trace:', error.stack);
+}
 const solarRoutes = require('./routes/solarRoutes.js');
+
 const cors = require('cors');
 const { default: mongoose } = require('mongoose');
 const errorHandler = require('./middleware/errorHandler.js');
@@ -62,10 +72,21 @@ app.get('/api/health', (req, res) => {
 
 // Routes - Node.js backend handles authentication and weather data only
 // Solar data is handled by the Java API (configured via JAVA_GROWATT_API_URL environment variable)
+console.log('🔄 [Server] Loading routes...');
 app.use('/api/weather', weatherRoutes);
+console.log('✅ [Server] Weather routes loaded');
 app.use('/api/user', userRoutes);
+console.log('✅ [Server] User routes loaded');
 app.use('/api/settings', apiSettingsRoutes);
-app.use('/api/solar', solarRoutes);
+console.log('✅ [Server] Settings routes loaded');
+
+try {
+  app.use('/api/solar', solarRoutes);
+  console.log('✅ [Server] Solar routes loaded successfully');
+} catch (error) {
+  console.error('❌ [Server] Error loading solar routes:', error.message);
+  console.error('❌ [Server] Solar routes will not be available');
+}
 
 app.use(errorHandler);
 
