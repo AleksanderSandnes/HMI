@@ -1,5 +1,6 @@
 package controller.config;
 
+import controller.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -7,18 +8,23 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -45,12 +51,15 @@ public class SecurityConfig {
             // Configure CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
+            // Add JWT filter before username/password authentication filter
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            
             // Configure authorization
             .authorizeHttpRequests(auth -> auth
                 // Allow health check endpoint for monitoring
-                .requestMatchers("/actuator/health").permitAll()
-                // Allow our specific API endpoints
-                .requestMatchers("/api/growatt/**").permitAll()
+                .requestMatchers("/actuator/health", "/api/growatt/health").permitAll()
+                // Require authentication for all other API endpoints
+                .requestMatchers("/api/growatt/**").authenticated()
                 // Block all other requests
                 .anyRequest().denyAll()
             );
@@ -65,7 +74,8 @@ public class SecurityConfig {
             "https://hmi-seven.vercel.app",
             "https://weatherapi-sbwb.onrender.com",
             "https://hmi-git-main-apsandnes-projects.vercel.app",
-            "http://localhost:8081"
+            "http://localhost:8081",
+            "http://localhost:5000"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));

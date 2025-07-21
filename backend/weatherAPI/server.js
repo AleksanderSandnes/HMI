@@ -60,7 +60,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Routes - Node.js backend handles authentication and weather data only
-// Solar data is handled directly by the Java API (localhost:8080)
+// Solar data is handled by the Java API (configured via JAVA_GROWATT_API_URL environment variable)
 app.use('/api/weather', weatherRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/settings', apiSettingsRoutes);

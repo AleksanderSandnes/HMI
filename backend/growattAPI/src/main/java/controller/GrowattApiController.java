@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import entity.DayResponse;
@@ -46,15 +46,17 @@ public class GrowattApiController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(
-        @RequestHeader("Authorization") String authHeader,
-        @Valid @RequestBody LoginRequest loginRequest
-    ) {
+    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest loginRequest) {
         long startTime = System.currentTimeMillis();
         log.info("=== LOGIN REQUEST START ===");
         log.info("Account: {}", loginRequest.getAccount());
+        
+        // Get authenticated user ID from security context
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Authenticated user ID: {}", userId);
+        
         try {
-            String result = growattWebClient.login(loginRequest, authHeader);
+            String result = growattWebClient.login(loginRequest, userId);
             String plantId = growattWebClient.getPlantId();
             long duration = System.currentTimeMillis() - startTime;
             log.info("Login successful in {}ms", duration);
