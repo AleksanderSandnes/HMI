@@ -65,8 +65,7 @@ public class SecurityConfig {
             "https://hmi-seven.vercel.app",
             "https://weatherapi-sbwb.onrender.com",
             "https://hmi-git-main-apsandnes-projects.vercel.app",
-            "http://localhost:3000",
-            "http://localhost:8080"
+            "http://localhost:8081"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
