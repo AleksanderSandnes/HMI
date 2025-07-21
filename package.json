@@ -61,6 +61,7 @@
   "devDependencies": {
     "@babel/core": "^7.24.4",
     "@types/country-data": "^0.0.5",
+    "@types/crypto-js": "^4.1.1",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "cross-env": "^7.0.3",
