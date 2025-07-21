@@ -95,16 +95,19 @@ const getDailySolar = async (req, res) => {
   try {
     // Get user ID from authentication middleware (if available)
     const userId = req.user;
-    
+
     // Get JWT token from request headers
     const authHeader = req.headers.authorization;
     const jwtToken = authHeader ? authHeader.replace('Bearer ', '') : null;
-    
+
     // Debug logging for production
     console.log('[SolarController] Request details:');
     console.log('- User ID:', userId);
     console.log('- Auth Header:', authHeader ? 'Present' : 'Missing');
-    console.log('- JWT Token:', jwtToken ? jwtToken.substring(0, 20) + '...' : 'Missing');
+    console.log(
+      '- JWT Token:',
+      jwtToken ? jwtToken.substring(0, 20) + '...' : 'Missing'
+    );
     console.log('- Environment:', process.env.NODE_ENV || 'development');
 
     const credentials = await getGrowattCredentials(userId);
@@ -125,7 +128,13 @@ const getDailySolar = async (req, res) => {
           '[SolarController] Fetching fresh data from Java Growatt API...'
         );
         // Pass JWT token to Java API service
-        data = await fetchPlantData(username, password, plantId, date, jwtToken);
+        data = await fetchPlantData(
+          username,
+          password,
+          plantId,
+          date,
+          jwtToken
+        );
         if (data) {
           const operation =
             date.toISOString() === formattedToday

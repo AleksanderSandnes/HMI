@@ -45,7 +45,10 @@ async function fetchPlantData(
     if (jwtToken) {
       headers['Authorization'] = `Bearer ${jwtToken}`;
       console.log('[JavaAPI] Including JWT token for authentication');
-      console.log('[JavaAPI] JWT token preview:', jwtToken.substring(0, 20) + '...');
+      console.log(
+        '[JavaAPI] JWT token preview:',
+        jwtToken.substring(0, 20) + '...'
+      );
     } else {
       console.warn(
         '[JavaAPI] No JWT token provided - request may fail if authentication is required'
@@ -54,17 +57,22 @@ async function fetchPlantData(
 
     // First, login to get session
     console.log('[JavaAPI] Attempting login to:', `${JAVA_API_BASE_URL}/login`);
-    console.log('[JavaAPI] Environment:', process.env.NODE_ENV || 'development');
+    console.log(
+      '[JavaAPI] Environment:',
+      process.env.NODE_ENV || 'development'
+    );
     console.log('[JavaAPI] Request headers:', JSON.stringify(headers, null, 2));
-    
+
     // Test the health endpoint first
     try {
-      const healthResponse = await axios.get(`${JAVA_API_BASE_URL}/health`, { timeout: 5000 });
+      const healthResponse = await axios.get(`${JAVA_API_BASE_URL}/health`, {
+        timeout: 5000,
+      });
       console.log('[JavaAPI] Health check passed:', healthResponse.status);
     } catch (healthError) {
       console.warn('[JavaAPI] Health check failed:', healthError.message);
     }
-    
+
     const loginResponse = await axios.post(
       `${JAVA_API_BASE_URL}/login`,
       {
@@ -78,7 +86,10 @@ async function fetchPlantData(
     );
 
     if (loginResponse.status !== 200) {
-      console.error('[JavaAPI] Login failed with status:', loginResponse.status);
+      console.error(
+        '[JavaAPI] Login failed with status:',
+        loginResponse.status
+      );
       console.error('[JavaAPI] Login response:', loginResponse.data);
       throw new Error(`Login failed: ${loginResponse.statusText}`);
     }
