@@ -5,7 +5,6 @@
  */
 
 import { getDataMode } from './dataConfig';
-import CryptoJS from 'crypto-js';
 
 export interface SolarData {
   chartData: {
@@ -406,7 +405,7 @@ async function fetchDevelopmentSolarData(
 }
 
 /**
- * Fetch solar data from production API
+ * Fetch solar data from production API via Node.js backend
  */
 async function fetchProductionSolarData(
   timespan: string,
@@ -416,100 +415,30 @@ async function fetchProductionSolarData(
   const config = API_CONFIG.production;
 
   console.log(
-    `[UnifiedSolarAPI] Fetching ${timespan} data from production Java API: ${config.javaApiUrl}`
+    `[UnifiedSolarAPI] Fetching ${timespan} data from production API via Node.js backend: ${config.baseUrl}`
   );
 
   try {
-    // Get user credentials from MongoDB via backend API
-    const credentials = await getGrowattCredentials();
-
-    if (!credentials.account || !credentials.password || !credentials.plantId) {
-      throw new Error(
-        'Growatt credentials not found in user settings. Please configure your Growatt account in settings.'
-      );
-    }
-
-    // Step 1: Login to Java API and capture session
-    console.log('[UnifiedSolarAPI] Logging in to production Java API...');
-    
     // Get JWT token for authentication
     const token = await getAuthToken();
     if (!token) {
       throw new Error('No authentication token available - user not logged in');
     }
-    
-    // MD5 hash the password as required by Java API
-    const passwordCrc = CryptoJS.MD5(credentials.password).toString();
-    
-    const loginResponse = await fetch(
-      `${config.javaApiUrl}${config.endpoints.javaLogin}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${token}`,  // Add JWT authentication
-        },
-        body: JSON.stringify({
-          account: credentials.account,
-          passwordCrc: passwordCrc,  // Use MD5 hashed password as expected by Java API
-        }),
-      }
-    );
 
-    if (!loginResponse.ok) {
-      const errorData = await loginResponse.text();
-      console.error(
-        '[UnifiedSolarAPI] Production login failed:',
-        loginResponse.status,
-        errorData
-      );
-      throw new Error(
-        `Production Java API login failed: ${loginResponse.status}`
-      );
-    }
-
-    // Extract session cookies from login response
-    const sessionCookies = loginResponse.headers.get('set-cookie') || '';
-    console.log(
-      '[UnifiedSolarAPI] Production login successful, session cookies:',
-      sessionCookies ? 'Present' : 'None'
-    );
-
-    // Step 2: Fetch day chart data with session
-    const requestBody = {
-      plantId: credentials.plantId,
-      date: date, // YYYY-MM-DD format
-    };
-
-    const chartHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      Authorization: `Bearer ${token}`,  // Add JWT authentication
-    };
-
-    // Include session cookies if available
-    if (sessionCookies) {
-      chartHeaders['Cookie'] = sessionCookies;
-    }
-
-    console.log('[UnifiedSolarAPI] Sending production dayChart request:', {
-      url: `${config.javaApiUrl}${config.endpoints.javaDayChart}`,
-      body: requestBody,
-      headers: chartHeaders,
-      dateReceived: date,
-      plantId: credentials.plantId,
-      hasSessionCookies: !!sessionCookies,
+    // Call Node.js backend API endpoint which handles Java API communication
+    console.log('[UnifiedSolarAPI] Calling Node.js backend for solar data...');
+    const response = await fetch(`${config.baseUrl}${config.endpoints.daily}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        date: date, // YYYY-MM-DD format
+        timespan: timespan,
+      }),
     });
-
-    const response = await fetch(
-      `${config.javaApiUrl}${config.endpoints.javaDayChart}`,
-      {
-        method: 'POST',
-        headers: chartHeaders,
-        body: JSON.stringify(requestBody),
-      }
-    );
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -519,86 +448,112 @@ async function fetchProductionSolarData(
         errorData
       );
       throw new Error(
-        `Production Java API error: ${response.status} ${response.statusText}`
+        `Production API error: ${response.status} ${response.statusText}. Details: ${errorData}`
       );
     }
 
     const data = await response.json();
     console.log(
-      '[UnifiedSolarAPI] Successfully fetched solar data from production Java API'
+      '[UnifiedSolarAPI] Successfully fetched solar data from production API'
     );
 
-    // Step 3: Process Java API response (same as development)
-    if (data.result !== 1) {
-      throw new Error('Production Java API returned error result');
-    }
+    // The Node.js backend should return data in the correct format already
+    // But let's process it to ensure consistency with our data structure
+    
+    // Check if we received Java API format data that needs processing
+    if (data.result === 1 && data.obj?.pac) {
+      // Java API format - process the power values
+      const powerValues = data.obj.pac || [];
+      const cleanPowerValues = cleanPowerData(powerValues);
+      const labels = generateTimeLabels();
+      const metrics = calculateMetrics(cleanPowerValues);
 
-    const powerValues = data.obj?.pac || [];
-    const cleanPowerValues = cleanPowerData(powerValues);
-    const labels = generateTimeLabels();
-    const metrics = calculateMetrics(cleanPowerValues);
+      // Use the same label filtering approach as development
+      const rawData = cleanPowerValues;
+      const rawLabels = labels.slice(0, cleanPowerValues.length);
 
-    // Use the same label filtering approach as development
-    const rawData = cleanPowerValues;
-    const rawLabels = labels.slice(0, cleanPowerValues.length);
+      // Apply the same filtering logic as development
+      let displayLabels: string[] = [];
+      let displayData: number[] = [];
 
-    // Apply the same filtering logic as development
-    let displayLabels: string[] = [];
-    let displayData: number[] = [];
-
-    if (timespan === 'hourly') {
-      // For hourly, show every 2 hours on mobile, every hour on desktop
-      if (isMobile) {
-        // Mobile: show every 2 hours (12 labels)
-        displayLabels = rawLabels.filter(
-          (_: string, index: number) => index % 2 === 0
-        );
-        displayData = rawData.filter(
-          (_: number, index: number) => index % 2 === 0
-        );
+      if (timespan === 'hourly') {
+        // For hourly, show every 2 hours on mobile, every hour on desktop
+        if (isMobile) {
+          // Mobile: show every 2 hours (12 labels)
+          displayLabels = rawLabels.filter(
+            (_: string, index: number) => index % 2 === 0
+          );
+          displayData = rawData.filter(
+            (_: number, index: number) => index % 2 === 0
+          );
+        } else {
+          // Desktop: show every hour (24 labels)
+          displayLabels = rawLabels;
+          displayData = rawData;
+        }
+      } else if (timespan === 'daily') {
+        // For daily, show every 2-3 hours
+        if (isMobile) {
+          // Mobile: show every 3 hours (8 labels)
+          displayLabels = rawLabels.filter(
+            (_: string, index: number) => index % 3 === 0
+          );
+          displayData = rawData.filter(
+            (_: number, index: number) => index % 3 === 0
+          );
+        } else {
+          // Desktop: show every 2 hours (12 labels)
+          displayLabels = rawLabels.filter(
+            (_: string, index: number) => index % 2 === 0
+          );
+          displayData = rawData.filter(
+            (_: number, index: number) => index % 2 === 0
+          );
+        }
       } else {
-        // Desktop: show every hour (24 labels)
+        // For weekly, monthly, yearly - use all labels
         displayLabels = rawLabels;
         displayData = rawData;
       }
-    } else if (timespan === 'daily') {
-      // For daily, show every 2-3 hours
-      if (isMobile) {
-        // Mobile: show every 3 hours (8 labels)
-        displayLabels = rawLabels.filter(
-          (_: string, index: number) => index % 3 === 0
-        );
-        displayData = rawData.filter(
-          (_: number, index: number) => index % 3 === 0
-        );
-      } else {
-        // Desktop: show every 2 hours (12 labels)
-        displayLabels = rawLabels.filter(
-          (_: string, index: number) => index % 2 === 0
-        );
-        displayData = rawData.filter(
-          (_: number, index: number) => index % 2 === 0
-        );
-      }
-    } else {
-      // For weekly, monthly, yearly - use all labels
-      displayLabels = rawLabels;
-      displayData = rawData;
-    }
 
-    return {
-      chartData: {
-        labels: displayLabels,
-        datasets: [
-          {
-            data: displayData,
-            color: () => '#10b981', // Green - same as development for consistency
-            strokeWidth: 2, // Same as development for consistency
-          },
-        ],
-      },
-      metrics,
-    };
+      return {
+        chartData: {
+          labels: displayLabels,
+          datasets: [
+            {
+              data: displayData,
+              color: () => '#10b981', // Green - consistent with development
+              strokeWidth: 2,
+            },
+          ],
+        },
+        metrics,
+      };
+    } else if (data.chartData && data.metrics) {
+      // Already in our expected format from Node.js backend
+      return data;
+    } else {
+      // Fallback - treat as raw power data
+      console.warn('[UnifiedSolarAPI] Unexpected data format from backend, attempting to process as raw data');
+      const powerValues = Array.isArray(data) ? data : [];
+      const cleanPowerValues = cleanPowerData(powerValues);
+      const labels = generateTimeLabels();
+      const metrics = calculateMetrics(cleanPowerValues);
+
+      return {
+        chartData: {
+          labels: labels.slice(0, cleanPowerValues.length),
+          datasets: [
+            {
+              data: cleanPowerValues,
+              color: () => '#10b981',
+              strokeWidth: 2,
+            },
+          ],
+        },
+        metrics,
+      };
+    }
   } catch (error) {
     console.error(
       '[UnifiedSolarAPI] Error fetching production solar data:',
