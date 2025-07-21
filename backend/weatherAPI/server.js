@@ -60,6 +60,18 @@ app.use(
 
 app.use(express.json());
 
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  if (req.path.includes('/solar')) {
+    console.log('=== REQUEST TO SERVER ===');
+    console.log(`[Server] ${req.method} ${req.originalUrl}`);
+    console.log(`[Server] Path: ${req.path}`);
+    console.log(`[Server] Headers: ${JSON.stringify(req.headers, null, 2)}`);
+    console.log('========================');
+  }
+  next();
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
