@@ -427,17 +427,13 @@ async function fetchProductionSolarData(
 
     // Call Node.js backend API endpoint which handles Java API communication
     console.log('[UnifiedSolarAPI] Calling Node.js backend for solar data...');
-    const response = await fetch(`${config.baseUrl}${config.endpoints.daily}`, {
-      method: 'POST',
+    const response = await fetch(`${config.baseUrl}${config.endpoints.daily}/${date}`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        date: date, // YYYY-MM-DD format
-        timespan: timespan,
-      }),
     });
 
     if (!response.ok) {
