@@ -99,6 +99,13 @@ const getDailySolar = async (req, res) => {
     // Get JWT token from request headers
     const authHeader = req.headers.authorization;
     const jwtToken = authHeader ? authHeader.replace('Bearer ', '') : null;
+    
+    // Debug logging for production
+    console.log('[SolarController] Request details:');
+    console.log('- User ID:', userId);
+    console.log('- Auth Header:', authHeader ? 'Present' : 'Missing');
+    console.log('- JWT Token:', jwtToken ? jwtToken.substring(0, 20) + '...' : 'Missing');
+    console.log('- Environment:', process.env.NODE_ENV || 'development');
 
     const credentials = await getGrowattCredentials(userId);
     const { username, password, plantId } = credentials;
