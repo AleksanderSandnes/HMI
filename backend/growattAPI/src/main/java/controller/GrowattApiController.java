@@ -111,8 +111,20 @@ public class GrowattApiController {
         log.info("=== DAY CHART REQUEST START ===");
         log.info("Request plantId: {}", request.getPlantId());
         log.info("Request date: {}", request.getDate());
+        log.info("Current stored plantId: {}", growattWebClient.getPlantId());
         
         try {
+            // If no plantId provided in request, try to use the stored one from login
+            if (request.getPlantId() == null || request.getPlantId().isEmpty()) {
+                String storedPlantId = growattWebClient.getPlantId();
+                if (storedPlantId != null) {
+                    request.setPlantId(storedPlantId);
+                    log.info("Auto-filled plantId from session: {}", storedPlantId);
+                } else {
+                    log.warn("No plantId in request and no stored plantId from login");
+                }
+            }
+            
             DayResponse response = growattWebClient.getInvEnergyDayChart(request);
             long duration = System.currentTimeMillis() - startTime;
             

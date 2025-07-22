@@ -4,6 +4,8 @@
  * No encryption, no JWT - simple and direct
  */
 
+import { getDataMode } from './dataConfig';
+
 export interface SolarData {
   chartData: {
     labels: string[];
@@ -47,7 +49,7 @@ const API_CONFIG = {
  * Get current environment config
  */
 function getApiConfig() {
-  const mode = process.env.EXPO_PUBLIC_DATA_MODE || 'development';
+  const mode = getDataMode();
   return mode === 'production' ? API_CONFIG.production : API_CONFIG.development;
 }
 
@@ -68,8 +70,9 @@ async function getGrowattCredentials(): Promise<{
     }
 
     // Get the backend URL based on current mode
+    const mode = getDataMode();
     const backendUrl =
-      process.env.EXPO_PUBLIC_DATA_MODE === 'production'
+      mode === 'production'
         ? 'https://weatherapi-sbwb.onrender.com'
         : 'http://localhost:5000';
 
@@ -349,8 +352,8 @@ export async function fetchSolarData(
 
     // Step 2: Fetch day chart data
     const requestBody = {
-      plantId: credentials.plantId,
       date: date, // YYYY-MM-DD format
+      // Note: plantId is omitted - let the backend use the one from login session
     };
 
     console.log('[GrowattAPI] Fetching day chart data...');

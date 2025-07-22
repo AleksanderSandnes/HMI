@@ -8,9 +8,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SETTINGS_STORAGE_KEY = '@solar_dashboard_settings';
 
-// Initial state
+// Initial state - use environment variable as default, fallback to development for safety
+const getInitialDataMode = () => {
+  const envMode = process.env.EXPO_PUBLIC_DATA_MODE;
+  if (envMode === 'production' || envMode === 'development' || envMode === 'mock') {
+    return envMode;
+  }
+  return 'development'; // Safe fallback
+};
+
 const initialState = {
-  dataMode: 'production', // 'production' | 'development' | 'mock'
+  dataMode: getInitialDataMode(),
   isLoading: false,
   error: null,
 };
