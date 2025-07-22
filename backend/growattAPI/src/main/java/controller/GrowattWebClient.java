@@ -102,13 +102,11 @@ public class GrowattWebClient {
 	 * @param loginRequest
 	 * @return
 	 */
-	public String login(LoginRequest loginRequest, String jwtToken) {
+	public String login(LoginRequest loginRequest) {
 		LinkedMultiValueMap<String, String> loginData = new LinkedMultiValueMap<>();
 		loginData.add("account", loginRequest.getAccount());
 		loginData.add("passwordCrc", loginRequest.getPasswordCrc());
-
-		log.info("[GrowattWebClient] Attempting login for account: {}", loginRequest.getAccount());
-		log.info("[GrowattWebClient] Incoming JWT: {}", jwtToken != null ? (jwtToken.length() > 40 ? jwtToken.substring(0, 40) + "..." : jwtToken) : "null");
+		
 		String login = client
 			.post()
 			.uri("/login")
@@ -116,63 +114,16 @@ public class GrowattWebClient {
 			.body(BodyInserters.fromFormData(loginData))
 			.exchangeToMono(response -> readCookies(cookieJar, response))
 			.block();
-
-		log.info("[GrowattWebClient] Raw login response: {}", login);
-
-		// If plantId is provided in the login request, use it directly
-		if (loginRequest.getPlantId() != null && !loginRequest.getPlantId().isEmpty()) {
-			log.info("[GrowattWebClient] Using plantId from LoginRequest: {}", loginRequest.getPlantId());
-			cookieJar.set(ONE_PLANT_ID, loginRequest.getPlantId());
-		} else {
-			// Try to fetch plantId from Node backend user settings
-			try {
-				String nodeApiUrl = System.getenv().getOrDefault("NODE_API_URL", "https://weatherapi-sbwb.onrender.com/api/settings/api");
-				String token = jwtToken.replace("Bearer ", "");
-				log.info("[GrowattWebClient] Fetching plantId from Node backend: {}", nodeApiUrl);
-				log.info("[GrowattWebClient] Sending JWT to Node backend: {}", token.length() > 40 ? token.substring(0, 40) + "..." : token);
-				WebClient nodeClient = WebClient.builder().build();
-				String response = nodeClient.get()
-					.uri(nodeApiUrl)
-					.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-					.header(HttpHeaders.CONTENT_TYPE, "application/json")
-					.retrieve()
-					.bodyToMono(String.class)
-					.block();
-				log.info("[GrowattWebClient] Node backend response: {}", response);
-				if (response != null && response.contains("plantId")) {
-					ObjectMapper om = new ObjectMapper();
-					String plantId = om.readTree(response)
-						.path("apiSettings").path("growatt").path("plantId").asText("");
-					if (!plantId.isEmpty()) {
-						log.info("[GrowattWebClient] Using plantId from Node backend: {}", plantId);
-						cookieJar.set(ONE_PLANT_ID, plantId);
-					} else {
-						log.error("[GrowattWebClient] Node backend response did not contain plantId");
-					}
-				} else {
-					log.error("[GrowattWebClient] Node backend response was null or did not contain plantId");
-				}
-			} catch (Exception e) {
-				log.error("[GrowattWebClient] Failed to fetch plantId from Node backend", e);
-			}
-			// If still missing, try to get from cookies as before
-			if (getPlantId() == null || getPlantId().isEmpty()) {
-				var plantListTitle = client
-					.get()
-					.uri("/index/getPlantListTitle")
-					.cookies(cookies -> writeCookies(cookieJar, cookies))
-					.exchangeToMono(response2 -> readCookies(cookieJar, response2))
-					.block();
-				log.info("[GrowattWebClient] Plant list response: {}", plantListTitle);
-			}
-		}
-
-		if (getPlantId() == null || getPlantId().isEmpty()) {
-			log.error("[GrowattWebClient] Login succeeded but plantId is missing for account: {}", loginRequest.getAccount());
-			throw new IllegalArgumentException("Growatt login failed: Plant ID not found after login");
-		}
-
-		log.info("[GrowattWebClient] Final plantId used: {}", getPlantId());
+		
+		/*
+		var plantListTitle = client
+			.get()
+			.uri("/index/getPlantListTitle")
+			.cookies(cookies -> writeCookies(cookieJar, cookies))
+			.exchangeToMono(response -> readCookies(cookieJar, response))
+			.block();
+		*/
+		
 		return login;
 	}
 	
@@ -238,7 +189,7 @@ public class GrowattWebClient {
 			} else 
 				log.error("POST to {} returned 'null'", uri);
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			log.error("Error parsing JSON response from {}: {}", uri, e.getMessage());
 		}
 		
 		return null;

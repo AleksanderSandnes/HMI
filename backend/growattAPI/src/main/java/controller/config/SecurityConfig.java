@@ -1,6 +1,5 @@
 package controller.config;
 
-import controller.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -8,7 +7,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -20,16 +18,10 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF for API endpoints (since we're using stateless authentication)
+            // Disable CSRF for API endpoints
             .csrf(AbstractHttpConfigurer::disable)
             
             // Configure session management
@@ -51,17 +43,9 @@ public class SecurityConfig {
             // Configure CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
-            // Add JWT filter before username/password authentication filter
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            
-            // Configure authorization
+            // Configure authorization - allow all requests (no JWT required)
             .authorizeHttpRequests(auth -> auth
-                // Allow health check endpoint for monitoring
-                .requestMatchers("/actuator/health", "/api/growatt/health").permitAll()
-                // Require authentication for all other API endpoints
-                .requestMatchers("/api/growatt/**").authenticated()
-                // Block all other requests
-                .anyRequest().denyAll()
+                .anyRequest().permitAll()
             );
 
         return http.build();

@@ -5,7 +5,7 @@
 
 import { getDataMode, getConfigInfo } from './dataConfig';
 import { getMockSolarData } from './mockDataService';
-import { fetchSolarData as fetchUnifiedSolarData } from './unifiedSolarApiService';
+import { fetchSolarData as fetchGrowattData } from './growattApiService';
 
 export interface SolarDataResponse {
   chartData: {
@@ -50,21 +50,13 @@ export async function fetchSolarData(
         console.log(
           '[DataService] 🟡 DEVELOPMENT MODE: Using Java API directly'
         );
-        const devResponse = await fetchUnifiedSolarData(
-          timespan,
-          date,
-          isMobile
-        );
+        const devResponse = await fetchGrowattData(timespan, date, isMobile);
         console.log('[DataService] ✅ Successfully fetched from Java API');
         return { ...devResponse, source: 'development' };
 
       case 'production':
         console.log('[DataService] 🟢 PRODUCTION MODE: Using Production API');
-        const prodResponse = await fetchUnifiedSolarData(
-          timespan,
-          date,
-          isMobile
-        );
+        const prodResponse = await fetchGrowattData(timespan, date, isMobile);
         console.log(
           '[DataService] ✅ Successfully fetched from Production API'
         );

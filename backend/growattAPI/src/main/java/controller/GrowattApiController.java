@@ -51,12 +51,8 @@ public class GrowattApiController {
         log.info("=== LOGIN REQUEST START ===");
         log.info("Account: {}", loginRequest.getAccount());
         
-        // Get authenticated user ID from security context
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        log.info("Authenticated user ID: {}", userId);
-        
         try {
-            String result = growattWebClient.login(loginRequest, userId);
+            String result = growattWebClient.login(loginRequest); // Direct login, no JWT needed
             String plantId = growattWebClient.getPlantId();
             long duration = System.currentTimeMillis() - startTime;
             log.info("Login successful in {}ms", duration);
@@ -115,20 +111,8 @@ public class GrowattApiController {
         log.info("=== DAY CHART REQUEST START ===");
         log.info("Request plantId: {}", request.getPlantId());
         log.info("Request date: {}", request.getDate());
-        log.info("Current stored plantId: {}", growattWebClient.getPlantId());
         
         try {
-            // If no plantId provided in request, try to use the stored one from login
-            if (request.getPlantId() == null || request.getPlantId().isEmpty()) {
-                String storedPlantId = growattWebClient.getPlantId();
-                if (storedPlantId != null) {
-                    request.setPlantId(storedPlantId);
-                    log.info("Auto-filled plantId from session: {}", storedPlantId);
-                } else {
-                    log.warn("No plantId in request and no stored plantId from login");
-                }
-            }
-            
             DayResponse response = growattWebClient.getInvEnergyDayChart(request);
             long duration = System.currentTimeMillis() - startTime;
             

@@ -44,14 +44,14 @@ router.get('/api', isAuthenticated, async (req, res) => {
 
     // Return API settings without exposing sensitive data
     const apiSettings = {
-      growatt: {
-        email: user.apiSettings?.growatt?.email || '',
-        plantId: user.apiSettings?.growatt?.plantId || '',
-        hasPassword: !!user.apiSettings?.growatt?.encryptedPassword,
-      },
       weather: {
         stationId: user.apiSettings?.weather?.stationId || '',
         hasApiKey: !!user.apiSettings?.weather?.apiKey,
+      },
+      growatt: {
+        email: user.apiSettings?.growatt?.email || '',
+        plantId: user.apiSettings?.growatt?.plantId || '',
+        hasPassword: !!user.apiSettings?.growatt?.password,
       },
     };
 
@@ -152,12 +152,10 @@ router.put('/api', isAuthenticated, async (req, res) => {
 
       // Only update password if provided
       if (growatt.password && growatt.password.trim()) {
-        console.log('[API Settings] Encrypting password');
-        // Use encryption (not hashing) so we can decrypt for API calls
-        user.apiSettings.growatt.encryptedPassword = encrypt(
-          growatt.password.trim()
-        );
-        console.log('[API Settings] Password encrypted successfully');
+        console.log('[API Settings] Saving password directly (no encryption)');
+        // Store password directly (no encryption as requested)
+        user.apiSettings.growatt.password = growatt.password.trim();
+        console.log('[API Settings] Password saved successfully');
       }
     }
 
@@ -223,7 +221,7 @@ router.put('/api', isAuthenticated, async (req, res) => {
           ? {
               email: user.apiSettings.growatt.email,
               plantId: user.apiSettings.growatt.plantId,
-              hasPassword: !!user.apiSettings.growatt.encryptedPassword,
+              hasPassword: !!user.apiSettings.growatt.password,
             }
           : null,
         weather: user.apiSettings.weather
@@ -246,47 +244,17 @@ router.put('/api', isAuthenticated, async (req, res) => {
 });
 
 /**
- * Get decrypted Growatt credentials (for API use only)
- * POST /api/settings/api/credentials
+ * Get Growatt credentials (for API use only)
+ * GET /api/settings/api/credentials
  */
-router.post('/credentials', isAuthenticated, async (req, res) => {
+router.get('/credentials', isAuthenticated, async (req, res) => {
   try {
     const user = await User.findById(req.user).select('apiSettings');
 
-    if (!user || !user.apiSettings?.growatt?.encryptedPassword) {
+    if (!user || !user.apiSettings?.growatt?.password) {
       return res.status(404).json({
         success: false,
         message: 'No Growatt credentials found',
-      });
-    }
-
-    const { password: providedPassword } = req.body;
-
-    if (!providedPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password verification required',
-      });
-    }
-
-    // Verify the provided password matches the stored encrypted password
-    try {
-      const decryptedPassword = decrypt(
-        user.apiSettings.growatt.encryptedPassword
-      );
-      const isValid = providedPassword === decryptedPassword;
-
-      if (!isValid) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid password',
-        });
-      }
-    } catch (error) {
-      console.error('Password verification error:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Password verification failed',
       });
     }
 
@@ -295,7 +263,7 @@ router.post('/credentials', isAuthenticated, async (req, res) => {
       success: true,
       credentials: {
         account: user.apiSettings.growatt.email,
-        password: providedPassword, // Return the verified password
+        password: user.apiSettings.growatt.password, // Plain password as requested
         plantId: user.apiSettings.growatt.plantId,
       },
     });

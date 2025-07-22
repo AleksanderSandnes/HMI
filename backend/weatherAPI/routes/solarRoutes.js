@@ -9,9 +9,14 @@ router.use((req, res, next) => {
   console.log('=== SOLAR ROUTE REQUEST ===');
   console.log(`[SolarRoutes] ${req.method} ${req.originalUrl}`);
   console.log(`[SolarRoutes] Path: ${req.path}`);
-  console.log(`[SolarRoutes] Headers:`, req.headers.authorization ? 'Auth Present' : 'No Auth');
+  console.log(
+    `[SolarRoutes] Headers:`,
+    req.headers.authorization ? 'Auth Present' : 'No Auth'
+  );
   console.log(`[SolarRoutes] Environment: ${process.env.NODE_ENV}`);
-  console.log(`[SolarRoutes] Full URL: ${req.protocol}://${req.get('host')}${req.originalUrl}`);
+  console.log(
+    `[SolarRoutes] Full URL: ${req.protocol}://${req.get('host')}${req.originalUrl}`
+  );
   console.log('=========================');
   next();
 });
@@ -34,7 +39,7 @@ router.all('*', (req, res) => {
     error: 'Solar endpoint not found',
     path: req.path,
     method: req.method,
-    availableRoutes: ['GET /daily/:date']
+    availableRoutes: ['GET /daily/:date'],
   });
 });
 

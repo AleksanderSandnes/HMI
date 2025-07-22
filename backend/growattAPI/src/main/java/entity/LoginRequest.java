@@ -1,44 +1,28 @@
 package entity;
 
+import md5.MD5;
 import lombok.Getter;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
 
 @Getter
 public class LoginRequest {
-
-    @NotBlank(message = "Account cannot be blank")
-    @Email(message = "Account must be a valid email")
-    private String account;
-    
-    @NotBlank(message = "Password cannot be blank")
-    @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
-    private String passwordCrc;
-
-    private String plantId;
-    public String getPlantId() { return plantId; }
-    public void setPlantId(String plantId) { this.plantId = plantId; }
-
-    // Default constructor for Jackson
-    public LoginRequest() {}
-
-    // Optionally, you can keep your custom constructor if you use it elsewhere
-    public LoginRequest(String account, String password) {
-        this.account = account;
-        this.passwordCrc = md5.MD5.md5(password);
-    }
-
-    // Optionally, add a setter for password that hashes automatically
-    public void setPassword(String password) {
-        this.passwordCrc = md5.MD5.md5(password);
-    }
-
-    public void setAccount(String account) {
-        this.account = account;
-    }
-    
-    public void setPasswordCrc(String passwordCrc) {
-        this.passwordCrc = passwordCrc;
-    }
+	
+	private String account;
+	private String passwordCrc;
+	
+	// Default constructor for Jackson
+	public LoginRequest() {}
+	
+	public LoginRequest(String account, String password) {
+		this.account = account;
+		this.passwordCrc = MD5.md5(password);
+	}
+	
+	// Setters for Jackson deserialization
+	public void setAccount(String account) {
+		this.account = account;
+	}
+	
+	public void setPassword(String password) {
+		this.passwordCrc = MD5.md5(password);
+	}
 }
