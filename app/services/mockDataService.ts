@@ -231,36 +231,50 @@ export function getChartData(
   timespan: string,
   isMobile: boolean = false
 ) {
+  console.log(`[MockData] Optimizing chart data for ${timespan}, mobile: ${isMobile}`);
+  console.log(`[MockData] Input data points: ${data.length}`);
+
   let labels: string[] = [];
   let values: number[] = [];
 
-  if (timespan === 'hourly') {
-    // For hourly, show every 2 hours on mobile, every hour on desktop
-    if (isMobile) {
-      // Mobile: show every 2 hours (12 labels)
-      labels = data.filter((_, index) => index % 2 === 0).map((d) => d.time);
-      values = data.filter((_, index) => index % 2 === 0).map((d) => d.power);
-    } else {
-      // Desktop: show every hour (24 labels)
-      labels = data.map((d) => d.time);
-      values = data.map((d) => d.power);
-    }
-  } else if (timespan === 'daily') {
-    // For daily, show every 2-3 hours
-    if (isMobile) {
-      // Mobile: show every 3 hours (8 labels)
-      labels = data.filter((_, index) => index % 3 === 0).map((d) => d.time);
-      values = data.filter((_, index) => index % 3 === 0).map((d) => d.power);
-    } else {
-      // Desktop: show every 2 hours (12 labels)
-      labels = data.filter((_, index) => index % 2 === 0).map((d) => d.time);
-      values = data.filter((_, index) => index % 2 === 0).map((d) => d.power);
-    }
-  } else {
-    // For weekly, monthly, yearly - use all labels
-    labels = data.map((d) => d.time);
-    values = data.map((d) => d.power);
+  // Filter out zero/low power values (nighttime) and apply smart sampling
+  const meaningfulData = data.filter(d => d.power > 10); // Only show meaningful generation
+  
+  if (meaningfulData.length === 0) {
+    // No meaningful data
+    return {
+      labels: ['No Data'],
+      datasets: [
+        {
+          data: [0],
+          color: () => '#dc2626',
+          strokeWidth: 2,
+        },
+      ],
+    };
   }
+
+  let samplingInterval: number;
+
+  if (timespan === 'hourly') {
+    // For hourly view, show every 30-60 minutes during active period
+    samplingInterval = isMobile ? 2 : 1; // Mobile: every 2 hours, Desktop: every hour
+  } else if (timespan === 'daily') {
+    // For daily view, show every 1-2 hours during active period
+    samplingInterval = isMobile ? 3 : 2; // Mobile: every 3 hours, Desktop: every 2 hours
+  } else {
+    // For other timespans, use moderate sampling
+    samplingInterval = 1; // Use all meaningful data
+  }
+
+  // Sample the meaningful data
+  for (let i = 0; i < meaningfulData.length; i += samplingInterval) {
+    const dataPoint = meaningfulData[i];
+    labels.push(dataPoint.time);
+    values.push(dataPoint.power);
+  }
+
+  console.log(`[MockData] Filtered to ${meaningfulData.length} meaningful points, sampled to ${labels.length} display points`);
 
   return {
     labels,

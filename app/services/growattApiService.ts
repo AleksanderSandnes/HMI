@@ -159,6 +159,89 @@ function generateTimeLabels(): string[] {
 }
 
 /**
+ * Filter and optimize chart data for better visualization
+ * Removes zero values and creates smart labeling
+ */
+function optimizeChartData(
+  powerValues: number[],
+  labels: string[],
+  timespan: string,
+  isMobile: boolean = false
+): { data: number[]; labels: string[] } {
+  console.log(`[GrowattAPI] Optimizing chart data for ${timespan}, mobile: ${isMobile}`);
+  console.log(`[GrowattAPI] Input data points: ${powerValues.length}`);
+
+  // Find the range of meaningful data (where power > 5W to avoid noise)
+  const meaningfulThreshold = 5; // Watts
+  const firstMeaningfulIndex = powerValues.findIndex(value => value > meaningfulThreshold);
+  const lastMeaningfulIndex = powerValues.slice().reverse().findIndex(value => value > meaningfulThreshold);
+  const actualLastIndex = lastMeaningfulIndex >= 0 ? powerValues.length - 1 - lastMeaningfulIndex : -1;
+
+  console.log(`[GrowattAPI] Meaningful data range: ${firstMeaningfulIndex} to ${actualLastIndex}`);
+
+  if (firstMeaningfulIndex === -1 || actualLastIndex === -1) {
+    // No meaningful data found
+    console.log('[GrowattAPI] No meaningful solar generation data found');
+    return { data: [0], labels: ['No Data'] };
+  }
+
+  // Extract the meaningful range with some padding
+  const startIndex = Math.max(0, firstMeaningfulIndex - 12); // 1 hour before
+  const endIndex = Math.min(powerValues.length - 1, actualLastIndex + 12); // 1 hour after
+  
+  const rangedData = powerValues.slice(startIndex, endIndex + 1);
+  const rangedLabels = labels.slice(startIndex, endIndex + 1);
+
+  console.log(`[GrowattAPI] Filtered to range: ${startIndex} to ${endIndex} (${rangedData.length} points)`);
+
+  // Determine optimal sampling based on timespan and device
+  let samplingInterval: number;
+  
+  if (timespan === 'hourly') {
+    // For hourly view, show every 15 minutes during active period
+    samplingInterval = 3; // Every 3rd point (15 minutes)
+  } else if (timespan === 'daily') {
+    // For daily view, show every 30 minutes during active period
+    samplingInterval = isMobile ? 12 : 6; // Mobile: 1 hour, Desktop: 30 minutes
+  } else {
+    // For other timespans, use current logic
+    samplingInterval = 12; // Every hour
+  }
+
+  // Sample the data at the determined interval
+  const sampledData: number[] = [];
+  const sampledLabels: string[] = [];
+
+  for (let i = 0; i < rangedData.length; i += samplingInterval) {
+    sampledData.push(rangedData[i]);
+    // Format labels to show only hours for cleaner look
+    const label = rangedLabels[i];
+    const [hour, minute] = label.split(':');
+    
+    // Show clean hour labels, or hour:30 for half-hour marks
+    if (minute === '00') {
+      sampledLabels.push(`${hour}:00`);
+    } else if (minute === '30' && samplingInterval <= 6) {
+      sampledLabels.push(`${hour}:30`);
+    } else if (minute === '15' && samplingInterval <= 3) {
+      sampledLabels.push(`${hour}:15`);
+    } else if (minute === '45' && samplingInterval <= 3) {
+      sampledLabels.push(`${hour}:45`);
+    } else {
+      sampledLabels.push(label);
+    }
+  }
+
+  console.log(`[GrowattAPI] Final optimized data points: ${sampledData.length}`);
+  console.log(`[GrowattAPI] Sample labels: ${sampledLabels.slice(0, 5).join(', ')}...`);
+
+  return {
+    data: sampledData,
+    labels: sampledLabels
+  };
+}
+
+/**
  * Calculate metrics from power data
  */
 function calculateMetrics(
@@ -282,59 +365,20 @@ export async function fetchSolarData(
     const labels = generateTimeLabels();
     const metrics = calculateMetrics(cleanPowerValues);
 
-    // Apply filtering based on timespan and device
-    const rawData = cleanPowerValues;
-    const rawLabels = labels.slice(0, cleanPowerValues.length);
-
-    let displayLabels: string[] = [];
-    let displayData: number[] = [];
-
-    if (timespan === 'hourly') {
-      // For hourly, show every 2 hours on mobile, every hour on desktop
-      if (isMobile) {
-        // Mobile: show every 2 hours (12 labels)
-        displayLabels = rawLabels.filter(
-          (_: string, index: number) => index % 2 === 0
-        );
-        displayData = rawData.filter(
-          (_: number, index: number) => index % 2 === 0
-        );
-      } else {
-        // Desktop: show every hour (24 labels)
-        displayLabels = rawLabels;
-        displayData = rawData;
-      }
-    } else if (timespan === 'daily') {
-      // For daily, show every 2-3 hours
-      if (isMobile) {
-        // Mobile: show every 3 hours (8 labels)
-        displayLabels = rawLabels.filter(
-          (_: string, index: number) => index % 3 === 0
-        );
-        displayData = rawData.filter(
-          (_: number, index: number) => index % 3 === 0
-        );
-      } else {
-        // Desktop: show every 2 hours (12 labels)
-        displayLabels = rawLabels.filter(
-          (_: string, index: number) => index % 2 === 0
-        );
-        displayData = rawData.filter(
-          (_: number, index: number) => index % 2 === 0
-        );
-      }
-    } else {
-      // For weekly, monthly, yearly - use all labels
-      displayLabels = rawLabels;
-      displayData = rawData;
-    }
+    // Use the new optimization function for better chart visualization
+    const optimizedChart = optimizeChartData(
+      cleanPowerValues, 
+      labels.slice(0, cleanPowerValues.length),
+      timespan,
+      isMobile
+    );
 
     return {
       chartData: {
-        labels: displayLabels,
+        labels: optimizedChart.labels,
         datasets: [
           {
-            data: displayData,
+            data: optimizedChart.data,
             color: () => '#10b981', // Green
             strokeWidth: 2,
           },
