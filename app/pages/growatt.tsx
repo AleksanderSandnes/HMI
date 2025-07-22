@@ -17,6 +17,7 @@ import TimespanSelector from '../components/selects/timespanSelector';
 import { fetchSolarData as fetchSolarDataFromService } from '../services/dataService';
 import { selectDataMode } from '../(redux)/settingsSlice';
 import { solarTheme } from '../theme/solarTheme';
+import useCurrentWeatherData from '../hooks/useCurrentWeatherData';
 
 const web = StyleSheet.create({
   container: {
@@ -373,6 +374,22 @@ const mobile = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
+  weatherInfo: {
+    backgroundColor: solarTheme.background.card,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+    alignSelf: 'center',
+  },
+  weatherText: {
+    color: solarTheme.text.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });
 
 function Growatt(): React.ReactElement {
@@ -406,6 +423,9 @@ function Growatt(): React.ReactElement {
 
   // Get current data mode from Redux
   const currentDataMode = useSelector(selectDataMode);
+
+  // Get current weather data
+  const { currentTemp, neighborhood } = useCurrentWeatherData();
 
   const windowWidth = useWindowDimensions();
   const isMobile = windowWidth.width <= 768;
@@ -528,6 +548,13 @@ function Growatt(): React.ReactElement {
                   : '🔴 Mock'}
             </Text>
           </View>
+          <View style={mobile.weatherInfo}>
+            <Text style={mobile.weatherText}>
+              {currentTemp
+                ? `${Math.round(currentTemp)}°C • ${neighborhood || 'Loading...'}`
+                : 'Loading weather...'}
+            </Text>
+          </View>
         </View>
 
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
@@ -614,8 +641,10 @@ function Growatt(): React.ReactElement {
           </View>
         </View>
         <View style={web.weatherInfo}>
-          <Text style={web.weatherText}>18°C</Text>
-          <Text style={web.weatherText}>Sunny • Sandnes</Text>
+          <Text style={web.weatherText}>
+            {currentTemp ? `${Math.round(currentTemp)}°C` : '--°C'}
+          </Text>
+          <Text style={web.weatherText}>{neighborhood || 'Loading...'}</Text>
         </View>
       </View>
 

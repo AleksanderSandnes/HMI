@@ -68,21 +68,19 @@ async function getGrowattCredentials(): Promise<{
     }
 
     // Get the backend URL based on current mode
-    const backendUrl = process.env.EXPO_PUBLIC_DATA_MODE === 'production' 
-      ? 'https://weatherapi-sbwb.onrender.com'
-      : 'http://localhost:5000';
+    const backendUrl =
+      process.env.EXPO_PUBLIC_DATA_MODE === 'production'
+        ? 'https://weatherapi-sbwb.onrender.com'
+        : 'http://localhost:5000';
 
     // Fetch user settings from MongoDB via backend API
-    const response = await fetch(
-      `${backendUrl}/api/settings/credentials`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const response = await fetch(`${backendUrl}/api/settings/credentials`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (!response.ok) {
       console.error(
