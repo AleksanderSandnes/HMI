@@ -185,9 +185,9 @@ function optimizeChartData(
     return { data: [0], labels: ['No Data'] };
   }
 
-  // Extract the meaningful range with some padding
-  const startIndex = Math.max(0, firstMeaningfulIndex - 12); // 1 hour before
-  const endIndex = Math.min(powerValues.length - 1, actualLastIndex + 12); // 1 hour after
+  // Extract the meaningful range with minimal padding to avoid showing zeros
+  const startIndex = Math.max(0, firstMeaningfulIndex - 6); // 30 minutes before first meaningful data
+  const endIndex = Math.min(powerValues.length - 1, actualLastIndex + 6); // 30 minutes after last meaningful data
   
   const rangedData = powerValues.slice(startIndex, endIndex + 1);
   const rangedLabels = labels.slice(startIndex, endIndex + 1);
@@ -198,8 +198,8 @@ function optimizeChartData(
   let samplingInterval: number;
   
   if (timespan === 'hourly') {
-    // For hourly view, show every 15 minutes during active period
-    samplingInterval = 3; // Every 3rd point (15 minutes)
+    // For hourly view: Mobile shows every hour, Desktop shows every hour too
+    samplingInterval = isMobile ? 12 : 12; // Both show every hour (12 * 5min = 60min)
   } else if (timespan === 'daily') {
     // For daily view, show every 30 minutes during active period
     samplingInterval = isMobile ? 12 : 6; // Mobile: 1 hour, Desktop: 30 minutes
@@ -214,21 +214,29 @@ function optimizeChartData(
 
   for (let i = 0; i < rangedData.length; i += samplingInterval) {
     sampledData.push(rangedData[i]);
-    // Format labels to show only hours for cleaner look
+    // Format labels to show clean hour labels
     const label = rangedLabels[i];
     const [hour, minute] = label.split(':');
     
-    // Show clean hour labels, or hour:30 for half-hour marks
-    if (minute === '00') {
-      sampledLabels.push(`${hour}:00`);
-    } else if (minute === '30' && samplingInterval <= 6) {
-      sampledLabels.push(`${hour}:30`);
-    } else if (minute === '15' && samplingInterval <= 3) {
-      sampledLabels.push(`${hour}:15`);
-    } else if (minute === '45' && samplingInterval <= 3) {
-      sampledLabels.push(`${hour}:45`);
+    // For hourly view, only show full hours
+    if (timespan === 'hourly') {
+      if (minute === '00') {
+        sampledLabels.push(`${hour}:00`);
+      } else {
+        // Round to nearest hour for cleaner display
+        const hourNum = parseInt(hour);
+        const displayHour = minute >= '30' ? hourNum + 1 : hourNum;
+        sampledLabels.push(`${displayHour.toString().padStart(2, '0')}:00`);
+      }
     } else {
-      sampledLabels.push(label);
+      // For other timespans, show hour:minute as before
+      if (minute === '00') {
+        sampledLabels.push(`${hour}:00`);
+      } else if (minute === '30' && samplingInterval <= 6) {
+        sampledLabels.push(`${hour}:30`);
+      } else {
+        sampledLabels.push(label);
+      }
     }
   }
 

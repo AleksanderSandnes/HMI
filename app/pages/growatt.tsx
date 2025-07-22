@@ -45,18 +45,19 @@ const web = StyleSheet.create({
   weatherInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: solarTheme.background.card,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(59, 130, 246, 0.3)',
+    gap: 8,
   },
   weatherText: {
     color: solarTheme.text.primary,
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
   },
   mainContent: {
     flex: 1,
