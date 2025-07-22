@@ -15,6 +15,13 @@ const AppWrapper = () => {
   const segments = useSegments();
 
   useEffect(() => {
+    console.log('[AppWrapper] Initializing app - loading user and settings');
+    console.log('[AppWrapper] Initial auth state:', {
+      isLoading,
+      user: !!user,
+      userEmail: user?.email,
+    });
+
     // Set store reference for data config
     setStoreReference(store);
 
@@ -24,15 +31,20 @@ const AppWrapper = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (isLoading) return; // Wait for auth state to load
+    // Wait for auth state to fully load before making routing decisions
+    if (isLoading) {
+      console.log('[AppWrapper] Still loading auth state, waiting...');
+      return;
+    }
 
     const inAuthGroup = segments[0] === 'auth';
     const inTabsGroup = segments[0] === '(tabs)';
     const onRootPage = segments.length === 0;
     const currentPath = segments.join('/');
 
-    console.log('[AppWrapper] Auth redirect check:', {
+    console.log('[AppWrapper] Auth redirect check (after loading):', {
       user: !!user,
+      userEmail: user?.email || 'none',
       segments,
       currentPath,
       inAuthGroup,
@@ -41,28 +53,26 @@ const AppWrapper = () => {
       isLoading,
     });
 
-    // Only redirect unauthenticated users away from protected tabs
-    // Allow authenticated users to access any page including the landing page
+    // Handle routing based on authentication state
     if (!user && inTabsGroup) {
       // User is not signed in but trying to access protected pages, redirect to landing page
       console.log(
         '[AppWrapper] Redirecting unauthenticated user from tabs to landing page'
       );
       router.push('/');
+    } else if (!user && inAuthGroup) {
+      // User is not signed in and on auth pages - allow access
+      console.log('[AppWrapper] Unauthenticated user on auth pages - allowing access');
+    } else if (user && (onRootPage || inAuthGroup)) {
+      // User is signed in but on landing/auth pages, redirect to dashboard
+      console.log('[AppWrapper] Redirecting authenticated user to dashboard');
+      router.push('/(tabs)');
+    } else if (user && inTabsGroup) {
+      console.log(
+        '[AppWrapper] Authenticated user accessing tabs - allowing access'
+      );
     }
-
-    // Note: Removed the redirect from auth pages for authenticated users
-    // This allows users to access the landing page even when logged in
-  }, [user, segments, isLoading]);
-
-  useEffect(() => {
-    // Set store reference for data config
-    setStoreReference(store);
-
-    // Load user and settings
-    dispatch(loadUser());
-    dispatch(loadSettings());
-  }, [dispatch]);
+  }, [user, segments, isLoading, router]);
 
   if (isLoading) {
     return <AuthLoadingScreen />;

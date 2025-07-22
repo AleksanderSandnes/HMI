@@ -38,8 +38,12 @@ const storage = getStorage();
 
 const loadUserFromStorage = async () => {
   try {
+    console.log('[AuthSlice] Loading user from storage...');
     const userInfo = await storage.getItem('userInfo');
-    return userInfo ? JSON.parse(userInfo) : null;
+    console.log('[AuthSlice] Raw userInfo from storage:', userInfo);
+    const parsedUser = userInfo ? JSON.parse(userInfo) : null;
+    console.log('[AuthSlice] Parsed user:', parsedUser);
+    return parsedUser;
   } catch (error) {
     console.error('Error loading user from storage:', error);
     return null;
