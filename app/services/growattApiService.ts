@@ -168,16 +168,28 @@ function optimizeChartData(
   timespan: string,
   isMobile: boolean = false
 ): { data: number[]; labels: string[] } {
-  console.log(`[GrowattAPI] Optimizing chart data for ${timespan}, mobile: ${isMobile}`);
+  console.log(
+    `[GrowattAPI] Optimizing chart data for ${timespan}, mobile: ${isMobile}`
+  );
   console.log(`[GrowattAPI] Input data points: ${powerValues.length}`);
 
   // Find the range of meaningful data (where power > 5W to avoid noise)
   const meaningfulThreshold = 5; // Watts
-  const firstMeaningfulIndex = powerValues.findIndex(value => value > meaningfulThreshold);
-  const lastMeaningfulIndex = powerValues.slice().reverse().findIndex(value => value > meaningfulThreshold);
-  const actualLastIndex = lastMeaningfulIndex >= 0 ? powerValues.length - 1 - lastMeaningfulIndex : -1;
+  const firstMeaningfulIndex = powerValues.findIndex(
+    (value) => value > meaningfulThreshold
+  );
+  const lastMeaningfulIndex = powerValues
+    .slice()
+    .reverse()
+    .findIndex((value) => value > meaningfulThreshold);
+  const actualLastIndex =
+    lastMeaningfulIndex >= 0
+      ? powerValues.length - 1 - lastMeaningfulIndex
+      : -1;
 
-  console.log(`[GrowattAPI] Meaningful data range: ${firstMeaningfulIndex} to ${actualLastIndex}`);
+  console.log(
+    `[GrowattAPI] Meaningful data range: ${firstMeaningfulIndex} to ${actualLastIndex}`
+  );
 
   if (firstMeaningfulIndex === -1 || actualLastIndex === -1) {
     // No meaningful data found
@@ -188,15 +200,17 @@ function optimizeChartData(
   // Extract the meaningful range with minimal padding to avoid showing zeros
   const startIndex = Math.max(0, firstMeaningfulIndex - 6); // 30 minutes before first meaningful data
   const endIndex = Math.min(powerValues.length - 1, actualLastIndex + 6); // 30 minutes after last meaningful data
-  
+
   const rangedData = powerValues.slice(startIndex, endIndex + 1);
   const rangedLabels = labels.slice(startIndex, endIndex + 1);
 
-  console.log(`[GrowattAPI] Filtered to range: ${startIndex} to ${endIndex} (${rangedData.length} points)`);
+  console.log(
+    `[GrowattAPI] Filtered to range: ${startIndex} to ${endIndex} (${rangedData.length} points)`
+  );
 
   // Determine optimal sampling based on timespan and device
   let samplingInterval: number;
-  
+
   if (timespan === 'hourly') {
     // For hourly view: Mobile shows every hour, Desktop shows every hour too
     samplingInterval = isMobile ? 12 : 12; // Both show every hour (12 * 5min = 60min)
@@ -217,7 +231,7 @@ function optimizeChartData(
     // Format labels to show clean hour labels
     const label = rangedLabels[i];
     const [hour, minute] = label.split(':');
-    
+
     // For hourly view, only show full hours
     if (timespan === 'hourly') {
       if (minute === '00') {
@@ -240,12 +254,16 @@ function optimizeChartData(
     }
   }
 
-  console.log(`[GrowattAPI] Final optimized data points: ${sampledData.length}`);
-  console.log(`[GrowattAPI] Sample labels: ${sampledLabels.slice(0, 5).join(', ')}...`);
+  console.log(
+    `[GrowattAPI] Final optimized data points: ${sampledData.length}`
+  );
+  console.log(
+    `[GrowattAPI] Sample labels: ${sampledLabels.slice(0, 5).join(', ')}...`
+  );
 
   return {
     data: sampledData,
-    labels: sampledLabels
+    labels: sampledLabels,
   };
 }
 
@@ -375,7 +393,7 @@ export async function fetchSolarData(
 
     // Use the new optimization function for better chart visualization
     const optimizedChart = optimizeChartData(
-      cleanPowerValues, 
+      cleanPowerValues,
       labels.slice(0, cleanPowerValues.length),
       timespan,
       isMobile

@@ -231,15 +231,17 @@ export function getChartData(
   timespan: string,
   isMobile: boolean = false
 ) {
-  console.log(`[MockData] Optimizing chart data for ${timespan}, mobile: ${isMobile}`);
+  console.log(
+    `[MockData] Optimizing chart data for ${timespan}, mobile: ${isMobile}`
+  );
   console.log(`[MockData] Input data points: ${data.length}`);
 
   let labels: string[] = [];
   let values: number[] = [];
 
   // Filter out zero/low power values (nighttime) and apply smart sampling
-  const meaningfulData = data.filter(d => d.power > 10); // Only show meaningful generation
-  
+  const meaningfulData = data.filter((d) => d.power > 10); // Only show meaningful generation
+
   if (meaningfulData.length === 0) {
     // No meaningful data
     return {
@@ -274,7 +276,9 @@ export function getChartData(
     values.push(dataPoint.power);
   }
 
-  console.log(`[MockData] Filtered to ${meaningfulData.length} meaningful points, sampled to ${labels.length} display points`);
+  console.log(
+    `[MockData] Filtered to ${meaningfulData.length} meaningful points, sampled to ${labels.length} display points`
+  );
 
   return {
     labels,

@@ -62,12 +62,15 @@ const web = StyleSheet.create({
   mainContent: {
     flex: 1,
     flexDirection: 'row',
+    alignItems: 'flex-start', // This makes content align to the top
     paddingHorizontal: 20,
     paddingBottom: 20,
     gap: 20,
+    height: '100%', // Key: Constrain to available height
   },
   chartContainer: {
     flex: 2.5,
+    minHeight: 0, // Allow shrinking
     backgroundColor: solarTheme.background.card,
     borderRadius: 16,
     padding: 24,
@@ -78,12 +81,22 @@ const web = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
+    overflow: 'hidden', // Key: Prevent overflow
+    height: '100%', // Key: Constrain to available height
   },
   chartHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  chartWrapper: {
+    flex: 1,
+    minHeight: 500, // Like Weather Station - allows more downward expansion
+    maxHeight: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    width: '100%',
   },
   chartTitle: {
     fontSize: 20,
@@ -680,12 +693,14 @@ function Growatt(): React.ReactElement {
               </Text>
             </View>
           </View>
-          <PowerProductionChart
-            data={data}
-            loading={isLoading}
-            timespan={timespan}
-            key={JSON.stringify(data)}
-          />
+          <View style={web.chartWrapper}>
+            <PowerProductionChart
+              data={data}
+              loading={isLoading}
+              timespan={timespan}
+              key={JSON.stringify(data)}
+            />
+          </View>
         </View>
 
         {/* Side Panel */}

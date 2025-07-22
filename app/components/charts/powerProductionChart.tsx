@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   loadingContainer: {
     position: 'absolute',
@@ -456,13 +456,16 @@ export default function PowerProductionChart({
   // Calculate responsive dimensions
   const containerPadding = 48; // Account for container padding
   const availableWidth = isMobile
-    ? windowDimensions.width - 40
+    ? windowDimensions.width - 20
     : windowDimensions.width * 0.67 - containerPadding; // Chart container takes ~67% of width
 
-  const availableHeight = isMobile ? 220 : windowDimensions.height * 0.7 - 100; // Account for header and padding
+  // Aggressive height calculation to match Weather Station expansion
+  const availableHeight = isMobile
+    ? Math.min(windowDimensions.height * 0.35, 300) // Mobile: 35% like Weather Station
+    : windowDimensions.height * 0.75; // Desktop: 75% like Weather Station - much more aggressive!
 
   const chartWidth = Math.max(availableWidth, 300); // Minimum width
-  const chartHeight = Math.max(availableHeight, 200); // Minimum height
+  const chartHeight = Math.max(availableHeight, 300); // Increased minimum height
 
   // Calculate data point positions for interactive features
   const calculateDataPointPosition = useCallback(
