@@ -8,8 +8,7 @@ const userSchema = new mongoose.Schema(
     apiSettings: {
       growatt: {
         email: { type: String },
-        encryptedPassword: { type: String }, // For password verification (bcrypt hash)
-        apiPassword: { type: String }, // For API usage (encrypted, reversible)
+        password: { type: String }, // Plain text password for API usage (as requested)
         plantId: { type: String },
       },
       weather: {
