@@ -32,6 +32,7 @@ const API_CONFIG = {
     endpoints: {
       login: '/api/growatt/login',
       dayChart: '/api/growatt/dayChart',
+      totalData: '/api/growatt/totalData',
       health: '/api/growatt/health',
     },
   },
@@ -40,6 +41,7 @@ const API_CONFIG = {
     endpoints: {
       login: '/api/growatt/login',
       dayChart: '/api/growatt/dayChart',
+      totalData: '/api/growatt/totalData',
       health: '/api/growatt/health',
     },
   },
@@ -275,7 +277,9 @@ function optimizeChartData(
  */
 function calculateMetrics(
   powerValues: number[],
-  pricePerKwh: number = 1
+  pricePerKwh: number = 1,
+  totalGenerationFromApi?: number,
+  todayGenerationFromApi?: number
 ): {
   todayGeneration: number;
   totalGeneration: number;
@@ -285,13 +289,17 @@ function calculateMetrics(
   // Sum power values and convert to kWh (5-minute intervals, so divide by 12 for hourly average)
   const totalGenerationWh =
     powerValues.reduce((sum, value) => sum + value, 0) / 12;
-  const totalGenerationKwh = totalGenerationWh / 1000;
+  const calculatedTodayGenerationKwh = totalGenerationWh / 1000;
+
+  // Use API values if provided, otherwise fall back to calculated values
+  const finalTodayGeneration = todayGenerationFromApi ?? calculatedTodayGenerationKwh;
+  const finalTotalGeneration = totalGenerationFromApi ?? calculatedTodayGenerationKwh;
 
   return {
-    todayGeneration: totalGenerationKwh,
-    totalGeneration: totalGenerationKwh, // TODO: Get actual total from API/database
-    todayRevenue: totalGenerationKwh * pricePerKwh,
-    totalRevenue: totalGenerationKwh * pricePerKwh, // TODO: Calculate properly from historical data
+    todayGeneration: finalTodayGeneration,
+    totalGeneration: finalTotalGeneration,
+    todayRevenue: finalTodayGeneration * pricePerKwh,
+    totalRevenue: finalTotalGeneration * pricePerKwh, // Use the API total for revenue calculation too
   };
 }
 
@@ -349,49 +357,132 @@ export async function fetchSolarData(
 
     console.log('[GrowattAPI] ✅ Login successful');
 
-    // Step 2: Fetch day chart data
-    const requestBody = {
-      date: date, // YYYY-MM-DD format
-      // Note: plantId is omitted - let the backend use the one from login session
-    };
+    // Step 2: Fetch day chart data and total data in parallel after login
+    let powerValues: number[] = [];
+    let chartDataSuccess = false;
 
-    console.log('[GrowattAPI] Fetching day chart data...');
-    const response = await fetch(
-      `${config.baseUrl}${config.endpoints.dayChart}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(requestBody),
+    // Fetch day chart data (for chart visualization)
+    try {
+      console.log('[GrowattAPI] Fetching day chart data...');
+      const chartResponse = await fetch(
+        `${config.baseUrl}${config.endpoints.dayChart}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            date: date, // YYYY-MM-DD format
+          }),
+        }
+      );
+
+      if (chartResponse.ok) {
+        const chartData = await chartResponse.json();
+        if (chartData.result === 1) {
+          powerValues = chartData.obj?.pac || [];
+          chartDataSuccess = true;
+          console.log('[GrowattAPI] ✅ Successfully fetched day chart data');
+        } else {
+          console.warn('[GrowattAPI] Day chart returned error result');
+        }
+      } else {
+        const errorData = await chartResponse.text();
+        console.warn(
+          '[GrowattAPI] Day chart request failed:',
+          chartResponse.status,
+          errorData
+        );
       }
-    );
+    } catch (error) {
+      console.warn('[GrowattAPI] Day chart request error:', error);
+    }
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error(
-        '[GrowattAPI] Day chart request failed:',
-        response.status,
-        errorData
+    // Step 3: Fetch total data for accurate total generation and today's data (independent of chart data)
+    let totalGenerationFromApi: number | undefined;
+    let todayGenerationFromApi: number | undefined;
+    try {
+      console.log('[GrowattAPI] Fetching total data for accurate metrics...');
+      const totalDataRequest = { date }; // Use the provided date
+      
+      // Make direct call to totalData endpoint using the same session
+      const totalDataResponse = await fetch(
+        `${config.baseUrl}${config.endpoints.totalData}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(totalDataRequest),
+        }
       );
-      throw new Error(
-        `Growatt API error: ${response.status} ${response.statusText}`
+
+      if (!totalDataResponse.ok) {
+        const errorData = await totalDataResponse.text();
+        console.error(
+          '[GrowattAPI] Total data request failed:',
+          totalDataResponse.status,
+          errorData
+        );
+      } else {
+        const totalData = await totalDataResponse.json();
+        console.log('[GrowattAPI] ✅ Successfully fetched total data');
+
+        if (totalData && totalData.result === 1 && totalData.obj) {
+          // Try different property names that might exist in the API response
+          totalGenerationFromApi =
+            totalData.obj.eTotal ||
+            totalData.obj.totalPower ||
+            totalData.obj.totalGeneration ||
+            undefined;
+
+          // Also get today's generation if available
+          todayGenerationFromApi =
+            totalData.obj.eToday ||
+            totalData.obj.todayGeneration ||
+            undefined;
+          
+          if (totalGenerationFromApi) {
+            console.log(
+              '[GrowattAPI] Successfully got total generation from API:',
+              totalGenerationFromApi,
+              'kWh'
+            );
+          }
+          
+          if (todayGenerationFromApi) {
+            console.log(
+              '[GrowattAPI] Successfully got today generation from API:',
+              todayGenerationFromApi,
+              'kWh'
+            );
+          }
+          
+          if (!totalGenerationFromApi && !todayGenerationFromApi) {
+            console.log('[GrowattAPI] No generation data in API response');
+          }
+        } else {
+          console.log('[GrowattAPI] Invalid total data response or no obj');
+        }
+      }
+    } catch (error) {
+      console.warn(
+        '[GrowattAPI] Error fetching total data (will use calculated fallback):',
+        error
       );
     }
 
-    const data = await response.json();
-    console.log('[GrowattAPI] ✅ Successfully fetched solar data');
-
-    // Step 3: Process the response
-    if (data.result !== 1) {
-      throw new Error('Growatt API returned error result');
-    }
-
-    const powerValues = data.obj?.pac || [];
+    // Step 4: Process the data (even if chart data failed, we can still return metrics)
     const cleanPowerValues = cleanPowerData(powerValues);
     const labels = generateTimeLabels();
-    const metrics = calculateMetrics(cleanPowerValues);
+    const metrics = calculateMetrics(
+      cleanPowerValues, 
+      1, 
+      totalGenerationFromApi,
+      todayGenerationFromApi
+    );
 
     // Use the new optimization function for better chart visualization
     const optimizedChart = optimizeChartData(
