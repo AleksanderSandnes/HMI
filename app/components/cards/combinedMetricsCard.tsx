@@ -241,7 +241,7 @@ export default function CombinedMetricsCard({
             <View style={styles.metricValues}>
               <View style={styles.metricValue}>
                 <Text style={valueTextStyle}>
-                  {isLoading ? '...' : powerGeneration.today.toFixed(2)} kWh
+                  {isLoading ? '...' : powerGeneration.today.toFixed(1)} kWh
                 </Text>
                 <Text style={valueLabelStyle}>{currentPeriodLabel}</Text>
               </View>
@@ -250,7 +250,7 @@ export default function CombinedMetricsCard({
 
               <View style={styles.metricValue}>
                 <Text style={valueTextStyle}>
-                  {isLoading ? '...' : powerGeneration.total.toFixed(2)} kWh
+                  {isLoading ? '...' : powerGeneration.total.toFixed(1)} kWh
                 </Text>
                 <Text style={valueLabelStyle}>Total</Text>
               </View>
@@ -275,7 +275,7 @@ export default function CombinedMetricsCard({
             <View style={styles.metricValues}>
               <View style={styles.metricValue}>
                 <Text style={valueTextStyle}>
-                  {isLoading ? '...' : revenue.today.toFixed(2)} kr
+                  {isLoading ? '...' : revenue.today.toFixed(1)} kr
                 </Text>
                 <Text style={valueLabelStyle}>{currentPeriodLabel}</Text>
               </View>
@@ -284,7 +284,7 @@ export default function CombinedMetricsCard({
 
               <View style={styles.metricValue}>
                 <Text style={valueTextStyle}>
-                  {isLoading ? '...' : revenue.total.toFixed(2)} kr
+                  {isLoading ? '...' : revenue.total.toFixed(1)} kr
                 </Text>
                 <Text style={valueLabelStyle}>Total</Text>
               </View>

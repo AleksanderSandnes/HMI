@@ -277,9 +277,11 @@ function optimizeChartData(
  */
 function calculateMetrics(
   powerValues: number[],
+  timespan: string,
   pricePerKwh: number = 1,
   totalGenerationFromApi?: number,
-  todayGenerationFromApi?: number
+  todayGenerationFromApi?: number,
+  monthGenerationFromApi?: number
 ): {
   todayGeneration: number;
   totalGeneration: number;
@@ -292,14 +294,30 @@ function calculateMetrics(
   const calculatedTodayGenerationKwh = totalGenerationWh / 1000;
 
   // Use API values if provided, otherwise fall back to calculated values
-  const finalTodayGeneration = todayGenerationFromApi ?? calculatedTodayGenerationKwh;
-  const finalTotalGeneration = totalGenerationFromApi ?? calculatedTodayGenerationKwh;
+  let finalTodayGeneration: number;
+  let finalTotalGeneration: number;
+
+  // Determine what to show based on timespan
+  switch (timespan) {
+    case 'monthly':
+      // For monthly view, show month generation as "today" and total as "total"
+      finalTodayGeneration = monthGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTotalGeneration = totalGenerationFromApi ?? calculatedTodayGenerationKwh;
+      break;
+    case 'daily':
+    case 'hourly':
+    default:
+      // For daily/hourly view, show today's generation and total
+      finalTodayGeneration = todayGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTotalGeneration = totalGenerationFromApi ?? calculatedTodayGenerationKwh;
+      break;
+  }
 
   return {
     todayGeneration: finalTodayGeneration,
     totalGeneration: finalTotalGeneration,
     todayRevenue: finalTodayGeneration * pricePerKwh,
-    totalRevenue: finalTotalGeneration * pricePerKwh, // Use the API total for revenue calculation too
+    totalRevenue: finalTotalGeneration * pricePerKwh,
   };
 }
 
@@ -402,6 +420,7 @@ export async function fetchSolarData(
     // Step 3: Fetch total data for accurate total generation and today's data (independent of chart data)
     let totalGenerationFromApi: number | undefined;
     let todayGenerationFromApi: number | undefined;
+    let monthGenerationFromApi: number | undefined;
     try {
       console.log('[GrowattAPI] Fetching total data for accurate metrics...');
       const totalDataRequest = { date }; // Use the provided date
@@ -443,6 +462,12 @@ export async function fetchSolarData(
             totalData.obj.eToday ||
             totalData.obj.todayGeneration ||
             undefined;
+
+          // Get month's generation if available
+          monthGenerationFromApi =
+            totalData.obj.eMonth ||
+            totalData.obj.monthGeneration ||
+            undefined;
           
           if (totalGenerationFromApi) {
             console.log(
@@ -459,8 +484,16 @@ export async function fetchSolarData(
               'kWh'
             );
           }
+
+          if (monthGenerationFromApi) {
+            console.log(
+              '[GrowattAPI] Successfully got month generation from API:',
+              monthGenerationFromApi,
+              'kWh'
+            );
+          }
           
-          if (!totalGenerationFromApi && !todayGenerationFromApi) {
+          if (!totalGenerationFromApi && !todayGenerationFromApi && !monthGenerationFromApi) {
             console.log('[GrowattAPI] No generation data in API response');
           }
         } else {
@@ -478,10 +511,12 @@ export async function fetchSolarData(
     const cleanPowerValues = cleanPowerData(powerValues);
     const labels = generateTimeLabels();
     const metrics = calculateMetrics(
-      cleanPowerValues, 
-      1, 
+      cleanPowerValues,
+      timespan,
+      1,
       totalGenerationFromApi,
-      todayGenerationFromApi
+      todayGenerationFromApi,
+      monthGenerationFromApi
     );
 
     // Use the new optimization function for better chart visualization
