@@ -275,7 +275,7 @@ function optimizeChartData(
  */
 function calculateMetrics(
   powerValues: number[],
-  pricePerKwh: number = 0.12
+  pricePerKwh: number = 1
 ): {
   todayGeneration: number;
   totalGeneration: number;
@@ -312,7 +312,7 @@ export async function fetchSolarData(
     // Get user credentials
     const credentials = await getGrowattCredentials();
 
-    if (!credentials.account || !credentials.password || !credentials.plantId) {
+    if (!credentials.account || !credentials.password) {
       throw new Error(
         'Growatt credentials not found. Please configure your account in Settings > API Credentials.'
       );
@@ -333,7 +333,6 @@ export async function fetchSolarData(
         body: JSON.stringify({
           account: credentials.account,
           password: credentials.password, // Plain password - Java API will hash it
-          plantId: credentials.plantId,
         }),
       }
     );
