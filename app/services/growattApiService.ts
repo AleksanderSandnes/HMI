@@ -424,6 +424,7 @@ export async function fetchSolarData(
     try {
       console.log('[GrowattAPI] Fetching total data for accurate metrics...');
       const totalDataRequest = { date }; // Use the provided date
+      console.log(`[GrowattAPI] Sending totalData request with date: ${date} for timespan: ${timespan}`);
       
       // Make direct call to totalData endpoint using the same session
       const totalDataResponse = await fetch(
@@ -489,9 +490,18 @@ export async function fetchSolarData(
             console.log(
               '[GrowattAPI] Successfully got month generation from API:',
               monthGenerationFromApi,
-              'kWh'
+              'kWh for date:',
+              date
             );
           }
+
+          // Log all available fields for debugging
+          console.log('[GrowattAPI] Full totalData response obj:', {
+            eToday: totalData.obj.eToday,
+            eMonth: totalData.obj.eMonth,
+            eTotal: totalData.obj.eTotal,
+            requestDate: date
+          });
           
           if (!totalGenerationFromApi && !todayGenerationFromApi && !monthGenerationFromApi) {
             console.log('[GrowattAPI] No generation data in API response');
