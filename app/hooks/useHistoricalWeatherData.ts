@@ -437,26 +437,9 @@ const useHistoricalWeatherData = (
           return time.slice(0, 5); // HH:MM format
         });
       } else {
-        // Weekly - use all hourly data for the week, filter out zero/null values
-        const filteredData = data.filter((item) => {
-          const tempAvg =
-            item.metric?.tempAvg ||
-            item.metric?.tempHigh ||
-            item.tempHigh ||
-            item.tempAvg ||
-            0;
-          const dewptAvg =
-            item.metric?.dewptAvg ||
-            item.metric?.dewptHigh ||
-            item.dewptHigh ||
-            item.dewptAvg ||
-            0;
-          // Only include data points that have meaningful temperature values
-          return tempAvg > 0 || dewptAvg > 0;
-        });
-
+        // Weekly - use all hourly data for the week, keep all data points including zero temperatures
         // Sample data every 3 hours to reduce density (8 points per day instead of 24)
-        const sampledData = filteredData.filter((item, index) => {
+        const sampledData = data.filter((item, index) => {
           const date = new Date(item.obsTimeLocal || item.date);
           const hour = date.getHours();
           // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
@@ -501,7 +484,7 @@ const useHistoricalWeatherData = (
         });
 
         console.log(
-          `[HistoricalWeatherHook] Filtered weekly data: ${data.length} -> ${filteredData.length} -> ${sampledData.length} records`
+          `[HistoricalWeatherHook] Sampled weekly data: ${data.length} -> ${sampledData.length} records`
         );
       }
 
@@ -589,26 +572,9 @@ const useHistoricalWeatherData = (
         return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
       });
     } else {
-      // Weekly - use all hourly data for the week, filter out zero/null values
-      const filteredData = data.filter((item) => {
-        const windspeedAvg =
-          item.metric?.windspeedAvg ||
-          item.metric?.windspeedHigh ||
-          item.windspeedHigh ||
-          item.windspeedAvg ||
-          0;
-        const windgustAvg =
-          item.metric?.windgustAvg ||
-          item.metric?.windgustHigh ||
-          item.windgustHigh ||
-          item.windgustAvg ||
-          0;
-        // Only include data points that have meaningful wind values
-        return windspeedAvg > 0 || windgustAvg > 0;
-      });
-
+      // Weekly - use all hourly data for the week, keep all data points including zero wind values
       // Sample data every 3 hours to reduce density (8 points per day instead of 24)
-      const sampledData = filteredData.filter((item, index) => {
+      const sampledData = data.filter((item, index) => {
         const date = new Date(item.obsTimeLocal || item.date);
         const hour = date.getHours();
         // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
@@ -698,16 +664,9 @@ const useHistoricalWeatherData = (
         }
       });
     } else {
-      // Weekly - use all hourly data for the week, filter out zero/null values
-      const filteredData = data.filter((item) => {
-        const precipRate = item.metric?.precipRate || item.precipRate || 0;
-        const precipTotal = item.metric?.precipTotal || item.precipTotal || 0;
-        // Only include data points that have meaningful precipitation values
-        return precipRate > 0 || precipTotal > 0;
-      });
-
+      // Weekly - use all hourly data for the week, keep all data points including zero precipitation (dry periods)
       // Sample data every 3 hours to reduce density (8 points per day instead of 24)
-      const sampledData = filteredData.filter((item, index) => {
+      const sampledData = data.filter((item, index) => {
         const date = new Date(item.obsTimeLocal || item.date);
         const hour = date.getHours();
         // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
@@ -729,11 +688,12 @@ const useHistoricalWeatherData = (
         const day = date.getDate();
         const month = date.getMonth() + 1;
 
-        // Show day name at midnight only
+        // Show day name with date at midnight, or at day boundaries when midnight is missing
         if (hour === 0) {
           return `${dayName} ${month}/${day}`;
         } else if (index % 8 === 0) {
-          return `${dayName}`;
+          // Fallback: show day with date when we don't have midnight data
+          return `${dayName} ${month}/${day}`;
         }
         return '';
       });
@@ -790,19 +750,9 @@ const useHistoricalWeatherData = (
         return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
       });
     } else {
-      // Weekly - use all hourly data for the week, filter out zero/null values
-      const filteredData = data.filter((item) => {
-        const pressureMax =
-          item.metric?.pressureMax ||
-          item.pressureMax ||
-          item.pressureHigh ||
-          0;
-        // Only include data points that have meaningful pressure values (pressure is usually > 900 hPa)
-        return pressureMax > 900;
-      });
-
+      // Weekly - use all hourly data for the week, keep all data points including zero pressure values
       // Sample data every 3 hours to reduce density (8 points per day instead of 24)
-      const sampledData = filteredData.filter((item, index) => {
+      const sampledData = data.filter((item, index) => {
         const date = new Date(item.obsTimeLocal || item.date);
         const hour = date.getHours();
         // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
@@ -885,15 +835,9 @@ const useHistoricalWeatherData = (
         return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
       });
     } else {
-      // Weekly - use all hourly data for the week, filter out zero/null values
-      const filteredData = data.filter((item) => {
-        const solarRadiationHigh = item.solarRadiationHigh || 0;
-        // Only include data points that have meaningful solar radiation values
-        return solarRadiationHigh > 0;
-      });
-
+      // Weekly - use all hourly data for the week, keep all data points including zero solar radiation (nighttime/cloudy periods)
       // Sample data every 3 hours to reduce density (8 points per day instead of 24)
-      const sampledData = filteredData.filter((item, index) => {
+      const sampledData = data.filter((item, index) => {
         const date = new Date(item.obsTimeLocal || item.date);
         const hour = date.getHours();
         // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
@@ -914,11 +858,12 @@ const useHistoricalWeatherData = (
         const day = date.getDate();
         const month = date.getMonth() + 1;
 
-        // Show day name at midnight only
+        // Show day name with date at midnight, or at day boundaries when midnight is missing
         if (hour === 0) {
           return `${dayName} ${month}/${day}`;
         } else if (index % 8 === 0) {
-          return `${dayName}`;
+          // Fallback: show day with date when we don't have midnight data
+          return `${dayName} ${month}/${day}`;
         }
         return '';
       });
@@ -971,15 +916,9 @@ const useHistoricalWeatherData = (
         return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
       });
     } else {
-      // Weekly - use all hourly data for the week, filter out zero/null values
-      const filteredData = data.filter((item) => {
-        const uvHigh = item.uvHigh || 0;
-        // Only include data points that have meaningful UV index values
-        return uvHigh > 0;
-      });
-
+      // Weekly - use all hourly data for the week, keep all data points including zero UV (nighttime/cloudy days)
       // Sample data every 3 hours to reduce density (8 points per day instead of 24)
-      const sampledData = filteredData.filter((item, index) => {
+      const sampledData = data.filter((item, index) => {
         const date = new Date(item.obsTimeLocal || item.date);
         const hour = date.getHours();
         // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
@@ -1000,11 +939,12 @@ const useHistoricalWeatherData = (
         const day = date.getDate();
         const month = date.getMonth() + 1;
 
-        // Show day name at midnight only
+        // Show day name with date at midnight, or at day boundaries when midnight is missing
         if (hour === 0) {
           return `${dayName} ${month}/${day}`;
         } else if (index % 8 === 0) {
-          return `${dayName}`;
+          // Fallback: show day with date when we don't have midnight data
+          return `${dayName} ${month}/${day}`;
         }
         return '';
       });
@@ -1055,15 +995,9 @@ const useHistoricalWeatherData = (
         return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
       });
     } else {
-      // Weekly - use all hourly data for the week, filter out zero/null values
-      const filteredData = data.filter((item) => {
-        const winddirAvg = item.winddirAvg || 0;
-        // Only include data points that have meaningful wind direction values (0-360 degrees)
-        return winddirAvg > 0 && winddirAvg <= 360;
-      });
-
+      // Weekly - use all hourly data for the week, keep all data points including zero wind direction values
       // Sample data every 3 hours to reduce density (8 points per day instead of 24)
-      const sampledData = filteredData.filter((item, index) => {
+      const sampledData = data.filter((item, index) => {
         const date = new Date(item.obsTimeLocal || item.date);
         const hour = date.getHours();
         // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
@@ -1084,11 +1018,12 @@ const useHistoricalWeatherData = (
         const day = date.getDate();
         const month = date.getMonth() + 1;
 
-        // Show day name at midnight only
+        // Show day name with date at midnight, or at day boundaries when midnight is missing
         if (hour === 0) {
           return `${dayName} ${month}/${day}`;
         } else if (index % 8 === 0) {
-          return `${dayName}`;
+          // Fallback: show day with date when we don't have midnight data
+          return `${dayName} ${month}/${day}`;
         }
         return '';
       });
