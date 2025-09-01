@@ -11,7 +11,7 @@ const SETTINGS_STORAGE_KEY = '@solar_dashboard_settings';
 // Initial state - use environment variable as default, fallback to development for safety
 const getInitialDataMode = () => {
   const envMode = process.env.EXPO_PUBLIC_DATA_MODE;
-  if (envMode === 'production' || envMode === 'development' || envMode === 'mock') {
+  if (envMode === 'production' || envMode === 'development') {
     return envMode;
   }
   return 'development'; // Safe fallback
@@ -59,7 +59,7 @@ export const loadSettings = () => async (dispatch) => {
       const parsedSettings = JSON.parse(storedSettings);
       if (
         parsedSettings.dataMode &&
-        ['production', 'development', 'mock'].includes(parsedSettings.dataMode)
+        ['production', 'development'].includes(parsedSettings.dataMode)
       ) {
         dispatch(setDataMode(parsedSettings.dataMode));
       }
@@ -77,7 +77,7 @@ export const saveDataMode = (dataMode) => async (dispatch) => {
     dispatch(setLoading(true));
 
     // Validate data mode
-    if (!['production', 'development', 'mock'].includes(dataMode)) {
+    if (!['production', 'development'].includes(dataMode)) {
       throw new Error('Invalid data mode');
     }
 

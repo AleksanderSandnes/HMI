@@ -16,7 +16,7 @@
 
 - ✅ Created `getDataModeDisplay()` function to show current mode with proper colors
 - ✅ Added data mode indicator to both mobile and desktop chart headers
-- ✅ Shows: 🟢 Production API, 🟡 Development API, 🟠 Mock Data
+- ✅ Shows: 🟢 Production API, 🟡 Development API
 
 **Enhanced Debugging:**
 
@@ -127,9 +127,9 @@ console.log(
 
 2. **Change Mode in Settings:**
 
-   - Go to Settings → Change to Mock Mode
+   - Go to Settings → Change to Development Mode
    - Return to Weather Station
-   - Should see: 🟠 Mock Data indicator
+   - Should see: � Development API indicator
    - Chart should refresh automatically
 
 3. **Console Verification:**

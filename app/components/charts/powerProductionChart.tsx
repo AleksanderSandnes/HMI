@@ -26,12 +26,6 @@ const modeConfigs = {
     fillGradient: '#f59e0b',
     fillGradientTo: '#fbbf24',
   },
-  mock: {
-    color: '#dc2626', // Red
-    strokeWidth: 3,
-    fillGradient: '#dc2626',
-    fillGradientTo: '#ef4444',
-  },
 };
 
 const chartConfig = {

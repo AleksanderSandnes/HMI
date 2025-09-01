@@ -425,9 +425,9 @@ function Growatt(): React.ReactElement {
   };
   const [isLoading, setIsLoading] = useState(false);
   const [metricsLoading, setMetricsLoading] = useState(false);
-  const [dataSource, setDataSource] = useState<
-    'production' | 'development' | 'mock'
-  >('production');
+  const [dataSource, setDataSource] = useState<'production' | 'development'>(
+    'production'
+  );
   const [metrics, setMetrics] = useState({
     todayGeneration: 0,
     totalGeneration: 0,
@@ -559,7 +559,7 @@ function Growatt(): React.ReactElement {
                 ? '🟢 Production'
                 : currentDataMode === 'development'
                   ? '🟡 Development'
-                  : '🔴 Mock'}
+                  : '🔴 Error'}
             </Text>
           </View>
           <View style={mobile.weatherInfo}>
@@ -650,7 +650,7 @@ function Growatt(): React.ReactElement {
                 ? '🟢 Production API'
                 : currentDataMode === 'development'
                   ? '🟡 Development API'
-                  : '🔴 Mock Data'}
+                  : '🔴 Error Data'}
             </Text>
           </View>
         </View>

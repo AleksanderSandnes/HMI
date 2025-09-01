@@ -148,14 +148,6 @@ const Settings = () => {
       color: '#f59e0b',
       subtitle: 'Local Growatt API for development testing',
     },
-    {
-      value: 'mock',
-      label: 'Mock Mode',
-      description: 'Simulated data for testing',
-      icon: 'flask',
-      color: '#8b5cf6',
-      subtitle: 'Generated mock data for offline testing',
-    },
   ];
 
   const handleDataModeChange = (newMode) => {

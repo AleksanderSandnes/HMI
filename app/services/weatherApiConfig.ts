@@ -29,9 +29,6 @@ export function getWeatherApiConfig(): WeatherApiConfig {
     baseUrl =
       process.env.EXPO_PUBLIC_WEATHER_API_DEVELOPMENT ||
       'http://localhost:5000';
-  } else if (dataMode === 'mock') {
-    // For mock mode, we still use development endpoint but could be extended for mock data
-    baseUrl = 'http://localhost:5000';
   }
 
   console.log(

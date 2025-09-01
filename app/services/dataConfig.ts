@@ -3,7 +3,7 @@
  * Manages data mode from Redux store - NO FALLBACKS
  */
 
-export type DataMode = 'production' | 'development' | 'mock';
+export type DataMode = 'production' | 'development';
 
 export interface DataConfig {
   mode: DataMode;
@@ -45,11 +45,7 @@ export function getDataConfig(): DataConfig {
   // Fallback to environment variable only if Redux is not available
   if (!_store) {
     const envMode = process.env.EXPO_PUBLIC_DATA_MODE as DataMode;
-    if (
-      envMode === 'production' ||
-      envMode === 'development' ||
-      envMode === 'mock'
-    ) {
+    if (envMode === 'production' || envMode === 'development') {
       mode = envMode;
     }
   }
@@ -78,18 +74,16 @@ export function getApiEndpoint(): string {
       return config.apiEndpoints.production;
     case 'development':
       return config.apiEndpoints.development;
-    case 'mock':
-      return ''; // No API endpoint for mock mode
     default:
       return config.apiEndpoints.production;
   }
 }
 
 /**
- * Check if mock data should be used
+ * Check if development data should be used
  */
-export function shouldUseMockData(): boolean {
-  return getDataConfig().mode === 'mock';
+export function shouldUseDevelopmentData(): boolean {
+  return getDataConfig().mode === 'development';
 }
 
 /**
@@ -105,5 +99,5 @@ export function getDataMode(): DataMode {
 export function getConfigInfo(): string {
   const config = getDataConfig();
   const endpoint = getApiEndpoint();
-  return `Mode: ${config.mode}, API: ${endpoint || 'Mock Data'}, Environment: ${config.environment}`;
+  return `Mode: ${config.mode}, API: ${endpoint || 'Development API'}, Environment: ${config.environment}`;
 }

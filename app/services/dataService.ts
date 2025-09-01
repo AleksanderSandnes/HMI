@@ -4,7 +4,6 @@
  */
 
 import { getDataMode, getConfigInfo } from './dataConfig';
-import { getMockSolarData } from './mockDataService';
 import { fetchSolarData as fetchGrowattData } from './growattApiService';
 
 export interface SolarDataResponse {
@@ -22,7 +21,7 @@ export interface SolarDataResponse {
     todayRevenue: number;
     totalRevenue: number;
   };
-  source: 'production' | 'development' | 'mock';
+  source: 'production' | 'development';
 }
 
 /**
@@ -42,10 +41,6 @@ export async function fetchSolarData(
 
   try {
     switch (dataMode) {
-      case 'mock':
-        console.log('[DataService] 🟠 MOCK MODE: Using mock data only');
-        return getMockDataResponse(timespan, date, isMobile);
-
       case 'development':
         console.log(
           '[DataService] 🟡 DEVELOPMENT MODE: Using Java API directly'
@@ -74,26 +69,4 @@ export async function fetchSolarData(
       `Failed to fetch data in ${dataMode} mode: ${errorMessage}`
     );
   }
-}
-
-/**
- * Get mock data response
- */
-function getMockDataResponse(
-  timespan: string,
-  date: string,
-  isMobile: boolean
-): SolarDataResponse {
-  const mockData = getMockSolarData(timespan, date, isMobile);
-
-  return {
-    chartData: mockData.chartData,
-    metrics: {
-      todayGeneration: mockData.metrics.currentPeriod,
-      totalGeneration: mockData.metrics.total,
-      todayRevenue: mockData.metrics.revenue.current,
-      totalRevenue: mockData.metrics.revenue.total,
-    },
-    source: 'mock',
-  };
 }

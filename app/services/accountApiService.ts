@@ -19,7 +19,7 @@ function getApiBaseUrl(): string {
       process.env.EXPO_PUBLIC_WEATHER_API_DEVELOPMENT || 'http://localhost:5000'
     );
   } else {
-    // Mock mode fallback to development
+    // Development mode fallback
     return 'http://localhost:5000';
   }
 }
