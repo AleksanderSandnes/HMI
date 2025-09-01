@@ -127,12 +127,12 @@ const useHistoricalWeatherData = (
       datasets: [
         {
           data: tempAvg,
-          color: () => `#329932`,
+          color: () => `#ff0000`,
           strokeWidth: 3,
         },
         {
           data: dewptAvg,
-          color: () => `#ff0000`,
+          color: () => `#329932`,
           strokeWidth: 3,
         },
       ],
@@ -164,13 +164,14 @@ const useHistoricalWeatherData = (
       datasets: [
         {
           data: windspeedAvg,
-          color: () => `#329932`,
+          color: () => `#3b82f6`,
           strokeWidth: 3,
         },
         {
           data: windgustAvg,
-          color: () => `#ff0000`,
+          color: () => `#f97316`,
           strokeWidth: 3,
+          withDots: true,
         },
       ],
     });
@@ -230,13 +231,13 @@ const useHistoricalWeatherData = (
       labels,
       datasets: [
         {
-          data: precipRate,
-          color: () => `#329932`,
+          data: precipTotal,
+          color: () => `#3b82f6`, // Blue for precipitation total
           strokeWidth: 3,
         },
         {
-          data: precipTotal,
-          color: () => `#ff0000`,
+          data: precipRate,
+          color: () => `#10b981`, // Green for precipitation rate
           strokeWidth: 3,
         },
       ],
@@ -266,7 +267,7 @@ const useHistoricalWeatherData = (
       datasets: [
         {
           data: pressureMax,
-          color: () => `#329932`,
+          color: () => `#000000`,
           strokeWidth: 3,
         },
       ],
@@ -298,7 +299,7 @@ const useHistoricalWeatherData = (
       datasets: [
         {
           data: solarRadiationHigh,
-          color: () => `#329932`,
+          color: () => `#FF8C00`,
           strokeWidth: 3,
         },
       ],
@@ -328,7 +329,7 @@ const useHistoricalWeatherData = (
       datasets: [
         {
           data: uvHigh,
-          color: () => `#329932`,
+          color: () => `#8B00FF`,
           strokeWidth: 3,
         },
       ],
@@ -415,12 +416,12 @@ const useHistoricalWeatherData = (
       datasets: [
         {
           data: tempAvg,
-          color: () => `#329932`,
+          color: () => `#ff0000`,
           strokeWidth: 3,
         },
         {
           data: dewptAvg,
-          color: () => `#ff0000`,
+          color: () => `#329932`,
           strokeWidth: 3,
         },
       ],
@@ -493,13 +494,14 @@ const useHistoricalWeatherData = (
       datasets: [
         {
           data: windspeedAvg,
-          color: () => `#329932`,
+          color: () => `#3b82f6`,
           strokeWidth: 3,
         },
         {
           data: windgustAvg,
-          color: () => `#ff0000`,
+          color: () => `#f97316`,
           strokeWidth: 3,
+          withDots: true,
         },
       ],
     });
@@ -559,16 +561,20 @@ const useHistoricalWeatherData = (
       });
     }
 
-    const precipData = formattedData.map(
-      (item) => item.precipTotal || item.precipRate
-    );
+    const precipTotal = formattedData.map((item) => item.precipTotal);
+    const precipRate = formattedData.map((item) => item.precipRate);
 
     setWeatherData({
       labels,
       datasets: [
         {
-          data: precipData,
-          color: () => `#3b82f6`,
+          data: precipTotal,
+          color: () => `#3b82f6`, // Blue for precipitation total
+          strokeWidth: 3,
+        },
+        {
+          data: precipRate,
+          color: () => `#10b981`, // Green for precipitation rate
           strokeWidth: 3,
         },
       ],
@@ -643,7 +649,7 @@ const useHistoricalWeatherData = (
       datasets: [
         {
           data: pressureMax,
-          color: () => `#329932`,
+          color: () => `#000000`,
           strokeWidth: 3,
         },
       ],
@@ -719,7 +725,7 @@ const useHistoricalWeatherData = (
       datasets: [
         {
           data: solarRadiationHigh,
-          color: () => `#329932`,
+          color: () => `#FF8C00`,
           strokeWidth: 3,
         },
       ],
@@ -790,7 +796,7 @@ const useHistoricalWeatherData = (
       datasets: [
         {
           data: uvHigh,
-          color: () => `#329932`,
+          color: () => `#8B00FF`,
           strokeWidth: 3,
         },
       ],

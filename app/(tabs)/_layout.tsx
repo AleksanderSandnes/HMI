@@ -1,5 +1,5 @@
 import React from 'react';
-import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useWindowDimensions } from 'react-native';
 
@@ -11,30 +11,12 @@ function SolarPanelIcon({ color }: { color: string }) {
   );
 }
 
-function ElectricBoltIcon({ color }: { color: string }) {
-  const windowDimensions = useWindowDimensions();
-  const isMobile = windowDimensions.width <= 768;
-  return (
-    <MaterialIcons
-      size={isMobile ? 22 : 28}
-      name="electric-bolt"
-      color={color}
-    />
-  );
-}
-
 function CloudSunIcon({ color }: { color: string }) {
   const windowDimensions = useWindowDimensions();
   const isMobile = windowDimensions.width <= 768;
   return (
     <FontAwesome5 size={isMobile ? 22 : 28} name="cloud-sun" color={color} />
   );
-}
-
-function WindIcon({ color }: { color: string }) {
-  const windowDimensions = useWindowDimensions();
-  const isMobile = windowDimensions.width <= 768;
-  return <FontAwesome6 size={isMobile ? 22 : 28} name="wind" color={color} />;
 }
 
 function SettingsIcon({ color }: { color: string }) {
@@ -98,27 +80,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="elhub"
-        options={{
-          headerShown: false,
-          title: 'Elhub',
-          tabBarIcon: ElectricBoltIcon,
-        }}
-      />
-      <Tabs.Screen
         name="weatherStation"
         options={{
           headerShown: false,
           title: isMobile ? 'Weather' : 'Weather Station',
           tabBarIcon: CloudSunIcon,
-        }}
-      />
-      <Tabs.Screen
-        name="windTurbine"
-        options={{
-          headerShown: false,
-          title: isMobile ? 'Wind' : 'Wind Turbine',
-          tabBarIcon: WindIcon,
         }}
       />
       <Tabs.Screen

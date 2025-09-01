@@ -313,6 +313,30 @@ const web = StyleSheet.create({
     color: solarTheme.text.primary,
     fontWeight: '600',
   },
+  legendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginTop: 4,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+    marginBottom: 4,
+  },
+  legendCircle: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  legendText: {
+    color: solarTheme.text.secondary,
+    fontSize: 12,
+    fontWeight: '500',
+  },
 });
 
 const mobile = StyleSheet.create({
@@ -598,6 +622,30 @@ const mobile = StyleSheet.create({
     color: solarTheme.text.primary,
     fontWeight: '600',
   },
+  legendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginTop: 4,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+    marginBottom: 4,
+  },
+  legendCircle: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  legendText: {
+    color: solarTheme.text.secondary,
+    fontSize: 12,
+    fontWeight: '500',
+  },
 });
 
 export default function WeatherStation() {
@@ -696,6 +744,84 @@ export default function WeatherStation() {
   );
 
   const getDataTypeLabel = () => {
+    if (dataType === 'precip') {
+      return (
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendCircle, { backgroundColor: '#3b82f6' }]} />
+            <Text style={styles.legendText}>Precip. Accum. Total (mm)</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendCircle, { backgroundColor: '#22c55e' }]} />
+            <Text style={styles.legendText}>Precip. Rate (mm)</Text>
+          </View>
+        </View>
+      );
+    }
+
+    if (dataType === 'windSpeed') {
+      return (
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendCircle, { backgroundColor: '#3b82f6' }]} />
+            <Text style={styles.legendText}>Wind Speed (km/h)</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendCircle, { backgroundColor: '#f97316' }]} />
+            <Text style={styles.legendText}>Wind Gust (km/h)</Text>
+          </View>
+        </View>
+      );
+    }
+
+    if (dataType === 'temperature') {
+      return (
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendCircle, { backgroundColor: '#ff0000' }]} />
+            <Text style={styles.legendText}>Temperature (°C)</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendCircle, { backgroundColor: '#329932' }]} />
+            <Text style={styles.legendText}>Dew Point (°C)</Text>
+          </View>
+        </View>
+      );
+    }
+
+    if (dataType === 'pressure') {
+      return (
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendCircle, { backgroundColor: '#000000' }]} />
+            <Text style={styles.legendText}>Pressure (hPa)</Text>
+          </View>
+        </View>
+      );
+    }
+
+    if (dataType === 'solarRadiation') {
+      return (
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendCircle, { backgroundColor: '#FF8C00' }]} />
+            <Text style={styles.legendText}>Solar Radiation (watts/m²)</Text>
+          </View>
+        </View>
+      );
+    }
+
+    if (dataType === 'uvIndex') {
+      return (
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendCircle, { backgroundColor: '#8B00FF' }]} />
+            <Text style={styles.legendText}>UV Index</Text>
+          </View>
+        </View>
+      );
+    }
+
     const labels: { [key: string]: string } = {
       temperature: 'Temperature',
       windSpeed: 'Wind Speed',

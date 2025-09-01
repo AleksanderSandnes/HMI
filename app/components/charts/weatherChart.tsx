@@ -52,6 +52,7 @@ export interface ChartData {
     data: number[];
     color: () => string;
     strokeWidth: number;
+    withDots?: boolean; // Optional property for datasets that should show dots
   }[];
 }
 

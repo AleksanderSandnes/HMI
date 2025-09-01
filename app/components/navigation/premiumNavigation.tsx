@@ -134,13 +134,6 @@ const navigationItems: NavigationItem[] = [
     onPress: () => {},
   },
   {
-    id: 'elhub',
-    label: 'Elhub',
-    icon: 'electric-bolt',
-    iconFamily: 'MaterialIcons',
-    onPress: () => {},
-  },
-  {
     id: 'dashboard',
     label: 'Dashboard',
     icon: 'dashboard',
@@ -199,7 +192,7 @@ export default function PremiumNavigation({
         <View style={styles.navContainer}>
           {navigationItems.map((item, index) => {
             const isActive = activeTab === item.id;
-            const isCenter = index === 2; // Dashboard is center
+            const isCenter = index === 1; // Dashboard is center
 
             return (
               <TouchableOpacity

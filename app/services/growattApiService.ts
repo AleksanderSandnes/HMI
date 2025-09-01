@@ -301,15 +301,19 @@ function calculateMetrics(
   switch (timespan) {
     case 'monthly':
       // For monthly view, show month generation as "today" and total as "total"
-      finalTodayGeneration = monthGenerationFromApi ?? calculatedTodayGenerationKwh;
-      finalTotalGeneration = totalGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTodayGeneration =
+        monthGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTotalGeneration =
+        totalGenerationFromApi ?? calculatedTodayGenerationKwh;
       break;
     case 'daily':
     case 'hourly':
     default:
       // For daily/hourly view, show today's generation and total
-      finalTodayGeneration = todayGenerationFromApi ?? calculatedTodayGenerationKwh;
-      finalTotalGeneration = totalGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTodayGeneration =
+        todayGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTotalGeneration =
+        totalGenerationFromApi ?? calculatedTodayGenerationKwh;
       break;
   }
 
@@ -424,8 +428,10 @@ export async function fetchSolarData(
     try {
       console.log('[GrowattAPI] Fetching total data for accurate metrics...');
       const totalDataRequest = { date }; // Use the provided date
-      console.log(`[GrowattAPI] Sending totalData request with date: ${date} for timespan: ${timespan}`);
-      
+      console.log(
+        `[GrowattAPI] Sending totalData request with date: ${date} for timespan: ${timespan}`
+      );
+
       // Make direct call to totalData endpoint using the same session
       const totalDataResponse = await fetch(
         `${config.baseUrl}${config.endpoints.totalData}`,
@@ -460,16 +466,12 @@ export async function fetchSolarData(
 
           // Also get today's generation if available
           todayGenerationFromApi =
-            totalData.obj.eToday ||
-            totalData.obj.todayGeneration ||
-            undefined;
+            totalData.obj.eToday || totalData.obj.todayGeneration || undefined;
 
           // Get month's generation if available
           monthGenerationFromApi =
-            totalData.obj.eMonth ||
-            totalData.obj.monthGeneration ||
-            undefined;
-          
+            totalData.obj.eMonth || totalData.obj.monthGeneration || undefined;
+
           if (totalGenerationFromApi) {
             console.log(
               '[GrowattAPI] Successfully got total generation from API:',
@@ -477,7 +479,7 @@ export async function fetchSolarData(
               'kWh'
             );
           }
-          
+
           if (todayGenerationFromApi) {
             console.log(
               '[GrowattAPI] Successfully got today generation from API:',
@@ -500,10 +502,14 @@ export async function fetchSolarData(
             eToday: totalData.obj.eToday,
             eMonth: totalData.obj.eMonth,
             eTotal: totalData.obj.eTotal,
-            requestDate: date
+            requestDate: date,
           });
-          
-          if (!totalGenerationFromApi && !todayGenerationFromApi && !monthGenerationFromApi) {
+
+          if (
+            !totalGenerationFromApi &&
+            !todayGenerationFromApi &&
+            !monthGenerationFromApi
+          ) {
             console.log('[GrowattAPI] No generation data in API response');
           }
         } else {

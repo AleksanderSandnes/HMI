@@ -14,11 +14,7 @@
     "start:prod": "cross-env EXPO_PUBLIC_DATA_MODE=production expo start",
     "web:prod": "cross-env EXPO_PUBLIC_DATA_MODE=production expo start --web",
     "android:prod": "cross-env EXPO_PUBLIC_DATA_MODE=production expo start --android",
-    "ios:prod": "cross-env EXPO_PUBLIC_DATA_MODE=production expo start --ios",
-    "start:mock": "cross-env EXPO_PUBLIC_DATA_MODE=mock expo start",
-    "web:mock": "cross-env EXPO_PUBLIC_DATA_MODE=mock expo start --web",
-    "android:mock": "cross-env EXPO_PUBLIC_DATA_MODE=mock expo start --android",
-    "ios:mock": "cross-env EXPO_PUBLIC_DATA_MODE=mock expo start --ios"
+    "ios:prod": "cross-env EXPO_PUBLIC_DATA_MODE=production expo start --ios"
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",
