@@ -15,6 +15,7 @@ import {
   getHourlyWeatherData,
   getDailyWeatherData,
   getWeeklyWeatherData,
+  getWeeklyHourlyWeatherData,
 } from '../services/weatherApiService';
 import { getDataMode } from '../services/dataConfig';
 
@@ -30,6 +31,50 @@ const useHistoricalWeatherData = (
   const [historicalPickerDate, setHistoricalPickerDate] =
     useState<string>(formattedPickerDate);
   const isMobile = useWindowDimensions().width <= 768;
+
+  // Helper function to calculate week start and end dates
+  const calculateWeekDates = (dateString: string) => {
+    // Parse YYYYMMDD format correctly (same as backend)
+    const year = parseInt(dateString.slice(0, 4));
+    const month = parseInt(dateString.slice(4, 6)) - 1; // Month is 0-indexed
+    const day = parseInt(dateString.slice(6, 8));
+
+    console.log(
+      `[HistoricalWeatherHook] Parsing date: ${dateString} -> Year=${year}, Month=${month + 1}, Day=${day}`
+    );
+
+    const date = new Date(year, month, day);
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const startDate = new Date(date);
+    startDate.setDate(date.getDate() - dayOfWeek); // Go to Sunday of this week
+
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6); // Saturday of this week
+
+    const formatDate = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}${month}${day}`;
+    };
+
+    const startDateFormatted = formatDate(startDate);
+    const endDateFormatted = formatDate(endDate);
+
+    console.log(
+      `[HistoricalWeatherHook] Week calculation: ${dateString} -> ${startDateFormatted} to ${endDateFormatted}`
+    );
+
+    return {
+      startDate: startDateFormatted,
+      endDate: endDateFormatted,
+      weekDates: Array.from({ length: 7 }, (_, i) => {
+        const weekDate = new Date(startDate);
+        weekDate.setDate(startDate.getDate() + i);
+        return formatDate(weekDate);
+      }),
+    };
+  };
 
   const fetchDailyWeatherData = async (
     formattedPickerDate: string,
@@ -50,7 +95,13 @@ const useHistoricalWeatherData = (
           json = await getHourlyWeatherData(formattedPickerDate);
           break;
         case 'weekly':
-          json = await getWeeklyWeatherData(formattedPickerDate);
+          // For weekly, calculate the week and get all hourly data for the week
+          const { startDate, endDate } =
+            calculateWeekDates(formattedPickerDate);
+          console.log(
+            `[HistoricalWeatherHook] Weekly mode: fetching data for week ${startDate} to ${endDate}`
+          );
+          json = await getWeeklyHourlyWeatherData(startDate, endDate);
           break;
         case 'daily':
         default:
@@ -61,7 +112,10 @@ const useHistoricalWeatherData = (
       // Handle different data structures based on timespan
       let observations = [];
       if (timespan === 'weekly') {
-        // Weekly endpoints return summaries array instead of observations
+        // Weekly endpoints return a different structure with all hourly data for the week
+        observations = json.weeklyData || json.observations || [];
+      } else if (timespan === 'weekly' && json.summaries) {
+        // Fallback for weekly endpoints that return summaries array
         observations = json.summaries || [];
       } else {
         // Hourly and daily endpoints return observations array
@@ -341,91 +395,165 @@ const useHistoricalWeatherData = (
     console.log(
       `[HistoricalWeatherHook] Formatting temperature data for ${timespan}, records: ${data.length}`
     );
+
+    if (!data || data.length === 0) {
+      console.warn(`[HistoricalWeatherHook] No data to format for ${timespan}`);
+      setWeatherData({
+        labels: [],
+        datasets: [],
+      });
+      return;
+    }
+
     console.log(`[HistoricalWeatherHook] Sample data item:`, data[0]);
 
     let formattedData: any[] = [];
     let labels: string[] = [];
 
-    if (timespan === 'hourly') {
-      // Hourly data - use obsTimeLocal
-      formattedData = data.map((item) => ({
-        time: item.obsTimeLocal,
-        tempAvg: item.metric?.tempAvg || item.tempHigh || 0,
-        dewptAvg: item.metric?.dewptAvg || item.dewptHigh || 0,
-      }));
+    try {
+      if (timespan === 'hourly') {
+        // Hourly data - use obsTimeLocal
+        formattedData = data.map((item) => ({
+          time: item.obsTimeLocal,
+          tempAvg: item.metric?.tempAvg || item.tempHigh || 0,
+          dewptAvg: item.metric?.dewptAvg || item.dewptHigh || 0,
+        }));
 
-      labels = formattedData.map((item) => {
-        const time = item.time.split(' ')[1];
-        const [hour, minute] = time.split(':').map(Number);
-        return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      });
-    } else if (timespan === 'daily') {
-      // Daily data - aggregate by hour
-      formattedData = data.map((item) => ({
-        time: item.obsTimeLocal,
-        tempAvg: item.metric?.tempAvg || item.tempHigh || 0,
-        dewptAvg: item.metric?.dewptAvg || item.dewptHigh || 0,
-      }));
-
-      labels = formattedData.map((item) => {
-        const time = item.time.split(' ')[1];
-        return time.slice(0, 5); // HH:MM format
-      });
-    } else {
-      // Weekly - use daily summaries (summaries array structure)
-      formattedData = data.map((item) => ({
-        time: item.obsTimeLocal || item.date,
-        tempAvg:
-          item.metric?.tempHigh ||
-          item.metric?.tempAvg ||
-          item.tempHigh ||
-          item.tempAvg ||
-          0,
-        dewptAvg:
-          item.metric?.dewptHigh ||
-          item.metric?.dewptAvg ||
-          item.dewptHigh ||
-          item.dewptAvg ||
-          0,
-      }));
-
-      labels = formattedData.map((item) => {
-        const date = new Date(item.time);
-        return date.toLocaleDateString('en-US', {
-          weekday: 'short',
-          month: 'numeric',
-          day: 'numeric',
+        labels = formattedData.map((item) => {
+          const time = item.time.split(' ')[1];
+          const [hour, minute] = time.split(':').map(Number);
+          return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         });
+      } else if (timespan === 'daily') {
+        // Daily data - aggregate by hour
+        formattedData = data.map((item) => ({
+          time: item.obsTimeLocal,
+          tempAvg: item.metric?.tempAvg || item.tempHigh || 0,
+          dewptAvg: item.metric?.dewptAvg || item.dewptHigh || 0,
+        }));
+
+        labels = formattedData.map((item) => {
+          const time = item.time.split(' ')[1];
+          return time.slice(0, 5); // HH:MM format
+        });
+      } else {
+        // Weekly - use all hourly data for the week, filter out zero/null values
+        const filteredData = data.filter((item) => {
+          const tempAvg =
+            item.metric?.tempAvg ||
+            item.metric?.tempHigh ||
+            item.tempHigh ||
+            item.tempAvg ||
+            0;
+          const dewptAvg =
+            item.metric?.dewptAvg ||
+            item.metric?.dewptHigh ||
+            item.dewptHigh ||
+            item.dewptAvg ||
+            0;
+          // Only include data points that have meaningful temperature values
+          return tempAvg > 0 || dewptAvg > 0;
+        });
+
+        // Sample data every 3 hours to reduce density (8 points per day instead of 24)
+        const sampledData = filteredData.filter((item, index) => {
+          const date = new Date(item.obsTimeLocal || item.date);
+          const hour = date.getHours();
+          // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
+          return hour % 3 === 0;
+        });
+
+        formattedData = sampledData.map((item) => ({
+          time: item.obsTimeLocal || item.date,
+          tempAvg:
+            item.metric?.tempAvg ||
+            item.metric?.tempHigh ||
+            item.tempHigh ||
+            item.tempAvg ||
+            0,
+          dewptAvg:
+            item.metric?.dewptAvg ||
+            item.metric?.dewptHigh ||
+            item.dewptHigh ||
+            item.dewptAvg ||
+            0,
+          day: item.day || new Date(item.obsTimeLocal).getDay(),
+          hour: item.hour || new Date(item.obsTimeLocal).getHours(),
+        }));
+
+        // Create compact labels for weekly view - show only day names and key times
+        labels = formattedData.map((item, index) => {
+          const date = new Date(item.time);
+          const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const dayName = dayNames[date.getDay()];
+          const hour = date.getHours();
+          const day = date.getDate();
+          const month = date.getMonth() + 1;
+
+          // Show day name at midnight only
+          if (hour === 0) {
+            return `${dayName} ${month}/${day}`;
+          } else if (index % 8 === 0) {
+            // Show day marker every 24 hours (8 samples * 3 hours = 24 hours)
+            return `${dayName}`;
+          }
+          return ''; // Empty label for other times
+        });
+
+        console.log(
+          `[HistoricalWeatherHook] Filtered weekly data: ${data.length} -> ${filteredData.length} -> ${sampledData.length} records`
+        );
+      }
+
+      console.log(
+        `[HistoricalWeatherHook] Formatted ${formattedData.length} records with ${labels.length} labels`
+      );
+      console.log(
+        `[HistoricalWeatherHook] Sample temp values:`,
+        formattedData.slice(0, 3).map((item) => item.tempAvg)
+      );
+      console.log(`[HistoricalWeatherHook] Sample labels:`, labels.slice(0, 5));
+
+      const tempAvg = formattedData.map((item) => item.tempAvg);
+      const dewptAvg = formattedData.map((item) => item.dewptAvg);
+
+      // Validate data before setting
+      if (tempAvg.length === 0 || labels.length === 0) {
+        console.warn(
+          `[HistoricalWeatherHook] Empty data arrays after processing`
+        );
+        setWeatherData({
+          labels: [],
+          datasets: [],
+        });
+        return;
+      }
+
+      setWeatherData({
+        labels,
+        datasets: [
+          {
+            data: tempAvg,
+            color: () => `#ff0000`,
+            strokeWidth: 3,
+          },
+          {
+            data: dewptAvg,
+            color: () => `#329932`,
+            strokeWidth: 3,
+          },
+        ],
+      });
+    } catch (error) {
+      console.error(
+        `[HistoricalWeatherHook] Error formatting temperature data:`,
+        error
+      );
+      setWeatherData({
+        labels: [],
+        datasets: [],
       });
     }
-
-    console.log(
-      `[HistoricalWeatherHook] Formatted ${formattedData.length} records with ${labels.length} labels`
-    );
-    console.log(
-      `[HistoricalWeatherHook] Sample temp values:`,
-      formattedData.slice(0, 3).map((item) => item.tempAvg)
-    );
-    console.log(`[HistoricalWeatherHook] Sample labels:`, labels.slice(0, 5));
-
-    const tempAvg = formattedData.map((item) => item.tempAvg);
-    const dewptAvg = formattedData.map((item) => item.dewptAvg);
-
-    setWeatherData({
-      labels,
-      datasets: [
-        {
-          data: tempAvg,
-          color: () => `#ff0000`,
-          strokeWidth: 3,
-        },
-        {
-          data: dewptAvg,
-          color: () => `#329932`,
-          strokeWidth: 3,
-        },
-      ],
-    });
   };
 
   const formatWindSpeedDataByTimespan = (data: any[], timespan: string) => {
@@ -461,28 +589,64 @@ const useHistoricalWeatherData = (
         return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
       });
     } else {
-      formattedData = data.map((item) => ({
+      // Weekly - use all hourly data for the week, filter out zero/null values
+      const filteredData = data.filter((item) => {
+        const windspeedAvg =
+          item.metric?.windspeedAvg ||
+          item.metric?.windspeedHigh ||
+          item.windspeedHigh ||
+          item.windspeedAvg ||
+          0;
+        const windgustAvg =
+          item.metric?.windgustAvg ||
+          item.metric?.windgustHigh ||
+          item.windgustHigh ||
+          item.windgustAvg ||
+          0;
+        // Only include data points that have meaningful wind values
+        return windspeedAvg > 0 || windgustAvg > 0;
+      });
+
+      // Sample data every 3 hours to reduce density (8 points per day instead of 24)
+      const sampledData = filteredData.filter((item, index) => {
+        const date = new Date(item.obsTimeLocal || item.date);
+        const hour = date.getHours();
+        // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
+        return hour % 3 === 0;
+      });
+
+      formattedData = sampledData.map((item) => ({
         time: item.obsTimeLocal || item.date,
         windspeedAvg:
-          item.metric?.windspeedHigh ||
           item.metric?.windspeedAvg ||
+          item.metric?.windspeedHigh ||
           item.windspeedHigh ||
           item.windspeedAvg ||
           0,
         windgustAvg:
-          item.metric?.windgustHigh ||
           item.metric?.windgustAvg ||
+          item.metric?.windgustHigh ||
           item.windgustHigh ||
           item.windgustAvg ||
           0,
       }));
 
-      labels = formattedData.map((item) => {
+      // Create compact labels for weekly view
+      labels = formattedData.map((item, index) => {
         const date = new Date(item.time);
-        return date.toLocaleDateString('en-US', {
-          weekday: 'short',
-          day: 'numeric',
-        });
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayName = dayNames[date.getDay()];
+        const hour = date.getHours();
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+
+        // Show day name at midnight only
+        if (hour === 0) {
+          return `${dayName} ${month}/${day}`;
+        } else if (index % 8 === 0) {
+          return `${dayName}`;
+        }
+        return '';
       });
     }
 
@@ -534,30 +698,44 @@ const useHistoricalWeatherData = (
         }
       });
     } else {
-      formattedData = data.map((item) => ({
+      // Weekly - use all hourly data for the week, filter out zero/null values
+      const filteredData = data.filter((item) => {
+        const precipRate = item.metric?.precipRate || item.precipRate || 0;
+        const precipTotal = item.metric?.precipTotal || item.precipTotal || 0;
+        // Only include data points that have meaningful precipitation values
+        return precipRate > 0 || precipTotal > 0;
+      });
+
+      // Sample data every 3 hours to reduce density (8 points per day instead of 24)
+      const sampledData = filteredData.filter((item, index) => {
+        const date = new Date(item.obsTimeLocal || item.date);
+        const hour = date.getHours();
+        // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
+        return hour % 3 === 0;
+      });
+
+      formattedData = sampledData.map((item) => ({
         time: item.obsTimeLocal || item.date,
         precipRate: item.metric?.precipRate || item.precipRate || 0,
         precipTotal: item.metric?.precipTotal || item.precipTotal || 0,
       }));
 
-      labels = formattedData.map((item) => {
+      // Create compact labels for weekly view
+      labels = formattedData.map((item, index) => {
         const date = new Date(item.time);
-        if (timespan === 'weekly') {
-          return date.toLocaleDateString('en-US', {
-            weekday: 'short',
-            day: 'numeric',
-          });
-        } else if (timespan === 'monthly') {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-          });
-        } else {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            year: '2-digit',
-          });
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayName = dayNames[date.getDay()];
+        const hour = date.getHours();
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+
+        // Show day name at midnight only
+        if (hour === 0) {
+          return `${dayName} ${month}/${day}`;
+        } else if (index % 8 === 0) {
+          return `${dayName}`;
         }
+        return '';
       });
     }
 
@@ -612,7 +790,26 @@ const useHistoricalWeatherData = (
         return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
       });
     } else {
-      formattedData = data.map((item) => ({
+      // Weekly - use all hourly data for the week, filter out zero/null values
+      const filteredData = data.filter((item) => {
+        const pressureMax =
+          item.metric?.pressureMax ||
+          item.pressureMax ||
+          item.pressureHigh ||
+          0;
+        // Only include data points that have meaningful pressure values (pressure is usually > 900 hPa)
+        return pressureMax > 900;
+      });
+
+      // Sample data every 3 hours to reduce density (8 points per day instead of 24)
+      const sampledData = filteredData.filter((item, index) => {
+        const date = new Date(item.obsTimeLocal || item.date);
+        const hour = date.getHours();
+        // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
+        return hour % 3 === 0;
+      });
+
+      formattedData = sampledData.map((item) => ({
         time: item.obsTimeLocal || item.date,
         pressureMax:
           item.metric?.pressureMax ||
@@ -621,24 +818,22 @@ const useHistoricalWeatherData = (
           0,
       }));
 
-      labels = formattedData.map((item) => {
+      // Create compact labels for weekly view
+      labels = formattedData.map((item, index) => {
         const date = new Date(item.time);
-        if (timespan === 'weekly') {
-          return date.toLocaleDateString('en-US', {
-            weekday: 'short',
-            day: 'numeric',
-          });
-        } else if (timespan === 'monthly') {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-          });
-        } else {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            year: '2-digit',
-          });
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayName = dayNames[date.getDay()];
+        const hour = date.getHours();
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+
+        // Show day name at midnight only
+        if (hour === 0) {
+          return `${dayName} ${month}/${day}`;
+        } else if (index % 8 === 0) {
+          return `${dayName}`;
         }
+        return '';
       });
     }
 
@@ -690,29 +885,42 @@ const useHistoricalWeatherData = (
         return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
       });
     } else {
-      formattedData = data.map((item) => ({
+      // Weekly - use all hourly data for the week, filter out zero/null values
+      const filteredData = data.filter((item) => {
+        const solarRadiationHigh = item.solarRadiationHigh || 0;
+        // Only include data points that have meaningful solar radiation values
+        return solarRadiationHigh > 0;
+      });
+
+      // Sample data every 3 hours to reduce density (8 points per day instead of 24)
+      const sampledData = filteredData.filter((item, index) => {
+        const date = new Date(item.obsTimeLocal || item.date);
+        const hour = date.getHours();
+        // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
+        return hour % 3 === 0;
+      });
+
+      formattedData = sampledData.map((item) => ({
         time: item.obsTimeLocal || item.date,
         solarRadiationHigh: item.solarRadiationHigh || 0,
       }));
 
-      labels = formattedData.map((item) => {
+      // Create compact labels for weekly view
+      labels = formattedData.map((item, index) => {
         const date = new Date(item.time);
-        if (timespan === 'weekly') {
-          return date.toLocaleDateString('en-US', {
-            weekday: 'short',
-            day: 'numeric',
-          });
-        } else if (timespan === 'monthly') {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-          });
-        } else {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            year: '2-digit',
-          });
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayName = dayNames[date.getDay()];
+        const hour = date.getHours();
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+
+        // Show day name at midnight only
+        if (hour === 0) {
+          return `${dayName} ${month}/${day}`;
+        } else if (index % 8 === 0) {
+          return `${dayName}`;
         }
+        return '';
       });
     }
 
@@ -763,29 +971,42 @@ const useHistoricalWeatherData = (
         return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
       });
     } else {
-      formattedData = data.map((item) => ({
+      // Weekly - use all hourly data for the week, filter out zero/null values
+      const filteredData = data.filter((item) => {
+        const uvHigh = item.uvHigh || 0;
+        // Only include data points that have meaningful UV index values
+        return uvHigh > 0;
+      });
+
+      // Sample data every 3 hours to reduce density (8 points per day instead of 24)
+      const sampledData = filteredData.filter((item, index) => {
+        const date = new Date(item.obsTimeLocal || item.date);
+        const hour = date.getHours();
+        // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
+        return hour % 3 === 0;
+      });
+
+      formattedData = sampledData.map((item) => ({
         time: item.obsTimeLocal || item.date,
         uvHigh: item.uvHigh || 0,
       }));
 
-      labels = formattedData.map((item) => {
+      // Create compact labels for weekly view
+      labels = formattedData.map((item, index) => {
         const date = new Date(item.time);
-        if (timespan === 'weekly') {
-          return date.toLocaleDateString('en-US', {
-            weekday: 'short',
-            day: 'numeric',
-          });
-        } else if (timespan === 'monthly') {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-          });
-        } else {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            year: '2-digit',
-          });
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayName = dayNames[date.getDay()];
+        const hour = date.getHours();
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+
+        // Show day name at midnight only
+        if (hour === 0) {
+          return `${dayName} ${month}/${day}`;
+        } else if (index % 8 === 0) {
+          return `${dayName}`;
         }
+        return '';
       });
     }
 
@@ -834,29 +1055,42 @@ const useHistoricalWeatherData = (
         return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
       });
     } else {
-      formattedData = data.map((item) => ({
+      // Weekly - use all hourly data for the week, filter out zero/null values
+      const filteredData = data.filter((item) => {
+        const winddirAvg = item.winddirAvg || 0;
+        // Only include data points that have meaningful wind direction values (0-360 degrees)
+        return winddirAvg > 0 && winddirAvg <= 360;
+      });
+
+      // Sample data every 3 hours to reduce density (8 points per day instead of 24)
+      const sampledData = filteredData.filter((item, index) => {
+        const date = new Date(item.obsTimeLocal || item.date);
+        const hour = date.getHours();
+        // Keep data points at 00h, 03h, 06h, 09h, 12h, 15h, 18h, 21h
+        return hour % 3 === 0;
+      });
+
+      formattedData = sampledData.map((item) => ({
         time: item.obsTimeLocal || item.date,
         winddirAvg: item.winddirAvg || 0,
       }));
 
-      labels = formattedData.map((item) => {
+      // Create compact labels for weekly view
+      labels = formattedData.map((item, index) => {
         const date = new Date(item.time);
-        if (timespan === 'weekly') {
-          return date.toLocaleDateString('en-US', {
-            weekday: 'short',
-            day: 'numeric',
-          });
-        } else if (timespan === 'monthly') {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-          });
-        } else {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            year: '2-digit',
-          });
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayName = dayNames[date.getDay()];
+        const hour = date.getHours();
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+
+        // Show day name at midnight only
+        if (hour === 0) {
+          return `${dayName} ${month}/${day}`;
+        } else if (index % 8 === 0) {
+          return `${dayName}`;
         }
+        return '';
       });
     }
 
@@ -915,7 +1149,7 @@ const useHistoricalWeatherData = (
           error
         );
       });
-  }, [historicalPickerDate, dataType, timespan, getDataMode()]);
+  }, [historicalPickerDate, dataType, timespan]);
 
   useEffect(() => {
     setHistoricalPickerDate(formattedPickerDate);

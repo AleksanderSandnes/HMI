@@ -285,6 +285,77 @@ const fetchWeeklyData = async (userId = null) => {
   return await fetchDailySummary(userId);
 };
 
+// New function to fetch weekly hourly data for all hours
+const fetchWeeklyHourlyData = async (selectedDate, userId = null) => {
+  console.log(
+    `[Weather] Fetching weekly hourly data for date: ${selectedDate}`
+  );
+
+  // Parse YYYYMMDD format correctly
+  const year = parseInt(selectedDate.slice(0, 4));
+  const month = parseInt(selectedDate.slice(4, 6)) - 1; // Month is 0-indexed
+  const day = parseInt(selectedDate.slice(6, 8));
+
+  console.log(
+    `[Weather] Parsed date: Year=${year}, Month=${month + 1}, Day=${day}`
+  );
+
+  // Calculate week dates (Sunday to Saturday)
+  const date = new Date(year, month, day);
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const startDate = new Date(date);
+  startDate.setDate(date.getDate() - dayOfWeek); // Go to Sunday of this week
+
+  const weekDates = [];
+  for (let i = 0; i < 7; i++) {
+    const weekDate = new Date(startDate);
+    weekDate.setDate(startDate.getDate() + i);
+    const formattedDate = `${weekDate.getFullYear()}${String(weekDate.getMonth() + 1).padStart(2, '0')}${String(weekDate.getDate()).padStart(2, '0')}`;
+    weekDates.push(formattedDate);
+  }
+
+  console.log(`[Weather] Week dates for ${selectedDate}:`, weekDates);
+
+  const credentials = await getWeatherCredentials(userId);
+  let weeklyData = [];
+
+  // Fetch hourly data for each day of the week
+  for (const dateStr of weekDates) {
+    try {
+      console.log(`[Weather] Fetching hourly data for ${dateStr}`);
+
+      const weatherResponse = await axios.get(
+        `${BASE_URL}${PWS_ENDPOINTS.HOURLY}?stationId=${credentials.stationId}&format=json&units=m&date=${dateStr}&apiKey=${credentials.apiKey}`
+      );
+
+      if (weatherResponse.data && weatherResponse.data.observations) {
+        // Include all hourly observations (no filtering)
+        const allObservations = weatherResponse.data.observations;
+
+        console.log(
+          `[Weather] ${dateStr}: ${allObservations.length} hourly observations`
+        );
+        weeklyData = weeklyData.concat(allObservations);
+      }
+    } catch (error) {
+      console.error(
+        `[Weather] Error fetching data for ${dateStr}:`,
+        error.message
+      );
+      // Continue with other dates even if one fails
+    }
+  }
+
+  console.log(`[Weather] Total weekly hourly records: ${weeklyData.length}`);
+
+  return {
+    weeklyData: weeklyData,
+    observations: weeklyData, // For backward compatibility
+    selectedDate: selectedDate,
+    weekDates: weekDates,
+  };
+};
+
 const fetchMonthlyData = async (userId = null) => {
   // For monthly data, we'll use daily summary as PWS API has limited historical range
   // In a production environment, you might want to aggregate multiple daily summary calls
@@ -352,6 +423,7 @@ module.exports = {
   fetchCurrentWeather,
   fetchDailySummary,
   fetchWeeklyData,
+  fetchWeeklyHourlyData,
   getOptimalEndpointForTimeRange,
   getWeatherCredentials, // Export for testing and API endpoint use
 };

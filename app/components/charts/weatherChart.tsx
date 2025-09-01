@@ -229,13 +229,13 @@ export default function WeatherChart({
     <View style={styles.container}>
       {/* Chart Container */}
       <View style={styles.chartContainer}>
-        {timespan === 'hourly' ? (
+        {timespan === 'hourly' || timespan === 'weekly' ? (
           <LineChart
             data={processedData}
             width={chartWidth}
             height={chartHeight}
             chartConfig={currentLineChartConfig}
-            withDots={false}
+            withDots={timespan === 'weekly'} // Show dots for weekly data for better visibility
             withVerticalLines={false}
             withHorizontalLines={true}
             withVerticalLabels={true}
@@ -244,10 +244,11 @@ export default function WeatherChart({
             yAxisSuffix=""
             bezier
             style={styles.chart}
-            onDataPointClick={(data) => {
-              // Handle hover/click for tooltip functionality
-              console.log('Data point clicked:', data);
-            }}
+            {...(Platform.OS !== 'web' && {
+              onDataPointClick: (data) => {
+                console.log('Data point clicked:', data);
+              },
+            })}
           />
         ) : (
           <BarChart

@@ -5,6 +5,7 @@ const {
   fetchCurrentWeather,
   fetchDailySummary,
   fetchWeeklyData,
+  fetchWeeklyHourlyData,
   fetchMonthlyHistoricalData,
   fetchYearlyHistoricalData,
   getOptimalEndpointForTimeRange,
@@ -93,6 +94,24 @@ const getWeeklyWeather = async (req, res) => {
   }
 };
 
+const getWeeklyHourlyWeather = async (req, res) => {
+  try {
+    const userId = req.user; // Get user ID from authentication middleware
+    const selectedDate = req.params.date; // Date to calculate week from
+    const weatherData = await fetchWeeklyHourlyData(selectedDate, userId);
+    res.json(weatherData);
+  } catch (error) {
+    console.error(
+      '[WeatherController] Error fetching weekly hourly weather data:',
+      error
+    );
+    res.status(500).json({
+      message: 'Error fetching weekly hourly weather data',
+      error: error.message,
+    });
+  }
+};
+
 // Utility endpoint to get optimal endpoint info for debugging
 const getEndpointInfo = async (req, res) => {
   try {
@@ -116,5 +135,6 @@ module.exports = {
   getAllWeather,
   getCurrentWeather,
   getWeeklyWeather,
+  getWeeklyHourlyWeather,
   getEndpointInfo,
 };

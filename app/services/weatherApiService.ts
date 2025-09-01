@@ -115,3 +115,16 @@ export async function getWeeklyWeatherData(date?: string): Promise<any> {
   const config = getWeatherApiConfig();
   return await makeAuthenticatedRequest(config.weeklyWeatherEndpoint(date));
 }
+
+/**
+ * Get hourly weather data for a specific date range (for weekly mode)
+ */
+export async function getWeeklyHourlyWeatherData(
+  startDate: string,
+  endDate: string
+): Promise<any> {
+  const config = getWeatherApiConfig();
+  // Use startDate as the date parameter since backend calculates the week from it
+  const url = `${config.baseUrl}/api/weather/weekly-hourly/${startDate}`;
+  return await makeAuthenticatedRequest(url);
+}

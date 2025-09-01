@@ -44,10 +44,10 @@ export function getWeatherApiConfig(): WeatherApiConfig {
       `${baseUrl}/api/weather/hourly/${date}`,
     dailyWeatherEndpoint: (date: string) =>
       `${baseUrl}/api/weather/daily/${date}`,
-    // Weekly endpoint using /dailysummary/7day for optimal 7-day summary
+    // Updated weekly endpoint to support specific date-based week calculation
     weeklyWeatherEndpoint: (date?: string) =>
       date
-        ? `${baseUrl}/api/weather/weekly/${date}`
+        ? `${baseUrl}/api/weather/weekly-hourly/${date}`
         : `${baseUrl}/api/weather/weekly`,
   };
 }
