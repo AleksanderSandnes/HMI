@@ -1,3 +1,4 @@
+import { logInfo, logError, logWarn } from '../../services/graylogService';
 /**
  * Credentials Settings Component
  * Allows users to securely store and manage their API credentials
@@ -90,10 +91,10 @@ export default function CredentialsSettings({
         }
       } catch (error) {
         setBackendSyncStatus('error');
-        console.warn('Could not sync with backend:', error);
+        logWarn('Could not sync with backend', 'CredentialsSettings', error as Error);
       }
     } catch (error) {
-      console.warn('Could not check stored credentials:', error);
+      logWarn('Could not check stored credentials', 'CredentialsSettings', error as Error);
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +123,7 @@ export default function CredentialsSettings({
         plantId: plantId.trim(),
       });
       localSuccess = true;
-      console.log('[CredentialsSettings] ✅ Saved to local storage');
+      logInfo('✅ Saved to local storage', 'CredentialsSettings');
 
       // Save to backend if authenticated
       try {
@@ -135,13 +136,10 @@ export default function CredentialsSettings({
         });
         backendSuccess = true;
         setBackendSyncStatus('synced');
-        console.log('[CredentialsSettings] ✅ Saved to backend');
+        logInfo('✅ Saved to backend', 'CredentialsSettings');
       } catch (backendError) {
         setBackendSyncStatus('error');
-        console.warn(
-          '[CredentialsSettings] ⚠️ Backend save failed:',
-          backendError
-        );
+        logWarn('Backend save failed', 'CredentialsSettings', backendError as Error);
       }
 
       const successMessage = backendSuccess
@@ -160,7 +158,7 @@ export default function CredentialsSettings({
       ]);
     } catch (error) {
       Alert.alert('Error', 'Failed to save credentials. Please try again.');
-      console.error('Failed to save credentials:', error);
+      logError('Failed to save credentials', 'CredentialsSettings', error as Error);
       setBackendSyncStatus('error');
     } finally {
       setIsLoading(false);
@@ -186,12 +184,9 @@ export default function CredentialsSettings({
               try {
                 await clearApiSettings();
                 setBackendSyncStatus(null);
-                console.log('[CredentialsSettings] ✅ Cleared from backend');
+                logInfo('✅ Cleared from backend', 'CredentialsSettings');
               } catch (error) {
-                console.warn(
-                  '[CredentialsSettings] ⚠️ Backend clear failed:',
-                  error
-                );
+                logWarn('Backend clear failed', 'CredentialsSettings', error as Error);
               }
 
               setAccount('');

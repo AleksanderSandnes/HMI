@@ -1,3 +1,4 @@
+import { logInfo, logError, logWarn } from '../services/graylogService';
 /**
  * Production API Service
  * Handles communication with the production API hosted on render.com
@@ -29,7 +30,7 @@ async function getAuthToken(): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.error('[ProductionAPI] Error getting auth token:', error);
+    logError('Error getting auth token:', 'ProductionAPI', error);
     return null;
   }
 }
@@ -61,7 +62,7 @@ export async function fetchProductionSolarData(
 ): Promise<ProductionSolarData> {
   const apiEndpoint = getApiEndpoint();
 
-  console.log(`[ProductionAPI] Fetching ${timespan} data from ${apiEndpoint}`);
+  logInfo('Fetching ${timespan} data from ${apiEndpoint}', 'ProductionAPI');
 
   try {
     const token = await getAuthToken();
@@ -71,9 +72,9 @@ export async function fetchProductionSolarData(
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
-      console.log('[ProductionAPI] Making authenticated request');
+      logInfo('Making authenticated request', 'ProductionAPI');
     } else {
-      console.warn('[ProductionAPI] No auth token available');
+      logWarn('No auth token available', 'ProductionAPI');
     }
 
     const response = await fetch(`${apiEndpoint}/solar/daily/${date}`, {
@@ -83,18 +84,15 @@ export async function fetchProductionSolarData(
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error(
-        '[ProductionAPI] Request failed:',
-        response.status,
-        errorData
-      );
+      logError('Request failed:', 'ProductionAPI', response.status,
+        errorData);
       throw new Error(
         `Production API error: ${response.status} ${response.statusText}`
       );
     }
 
     const data = await response.json();
-    console.log('[ProductionAPI] Successfully fetched solar data');
+    logInfo('Successfully fetched solar data', 'ProductionAPI');
 
     return {
       chartData: {
@@ -115,7 +113,7 @@ export async function fetchProductionSolarData(
       },
     };
   } catch (error) {
-    console.error('[ProductionAPI] Error fetching solar data:', error);
+    logError('Error fetching solar data:', 'ProductionAPI', error);
     throw error;
   }
 }
@@ -139,7 +137,7 @@ export async function checkProductionApiHealth(): Promise<boolean> {
     const response = await Promise.race([fetchPromise, timeoutPromise]);
     return response.ok;
   } catch (error) {
-    console.log('[ProductionAPI] Health check failed:', error);
+    logInfo('Health check failed:', 'ProductionAPI', error);
     return false;
   }
 }

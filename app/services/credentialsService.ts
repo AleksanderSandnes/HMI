@@ -1,3 +1,4 @@
+import { logInfo, logError, logWarn } from '../services/graylogService';
 /**
  * Credentials Service
  * Manages secure credential retrieval from user settings or environment variables
@@ -18,9 +19,7 @@ export interface GrowattCredentials {
 export async function getGrowattCredentials(): Promise<GrowattCredentials> {
   const dataMode = getDataMode();
 
-  console.log(
-    `[CredentialsService] Getting Growatt credentials for ${dataMode} mode`
-  );
+  logInfo('Getting Growatt credentials for ${dataMode} mode', 'CredentialsService');
 
   // Try to get from user settings first (stored in localStorage or AsyncStorage)
   try {
@@ -29,7 +28,7 @@ export async function getGrowattCredentials(): Promise<GrowattCredentials> {
       storedCredentials?.growatt?.account &&
       storedCredentials?.growatt?.password
     ) {
-      console.log('[CredentialsService] ✅ Using user-stored credentials');
+      logInfo('✅ Using user-stored credentials', 'CredentialsService');
       return {
         account: storedCredentials.growatt.account,
         password: storedCredentials.growatt.password,
@@ -37,10 +36,7 @@ export async function getGrowattCredentials(): Promise<GrowattCredentials> {
       };
     }
   } catch (error) {
-    console.warn(
-      '[CredentialsService] Could not retrieve user-stored credentials:',
-      error
-    );
+    logWarn('Could not retrieve user-stored credentials:', 'CredentialsService', error);
   }
 
   // Only use environment variables in development mode
@@ -50,9 +46,7 @@ export async function getGrowattCredentials(): Promise<GrowattCredentials> {
     const envPlantId = process.env.EXPO_PUBLIC_GROWATT_PLANT_ID;
 
     if (envAccount && envPassword) {
-      console.log(
-        '[CredentialsService] ⚠️ Using environment variable credentials (development mode only)'
-      );
+      logInfo('⚠️ Using environment variable credentials (development mode only)', 'CredentialsService');
       return {
         account: envAccount,
         password: envPassword,
@@ -62,7 +56,7 @@ export async function getGrowattCredentials(): Promise<GrowattCredentials> {
   }
 
   // No credentials available
-  console.error('[CredentialsService] ❌ No Growatt credentials available');
+  logError('❌ No Growatt credentials available', 'CredentialsService');
   throw new Error(
     dataMode === 'development'
       ? 'No Growatt credentials available. Please set them in Settings or environment variables.'
@@ -100,14 +94,9 @@ export async function storeGrowattCredentials(
       );
     }
 
-    console.log(
-      '[CredentialsService] ✅ Growatt credentials stored successfully'
-    );
+    logInfo('✅ Growatt credentials stored successfully', 'CredentialsService');
   } catch (error) {
-    console.error(
-      '[CredentialsService] ❌ Failed to store credentials:',
-      error
-    );
+    logError('❌ Failed to store credentials:', 'CredentialsService', error);
     throw new Error('Failed to store credentials');
   }
 }
@@ -135,10 +124,7 @@ async function getUserStoredCredentials(): Promise<any> {
 
     return null;
   } catch (error) {
-    console.warn(
-      '[CredentialsService] Error reading stored credentials:',
-      error
-    );
+    logWarn('Error reading stored credentials:', 'CredentialsService', error);
     return null;
   }
 }
@@ -158,12 +144,9 @@ export async function clearStoredCredentials(): Promise<void> {
       await AsyncStorage.removeItem('userCredentials');
     }
 
-    console.log('[CredentialsService] ✅ Stored credentials cleared');
+    logInfo('✅ Stored credentials cleared', 'CredentialsService');
   } catch (error) {
-    console.error(
-      '[CredentialsService] ❌ Failed to clear credentials:',
-      error
-    );
+    logError('❌ Failed to clear credentials:', 'CredentialsService', error);
   }
 }
 

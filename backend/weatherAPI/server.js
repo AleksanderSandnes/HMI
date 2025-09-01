@@ -6,6 +6,8 @@ const apiSettingsRoutes = require('./routes/apiSettings.js');
 const cors = require('cors');
 const { default: mongoose } = require('mongoose');
 const errorHandler = require('./middleware/errorHandler.js');
+const graylogMiddleware = require('./middleware/graylogMiddleware.js');
+const { logInfo, logError } = require('./services/graylogService.js');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,16 +20,20 @@ const environment = process.env.NODE_ENV || 'development';
 let uri;
 if (environment === 'development') {
   uri = process.env.MONGODB_LOCAL_URI || 'mongodb://localhost:27017/hmi-dev';
-  console.log('🟡 [MongoDB] Using local development database:', uri);
+  logInfo('Using local development database', 'MongoDB', { uri });
 } else {
   uri = `mongodb+srv://${db_username}:${db_password}@hmi.g7qbf6h.mongodb.net/HMI?retryWrites=true&w=majority&appName=HMI`;
-  console.log('🟢 [MongoDB] Using production cluster (HMI database)');
+  logInfo('Using production cluster (HMI database)', 'MongoDB');
 }
 
 mongoose
   .connect(uri)
-  .then(() => console.log(`✅ Database connected (${environment} mode)`))
-  .catch((err) => console.log('❌ Database connection error:', err));
+  .then(() => {
+    logInfo(`Database connected successfully`, 'Database', { environment, uri: uri.replace(/\/\/.*@/, '//***:***@') });
+  })
+  .catch((err) => {
+    logError('Database connection failed', 'Database', err, { environment });
+  });
 
 // Enable CORS for all routes
 app.use(
@@ -49,6 +55,9 @@ app.use(
 
 app.use(express.json());
 
+// Add Graylog middleware for automatic request logging
+app.use(graylogMiddleware);
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -66,4 +75,4 @@ app.use('/api/settings', apiSettingsRoutes);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => logInfo(`Server running on port ${PORT}`, 'Server', { port: PORT, environment }));

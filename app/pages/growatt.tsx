@@ -18,6 +18,7 @@ import { fetchSolarData as fetchSolarDataFromService } from '../services/dataSer
 import { selectDataMode } from '../(redux)/settingsSlice';
 import { solarTheme } from '../theme/solarTheme';
 import useCurrentWeatherData from '../hooks/useCurrentWeatherData';
+import { logInfo, logError } from '../services/graylogService';
 
 const web = StyleSheet.create({
   container: {
@@ -420,7 +421,7 @@ function Growatt(): React.ReactElement {
 
   // Debug wrapper for setPickerDate
   const handleDateChange = (newDate: string) => {
-    console.log(`[Growatt] Date changed from ${pickerDate} to ${newDate}`);
+    logInfo(`Date changed from ${pickerDate} to ${newDate}`, 'Growatt');
     setPickerDate(newDate);
   };
   const [isLoading, setIsLoading] = useState(false);
@@ -444,14 +445,15 @@ function Growatt(): React.ReactElement {
   const windowWidth = useWindowDimensions();
   const isMobile = windowWidth.width <= 768;
   const fetchSolarData = async () => {
-    console.log(
-      `[Growatt] Starting fetchSolarData - timespan: ${timespan}, date: ${pickerDate}`
+    logInfo(
+      'Starting fetchSolarData - timespan: ${timespan}, date: ${pickerDate}',
+      'Growatt'
     );
-    console.log(`[Growatt] Current data mode from Redux: ${currentDataMode}`);
+    logInfo('Current data mode from Redux: ${currentDataMode}', 'Growatt');
     setIsLoading(true);
     setMetricsLoading(true);
     try {
-      console.log(`[Growatt] Fetching ${timespan} data for ${pickerDate}`);
+      logInfo('Fetching ${timespan} data for ${pickerDate}', 'Growatt');
 
       const response = await fetchSolarDataFromService(
         timespan,
@@ -459,7 +461,7 @@ function Growatt(): React.ReactElement {
         isMobile
       );
 
-      console.log(`[Growatt] Data fetched from ${response.source}`, {
+      logInfo('Data fetched from ${response.source}', 'Growatt', {
         chartLabels: response.chartData.labels.length,
         chartData: response.chartData.datasets[0].data.length,
         metrics: response.metrics,
@@ -474,7 +476,7 @@ function Growatt(): React.ReactElement {
         totalRevenue: response.metrics.totalRevenue,
       });
     } catch (error) {
-      console.error('[Growatt] Error fetching solar data:', error);
+      logError('Error fetching solar data:', 'Growatt', error as Error);
 
       // Keep the current data source setting (don't change it)
       // Show empty data to indicate error state
@@ -504,8 +506,9 @@ function Growatt(): React.ReactElement {
   const dataMode = useSelector(selectDataMode);
 
   useEffect(() => {
-    console.log(
-      `[Growatt] useEffect triggered - timespan: ${timespan}, pickerDate: ${pickerDate}`
+    logInfo(
+      'useEffect triggered - timespan: ${timespan}, pickerDate: ${pickerDate}',
+      'Growatt'
     );
     if (
       timespan === 'hourly' ||
@@ -520,8 +523,8 @@ function Growatt(): React.ReactElement {
 
   // Separate useEffect to handle data mode changes from settings
   useEffect(() => {
-    console.log(`[Growatt] Data mode changed to: ${currentDataMode}`);
-    console.log(`[Growatt] Previous dataSource state: ${dataSource}`);
+    logInfo('Data mode changed to: ${currentDataMode}', 'Growatt');
+    logInfo('Previous dataSource state: ${dataSource}', 'Growatt');
     // Force data refresh when data mode changes
     if (currentDataMode) {
       fetchSolarData();
@@ -530,9 +533,7 @@ function Growatt(): React.ReactElement {
 
   // Fetch data when the data mode changes
   useEffect(() => {
-    console.log(
-      `[Growatt] Data mode changed to ${dataMode}, refetching data...`
-    );
+    logInfo('Data mode changed to ${dataMode}, refetching data...', 'Growatt');
     fetchSolarData();
   }, [dataMode]);
 

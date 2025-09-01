@@ -8,6 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import { solarTheme } from '../../theme/solarTheme';
+import { logInfo, logError, logWarn } from '../../services/graylogService';
 
 const chartConfig = {
   backgroundGradientFrom: solarTheme.background.main,
@@ -246,7 +247,7 @@ export default function WeatherChart({
             style={styles.chart}
             {...(Platform.OS !== 'web' && {
               onDataPointClick: (data) => {
-                console.log('Data point clicked:', data);
+                logInfo('Data point clicked', 'WeatherChart', { data });
               },
             })}
           />

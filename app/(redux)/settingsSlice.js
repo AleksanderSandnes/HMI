@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logInfo, logError, logWarn } from '../services/graylogService';
 
 /**
  * Settings Redux Slice
@@ -65,7 +66,7 @@ export const loadSettings = () => async (dispatch) => {
       }
     }
   } catch (error) {
-    console.error('[Settings] Error loading settings:', error);
+    logError('Error loading settings:', 'Settings', error);
     dispatch(setError('Failed to load settings'));
   } finally {
     dispatch(setLoading(false));
@@ -88,9 +89,9 @@ export const saveDataMode = (dataMode) => async (dispatch) => {
     // Update Redux state
     dispatch(setDataMode(dataMode));
 
-    console.log(`[Settings] Data mode saved: ${dataMode}`);
+    logInfo('Data mode saved: ${dataMode}', 'Settings');
   } catch (error) {
-    console.error('[Settings] Error saving data mode:', error);
+    logError('Error saving data mode:', 'Settings', error);
     dispatch(setError('Failed to save settings'));
   } finally {
     dispatch(setLoading(false));

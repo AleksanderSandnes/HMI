@@ -4,6 +4,7 @@
  */
 
 import { getDataMode } from './dataConfig';
+import { logInfo, logError } from './graylogService';
 
 // Get the correct API URL based on mode
 function getApiBaseUrl(): string {
@@ -48,7 +49,7 @@ async function getAuthToken(): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.error('[AccountAPI] Error getting auth token:', error);
+    logError('Error getting auth token', 'AccountAPI', error as Error);
     return null;
   }
 }
@@ -88,31 +89,34 @@ export async function getUserProfile(): Promise<UserProfile> {
     headers['Authorization'] = `Bearer ${token}`;
 
     const apiUrl = `${getApiBaseUrl()}/api/user/account`;
-    console.log('[AccountAPI] Making request to:', apiUrl);
+    logInfo('Making request to profile API', 'AccountAPI', { url: apiUrl });
 
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers,
     });
 
-    console.log('[AccountAPI] Response status:', response.status);
+    logInfo('Profile API response received', 'AccountAPI', { status: response.status });
 
     if (!response.ok) {
       if (response.status === 401) {
         throw new Error('Session expired. Please log in again.');
       }
       const errorText = await response.text();
-      console.error('[AccountAPI] Error response:', errorText);
+      logError('Error response from profile API', 'AccountAPI', undefined, { 
+        status: response.status, 
+        errorText 
+      });
       throw new Error(
         `Failed to get profile: ${response.status} ${response.statusText}`
       );
     }
 
     const data = await response.json();
-    console.log('[AccountAPI] ✅ Profile retrieved successfully');
+    logInfo('Profile retrieved successfully', 'AccountAPI');
     return data.user;
   } catch (error) {
-    console.error('[AccountAPI] ❌ Failed to get profile:', error);
+    logError('Failed to get profile', 'AccountAPI', error as Error);
     throw error;
   }
 }
@@ -150,10 +154,10 @@ export async function updateUserProfile(
     }
 
     const data = await response.json();
-    console.log('[AccountAPI] ✅ Profile updated successfully');
+    logInfo('Profile updated successfully', 'AccountAPI');
     return data.user;
   } catch (error) {
-    console.error('[AccountAPI] ❌ Failed to update profile:', error);
+    logError('Failed to update profile', 'AccountAPI', error as Error);
     throw error;
   }
 }
@@ -190,9 +194,9 @@ export async function updateUserPassword(
       throw new Error(errorData.message || 'Failed to update password');
     }
 
-    console.log('[AccountAPI] ✅ Password updated successfully');
+    logInfo('Password updated successfully', 'AccountAPI');
   } catch (error) {
-    console.error('[AccountAPI] ❌ Failed to update password:', error);
+    logError('Failed to update password', 'AccountAPI', error as Error);
     throw error;
   }
 }

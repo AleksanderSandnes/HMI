@@ -25,6 +25,7 @@ import {
   ApiSettingsResponse,
 } from '../../services/settingsApiService';
 import { selectDataMode } from '../../(redux)/settingsSlice';
+import { logInfo, logError, logWarn } from '../../services/graylogService';
 
 interface WeatherCredentialsSettingsProps {
   onCredentialsChange?: () => void;
@@ -68,10 +69,18 @@ export default function WeatherCredentialsSettings({
         }
       } catch (error) {
         setBackendSyncStatus('error');
-        console.warn('Could not sync with backend:', error);
+        logWarn(
+          'Could not sync with backend',
+          'WeatherCredentialsSettings',
+          error as Error
+        );
       }
     } catch (error) {
-      console.warn('Could not check stored credentials:', error);
+      logWarn(
+        'Could not check stored credentials',
+        'WeatherCredentialsSettings',
+        error as Error
+      );
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +110,7 @@ export default function WeatherCredentialsSettings({
       });
       backendSuccess = true;
       setBackendSyncStatus('synced');
-      console.log('[WeatherCredentialsSettings] ✅ Saved to backend');
+      logInfo('✅ Saved to backend', 'WeatherCredentialsSettings');
 
       Alert.alert(
         'Success',
@@ -119,7 +128,11 @@ export default function WeatherCredentialsSettings({
       );
     } catch (error) {
       Alert.alert('Error', 'Failed to save credentials. Please try again.');
-      console.error('Failed to save weather credentials:', error);
+      logError(
+        'Failed to save weather credentials',
+        'WeatherCredentialsSettings',
+        error as Error
+      );
       setBackendSyncStatus('error');
     } finally {
       setIsLoading(false);
@@ -146,9 +159,7 @@ export default function WeatherCredentialsSettings({
                 },
               });
               setBackendSyncStatus(null);
-              console.log(
-                '[WeatherCredentialsSettings] ✅ Cleared from backend'
-              );
+              logInfo('✅ Cleared from backend', 'WeatherCredentialsSettings');
 
               setApiKey('');
               setStationId('');

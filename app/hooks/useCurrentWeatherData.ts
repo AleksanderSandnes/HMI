@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { countries } from 'country-data';
 import { getCurrentWeatherData } from '../services/weatherApiService';
 import { getDataMode } from '../services/dataConfig';
+import { logInfo, logError, logWarn } from '../services/graylogService';
 
 function useCurrentWeatherData() {
   const [neighborhood, setNeighborhood] = useState('');
@@ -15,16 +16,11 @@ function useCurrentWeatherData() {
   const fetchCurrentWeatherData = useCallback(async () => {
     const dataMode = getDataMode();
 
-    console.log(
-      `[CurrentWeatherHook] Fetching weather data in ${dataMode} mode`
-    );
+    logInfo('Fetching weather data in ${dataMode} mode', 'CurrentWeatherHook');
 
     try {
       const data = await getCurrentWeatherData();
-      console.log(
-        `[CurrentWeatherHook] Successfully fetched weather data in ${dataMode} mode`,
-        data
-      );
+      logInfo('Successfully fetched weather data in ${dataMode} mode', 'CurrentWeatherHook', data);
 
       if (data?.observations?.[0]) {
         const observation = data.observations[0];
@@ -38,15 +34,10 @@ function useCurrentWeatherData() {
         setCurrentWindGust(observation.metric.windGust);
         setCurrentHumidity(observation.humidity);
       } else {
-        console.warn(
-          '[CurrentWeatherHook] No observation data found in response'
-        );
+        logWarn('No observation data found in response', 'CurrentWeatherHook');
       }
     } catch (error) {
-      console.error(
-        `[CurrentWeatherHook] Error fetching weather data in ${dataMode} mode:`,
-        error
-      );
+      logError('Error fetching weather data in ${dataMode} mode:', 'CurrentWeatherHook', error);
     }
   }, []);
 
@@ -63,9 +54,7 @@ function useCurrentWeatherData() {
 
   useEffect(() => {
     const dataMode = getDataMode();
-    console.log(
-      `[CurrentWeatherHook] Setting up weather data fetching in ${dataMode} mode`
-    );
+    logInfo('Setting up weather data fetching in ${dataMode} mode', 'CurrentWeatherHook');
 
     fetchCurrentWeatherData();
     const intervalId = setInterval(fetchCurrentWeatherData, 60000);

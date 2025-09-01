@@ -7,6 +7,7 @@ import AuthLoadingScreen from '../components/AuthLoadingScreen';
 import { setStoreReference } from '../services/dataConfig';
 import { store } from './store';
 import { useRouter, useSegments } from 'expo-router';
+import { logInfo, logError, logWarn } from '../services/graylogService';
 
 const AppWrapper = () => {
   const dispatch = useDispatch();
@@ -15,8 +16,8 @@ const AppWrapper = () => {
   const segments = useSegments();
 
   useEffect(() => {
-    console.log('[AppWrapper] Initializing app - loading user and settings');
-    console.log('[AppWrapper] Initial auth state:', {
+    logInfo('Initializing app - loading user and settings', 'AppWrapper');
+    logInfo('Initial auth state:', 'AppWrapper', {
       isLoading,
       user: !!user,
       userEmail: user?.email,
@@ -33,7 +34,7 @@ const AppWrapper = () => {
   useEffect(() => {
     // Wait for auth state to fully load before making routing decisions
     if (isLoading) {
-      console.log('[AppWrapper] Still loading auth state, waiting...');
+      logInfo('Still loading auth state, waiting...', 'AppWrapper');
       return;
     }
 
@@ -42,7 +43,7 @@ const AppWrapper = () => {
     const onRootPage = segments.length === 0;
     const currentPath = segments.join('/');
 
-    console.log('[AppWrapper] Auth redirect check (after loading):', {
+    logInfo('Auth redirect check (after loading):', 'AppWrapper', {
       user: !!user,
       userEmail: user?.email || 'none',
       segments,
@@ -56,20 +57,25 @@ const AppWrapper = () => {
     // Handle routing based on authentication state
     if (!user && inTabsGroup) {
       // User is not signed in but trying to access protected pages, redirect to landing page
-      console.log(
-        '[AppWrapper] Redirecting unauthenticated user from tabs to landing page'
+      logInfo(
+        'Redirecting unauthenticated user from tabs to landing page',
+        'AppWrapper'
       );
       router.push('/');
     } else if (!user && inAuthGroup) {
       // User is not signed in and on auth pages - allow access
-      console.log('[AppWrapper] Unauthenticated user on auth pages - allowing access');
+      logInfo(
+        'Unauthenticated user on auth pages - allowing access',
+        'AppWrapper'
+      );
     } else if (user && (onRootPage || inAuthGroup)) {
       // User is signed in but on landing/auth pages, redirect to dashboard
-      console.log('[AppWrapper] Redirecting authenticated user to dashboard');
+      logInfo('Redirecting authenticated user to dashboard', 'AppWrapper');
       router.push('/(tabs)');
     } else if (user && inTabsGroup) {
-      console.log(
-        '[AppWrapper] Authenticated user accessing tabs - allowing access'
+      logInfo(
+        'Authenticated user accessing tabs - allowing access',
+        'AppWrapper'
       );
     }
   }, [user, segments, isLoading, router]);

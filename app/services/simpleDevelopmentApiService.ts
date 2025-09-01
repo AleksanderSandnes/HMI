@@ -1,6 +1,7 @@
+import { logInfo, logError, logWarn } from '../services/graylogService';
 /**
  * Simple Development API Service
- * Uses the backend Node.js solar API with authentication for development mode
+ * Uses the backend Node.js solar API with authentication for develop    logInfo(`Java API health check: ${response.ok ? '✅ Healthy' : '❌ Unhealthy'}`, 'DevelopmentAPI');ent mode
  */
 
 export interface DevelopmentSolarData {
@@ -44,7 +45,7 @@ async function getAuthToken(): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.error('[DevelopmentAPI] Error getting auth token:', error);
+    logError('Error getting auth token', 'DevelopmentAPI', error as Error);
     return null;
   }
 }
@@ -59,13 +60,11 @@ export async function fetchDevelopmentSolarData(
 ): Promise<DevelopmentSolarData> {
   const javaApiEndpoint = 'http://localhost:8080';
 
-  console.log(
-    `[DevelopmentAPI] Fetching ${timespan} data from Java API: ${javaApiEndpoint}`
-  );
+  logInfo(`Fetching ${timespan} data from Java API: ${javaApiEndpoint}`, 'DevelopmentAPI');
 
   try {
     // First, login to the Java API to establish session
-    console.log('[DevelopmentAPI] Logging in to Java API...');
+    logInfo('Logging in to Java API...', 'DevelopmentAPI');
     const loginResponse = await fetch(`${javaApiEndpoint}/api/growatt/login`, {
       method: 'POST',
       headers: {
@@ -80,15 +79,11 @@ export async function fetchDevelopmentSolarData(
 
     if (!loginResponse.ok) {
       const errorData = await loginResponse.text();
-      console.error(
-        '[DevelopmentAPI] Login failed:',
-        loginResponse.status,
-        errorData
-      );
+      logError('Login failed', 'DevelopmentAPI', new Error(`Status: ${loginResponse.status}, Data: ${errorData}`));
       throw new Error(`Java API login failed: ${loginResponse.status}`);
     }
 
-    console.log('[DevelopmentAPI] Login successful, fetching solar data...');
+    logInfo('Login successful, fetching solar data...', 'DevelopmentAPI');
 
     const response = await fetch(`${javaApiEndpoint}/api/growatt/dayChart`, {
       method: 'POST',
@@ -104,21 +99,14 @@ export async function fetchDevelopmentSolarData(
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error(
-        '[DevelopmentAPI] Request failed:',
-        response.status,
-        errorData
-      );
+      logError('Request failed', 'DevelopmentAPI', new Error(`Status: ${response.status}, Data: ${errorData}`));
       throw new Error(
         `Development API error: ${response.status} ${response.statusText}`
       );
     }
 
     const data = await response.json();
-    console.log(
-      '[DevelopmentAPI] Successfully fetched solar data from Java API',
-      data
-    );
+    logInfo('Successfully fetched solar data from Java API', 'DevelopmentAPI', data);
 
     // Parse Java API response format
     if (data.result !== 1) {
@@ -171,7 +159,7 @@ export async function fetchDevelopmentSolarData(
       },
     };
   } catch (error) {
-    console.error('[DevelopmentAPI] Error fetching solar data:', error);
+    logError('Error fetching solar data', 'DevelopmentAPI', error as Error);
     throw error;
   }
 }
@@ -181,7 +169,7 @@ export async function fetchDevelopmentSolarData(
  */
 export async function checkDevelopmentApiHealth(): Promise<boolean> {
   try {
-    console.log('[DevelopmentAPI] Checking Java API health...');
+    logInfo('Checking Java API health...', 'DevelopmentAPI');
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -193,12 +181,10 @@ export async function checkDevelopmentApiHealth(): Promise<boolean> {
 
     clearTimeout(timeoutId);
 
-    console.log(
-      `[DevelopmentAPI] Java API health check: ${response.ok ? '✅' : '❌'}`
-    );
+    logInfo(`Java API health check: ${response.ok ? '✅ Healthy' : '❌ Unhealthy'}`, 'DevelopmentAPI');
     return response.ok;
   } catch (error) {
-    console.error('[DevelopmentAPI] Java API health check failed:', error);
+    logError('Java API health check failed', 'DevelopmentAPI', error as Error);
     return false;
   }
 }

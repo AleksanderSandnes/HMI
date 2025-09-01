@@ -1,3 +1,4 @@
+import { logInfo, logError, logWarn } from '../services/graylogService';
 /**
  * Settings API Service
  * Handles API calls for saving and retrieving user settings to/from backend
@@ -53,15 +54,15 @@ export interface ApiSettingsResponse {
  */
 async function getAuthToken(): Promise<string | null> {
   try {
-    console.log('[SettingsAPI] Getting auth token...');
+    logInfo('Getting auth token...', 'SettingsAPI');
     if (typeof window !== 'undefined') {
       // Web: Use localStorage
       const userInfo = localStorage.getItem('userInfo');
-      console.log('[SettingsAPI] Web - userInfo from localStorage:', userInfo);
+      logInfo('Web - userInfo from localStorage:', 'SettingsAPI', userInfo);
       if (userInfo) {
         const user = JSON.parse(userInfo);
-        console.log('[SettingsAPI] Web - parsed user:', user);
-        console.log('[SettingsAPI] Web - token:', user.token);
+        logInfo('Web - parsed user:', 'SettingsAPI', user);
+        logInfo('Web - token:', 'SettingsAPI', user.token);
         return user.token || null;
       }
     } else {
@@ -69,21 +70,18 @@ async function getAuthToken(): Promise<string | null> {
       const AsyncStorage =
         require('@react-native-async-storage/async-storage').default;
       const userInfo = await AsyncStorage.getItem('userInfo');
-      console.log(
-        '[SettingsAPI] Mobile - userInfo from AsyncStorage:',
-        userInfo
-      );
+      logInfo('Mobile - userInfo from AsyncStorage:', 'SettingsAPI', userInfo);
       if (userInfo) {
         const user = JSON.parse(userInfo);
-        console.log('[SettingsAPI] Mobile - parsed user:', user);
-        console.log('[SettingsAPI] Mobile - token:', user.token);
+        logInfo('Mobile - parsed user:', 'SettingsAPI', user);
+        logInfo('Mobile - token:', 'SettingsAPI', user.token);
         return user.token || null;
       }
     }
-    console.log('[SettingsAPI] No token found');
+    logInfo('No token found', 'SettingsAPI');
     return null;
   } catch (error) {
-    console.error('[SettingsAPI] Error getting auth token:', error);
+    logError('Error getting auth token:', 'SettingsAPI', error);
     return null;
   }
 }
@@ -95,7 +93,7 @@ export async function saveApiSettings(
   settings: ApiSettingsData
 ): Promise<void> {
   try {
-    console.log('[SettingsAPI] Saving settings:', settings);
+    logInfo('Saving settings:', 'SettingsAPI', settings);
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -103,9 +101,7 @@ export async function saveApiSettings(
 
     // Add authentication
     const token = await getAuthToken();
-    console.log(
-      '[SettingsAPI] Retrieved token:',
-      token ? `${token.substring(0, 20)}...` : 'null'
+    logInfo('Retrieved token:', 'SettingsAPI', token ? `${token.substring(0, 20)}...` : 'null'
     );
 
     if (!token) {
@@ -114,8 +110,8 @@ export async function saveApiSettings(
     headers['Authorization'] = `Bearer ${token}`;
 
     const apiUrl = `${getApiBaseUrl()}/api/settings/api`;
-    console.log('[SettingsAPI] Making request to:', apiUrl);
-    console.log('[SettingsAPI] Headers:', headers);
+    logInfo('Making request to:', 'SettingsAPI', apiUrl);
+    logInfo('Headers:', 'SettingsAPI', headers);
 
     const response = await fetch(apiUrl, {
       method: 'PUT',
@@ -123,18 +119,18 @@ export async function saveApiSettings(
       body: JSON.stringify(settings),
     });
 
-    console.log('[SettingsAPI] Response status:', response.status);
-    console.log('[SettingsAPI] Response ok:', response.ok);
+    logInfo('Response status:', 'SettingsAPI', response.status);
+    logInfo('Response ok:', 'SettingsAPI', response.ok);
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('[SettingsAPI] Response error:', error);
+      logError('Response error:', 'SettingsAPI', error);
       throw new Error(`Failed to save settings: ${error}`);
     }
 
-    console.log('[SettingsAPI] ✅ Settings saved to backend successfully');
+    logInfo('✅ Settings saved to backend successfully', 'SettingsAPI');
   } catch (error) {
-    console.error('[SettingsAPI] ❌ Failed to save settings:', error);
+    logError('❌ Failed to save settings:', 'SettingsAPI', error);
     throw error;
   }
 }
@@ -169,7 +165,7 @@ export async function getApiSettings(): Promise<ApiSettingsResponse | null> {
     // Add authentication
     const token = await getAuthToken();
     if (!token) {
-      console.warn('[SettingsAPI] No authentication token available');
+      logWarn('No authentication token available', 'SettingsAPI');
       return null; // Return null instead of throwing error for graceful degradation
     }
     headers['Authorization'] = `Bearer ${token}`;
@@ -188,12 +184,10 @@ export async function getApiSettings(): Promise<ApiSettingsResponse | null> {
     }
 
     const data = await response.json();
-    console.log(
-      '[SettingsAPI] ✅ Settings retrieved from backend successfully'
-    );
+    logInfo('✅ Settings retrieved from backend successfully', 'SettingsAPI');
     return data;
   } catch (error) {
-    console.error('[SettingsAPI] ❌ Failed to get settings:', error);
+    logError('❌ Failed to get settings:', 'SettingsAPI', error);
     throw error;
   }
 }
@@ -224,9 +218,9 @@ export async function clearApiSettings(): Promise<void> {
       throw new Error(`Failed to clear settings: ${error}`);
     }
 
-    console.log('[SettingsAPI] ✅ Settings cleared from backend successfully');
+    logInfo('✅ Settings cleared from backend successfully', 'SettingsAPI');
   } catch (error) {
-    console.error('[SettingsAPI] ❌ Failed to clear settings:', error);
+    logError('❌ Failed to clear settings:', 'SettingsAPI', error);
     throw error;
   }
 }
@@ -263,11 +257,9 @@ export async function clearWeatherApiSettings(): Promise<void> {
       throw new Error(`Failed to clear weather settings: ${error}`);
     }
 
-    console.log(
-      '[SettingsAPI] ✅ Weather settings cleared from backend successfully'
-    );
+    logInfo('✅ Weather settings cleared from backend successfully', 'SettingsAPI');
   } catch (error) {
-    console.error('[SettingsAPI] ❌ Failed to clear weather settings:', error);
+    logError('❌ Failed to clear weather settings:', 'SettingsAPI', error);
     throw error;
   }
 }

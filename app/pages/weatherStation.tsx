@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { logInfo, logError, logWarn } from '../services/graylogService';
 import {
   StyleSheet,
   useWindowDimensions,
@@ -16,8 +17,14 @@ import useCurrentWeatherData from '../hooks/useCurrentWeatherData';
 import { useDatePicker } from '../hooks/useDatePicker';
 import useHistoricalWeatherData from '../hooks/useHistoricalWeatherData';
 import { webStyles, mobileStyles } from '../styles/weatherStationStyles';
-import { dataTypeConfig, timespanOptions } from '../constants/weatherStationConfig';
-import { getWeatherIcon, getDataModeDisplay } from '../utils/weatherStationUtils';
+import {
+  dataTypeConfig,
+  timespanOptions,
+} from '../constants/weatherStationConfig';
+import {
+  getWeatherIcon,
+  getDataModeDisplay,
+} from '../utils/weatherStationUtils';
 import { solarTheme } from '../theme/solarTheme';
 
 export default function WeatherStation() {
@@ -64,13 +71,14 @@ export default function WeatherStation() {
 
   // Log current data mode for debugging
   useEffect(() => {
-    console.log(`[WeatherStation] Current data mode: ${dataMode}`);
+    logInfo('Current data mode: ${dataMode}', 'WeatherStation');
   }, [dataMode]);
 
   // Refresh data when data mode changes
   useEffect(() => {
-    console.log(
-      `[WeatherStation] Data mode changed to: ${dataMode}, refreshing data...`
+    logInfo(
+      'Data mode changed to: ${dataMode}, refreshing data...',
+      'WeatherStation'
     );
     setRefreshKey((prev) => prev + 1);
   }, [dataMode]);
@@ -78,8 +86,9 @@ export default function WeatherStation() {
   // Debug wrapper for setPickerDate (matching Growatt implementation)
   const handleDateChange = useCallback(
     (newDate: string) => {
-      console.log(
-        `[WeatherStation] Date changed from ${pickerDate} to ${newDate} (mode: ${dataMode})`
+      logInfo(
+        'Date changed from ${pickerDate} to ${newDate} (mode: ${dataMode})',
+        'WeatherStation'
       );
       onConfirm({ date: new Date(newDate) });
     },
@@ -118,7 +127,9 @@ export default function WeatherStation() {
         >
           {/* Mobile Weather Info - Above temperature box */}
           <View style={styles.weatherInfo}>
-            <Text style={styles.weatherIcon}>{getWeatherIcon(weatherText)}</Text>
+            <Text style={styles.weatherIcon}>
+              {getWeatherIcon(weatherText)}
+            </Text>
             <Text style={styles.locationText}>
               {neighborhood && countryName
                 ? `${neighborhood}, ${countryName}`
@@ -321,7 +332,9 @@ export default function WeatherStation() {
             <View style={styles.metricCard}>
               {/* Location and Icon Row */}
               <View style={styles.weatherInfo}>
-                <Text style={styles.weatherIcon}>{getWeatherIcon(weatherText)}</Text>
+                <Text style={styles.weatherIcon}>
+                  {getWeatherIcon(weatherText)}
+                </Text>
                 <Text style={styles.locationText}>
                   {neighborhood && countryName
                     ? `${neighborhood}, ${countryName}`

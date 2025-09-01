@@ -1,3 +1,4 @@
+import { logInfo, logError, logWarn } from '../services/graylogService';
 /**
  * Unified Data Service
  * Strict mode - NO FALLBACKS - Each mode uses only its designated data source
@@ -34,34 +35,28 @@ export async function fetchSolarData(
 ): Promise<SolarDataResponse> {
   const dataMode = getDataMode();
 
-  console.log(`[DataService] ${getConfigInfo()}`);
-  console.log(
-    `[DataService] Fetching ${timespan} data for ${date} in STRICT mode: ${dataMode}`
-  );
+  logInfo('${getConfigInfo()}', 'DataService');
+  logInfo('Fetching ${timespan} data for ${date} in STRICT mode: ${dataMode}', 'DataService');
 
   try {
     switch (dataMode) {
       case 'development':
-        console.log(
-          '[DataService] 🟡 DEVELOPMENT MODE: Using Java API directly'
-        );
+        logInfo('🟡 DEVELOPMENT MODE: Using Java API directly', 'DataService');
         const devResponse = await fetchGrowattData(timespan, date, isMobile);
-        console.log('[DataService] ✅ Successfully fetched from Java API');
+        logInfo('✅ Successfully fetched from Java API', 'DataService');
         return { ...devResponse, source: 'development' };
 
       case 'production':
-        console.log('[DataService] 🟢 PRODUCTION MODE: Using Production API');
+        logInfo('🟢 PRODUCTION MODE: Using Production API', 'DataService');
         const prodResponse = await fetchGrowattData(timespan, date, isMobile);
-        console.log(
-          '[DataService] ✅ Successfully fetched from Production API'
-        );
+        logInfo('✅ Successfully fetched from Production API', 'DataService');
         return { ...prodResponse, source: 'production' };
 
       default:
         throw new Error(`Invalid data mode: ${dataMode}`);
     }
   } catch (error) {
-    console.error(`[DataService] ❌ Error in ${dataMode} mode:`, error);
+    logError('❌ Error in ${dataMode} mode:', 'DataService', error);
     // Re-throw the error instead of falling back
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';

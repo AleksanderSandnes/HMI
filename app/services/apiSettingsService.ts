@@ -1,3 +1,4 @@
+import { logInfo, logError, logWarn } from '../services/graylogService';
 /**
  * API Settings Service
  * Handles communication with backend for API settings management
@@ -57,7 +58,7 @@ export async function getApiSettings(): Promise<GrowattApiSettings | null> {
 
     return null;
   } catch (error) {
-    console.error('[ApiSettingsService] Error fetching API settings:', error);
+    logError('Error fetching API settings:', 'ApiSettingsService', error);
     return null;
   }
 }
@@ -93,7 +94,7 @@ export async function updateApiSettings(
     const data: ApiSettingsResponse = await response.json();
     return data.success;
   } catch (error) {
-    console.error('[ApiSettingsService] Error updating API settings:', error);
+    logError('Error updating API settings:', 'ApiSettingsService', error);
     throw error;
   }
 }
@@ -123,7 +124,7 @@ export async function clearApiSettings(): Promise<boolean> {
     const data: ApiSettingsResponse = await response.json();
     return data.success;
   } catch (error) {
-    console.error('[ApiSettingsService] Error clearing API settings:', error);
+    logError('Error clearing API settings:', 'ApiSettingsService', error);
     throw error;
   }
 }
@@ -143,7 +144,7 @@ async function getAuthToken(): Promise<string | null> {
       return await AsyncStorage.getItem('authToken');
     }
   } catch (error) {
-    console.error('[ApiSettingsService] Error getting auth token:', error);
+    logError('Error getting auth token:', 'ApiSettingsService', error);
     return null;
   }
 }

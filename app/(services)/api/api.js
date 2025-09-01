@@ -1,6 +1,7 @@
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
 import { getDataMode } from '../../services/dataConfig';
+import { logInfo } from '../../services/graylogService';
 
 // API Configuration - respects data mode
 const getApiConfig = () => {
@@ -50,7 +51,7 @@ const createApiRequest = (getUrl, method = 'GET', logPrefix = '') => {
       const url = typeof getUrl === 'function' ? getUrl(API_CONFIG) : getUrl;
 
       if (logPrefix) {
-        console.log(`[API] ${logPrefix}:`, data);
+        logInfo('${logPrefix}:', 'API', data);
       }
 
       const config = {
@@ -93,7 +94,7 @@ async function getAuthToken() {
     }
     return null;
   } catch (error) {
-    console.error('[GrowattAPI] Error getting auth token:', error);
+    logError('Error getting auth token:', 'GrowattAPI', error);
     return null;
   }
 }
@@ -143,7 +144,7 @@ export const growattLogin = async (credentials) => {
 export const getGrowattTotalData = async (request) => {
   try {
     const API_CONFIG = getApiConfig();
-    console.log('[API] Sending totalData request:', request);
+    logInfo('Sending totalData request:', 'API', request);
     const token = await getAuthToken();
     const headers = {
       ...API_CONFIG.HEADERS,
@@ -163,7 +164,7 @@ export const getGrowattTotalData = async (request) => {
 export const getGrowattDayChart = async (request) => {
   try {
     const API_CONFIG = getApiConfig();
-    console.log('[API] Sending dayChart request:', request);
+    logInfo('Sending dayChart request:', 'API', request);
     const token = await getAuthToken();
     const headers = {
       ...API_CONFIG.HEADERS,
@@ -183,7 +184,7 @@ export const getGrowattDayChart = async (request) => {
 export const getGrowattMonthChart = async (request) => {
   try {
     const API_CONFIG = getApiConfig();
-    console.log('[API] Sending monthChart request:', request);
+    logInfo('Sending monthChart request:', 'API', request);
     const token = await getAuthToken();
     const headers = {
       ...API_CONFIG.HEADERS,
@@ -203,7 +204,7 @@ export const getGrowattMonthChart = async (request) => {
 export const getGrowattYearChart = async (request) => {
   try {
     const API_CONFIG = getApiConfig();
-    console.log('[API] Sending yearChart request:', request);
+    logInfo('Sending yearChart request:', 'API', request);
     const token = await getAuthToken();
     const headers = {
       ...API_CONFIG.HEADERS,

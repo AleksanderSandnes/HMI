@@ -1,3 +1,4 @@
+import { logInfo, logError, logWarn } from '../services/graylogService';
 /**
  * Weather API Configuration Service
  * Manages weather API endpoints based on data mode
@@ -31,9 +32,7 @@ export function getWeatherApiConfig(): WeatherApiConfig {
       'http://localhost:5000';
   }
 
-  console.log(
-    `[WeatherApiConfig] Using weather API in ${dataMode} mode: ${baseUrl}`
-  );
+  logInfo('Using weather API in ${dataMode} mode: ${baseUrl}', 'WeatherApiConfig');
 
   return {
     baseUrl,

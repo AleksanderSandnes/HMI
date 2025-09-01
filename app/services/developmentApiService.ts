@@ -11,6 +11,7 @@ import {
   getGrowattYearChart,
 } from '../(services)/api/api';
 import { getGrowattCredentials } from './credentialsService';
+import { logInfo, logError, logWarn } from './graylogService';
 
 export interface DevelopmentSolarData {
   chartData: {
@@ -34,7 +35,7 @@ export interface DevelopmentSolarData {
  */
 export async function checkDevelopmentApiHealth(): Promise<boolean> {
   try {
-    console.log('[DevelopmentAPI] Checking development API health...');
+    logInfo('Checking development API health...', 'DevelopmentAPI');
 
     // Create timeout controllers
     const weatherController = new AbortController();
@@ -71,34 +72,28 @@ export async function checkDevelopmentApiHealth(): Promise<boolean> {
     const growattHealthy =
       growattResponse.status === 'fulfilled' && growattResponse.value.ok;
 
-    console.log(
-      `[DevelopmentAPI] Weather API (localhost:5000): ${weatherHealthy ? '✅' : '❌'}`
-    );
-    console.log(
-      `[DevelopmentAPI] Growatt API (localhost:8080): ${growattHealthy ? '✅' : '❌'}`
-    );
+    logInfo(`Weather API (localhost:5000): ${weatherHealthy ? '✅ Healthy' : '❌ Unhealthy'}`, 'DevelopmentAPI');
+    logInfo(`Growatt API (localhost:8080): ${growattHealthy ? '✅ Healthy' : '❌ Unhealthy'}`, 'DevelopmentAPI');
 
     if (!weatherHealthy) {
-      console.warn(
-        '[DevelopmentAPI] Weather API health check failed:',
-        weatherResponse.status === 'rejected'
+      logWarn('Weather API health check failed:', 'DevelopmentAPI', {
+        reason: weatherResponse.status === 'rejected'
           ? weatherResponse.reason
           : 'HTTP error'
-      );
+      });
     }
 
     if (!growattHealthy) {
-      console.warn(
-        '[DevelopmentAPI] Growatt API health check failed:',
-        growattResponse.status === 'rejected'
+      logWarn('Growatt API health check failed:', 'DevelopmentAPI', {
+        reason: growattResponse.status === 'rejected'
           ? growattResponse.reason
           : 'HTTP error'
-      );
+      });
     }
 
     return weatherHealthy && growattHealthy;
   } catch (error) {
-    console.error('[DevelopmentAPI] Health check failed:', error);
+    logError('Health check failed:', 'DevelopmentAPI', error as Error);
     return false;
   }
 }
@@ -111,17 +106,17 @@ export async function fetchDevelopmentSolarData(
   date: string,
   isMobile: boolean = false
 ): Promise<DevelopmentSolarData> {
-  console.log(`[DevelopmentAPI] Fetching ${timespan} data from Growatt API`);
-  console.log(`[DevelopmentAPI] Using localhost:8080 for Growatt API`);
+  logInfo(`Fetching ${timespan} data from Growatt API`, 'DevelopmentAPI');
+  logInfo('Using localhost:8080 for Growatt API', 'DevelopmentAPI');
 
   try {
     // Get secure credentials from user settings or environment variables
-    console.log('[DevelopmentAPI] Retrieving Growatt credentials...');
+    logInfo('Retrieving Growatt credentials...', 'DevelopmentAPI');
     const loginCredentials = await getGrowattCredentials();
 
-    console.log('[DevelopmentAPI] Attempting Growatt login...');
+    logInfo('Attempting Growatt login...', 'DevelopmentAPI');
     await growattLogin(loginCredentials);
-    console.log('[DevelopmentAPI] Growatt login successful');
+    logInfo('Growatt login successful', 'DevelopmentAPI');
 
     let chartData;
     let labels: string[] = [];
@@ -130,7 +125,7 @@ export async function fetchDevelopmentSolarData(
     let totalGeneration = 0;
 
     if (timespan === 'hourly' || timespan === 'daily') {
-      console.log('[DevelopmentAPI] Fetching day chart data...');
+      logInfo('Fetching day chart data...', 'DevelopmentAPI');
 
       // Try yesterday's date if today returns null data
       let requestDate = date;
@@ -139,31 +134,25 @@ export async function fetchDevelopmentSolarData(
       yesterday.setDate(today.getDate() - 1);
       const yesterdayString = yesterday.toISOString().split('T')[0];
 
-      console.log('[DevelopmentAPI] Trying date:', requestDate);
+      logInfo('Trying date:', 'DevelopmentAPI', { requestDate });
 
       const dayChartRequest = { date: requestDate };
       chartData = await getGrowattDayChart(dayChartRequest);
 
       if (chartData && chartData.obj && chartData.obj.pac) {
         const pacValues = chartData.obj.pac;
-        console.log(
-          '[DevelopmentAPI] Raw pacValues:',
-          pacValues.slice(0, 10),
-          '... (showing first 10 values)'
-        );
-        console.log(
-          '[DevelopmentAPI] Total pacValues length:',
-          pacValues.length
-        );
-        console.log(
-          '[DevelopmentAPI] Non-zero values:',
-          pacValues.filter((v: any) => v > 0).length
-        );
-        console.log('[DevelopmentAPI] Requested date:', date);
-        console.log(
-          '[DevelopmentAPI] Full API response structure:',
-          JSON.stringify(chartData, null, 2).substring(0, 500)
-        );
+        logInfo('Raw pacValues (first 10):', 'DevelopmentAPI', { 
+          values: pacValues.slice(0, 10),
+          note: 'showing first 10 values'
+        });
+        logInfo('Total pacValues length:', 'DevelopmentAPI', { length: pacValues.length });
+        logInfo('Non-zero values:', 'DevelopmentAPI', { 
+          count: pacValues.filter((v: any) => v > 0).length 
+        });
+        logInfo('Requested date:', 'DevelopmentAPI', { date });
+        logInfo('Full API response structure:', 'DevelopmentAPI', {
+          response: JSON.stringify(chartData, null, 2).substring(0, 500)
+        });
 
         // Get the final pacValues (either today's or yesterday's)
         const finalPacValues = chartData.obj.pac;
@@ -173,23 +162,17 @@ export async function fetchDevelopmentSolarData(
         let actualDataArray = pacValues;
 
         if (nonNullCount === 0) {
-          console.log(
-            '[DevelopmentAPI] All pac values are null, checking other properties...'
-          );
+          logInfo('All pac values are null, checking other properties...', 'DevelopmentAPI');
 
           // Check if energy array has data
           if (chartData.obj.energy && Array.isArray(chartData.obj.energy)) {
             const energyNonNull = chartData.obj.energy.filter(
               (v: any) => v !== null && v > 0
             ).length;
-            console.log(
-              `[DevelopmentAPI] Energy array has ${energyNonNull} non-null values`
-            );
+            logInfo(`Energy array has ${energyNonNull} non-null values`, 'DevelopmentAPI');
             if (energyNonNull > 0) {
               actualDataArray = chartData.obj.energy;
-              console.log(
-                '[DevelopmentAPI] Using energy array instead of pac array'
-              );
+              logInfo('Using energy array instead of pac array', 'DevelopmentAPI');
             }
           }
 
@@ -198,14 +181,10 @@ export async function fetchDevelopmentSolarData(
             const powerNonNull = chartData.obj.power.filter(
               (v: any) => v !== null && v > 0
             ).length;
-            console.log(
-              `[DevelopmentAPI] Power array has ${powerNonNull} non-null values`
-            );
+            logInfo(`Power array has ${powerNonNull} non-null values`, 'DevelopmentAPI');
             if (powerNonNull > 0) {
               actualDataArray = chartData.obj.power;
-              console.log(
-                '[DevelopmentAPI] Using power array instead of pac array'
-              );
+              logInfo('Using power array instead of pac array', 'DevelopmentAPI');
             }
           }
         }
@@ -256,7 +235,7 @@ export async function fetchDevelopmentSolarData(
         ); // 30-min intervals
       }
     } else if (timespan === 'weekly') {
-      console.log('[DevelopmentAPI] Fetching weekly data from month chart...');
+      logInfo('Fetching weekly data from month chart...', 'DevelopmentAPI');
       const currentDate = new Date(date);
       const monthChartRequest = {
         date: `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`,
@@ -298,7 +277,7 @@ export async function fetchDevelopmentSolarData(
         todayGeneration = pacData[pacData.length - 1] || 0; // Today's generation
       }
     } else if (timespan === 'monthly') {
-      console.log('[DevelopmentAPI] Fetching monthly data from year chart...');
+      logInfo('Fetching monthly data from year chart...', 'DevelopmentAPI');
       const currentDate = new Date(date);
       const yearChartRequest = { date: currentDate.getFullYear().toString() };
 
@@ -331,7 +310,7 @@ export async function fetchDevelopmentSolarData(
         todayGeneration = pacData[currentMonth] || 0; // Current month's generation
       }
     } else if (timespan === 'yearly') {
-      console.log('[DevelopmentAPI] Fetching yearly data...');
+      logInfo('Fetching yearly data...', 'DevelopmentAPI');
       const currentYear = new Date().getFullYear();
       const years: string[] = [];
       const yearlyData: number[] = [];
@@ -355,10 +334,9 @@ export async function fetchDevelopmentSolarData(
             yearlyData.push(0);
           }
         } catch (error) {
-          console.log(
-            `[DevelopmentAPI] Error fetching data for year ${year}:`,
-            error
-          );
+          logInfo(`Error fetching data for year ${year}:`, 'DevelopmentAPI', { 
+            error: error as Error
+          });
           yearlyData.push(0);
         }
       }
@@ -370,7 +348,7 @@ export async function fetchDevelopmentSolarData(
 
     // Fetch total data for total generation (handle errors gracefully)
     try {
-      console.log('[DevelopmentAPI] Fetching total data...');
+      logInfo('Fetching total data...', 'DevelopmentAPI');
       const totalDataRequest = { date }; // Use the provided date
       const totalData = await getGrowattTotalData(totalDataRequest);
 
@@ -381,21 +359,17 @@ export async function fetchDevelopmentSolarData(
           totalData.obj.totalPower ||
           totalData.obj.totalGeneration ||
           24000.3; // Use a realistic fallback value
-        console.log(
-          '[DevelopmentAPI] Successfully got total generation:',
-          totalGeneration
-        );
+        logInfo('Successfully got total generation:', 'DevelopmentAPI', { 
+          totalGeneration 
+        });
       } else {
         totalGeneration = 24000.3; // Fallback if no obj
-        console.log(
-          '[DevelopmentAPI] No obj in total data response, using fallback'
-        );
+        logInfo('No obj in total data response, using fallback', 'DevelopmentAPI');
       }
     } catch (error) {
-      console.log(
-        '[DevelopmentAPI] Error fetching total data (using fallback):',
-        error
-      );
+      logInfo('Error fetching total data (using fallback):', 'DevelopmentAPI', { 
+        error: error as Error
+      });
       totalGeneration = 24000.3; // Fallback to known total
     }
 
@@ -408,7 +382,7 @@ export async function fetchDevelopmentSolarData(
     todayGeneration = Math.round(todayGeneration * 100) / 100;
     totalGeneration = Math.round(totalGeneration * 100) / 100;
 
-    console.log('[DevelopmentAPI] ✅ Successfully processed Growatt data:', {
+    logInfo('✅ Successfully processed Growatt data:', 'DevelopmentAPI', {
       timespan,
       dataPoints: pacData.length,
       labelsWithValues: labels.filter((l) => l !== '').length,
@@ -435,10 +409,7 @@ export async function fetchDevelopmentSolarData(
       },
     };
   } catch (error) {
-    console.error(
-      '[DevelopmentAPI] ❌ Error fetching from Growatt API:',
-      error
-    );
+    logError('❌ Error fetching from Growatt API:', 'DevelopmentAPI', error as Error);
     throw new Error(`Development API failed: ${error}`);
   }
 }
@@ -467,7 +438,7 @@ async function getAuthToken(): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.error('[DevelopmentAPI] Error getting auth token:', error);
+    logError('Error getting auth token:', 'DevelopmentAPI', error as Error);
     return null;
   }
 }

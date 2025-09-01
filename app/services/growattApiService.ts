@@ -1,3 +1,4 @@
+import { logInfo, logError, logWarn } from '../services/graylogService';
 /**
  * Direct Growatt API Service
  * Handles direct communication with the Java Growatt API
@@ -67,7 +68,7 @@ async function getGrowattCredentials(): Promise<{
     const token = await getAuthToken();
 
     if (!token) {
-      console.warn('[GrowattAPI] No auth token available - user not logged in');
+      logWarn('No auth token available - user not logged in', 'GrowattAPI');
       return { account: null, password: null, plantId: null };
     }
 
@@ -88,10 +89,7 @@ async function getGrowattCredentials(): Promise<{
     });
 
     if (!response.ok) {
-      console.error(
-        '[GrowattAPI] Failed to fetch credentials:',
-        response.status
-      );
+      logError('Failed to fetch credentials', 'GrowattAPI', new Error(`HTTP ${response.status}`));
       return { account: null, password: null, plantId: null };
     }
 
@@ -102,7 +100,7 @@ async function getGrowattCredentials(): Promise<{
       plantId: data.credentials?.plantId || null,
     };
   } catch (error) {
-    console.error('[GrowattAPI] Error getting credentials:', error);
+    logError('Error getting credentials', 'GrowattAPI', error as Error);
     return { account: null, password: null, plantId: null };
   }
 }
@@ -131,7 +129,7 @@ async function getAuthToken(): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.error('[GrowattAPI] Error getting auth token:', error);
+    logError('Error getting auth token', 'GrowattAPI', error as Error);
     return null;
   }
 }
@@ -173,10 +171,8 @@ function optimizeChartData(
   timespan: string,
   isMobile: boolean = false
 ): { data: number[]; labels: string[] } {
-  console.log(
-    `[GrowattAPI] Optimizing chart data for ${timespan}, mobile: ${isMobile}`
-  );
-  console.log(`[GrowattAPI] Input data points: ${powerValues.length}`);
+  logInfo(`Optimizing chart data for ${timespan}, mobile: ${isMobile}`, 'GrowattAPI');
+  logInfo(`Input data points: ${powerValues.length}`, 'GrowattAPI');
 
   // Find the range of meaningful data (where power > 5W to avoid noise)
   const meaningfulThreshold = 5; // Watts
@@ -192,13 +188,11 @@ function optimizeChartData(
       ? powerValues.length - 1 - lastMeaningfulIndex
       : -1;
 
-  console.log(
-    `[GrowattAPI] Meaningful data range: ${firstMeaningfulIndex} to ${actualLastIndex}`
-  );
+  logInfo(`Meaningful data range: ${firstMeaningfulIndex} to ${actualLastIndex}`, 'GrowattAPI');
 
   if (firstMeaningfulIndex === -1 || actualLastIndex === -1) {
     // No meaningful data found
-    console.log('[GrowattAPI] No meaningful solar generation data found');
+    logInfo('No meaningful solar generation data found', 'GrowattAPI');
     return { data: [0], labels: ['No Data'] };
   }
 
@@ -209,9 +203,7 @@ function optimizeChartData(
   const rangedData = powerValues.slice(startIndex, endIndex + 1);
   const rangedLabels = labels.slice(startIndex, endIndex + 1);
 
-  console.log(
-    `[GrowattAPI] Filtered to range: ${startIndex} to ${endIndex} (${rangedData.length} points)`
-  );
+  logInfo(`Filtered to range: ${startIndex} to ${endIndex} (${rangedData.length} points)`, 'GrowattAPI');
 
   // Determine optimal sampling based on timespan and device
   let samplingInterval: number;
@@ -259,12 +251,8 @@ function optimizeChartData(
     }
   }
 
-  console.log(
-    `[GrowattAPI] Final optimized data points: ${sampledData.length}`
-  );
-  console.log(
-    `[GrowattAPI] Sample labels: ${sampledLabels.slice(0, 5).join(', ')}...`
-  );
+  logInfo(`Final optimized data points: ${sampledData.length}`, 'GrowattAPI');
+  logInfo(`Sample labels: ${sampledLabels.slice(0, 5).join(', ')}...`, 'GrowattAPI');
 
   return {
     data: sampledData,
@@ -335,8 +323,8 @@ export async function fetchSolarData(
 ): Promise<SolarData> {
   const config = getApiConfig();
 
-  console.log(`[GrowattAPI] Fetching ${timespan} data for ${date}`);
-  console.log(`[GrowattAPI] Using API: ${config.baseUrl}`);
+  logInfo(`Fetching ${timespan} data for ${date}`, 'GrowattAPI');
+  logInfo(`Using API: ${config.baseUrl}`, 'GrowattAPI');
 
   try {
     // Get user credentials
@@ -348,10 +336,10 @@ export async function fetchSolarData(
       );
     }
 
-    console.log(`[GrowattAPI] Got credentials for: ${credentials.account}`);
+    logInfo(`Got credentials for: ${credentials.account}`, 'GrowattAPI');
 
     // Step 1: Login to Growatt API
-    console.log('[GrowattAPI] Logging in to Growatt API...');
+    logInfo('Logging in to Growatt API...', 'GrowattAPI');
     const loginResponse = await fetch(
       `${config.baseUrl}${config.endpoints.login}`,
       {
@@ -369,15 +357,11 @@ export async function fetchSolarData(
 
     if (!loginResponse.ok) {
       const errorData = await loginResponse.text();
-      console.error(
-        '[GrowattAPI] Login failed:',
-        loginResponse.status,
-        errorData
-      );
+      logError('Login failed', 'GrowattAPI', new Error(`Status: ${loginResponse.status}, Data: ${errorData}`));
       throw new Error(`Growatt login failed: ${loginResponse.status}`);
     }
 
-    console.log('[GrowattAPI] ✅ Login successful');
+    logInfo('✅ Login successful', 'GrowattAPI');
 
     // Step 2: Fetch day chart data and total data in parallel after login
     let powerValues: number[] = [];
@@ -385,7 +369,7 @@ export async function fetchSolarData(
 
     // Fetch day chart data (for chart visualization)
     try {
-      console.log('[GrowattAPI] Fetching day chart data...');
+      logInfo('Fetching day chart data...', 'GrowattAPI');
       const chartResponse = await fetch(
         `${config.baseUrl}${config.endpoints.dayChart}`,
         {
@@ -405,20 +389,19 @@ export async function fetchSolarData(
         if (chartData.result === 1) {
           powerValues = chartData.obj?.pac || [];
           chartDataSuccess = true;
-          console.log('[GrowattAPI] ✅ Successfully fetched day chart data');
+          logInfo('✅ Successfully fetched day chart data', 'GrowattAPI');
         } else {
-          console.warn('[GrowattAPI] Day chart returned error result');
+          logWarn('Day chart returned error result', 'GrowattAPI');
         }
       } else {
         const errorData = await chartResponse.text();
-        console.warn(
-          '[GrowattAPI] Day chart request failed:',
-          chartResponse.status,
-          errorData
-        );
+        logWarn('Day chart request failed', 'GrowattAPI', { 
+          status: chartResponse.status, 
+          errorData 
+        });
       }
     } catch (error) {
-      console.warn('[GrowattAPI] Day chart request error:', error);
+      logWarn('Day chart request error', 'GrowattAPI', { error });
     }
 
     // Step 3: Fetch total data for accurate total generation and today's data (independent of chart data)
@@ -426,11 +409,9 @@ export async function fetchSolarData(
     let todayGenerationFromApi: number | undefined;
     let monthGenerationFromApi: number | undefined;
     try {
-      console.log('[GrowattAPI] Fetching total data for accurate metrics...');
+      logInfo('Fetching total data for accurate metrics...', 'GrowattAPI');
       const totalDataRequest = { date }; // Use the provided date
-      console.log(
-        `[GrowattAPI] Sending totalData request with date: ${date} for timespan: ${timespan}`
-      );
+      logInfo(`Sending totalData request with date: ${date} for timespan: ${timespan}`, 'GrowattAPI');
 
       // Make direct call to totalData endpoint using the same session
       const totalDataResponse = await fetch(
@@ -447,14 +428,10 @@ export async function fetchSolarData(
 
       if (!totalDataResponse.ok) {
         const errorData = await totalDataResponse.text();
-        console.error(
-          '[GrowattAPI] Total data request failed:',
-          totalDataResponse.status,
-          errorData
-        );
+        logError('Total data request failed', 'GrowattAPI', new Error(`Status: ${totalDataResponse.status}, Data: ${errorData}`));
       } else {
         const totalData = await totalDataResponse.json();
-        console.log('[GrowattAPI] ✅ Successfully fetched total data');
+        logInfo('✅ Successfully fetched total data', 'GrowattAPI');
 
         if (totalData && totalData.result === 1 && totalData.obj) {
           // Try different property names that might exist in the API response
@@ -473,32 +450,29 @@ export async function fetchSolarData(
             totalData.obj.eMonth || totalData.obj.monthGeneration || undefined;
 
           if (totalGenerationFromApi) {
-            console.log(
-              '[GrowattAPI] Successfully got total generation from API:',
-              totalGenerationFromApi,
-              'kWh'
-            );
+            logInfo('Successfully got total generation from API', 'GrowattAPI', { 
+              totalGeneration: totalGenerationFromApi,
+              unit: 'kWh'
+            });
           }
 
           if (todayGenerationFromApi) {
-            console.log(
-              '[GrowattAPI] Successfully got today generation from API:',
-              todayGenerationFromApi,
-              'kWh'
-            );
+            logInfo('Successfully got today generation from API', 'GrowattAPI', { 
+              todayGeneration: todayGenerationFromApi,
+              unit: 'kWh'
+            });
           }
 
           if (monthGenerationFromApi) {
-            console.log(
-              '[GrowattAPI] Successfully got month generation from API:',
-              monthGenerationFromApi,
-              'kWh for date:',
-              date
-            );
+            logInfo('Successfully got month generation from API', 'GrowattAPI', { 
+              monthGeneration: monthGenerationFromApi,
+              unit: 'kWh',
+              date: date
+            });
           }
 
           // Log all available fields for debugging
-          console.log('[GrowattAPI] Full totalData response obj:', {
+          logInfo('Full totalData response obj:', 'GrowattAPI', {
             eToday: totalData.obj.eToday,
             eMonth: totalData.obj.eMonth,
             eTotal: totalData.obj.eTotal,
@@ -510,17 +484,14 @@ export async function fetchSolarData(
             !todayGenerationFromApi &&
             !monthGenerationFromApi
           ) {
-            console.log('[GrowattAPI] No generation data in API response');
+            logInfo('No generation data in API response', 'GrowattAPI');
           }
         } else {
-          console.log('[GrowattAPI] Invalid total data response or no obj');
+          logInfo('Invalid total data response or no obj', 'GrowattAPI');
         }
       }
     } catch (error) {
-      console.warn(
-        '[GrowattAPI] Error fetching total data (will use calculated fallback):',
-        error
-      );
+      logWarn('Error fetching total data (will use calculated fallback)', 'GrowattAPI', { error });
     }
 
     // Step 4: Process the data (even if chart data failed, we can still return metrics)
@@ -557,7 +528,7 @@ export async function fetchSolarData(
       metrics,
     };
   } catch (error) {
-    console.error('[GrowattAPI] Error fetching solar data:', error);
+    logError('Error fetching solar data', 'GrowattAPI', error as Error);
     throw error;
   }
 }
@@ -569,7 +540,7 @@ export async function checkApiHealth(): Promise<boolean> {
   try {
     const config = getApiConfig();
 
-    console.log(`[GrowattAPI] Checking API health: ${config.baseUrl}`);
+    logInfo(`Checking API health: ${config.baseUrl}`, 'GrowattAPI');
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -585,10 +556,10 @@ export async function checkApiHealth(): Promise<boolean> {
     clearTimeout(timeoutId);
 
     const isHealthy = response.ok;
-    console.log(`[GrowattAPI] Health check: ${isHealthy ? '✅' : '❌'}`);
+    logInfo(`Health check: ${isHealthy ? '✅ Healthy' : '❌ Unhealthy'}`, 'GrowattAPI');
     return isHealthy;
   } catch (error) {
-    console.error('[GrowattAPI] Health check failed:', error);
+    logError('Health check failed', 'GrowattAPI', error as Error);
     return false;
   }
 }

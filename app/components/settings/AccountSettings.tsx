@@ -26,6 +26,7 @@ import {
   UpdatePasswordData,
 } from '../../services/accountApiService';
 import { loginUserAction } from '../../(redux)/authSlice';
+import { logInfo, logError } from '../../services/graylogService';
 
 interface AccountSettingsProps {
   onAccountChange?: () => void;
@@ -68,17 +69,17 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
       setIsProfileLoading(true);
       setProfileError(null);
 
-      console.log('[AccountSettings] Loading user profile...');
+      logInfo('Loading user profile...', 'AccountSettings');
       const profileData = await getUserProfile();
-      console.log('[AccountSettings] Profile data received:', profileData);
+      logInfo('Profile data received:', 'AccountSettings', profileData);
 
       setProfile(profileData);
       setUsername(profileData.username);
       setEmail(profileData.email);
 
-      console.log('[AccountSettings] Profile state updated successfully');
+      logInfo('Profile state updated successfully', 'AccountSettings');
     } catch (error: any) {
-      console.error('[AccountSettings] Failed to load profile:', error);
+      logError('Failed to load profile:', 'AccountSettings', error);
       setProfileError(error.message || 'Failed to load profile');
     } finally {
       setIsProfileLoading(false);
@@ -135,7 +136,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
 
       onAccountChange?.();
     } catch (error: any) {
-      console.error('[AccountSettings] Profile update failed:', error);
+      logError('Profile update failed:', 'AccountSettings', error);
       setProfileError(error.message || 'Failed to update profile');
 
       if (Platform.OS !== 'web') {
@@ -189,7 +190,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
 
       onAccountChange?.();
     } catch (error: any) {
-      console.error('[AccountSettings] Password update failed:', error);
+      logError('Password update failed:', 'AccountSettings', error);
       setPasswordError(error.message || 'Failed to update password');
 
       if (Platform.OS !== 'web') {

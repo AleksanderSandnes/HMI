@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createSlice } from '@reduxjs/toolkit';
 import { Platform } from 'react-native';
 import { clearStoredCredentials } from '../services/credentialsService';
+import { logInfo, logError, logWarn } from '../services/graylogService';
 
 const getStorage = () => {
   if (Platform.OS === 'web') {
@@ -38,11 +39,11 @@ const storage = getStorage();
 
 const loadUserFromStorage = async () => {
   try {
-    console.log('[AuthSlice] Loading user from storage...');
+    logInfo('Loading user from storage...', 'AuthSlice');
     const userInfo = await storage.getItem('userInfo');
-    console.log('[AuthSlice] Raw userInfo from storage:', userInfo);
+    logInfo('Raw userInfo from storage:', 'AuthSlice', userInfo);
     const parsedUser = userInfo ? JSON.parse(userInfo) : null;
-    console.log('[AuthSlice] Parsed user:', parsedUser);
+    logInfo('Parsed user:', 'AuthSlice', parsedUser);
     return parsedUser;
   } catch (error) {
     console.error('Error loading user from storage:', error);

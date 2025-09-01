@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
+import { logInfo, logError, logWarn } from '../services/graylogService';
 import {
   TemperatureDataItem,
   WindSpeedDataItem,
@@ -39,8 +40,9 @@ const useHistoricalWeatherData = (
     const month = parseInt(dateString.slice(4, 6)) - 1; // Month is 0-indexed
     const day = parseInt(dateString.slice(6, 8));
 
-    console.log(
-      `[HistoricalWeatherHook] Parsing date: ${dateString} -> Year=${year}, Month=${month + 1}, Day=${day}`
+    logInfo(
+      `Parsing date: ${dateString} -> Year=${year}, Month=${month + 1}, Day=${day}`,
+      'HistoricalWeatherHook'
     );
 
     const date = new Date(year, month, day);
@@ -61,8 +63,9 @@ const useHistoricalWeatherData = (
     const startDateFormatted = formatDate(startDate);
     const endDateFormatted = formatDate(endDate);
 
-    console.log(
-      `[HistoricalWeatherHook] Week calculation: ${dateString} -> ${startDateFormatted} to ${endDateFormatted}`
+    logInfo(
+      `Week calculation: ${dateString} -> ${startDateFormatted} to ${endDateFormatted}`,
+      'HistoricalWeatherHook'
     );
 
     return {
@@ -82,8 +85,9 @@ const useHistoricalWeatherData = (
   ) => {
     const dataMode = getDataMode();
 
-    console.log(
-      `[HistoricalWeatherHook] Fetching historical weather data for ${timespan} in ${dataMode} mode`
+    logInfo(
+      `Fetching historical weather data for ${timespan} in ${dataMode} mode`,
+      'HistoricalWeatherHook'
     );
 
     try {
@@ -98,8 +102,9 @@ const useHistoricalWeatherData = (
           // For weekly, calculate the week and get all hourly data for the week
           const { startDate, endDate } =
             calculateWeekDates(formattedPickerDate);
-          console.log(
-            `[HistoricalWeatherHook] Weekly mode: fetching data for week ${startDate} to ${endDate}`
+          logInfo(
+            `Weekly mode: fetching data for week ${startDate} to ${endDate}`,
+            'HistoricalWeatherHook'
           );
           json = await getWeeklyHourlyWeatherData(startDate, endDate);
           break;
@@ -123,20 +128,23 @@ const useHistoricalWeatherData = (
       }
 
       if (!observations || observations.length === 0) {
-        console.warn(
-          `[HistoricalWeatherHook] No data returned for ${timespan} timespan`
+        logWarn(
+          `No data returned for ${timespan} timespan`,
+          'HistoricalWeatherHook'
         );
         return [];
       }
 
-      console.log(
-        `[HistoricalWeatherHook] Successfully fetched ${timespan} weather data in ${dataMode} mode. Records: ${observations.length}`
+      logInfo(
+        `Successfully fetched ${timespan} weather data in ${dataMode} mode. Records: ${observations.length}`,
+        'HistoricalWeatherHook'
       );
 
       // Debug: Log sample data structure for weekly
       if (timespan === 'weekly' && observations.length > 0) {
-        console.log(
-          `[HistoricalWeatherHook] Sample data structure for ${timespan}:`,
+        logInfo(
+          `Sample data structure for ${timespan}:`,
+          'HistoricalWeatherHook',
           {
             sampleItem: observations[0],
             metricValues: observations[0].metric,
@@ -148,9 +156,10 @@ const useHistoricalWeatherData = (
 
       return observations;
     } catch (error) {
-      console.error(
-        `[HistoricalWeatherHook] Error fetching ${timespan} weather data in ${dataMode} mode:`,
-        error
+      logError(
+        `Error fetching ${timespan} weather data in ${dataMode} mode:`,
+        'HistoricalWeatherHook',
+        error as Error
       );
       return [];
     }
@@ -392,12 +401,13 @@ const useHistoricalWeatherData = (
 
   // New formatting functions that handle different time ranges and data structures
   const formatTemperatureDataByTimespan = (data: any[], timespan: string) => {
-    console.log(
-      `[HistoricalWeatherHook] Formatting temperature data for ${timespan}, records: ${data.length}`
+    logInfo(
+      `Formatting temperature data for ${timespan}, records: ${data.length}`,
+      'HistoricalWeatherHook'
     );
 
     if (!data || data.length === 0) {
-      console.warn(`[HistoricalWeatherHook] No data to format for ${timespan}`);
+      logWarn(`No data to format for ${timespan}`, 'HistoricalWeatherHook');
       setWeatherData({
         labels: [],
         datasets: [],
@@ -405,7 +415,7 @@ const useHistoricalWeatherData = (
       return;
     }
 
-    console.log(`[HistoricalWeatherHook] Sample data item:`, data[0]);
+    logInfo('Sample data item:', 'HistoricalWeatherHook', data[0]);
 
     let formattedData: any[] = [];
     let labels: string[] = [];
@@ -483,28 +493,29 @@ const useHistoricalWeatherData = (
           return ''; // Empty label for other times
         });
 
-        console.log(
-          `[HistoricalWeatherHook] Sampled weekly data: ${data.length} -> ${sampledData.length} records`
+        logInfo(
+          `Sampled weekly data: ${data.length} -> ${sampledData.length} records`,
+          'HistoricalWeatherHook'
         );
       }
 
-      console.log(
-        `[HistoricalWeatherHook] Formatted ${formattedData.length} records with ${labels.length} labels`
+      logInfo(
+        `Formatted ${formattedData.length} records with ${labels.length} labels`,
+        'HistoricalWeatherHook'
       );
-      console.log(
-        `[HistoricalWeatherHook] Sample temp values:`,
+      logInfo(
+        'Sample temp values:',
+        'HistoricalWeatherHook',
         formattedData.slice(0, 3).map((item) => item.tempAvg)
       );
-      console.log(`[HistoricalWeatherHook] Sample labels:`, labels.slice(0, 5));
+      logInfo('Sample labels:', 'HistoricalWeatherHook', labels.slice(0, 5));
 
       const tempAvg = formattedData.map((item) => item.tempAvg);
       const dewptAvg = formattedData.map((item) => item.dewptAvg);
 
       // Validate data before setting
       if (tempAvg.length === 0 || labels.length === 0) {
-        console.warn(
-          `[HistoricalWeatherHook] Empty data arrays after processing`
-        );
+        logWarn('Empty data arrays after processing', 'HistoricalWeatherHook');
         setWeatherData({
           labels: [],
           datasets: [],
@@ -528,9 +539,10 @@ const useHistoricalWeatherData = (
         ],
       });
     } catch (error) {
-      console.error(
-        `[HistoricalWeatherHook] Error formatting temperature data:`,
-        error
+      logError(
+        'Error formatting temperature data:',
+        'HistoricalWeatherHook',
+        error as Error
       );
       setWeatherData({
         labels: [],
@@ -1045,8 +1057,9 @@ const useHistoricalWeatherData = (
 
   useEffect(() => {
     const dataMode = getDataMode();
-    console.log(
-      `[HistoricalWeatherHook] Data changed - Date: ${historicalPickerDate}, Type: ${dataType}, Timespan: ${timespan}, Mode: ${dataMode}`
+    logInfo(
+      `Data changed - Date: ${historicalPickerDate}, Type: ${dataType}, Timespan: ${timespan}, Mode: ${dataMode}`,
+      'HistoricalWeatherHook'
     );
 
     fetchDailyWeatherData(historicalPickerDate, timespan)
@@ -1079,9 +1092,10 @@ const useHistoricalWeatherData = (
         }
       })
       .catch((error) => {
-        console.error(
-          `[HistoricalWeatherHook] Error fetching data in ${dataMode} mode:`,
-          error
+        logError(
+          `Error fetching data in ${dataMode} mode:`,
+          'HistoricalWeatherHook',
+          error as Error
         );
       });
   }, [historicalPickerDate, dataType, timespan]);

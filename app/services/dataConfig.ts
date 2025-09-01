@@ -1,3 +1,4 @@
+import { logInfo, logError, logWarn } from '../services/graylogService';
 /**
  * Data Configuration Service
  * Manages data mode from Redux store - NO FALLBACKS
@@ -38,7 +39,7 @@ export function getDataConfig(): DataConfig {
         mode = state.settings.dataMode;
       }
     } catch (error) {
-      console.warn('[DataConfig] Could not read from Redux store:', error);
+      logWarn('Could not read from Redux store:', 'DataConfig', error);
     }
   }
 

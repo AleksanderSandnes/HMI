@@ -4,6 +4,7 @@
  */
 
 import { getWeatherApiConfig } from './weatherApiConfig';
+import { logInfo, logError, logApiCall, logWarn } from './graylogService';
 
 /**
  * Get authentication token from storage
@@ -29,7 +30,8 @@ async function getAuthToken(): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.error('[WeatherAPI] Error getting auth token:', error);
+    logError('Error getting auth token:', 'WeatherAPI', error);
+    logError('Failed to get auth token', 'WeatherAPI', error as Error);
     return null;
   }
 }
@@ -38,6 +40,7 @@ async function getAuthToken(): Promise<string | null> {
  * Make authenticated API request
  */
 async function makeAuthenticatedRequest(url: string): Promise<any> {
+  const startTime = Date.now();
   try {
     const token = await getAuthToken();
     const headers: Record<string, string> = {
@@ -46,12 +49,11 @@ async function makeAuthenticatedRequest(url: string): Promise<any> {
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
-      console.log('[WeatherAPI] Making authenticated request to:', url);
+      logInfo('Making authenticated request to:', 'WeatherAPI', url);
+      logInfo('Making authenticated API request', 'WeatherAPI', { url, hasToken: true });
     } else {
-      console.warn(
-        '[WeatherAPI] No auth token available, making unauthenticated request to:',
-        url
-      );
+      logWarn('No auth token available, making unauthenticated request to:', 'WeatherAPI', url);
+      logWarn('Making unauthenticated API request', 'WeatherAPI', { url, hasToken: false });
     }
 
     const response = await fetch(url, {
@@ -59,19 +61,25 @@ async function makeAuthenticatedRequest(url: string): Promise<any> {
       headers,
     });
 
+    const duration = Date.now() - startTime;
+
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('[WeatherAPI] Request failed:', response.status, errorData);
-      throw new Error(
-        `Weather API request failed: ${response.status} ${errorData}`
-      );
+      logError('Request failed:', 'WeatherAPI', response.status, errorData);
+      
+      const error = new Error(`Weather API request failed: ${response.status} ${errorData}`);
+      logApiCall('GET', url, response.status, duration, error, { errorData });
+      throw error;
     }
 
     const data = await response.json();
-    console.log('[WeatherAPI] Request successful');
+    logInfo('Request successful', 'WeatherAPI');
+    logApiCall('GET', url, response.status, duration, undefined, { responseSize: JSON.stringify(data).length });
     return data;
   } catch (error) {
-    console.error('[WeatherAPI] Request error:', error);
+    const duration = Date.now() - startTime;
+    logError('Request error:', 'WeatherAPI', error);
+    logApiCall('GET', url, undefined, duration, error as Error);
     throw error;
   }
 }
