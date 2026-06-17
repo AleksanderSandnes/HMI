@@ -1,6 +1,6 @@
 import React from 'react';
-import WeatherStation from '../pages/weatherStation';
+import WeatherStationPremium from '../pages/weatherStationPremium';
 
 export default function Tab() {
-  return <WeatherStation />;
+  return <WeatherStationPremium />;
 }

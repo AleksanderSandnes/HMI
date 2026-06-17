@@ -12,9 +12,10 @@ import { premiumTheme } from '../../theme/premiumTheme';
 interface SegmentedControlProps {
   value: string;
   onChange: (value: string) => void;
+  options?: { full: string; short: string; value: string }[];
 }
 
-const OPTIONS = [
+const DEFAULT_OPTIONS = [
   { full: 'Hourly', short: 'Day', value: 'hourly' },
   { full: 'Weekly', short: 'Week', value: 'weekly' },
   { full: 'Monthly', short: 'Month', value: 'monthly' },
@@ -60,13 +61,14 @@ const styles = StyleSheet.create({
 export default function SegmentedControl({
   value,
   onChange,
+  options = DEFAULT_OPTIONS,
 }: SegmentedControlProps) {
   const { width } = useWindowDimensions();
   const compact = width <= 420;
 
   return (
     <View style={styles.track}>
-      {OPTIONS.map((opt) => {
+      {options.map((opt) => {
         const active = value === opt.value;
         return (
           <Pressable
