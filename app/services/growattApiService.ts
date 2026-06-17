@@ -32,6 +32,9 @@ const API_CONFIG = {
     endpoints: {
       login: '/api/growatt/login',
       dayChart: '/api/growatt/dayChart',
+      weekChart: '/api/growatt/weekChart',
+      monthChart: '/api/growatt/monthChart',
+      yearChart: '/api/growatt/yearChart',
       totalData: '/api/growatt/totalData',
       health: '/api/growatt/health',
     },
@@ -41,6 +44,9 @@ const API_CONFIG = {
     endpoints: {
       login: '/api/growatt/login',
       dayChart: '/api/growatt/dayChart',
+      weekChart: '/api/growatt/weekChart',
+      monthChart: '/api/growatt/monthChart',
+      yearChart: '/api/growatt/yearChart',
       totalData: '/api/growatt/totalData',
       health: '/api/growatt/health',
     },
@@ -322,6 +328,206 @@ function calculateMetrics(
 }
 
 /**
+ * Weekday + month label sets for the aggregated bar charts.
+ */
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_LABELS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+/**
+ * Build x-axis labels for the aggregated (week/month/year) bar charts.
+ * - weekly: weekday abbreviation for each calendar day (e.g. "Wed")
+ * - monthly: day-of-month number (1..31)
+ * - yearly: month abbreviation (Jan..Dec)
+ */
+function buildAggregatedLabels(
+  timespan: string,
+  count: number,
+  dayLabels?: string[]
+): string[] {
+  if (timespan === 'weekly') {
+    if (dayLabels && dayLabels.length) {
+      return dayLabels.map((d) => {
+        const [year, month, day] = d.split('-').map(Number);
+        const date = new Date(year, (month || 1) - 1, day || 1);
+        return WEEKDAY_LABELS[date.getDay()] ?? d;
+      });
+    }
+    return Array.from({ length: count }, (_, i) => `Day ${i + 1}`);
+  }
+
+  if (timespan === 'yearly') {
+    return Array.from({ length: count }, (_, i) => MONTH_LABELS[i] ?? `${i + 1}`);
+  }
+
+  // monthly -> day of month
+  return Array.from({ length: count }, (_, i) => `${i + 1}`);
+}
+
+/**
+ * Fetch the lifetime total generation (eTotal) used for the "Total" metric column.
+ */
+async function fetchTotalGeneration(
+  config: ReturnType<typeof getApiConfig>,
+  date: string
+): Promise<number | undefined> {
+  try {
+    const response = await fetch(
+      `${config.baseUrl}${config.endpoints.totalData}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ date }),
+      }
+    );
+
+    if (!response.ok) {
+      return undefined;
+    }
+
+    const totalData = await response.json();
+    if (totalData && totalData.result === 1 && totalData.obj) {
+      return (
+        totalData.obj.eTotal ||
+        totalData.obj.totalPower ||
+        totalData.obj.totalGeneration ||
+        undefined
+      );
+    }
+  } catch (error) {
+    console.warn('[GrowattAPI] Error fetching total data for metrics:', error);
+  }
+  return undefined;
+}
+
+/**
+ * Fetch and assemble aggregated solar data for the week/month/year time ranges.
+ * Assumes the Growatt session has already been established by a prior login call.
+ */
+async function fetchAggregatedSolarData(
+  timespan: string,
+  date: string,
+  config: ReturnType<typeof getApiConfig>,
+  isMobile: boolean
+): Promise<SolarData> {
+  // Pick the endpoint and the date granularity each range expects.
+  let endpoint: string;
+  let requestDate: string;
+
+  if (timespan === 'weekly') {
+    endpoint = config.endpoints.weekChart;
+    requestDate = date; // yyyy-MM-dd (inclusive end of the 7-day window)
+  } else if (timespan === 'monthly') {
+    endpoint = config.endpoints.monthChart;
+    requestDate = date.slice(0, 7); // yyyy-MM
+  } else {
+    endpoint = config.endpoints.yearChart;
+    requestDate = date.slice(0, 4); // yyyy
+  }
+
+  console.log(
+    `[GrowattAPI] Fetching ${timespan} chart from ${endpoint} for ${requestDate} (mobile: ${isMobile})`
+  );
+
+  let energyValues: number[] = [];
+  let dayLabels: string[] | undefined;
+
+  try {
+    const chartResponse = await fetch(`${config.baseUrl}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ date: requestDate }),
+    });
+
+    if (chartResponse.ok) {
+      const chartData = await chartResponse.json();
+      if (chartData.result === 1 && chartData.obj) {
+        energyValues = cleanPowerData(chartData.obj.energy || []);
+        dayLabels = chartData.obj.days; // only present on the weekly response
+        console.log(
+          `[GrowattAPI] ✅ Fetched ${timespan} chart (${energyValues.length} buckets)`
+        );
+      } else {
+        console.warn(`[GrowattAPI] ${timespan} chart returned error result`);
+      }
+    } else {
+      const errorData = await chartResponse.text();
+      console.warn(
+        `[GrowattAPI] ${timespan} chart request failed:`,
+        chartResponse.status,
+        errorData
+      );
+    }
+  } catch (error) {
+    console.warn(`[GrowattAPI] ${timespan} chart request error:`, error);
+  }
+
+  // Lifetime total for the "Total" column.
+  const totalGenerationFromApi = await fetchTotalGeneration(config, requestDate);
+
+  // Sum of all buckets = generation for the selected period (kWh).
+  const periodTotal = energyValues.reduce((sum, value) => sum + value, 0);
+  const finalTotal = totalGenerationFromApi ?? periodTotal;
+
+  const hasData = energyValues.some((value) => value > 0);
+  const labels = buildAggregatedLabels(
+    timespan,
+    energyValues.length,
+    dayLabels
+  );
+
+  const chartData = hasData
+    ? {
+        labels,
+        datasets: [
+          {
+            data: energyValues,
+            color: () => '#3b82f6', // Blue bars, matching Growatt
+            strokeWidth: 2,
+          },
+        ],
+      }
+    : {
+        labels: ['No Data'],
+        datasets: [
+          {
+            data: [0],
+            color: () => '#3b82f6',
+            strokeWidth: 2,
+          },
+        ],
+      };
+
+  return {
+    chartData,
+    metrics: {
+      todayGeneration: periodTotal,
+      totalGeneration: finalTotal,
+      todayRevenue: periodTotal,
+      totalRevenue: finalTotal,
+    },
+  };
+}
+
+/**
  * Fetch solar data from Growatt API
  */
 export async function fetchSolarData(
@@ -374,6 +580,17 @@ export async function fetchSolarData(
     }
 
     console.log('[GrowattAPI] ✅ Login successful');
+
+    // For aggregated time ranges (week/month/year) use the dedicated chart
+    // endpoints, which return discrete energy (kWh) totals per bucket rather than
+    // the 5-minute power samples used for the hourly view.
+    if (
+      timespan === 'weekly' ||
+      timespan === 'monthly' ||
+      timespan === 'yearly'
+    ) {
+      return await fetchAggregatedSolarData(timespan, date, config, isMobile);
+    }
 
     // Step 2: Fetch day chart data and total data in parallel after login
     let powerValues: number[] = [];

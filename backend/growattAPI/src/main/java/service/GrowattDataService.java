@@ -5,6 +5,10 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -19,6 +23,7 @@ import entity.EnergyRequest;
 import entity.GrowattResponse;
 import entity.MonthResponse;
 import entity.SolarDataCache;
+import entity.WeekResponse;
 import entity.YearResponse;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -73,6 +78,60 @@ public class GrowattDataService {
 
 	public MonthResponse getMonthChart(EnergyRequest request) {
 		return getOrFetch(CacheType.MONTH, request, MonthResponse.class, client::getInvEnergyMonthChart);
+	}
+
+	/**
+	 * Build the aggregated weekly view (7 daily energy totals ending on the requested date).
+	 *
+	 * <p>Growatt exposes no native weekly endpoint, so the window is assembled from the daily
+	 * totals already provided by the monthly chart. The 7-day window touches at most two
+	 * calendar months, so this performs one or two {@link #getMonthChart} calls, each of which
+	 * goes through the regular cache. The requested date is treated as the (inclusive) last day
+	 * of the window; a blank/unparseable date falls back to today.</p>
+	 */
+	public WeekResponse getWeekChart(EnergyRequest request) {
+		LocalDate end;
+		try {
+			end = LocalDate.parse(request.getDate(), DAY_FMT);
+		} catch (Exception e) {
+			log.warn("[Week] could not parse date '{}', defaulting to today", request.getDate());
+			end = LocalDate.now();
+		}
+		LocalDate start = end.minusDays(6);
+
+		Map<YearMonth, MonthResponse> monthsCache = new HashMap<>();
+		List<Double> energy = new ArrayList<>();
+		List<String> days = new ArrayList<>();
+
+		for (LocalDate day = start; !day.isAfter(end); day = day.plusDays(1)) {
+			YearMonth ym = YearMonth.from(day);
+			MonthResponse month = monthsCache.computeIfAbsent(ym, key -> {
+				EnergyRequest monthRequest = new EnergyRequest(request.getPlantId(), key.format(MONTH_FMT));
+				try {
+					return getMonthChart(monthRequest);
+				} catch (Exception ex) {
+					log.warn("[Week] month fetch failed for {} ({})", key, ex.getMessage());
+					return null;
+				}
+			});
+
+			energy.add(extractDayEnergy(month, day.getDayOfMonth()));
+			days.add(day.format(DAY_FMT));
+		}
+
+		return new WeekResponse(1L, new WeekResponse.Obj(energy, days));
+	}
+
+	/** Pull a single day's energy (1-based day-of-month) from a month chart, defaulting to 0. */
+	private Double extractDayEnergy(MonthResponse month, int dayOfMonth) {
+		if (month != null && month.getObj() != null && month.getObj().getEnergy() != null) {
+			List<Double> values = month.getObj().getEnergy();
+			int index = dayOfMonth - 1;
+			if (index >= 0 && index < values.size() && values.get(index) != null) {
+				return values.get(index);
+			}
+		}
+		return 0.0;
 	}
 
 	public YearResponse getYearChart(EnergyRequest request) {

@@ -19,6 +19,7 @@ import entity.LoginRequest;
 import entity.MonthResponse;
 import entity.TotalDataInvResponse;
 import entity.TotalDataResponse;
+import entity.WeekResponse;
 import entity.YearResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -141,6 +142,43 @@ public class GrowattApiController {
             log.error("DayChart request failed after {}ms for plantId: {}, date: {}", 
                      duration, request.getPlantId(), request.getDate(), e);
             log.info("=== DAY CHART REQUEST END (ERROR) ===");
+            throw e;
+        }
+    }
+
+    @PostMapping("/weekChart")
+    public ResponseEntity<WeekResponse> getWeekChart(@Valid @RequestBody EnergyRequest request) {
+        long startTime = System.currentTimeMillis();
+        log.info("=== WEEK CHART REQUEST START ===");
+        log.info("Request plantId: {}", request.getPlantId());
+        log.info("Request date: {}", request.getDate());
+        log.info("Current stored plantId: {}", growattWebClient.getPlantId());
+
+        try {
+            // If no plantId provided in request, try to use the stored one from login
+            if (request.getPlantId() == null || request.getPlantId().isEmpty()) {
+                String storedPlantId = growattWebClient.getPlantId();
+                if (storedPlantId != null) {
+                    request.setPlantId(storedPlantId);
+                    log.info("Auto-filled plantId from session: {}", storedPlantId);
+                } else {
+                    log.warn("No plantId in request and no stored plantId from login");
+                }
+            }
+
+            WeekResponse response = growattDataService.getWeekChart(request);
+            long duration = System.currentTimeMillis() - startTime;
+
+            log.info("WeekChart request successful in {}ms", duration);
+            log.info("Response data available: {}", response != null);
+            log.info("=== WEEK CHART REQUEST END ===");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            log.error("WeekChart request failed after {}ms for plantId: {}, date: {}",
+                     duration, request.getPlantId(), request.getDate(), e);
+            log.info("=== WEEK CHART REQUEST END (ERROR) ===");
             throw e;
         }
     }
