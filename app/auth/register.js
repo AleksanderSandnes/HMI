@@ -1,29 +1,35 @@
 import {
   StyleSheet,
   Text,
-  TextInput,
   View,
-  TouchableOpacity,
-  ActivityIndicator,
-  useWindowDimensions,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Animated,
+  useWindowDimensions,
 } from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
-import { Formik } from 'formik';
+import React, { useState } from 'react';
 import * as Yup from 'yup';
+import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { useDispatch } from 'react-redux';
-import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StatusBar } from 'expo-status-bar';
+import { FontAwesome5 } from '@expo/vector-icons';
+
 import { registerUser } from '../(services)/api/api';
 import { loginUserAction } from '../(redux)/authSlice';
-import { solarTheme } from '../theme/solarTheme';
+import AuthBackground from '../components/auth/AuthBackground';
+import GlassCard from '../components/premium/GlassCard';
+import PremiumField from '../components/premium/PremiumField';
+import PremiumButton from '../components/premium/PremiumButton';
+import StatusBanner from '../components/settings/premium/StatusBanner';
+import { premiumTheme } from '../theme/premiumTheme';
+import { storeGrowattCredentials } from '../services/credentialsService';
+import {
+  saveGrowattApiSettings,
+  saveWeatherApiSettings,
+} from '../services/settingsApiService';
 
-const validationSchema = Yup.object().shape({
+const accountSchema = Yup.object().shape({
   email: Yup.string().required('Email is required').email().label('Email'),
   username: Yup.string().required('Username is required').label('Username'),
   password: Yup.string()
@@ -32,499 +38,611 @@ const validationSchema = Yup.object().shape({
     .label('Password'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), null], 'Passwords must match')
-    .required('Required'),
+    .required('Please confirm your password'),
 });
 
+const STEPS = [
+  { key: 'account', label: 'Account' },
+  { key: 'solar', label: 'Solar' },
+  { key: 'weather', label: 'Weather' },
+];
+
+/** Persist the auth payload so settings saves can read the token immediately. */
+async function persistUserInfo(data) {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('userInfo', JSON.stringify(data));
+    } else {
+      const AsyncStorage =
+        require('@react-native-async-storage/async-storage').default;
+      await AsyncStorage.setItem('userInfo', JSON.stringify(data));
+    }
+  } catch {
+    // non-fatal — the redux action also persists
+  }
+}
+
 const Register = () => {
-  const mutation = useMutation({
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isMobile = width <= 768;
+
+  const registerMutation = useMutation({
     mutationFn: registerUser,
     mutationKey: ['register'],
   });
-  const dispatch = useDispatch();
-  const router = useRouter();
-  const windowDimensions = useWindowDimensions();
-  const isMobile = windowDimensions.width <= 768;
 
-  // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-  const [focusedField, setFocusedField] = useState(null);
+  const [step, setStep] = useState(0);
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
+  // Auth payload from a successful account creation. We hold it locally and only
+  // commit it to Redux at the end of the wizard, otherwise the global auth guard
+  // (AppWrapper) would immediately redirect away from steps 2 and 3.
+  const [registeredUser, setRegisteredUser] = useState(null);
 
-  const dynamicStyles = {
-    container: {
-      ...styles.container,
-      paddingHorizontal: isMobile ? 20 : 40,
-      paddingVertical: isMobile ? 20 : 40,
-    },
-    formContainer: {
-      ...styles.formContainer,
-      maxWidth: isMobile ? '100%' : 400,
-      paddingHorizontal: isMobile ? 24 : 32,
-      paddingVertical: isMobile ? 32 : 40,
-    },
-    title: {
-      ...styles.title,
-      fontSize: isMobile ? 28 : 32,
-      marginBottom: isMobile ? 8 : 12,
-    },
-    subtitle: {
-      ...styles.subtitle,
-      fontSize: isMobile ? 14 : 16,
-      marginBottom: isMobile ? 32 : 40,
-    },
+  // Step 1 — account
+  const [account, setAccount] = useState({
+    email: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [accountErrors, setAccountErrors] = useState({});
+
+  // Step 2 — Growatt
+  const [growatt, setGrowatt] = useState({
+    email: '',
+    password: '',
+    plantId: '',
+  });
+
+  // Step 3 — Weather
+  const [weather, setWeather] = useState({ stationId: '', apiKey: '' });
+
+  const [stepError, setStepError] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const setAccountField = (k) => (v) => setAccount((s) => ({ ...s, [k]: v }));
+  const setGrowattField = (k) => (v) => setGrowatt((s) => ({ ...s, [k]: v }));
+  const setWeatherField = (k) => (v) => setWeather((s) => ({ ...s, [k]: v }));
+
+  // Complete the wizard: commit auth to Redux (which lets the guard route us in)
+  // and navigate to the dashboard.
+  const finalize = () => {
+    if (registeredUser) dispatch(loginUserAction(registeredUser));
+    router.replace('/(tabs)');
   };
 
+  const handleCreateAccount = async () => {
+    setStepError(null);
+    setAccountErrors({});
+    try {
+      await accountSchema.validate(account, { abortEarly: false });
+    } catch (err) {
+      const map = {};
+      if (err.inner) {
+        err.inner.forEach((e) => {
+          if (e.path && !map[e.path]) map[e.path] = e.message;
+        });
+      }
+      setAccountErrors(map);
+      return;
+    }
+
+    try {
+      const data = await registerMutation.mutateAsync({
+        email: account.email.trim(),
+        username: account.username.trim(),
+        password: account.password,
+      });
+      // Persist to storage so the optional credential saves can authenticate,
+      // but do NOT commit to Redux yet (that would trigger the auth redirect).
+      await persistUserInfo(data);
+      setRegisteredUser(data);
+      setStep(1);
+    } catch (error) {
+      console.log('Registration error:', error);
+    }
+  };
+
+  const handleSaveGrowatt = async () => {
+    setStepError(null);
+    const email = growatt.email.trim();
+    const password = growatt.password.trim();
+
+    // Both empty → skip this optional step.
+    if (!email && !password) {
+      setStep(2);
+      return;
+    }
+    if (!email || !password) {
+      setStepError('Enter both account and password, or skip this step.');
+      return;
+    }
+    if (!email.includes('@')) {
+      setStepError('Please enter a valid email address.');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await storeGrowattCredentials({
+        account: email,
+        password,
+        plantId: growatt.plantId.trim(),
+      });
+      await saveGrowattApiSettings({
+        growatt: { email, password, plantId: growatt.plantId.trim() },
+      });
+      setStep(2);
+    } catch (e) {
+      setStepError('Could not save Growatt credentials. You can add them later in Settings.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    setStepError(null);
+    const stationId = weather.stationId.trim();
+    const apiKey = weather.apiKey.trim();
+
+    // Both empty → finish without saving.
+    if (!stationId && !apiKey) {
+      finalize();
+      return;
+    }
+    if (!stationId || !apiKey) {
+      setStepError('Enter both station ID and API key, or skip this step.');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await saveWeatherApiSettings({ weather: { apiKey, stationId } });
+      finalize();
+    } catch (e) {
+      setStepError('Could not save weather credentials. You can add them later in Settings.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const header = (() => {
+    if (step === 0) {
+      return {
+        icon: 'user-plus',
+        gradient: premiumTheme.accent.gradient,
+        title: 'Create account',
+        subtitle: 'Join your energy monitoring dashboard',
+      };
+    }
+    if (step === 1) {
+      return {
+        icon: 'solar-panel',
+        gradient: premiumTheme.energy.gradient,
+        title: 'Connect Growatt',
+        subtitle: 'Optional — add your solar credentials',
+      };
+    }
+    return {
+      icon: 'cloud-sun',
+      gradient: premiumTheme.solar.gradient,
+      title: 'Connect Weather.com',
+      subtitle: 'Optional — add your weather station',
+    };
+  })();
+
   return (
-    <>
-      <StatusBar style="light" backgroundColor="#0f172a" translucent={false} />
-      <LinearGradient
-        colors={['#0f172a', '#1e293b', '#334155']}
-        style={styles.gradientContainer}
+    <AuthBackground>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.flex}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardAvoidingView}
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContainer}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
+          <GlassCard
+            strong
+            elevated
+            style={[
+              styles.card,
+              { maxWidth: isMobile ? 480 : 460, padding: isMobile ? 24 : 34 },
+            ]}
           >
-            <Animated.View
-              style={[
-                dynamicStyles.container,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }],
-                },
-              ]}
-            >
-              <View style={dynamicStyles.formContainer}>
-                {/* Header */}
-                <View style={styles.header}>
-                  <Text style={dynamicStyles.title}>Create Account</Text>
-                  <Text style={dynamicStyles.subtitle}>
-                    Join the energy monitoring revolution
-                  </Text>
-                </View>
+            <StepIndicator step={step} />
 
-                {/* Status Messages */}
-                {mutation?.isError && (
-                  <View style={styles.messageContainer}>
-                    <Text style={styles.errorMessage}>
-                      {mutation?.error?.response?.data?.message ||
-                        'Registration failed'}
-                    </Text>
-                  </View>
-                )}
-                {mutation?.isSuccess && (
-                  <View style={styles.messageContainer}>
-                    <Text style={styles.successMessage}>
-                      Registration successful! Welcome aboard! 🎉
-                    </Text>
-                  </View>
-                )}
+            <View style={styles.brand}>
+              <LinearGradient
+                colors={header.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.brandIcon}
+              >
+                <FontAwesome5
+                  name={header.icon}
+                  size={20}
+                  color={premiumTheme.text.inverse}
+                  solid
+                />
+              </LinearGradient>
+              <Text style={styles.title}>{header.title}</Text>
+              <Text style={styles.subtitle}>{header.subtitle}</Text>
+            </View>
 
-                {/* Form */}
-                <Formik
-                  initialValues={{
-                    email: '',
-                    username: '',
-                    password: '',
-                    confirmPassword: '',
-                  }}
-                  onSubmit={(values) => {
-                    mutation
-                      .mutateAsync(values)
-                      .then((data) => {
-                        dispatch(loginUserAction(data));
-                        router.push('/(tabs)');
-                      })
-                      .catch((error) => {
-                        console.log('Registration error:', error);
-                      });
-                  }}
-                  validationSchema={validationSchema}
-                >
-                  {({
-                    handleChange,
-                    handleBlur,
-                    handleSubmit,
-                    values,
-                    errors,
-                    touched,
-                    isValid,
-                    dirty,
-                  }) => (
-                    <View style={styles.form}>
-                      <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Email Address</Text>
-                        <View
-                          style={[
-                            styles.inputWrapper,
-                            focusedField === 'email' &&
-                              styles.inputWrapperFocused,
-                            errors.email &&
-                              touched.email &&
-                              styles.inputWrapperError,
-                          ]}
-                        >
-                          <TextInput
-                            style={styles.input}
-                            placeholder="Enter your email"
-                            placeholderTextColor={solarTheme.text.tertiary}
-                            value={values.email}
-                            onChangeText={handleChange('email')}
-                            onBlur={() => {
-                              handleBlur('email');
-                              setFocusedField(null);
-                            }}
-                            onFocus={() => setFocusedField('email')}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                          />
-                        </View>
-                        {errors.email && touched.email && (
-                          <Text style={styles.errorText}>{errors.email}</Text>
-                        )}
-                      </View>
+            {step === 0 && registerMutation?.isError ? (
+              <StatusBanner
+                kind="error"
+                message={
+                  registerMutation?.error?.response?.data?.message ||
+                  'Registration failed. Please try again.'
+                }
+              />
+            ) : null}
+            {stepError ? <StatusBanner kind="error" message={stepError} /> : null}
 
-                      <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Username</Text>
-                        <View
-                          style={[
-                            styles.inputWrapper,
-                            focusedField === 'username' &&
-                              styles.inputWrapperFocused,
-                            errors.username &&
-                              touched.username &&
-                              styles.inputWrapperError,
-                          ]}
-                        >
-                          <TextInput
-                            style={styles.input}
-                            placeholder="Choose a username"
-                            placeholderTextColor={solarTheme.text.tertiary}
-                            value={values.username}
-                            onChangeText={handleChange('username')}
-                            onBlur={() => {
-                              handleBlur('username');
-                              setFocusedField(null);
-                            }}
-                            onFocus={() => setFocusedField('username')}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                          />
-                        </View>
-                        {errors.username && touched.username && (
-                          <Text style={styles.errorText}>
-                            {errors.username}
-                          </Text>
-                        )}
-                      </View>
+            {step === 0 ? (
+              <View>
+                <PremiumField
+                  label="EMAIL ADDRESS"
+                  icon="envelope"
+                  value={account.email}
+                  onChangeText={setAccountField('email')}
+                  placeholder="you@domain.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!registerMutation.isPending}
+                />
+                <FieldError message={accountErrors.email} />
 
-                      <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Password</Text>
-                        <View
-                          style={[
-                            styles.inputWrapper,
-                            focusedField === 'password' &&
-                              styles.inputWrapperFocused,
-                            errors.password &&
-                              touched.password &&
-                              styles.inputWrapperError,
-                          ]}
-                        >
-                          <TextInput
-                            style={styles.input}
-                            placeholder="Create a secure password"
-                            placeholderTextColor={solarTheme.text.tertiary}
-                            value={values.password}
-                            onChangeText={handleChange('password')}
-                            onBlur={() => {
-                              handleBlur('password');
-                              setFocusedField(null);
-                            }}
-                            onFocus={() => setFocusedField('password')}
-                            secureTextEntry
-                          />
-                        </View>
-                        {errors.password && touched.password && (
-                          <Text style={styles.errorText}>
-                            {errors.password}
-                          </Text>
-                        )}
-                      </View>
+                <PremiumField
+                  label="USERNAME"
+                  icon="user"
+                  value={account.username}
+                  onChangeText={setAccountField('username')}
+                  placeholder="Choose a username"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!registerMutation.isPending}
+                />
+                <FieldError message={accountErrors.username} />
 
-                      <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Confirm Password</Text>
-                        <View
-                          style={[
-                            styles.inputWrapper,
-                            focusedField === 'confirmPassword' &&
-                              styles.inputWrapperFocused,
-                            errors.confirmPassword &&
-                              touched.confirmPassword &&
-                              styles.inputWrapperError,
-                          ]}
-                        >
-                          <TextInput
-                            style={styles.input}
-                            placeholder="Confirm your password"
-                            placeholderTextColor={solarTheme.text.tertiary}
-                            value={values.confirmPassword}
-                            onChangeText={handleChange('confirmPassword')}
-                            onBlur={() => {
-                              handleBlur('confirmPassword');
-                              setFocusedField(null);
-                            }}
-                            onFocus={() => setFocusedField('confirmPassword')}
-                            secureTextEntry
-                          />
-                        </View>
-                        {errors.confirmPassword && touched.confirmPassword && (
-                          <Text style={styles.errorText}>
-                            {errors.confirmPassword}
-                          </Text>
-                        )}
-                      </View>
+                <PremiumField
+                  label="PASSWORD"
+                  icon="lock"
+                  secure
+                  value={account.password}
+                  onChangeText={setAccountField('password')}
+                  placeholder="Create a secure password"
+                  editable={!registerMutation.isPending}
+                />
+                <FieldError message={accountErrors.password} />
 
-                      <TouchableOpacity
-                        onPress={handleSubmit}
-                        style={[
-                          styles.submitButton,
-                          (!isValid || !dirty || mutation?.isPending) &&
-                            styles.submitButtonDisabled,
-                        ]}
-                        disabled={mutation?.isPending || !isValid || !dirty}
-                      >
-                        <LinearGradient
-                          colors={solarTheme.primary.gradient}
-                          style={styles.submitButtonGradient}
-                        >
-                          {mutation?.isPending ? (
-                            <ActivityIndicator
-                              color={solarTheme.text.primary}
-                              size="small"
-                            />
-                          ) : (
-                            <Text style={styles.submitButtonText}>
-                              Create Account
-                            </Text>
-                          )}
-                        </LinearGradient>
-                      </TouchableOpacity>
+                <PremiumField
+                  label="CONFIRM PASSWORD"
+                  icon="lock"
+                  secure
+                  value={account.confirmPassword}
+                  onChangeText={setAccountField('confirmPassword')}
+                  placeholder="Re-enter your password"
+                  editable={!registerMutation.isPending}
+                />
+                <FieldError message={accountErrors.confirmPassword} />
 
-                      <View style={styles.footer}>
-                        <Text style={styles.footerText}>
-                          Already have an account?{' '}
-                          <Text
-                            style={styles.linkText}
-                            onPress={() => router.push('/auth/login')}
-                          >
-                            Sign in
-                          </Text>
-                        </Text>
-                      </View>
-                    </View>
-                  )}
-                </Formik>
+                <PremiumButton
+                  label="Create account"
+                  icon="arrow-right"
+                  onPress={handleCreateAccount}
+                  loading={registerMutation.isPending}
+                  style={styles.submit}
+                />
               </View>
-            </Animated.View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </LinearGradient>
-    </>
+            ) : null}
+
+            {step === 1 ? (
+              <View>
+                <PremiumField
+                  label="ACCOUNT (EMAIL)"
+                  icon="envelope"
+                  value={growatt.email}
+                  onChangeText={setGrowattField('email')}
+                  placeholder="your-email@domain.com"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  editable={!saving}
+                />
+                <PremiumField
+                  label="PASSWORD"
+                  icon="key"
+                  secure
+                  value={growatt.password}
+                  onChangeText={setGrowattField('password')}
+                  placeholder="Enter your Growatt password"
+                  editable={!saving}
+                />
+                <PremiumField
+                  label="PLANT ID (OPTIONAL)"
+                  icon="hashtag"
+                  value={growatt.plantId}
+                  onChangeText={setGrowattField('plantId')}
+                  placeholder="Enter your plant ID"
+                  editable={!saving}
+                />
+
+                <Text style={styles.optionalNote}>
+                  Optional — you can add or change this anytime in Settings.
+                </Text>
+
+                <View style={styles.buttonRow}>
+                  <PremiumButton
+                    label="Skip"
+                    variant="ghost"
+                    onPress={() => {
+                      setStepError(null);
+                      setStep(2);
+                    }}
+                    style={styles.rowBtn}
+                  />
+                  <PremiumButton
+                    label="Continue"
+                    icon="arrow-right"
+                    onPress={handleSaveGrowatt}
+                    loading={saving}
+                    gradient={premiumTheme.energy.gradient}
+                    style={styles.rowBtn}
+                  />
+                </View>
+              </View>
+            ) : null}
+
+            {step === 2 ? (
+              <View>
+                <PremiumField
+                  label="WEATHER STATION ID"
+                  icon="map-marker-alt"
+                  value={weather.stationId}
+                  onChangeText={setWeatherField('stationId')}
+                  placeholder="e.g. ISANDN24"
+                  autoCapitalize="characters"
+                  hint="Find your local station ID at weather.com/weather/map"
+                  editable={!saving}
+                />
+                <PremiumField
+                  label="API KEY"
+                  icon="key"
+                  secure
+                  value={weather.apiKey}
+                  onChangeText={setWeatherField('apiKey')}
+                  placeholder="Enter your Weather.com API key"
+                  hint="Get your API key from the weather.com developer portal"
+                  editable={!saving}
+                />
+
+                <Text style={styles.optionalNote}>
+                  Optional — you can add or change this anytime in Settings.
+                </Text>
+
+                <View style={styles.buttonRow}>
+                  <PremiumButton
+                    label="Back"
+                    variant="ghost"
+                    icon="arrow-left"
+                    onPress={() => {
+                      setStepError(null);
+                      setStep(1);
+                    }}
+                    style={styles.rowBtn}
+                  />
+                  <PremiumButton
+                    label="Finish"
+                    icon="check"
+                    onPress={handleFinish}
+                    loading={saving}
+                    style={styles.rowBtn}
+                  />
+                </View>
+              </View>
+            ) : null}
+
+            {step === 0 ? (
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Already have an account?</Text>
+                <Text
+                  style={styles.link}
+                  onPress={() => router.push('/auth/login')}
+                >
+                  Sign in
+                </Text>
+              </View>
+            ) : null}
+          </GlassCard>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </AuthBackground>
   );
 };
 
 export default Register;
 
+function FieldError({ message }) {
+  if (!message) return null;
+  return <Text style={styles.fieldError}>{message}</Text>;
+}
+
+function StepIndicator({ step }) {
+  return (
+    <View style={styles.steps}>
+      {STEPS.map((s, i) => {
+        const done = i < step;
+        const active = i === step;
+        return (
+          <React.Fragment key={s.key}>
+            <View style={styles.stepItem}>
+              <View
+                style={[
+                  styles.stepDot,
+                  active && styles.stepDotActive,
+                  done && styles.stepDotDone,
+                ]}
+              >
+                {done ? (
+                  <FontAwesome5
+                    name="check"
+                    size={10}
+                    color={premiumTheme.text.inverse}
+                    solid
+                  />
+                ) : (
+                  <Text
+                    style={[
+                      styles.stepNum,
+                      (active || done) && styles.stepNumActive,
+                    ]}
+                  >
+                    {i + 1}
+                  </Text>
+                )}
+              </View>
+              <Text
+                style={[styles.stepLabel, active && styles.stepLabelActive]}
+              >
+                {s.label}
+              </Text>
+            </View>
+            {i < STEPS.length - 1 ? (
+              <View
+                style={[styles.stepBar, i < step && styles.stepBarDone]}
+              />
+            ) : null}
+          </React.Fragment>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  gradientContainer: {
-    flex: 1,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContainer: {
+  flex: { flex: 1 },
+  scroll: {
     flexGrow: 1,
     justifyContent: 'center',
-    minHeight: '100%',
+    alignItems: 'center',
+    padding: 20,
   },
-  container: {
-    flex: 1,
+  card: { width: '100%' },
+
+  steps: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginBottom: 22,
   },
-  formContainer: {
-    width: '100%',
-    backgroundColor: solarTheme.background.card,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+  stepItem: { alignItems: 'center', width: 64 },
+  stepDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: premiumTheme.glass.fill,
     borderWidth: 1,
-    borderColor: solarTheme.border.primary,
+    borderColor: premiumTheme.glass.borderStrong,
   },
-  header: {
+  stepDotActive: {
+    backgroundColor: premiumTheme.solar.soft,
+    borderColor: premiumTheme.solar.main,
+  },
+  stepDotDone: {
+    backgroundColor: premiumTheme.solar.main,
+    borderColor: premiumTheme.solar.main,
+  },
+  stepNum: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: premiumTheme.text.muted,
+  },
+  stepNumActive: { color: premiumTheme.solar.light },
+  stepLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: premiumTheme.text.muted,
+    marginTop: 6,
+  },
+  stepLabelActive: { color: premiumTheme.text.secondary },
+  stepBar: {
+    flex: 1,
+    height: 2,
+    maxWidth: 40,
+    marginTop: -16,
+    backgroundColor: premiumTheme.glass.borderStrong,
+    borderRadius: 2,
+  },
+  stepBarDone: { backgroundColor: premiumTheme.solar.main },
+
+  brand: { alignItems: 'center', marginBottom: 22 },
+  brandIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
     alignItems: 'center',
-    marginBottom: 24,
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   title: {
-    color: solarTheme.text.primary,
-    fontWeight: '700',
+    fontSize: 25,
+    fontWeight: '800',
+    color: premiumTheme.text.primary,
+    letterSpacing: -0.6,
     textAlign: 'center',
-    letterSpacing: 0.5,
   },
   subtitle: {
-    color: solarTheme.text.secondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  messageContainer: {
-    marginBottom: 20,
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  errorMessage: {
-    color: solarTheme.text.error,
-    textAlign: 'center',
     fontSize: 14,
-    fontWeight: '500',
-  },
-  successMessage: {
-    color: solarTheme.text.success,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  form: {
-    width: '100%',
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    color: solarTheme.text.secondary,
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    letterSpacing: 0.3,
-  },
-  inputWrapper: {
-    borderWidth: 1,
-    borderColor: solarTheme.border.primary,
-    borderRadius: 12,
-    backgroundColor: solarTheme.background.input,
-    transition: 'all 0.2s ease',
-  },
-  inputWrapperFocused: {
-    borderColor: solarTheme.border.focus,
-    shadowColor: solarTheme.primary.main,
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  inputWrapperError: {
-    borderColor: solarTheme.border.error,
-  },
-  input: {
-    height: 52,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: solarTheme.text.primary,
-    fontWeight: '500',
-    // Fix Chrome autofill white background
-    ...(Platform.OS === 'web' && {
-      transition: 'background-color 5000s ease-in-out 0s',
-      WebkitBoxShadow: '0 0 0 1000px rgba(255, 255, 255, 0.1) inset',
-      WebkitTextFillColor: solarTheme.text.primary,
-    }),
-  },
-  inputFocused: {
-    color: solarTheme.text.primary,
-  },
-  inputError: {
-    color: solarTheme.text.primary,
-  },
-  errorText: {
-    color: solarTheme.text.error,
-    fontSize: 12,
+    color: premiumTheme.text.muted,
     marginTop: 6,
-    marginLeft: 4,
     fontWeight: '500',
+    textAlign: 'center',
   },
-  submitButton: {
-    marginTop: 24,
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: solarTheme.primary.main,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+  fieldError: {
+    color: premiumTheme.negative,
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: -8,
+    marginBottom: 14,
+    marginLeft: 2,
   },
-  submitButtonDisabled: {
-    opacity: 0.6,
-    shadowOpacity: 0.1,
+  optionalNote: {
+    fontSize: 12.5,
+    color: premiumTheme.text.muted,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: 2,
+    marginBottom: 18,
+    lineHeight: 18,
   },
-  submitButtonGradient: {
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-  },
-  submitButtonText: {
-    color: solarTheme.text.primary,
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
+  submit: { marginTop: 6 },
+  buttonRow: { flexDirection: 'row', gap: 12 },
+  rowBtn: { flex: 1 },
   footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     marginTop: 24,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: solarTheme.border.primary,
+    borderTopColor: premiumTheme.glass.border,
   },
   footerText: {
-    color: solarTheme.text.secondary,
+    color: premiumTheme.text.muted,
     fontSize: 14,
-    textAlign: 'center',
+    fontWeight: '500',
   },
-  linkText: {
-    color: solarTheme.primary.light,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
+  link: {
+    color: premiumTheme.solar.light,
+    fontSize: 14,
+    fontWeight: '800',
+    marginLeft: 5,
   },
 });

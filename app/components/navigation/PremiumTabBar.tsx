@@ -178,7 +178,7 @@ export default function PremiumTabBar({
         </LinearGradient>
         {full && (
           <View>
-            <Text style={styles.brandName}>HPI</Text>
+            <Text style={styles.brandName}>HMI</Text>
             <Text style={styles.brandTag}>Home Production Interface</Text>
           </View>
         )}

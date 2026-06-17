@@ -191,7 +191,10 @@ export async function getApiSettings(): Promise<ApiSettingsResponse | null> {
     console.log(
       '[SettingsAPI] ✅ Settings retrieved from backend successfully'
     );
-    return data;
+    // The backend wraps the payload as { success, apiSettings: {...} }. Unwrap it
+    // here so callers get the flat { growatt, weather } shape (ApiSettingsResponse).
+    // Fall back to the raw body in case an older endpoint returns it directly.
+    return (data?.apiSettings ?? data) as ApiSettingsResponse;
   } catch (error) {
     console.error('[SettingsAPI] ❌ Failed to get settings:', error);
     throw error;

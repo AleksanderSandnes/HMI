@@ -48,5 +48,5 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
   }
 
   /* 3. Browser tab title. */
-  document.title = 'HPI';
+  document.title = 'HMI';
 }

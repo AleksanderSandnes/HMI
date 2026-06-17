@@ -10,6 +10,7 @@ import { Video, ResizeMode } from 'expo-av';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { solarTheme } from './theme/solarTheme';
+import { premiumTheme } from './theme/premiumTheme';
 import { useResponsive } from './utils/responsive';
 import { ANIMATION_DURATION, SPACING } from './constants';
 
@@ -59,11 +60,43 @@ const Home = () => {
     },
     button: {
       ...styles.button,
-      paddingVertical: isMobile ? 16 : 14,
-      paddingHorizontal: isMobile ? 40 : 32,
       minWidth: isMobile ? 200 : 180,
     },
+    pad: {
+      paddingVertical: isMobile ? 16 : 15,
+      paddingHorizontal: isMobile ? 40 : 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
   };
+
+  const Buttons = (
+    <>
+      <TouchableOpacity
+        style={dynamicStyles.button}
+        onPress={() => router.push('/auth/login')}
+        activeOpacity={0.85}
+      >
+        <LinearGradient
+          colors={premiumTheme.solar.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={dynamicStyles.pad}
+        >
+          <Text style={styles.primaryButtonText}>Login</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[dynamicStyles.button, styles.secondaryButton]}
+        onPress={() => router.push('/auth/register')}
+        activeOpacity={0.85}
+      >
+        <View style={dynamicStyles.pad}>
+          <Text style={styles.secondaryButtonText}>Register</Text>
+        </View>
+      </TouchableOpacity>
+    </>
+  );
 
   return (
     <View style={styles.container}>
@@ -133,20 +166,7 @@ const Home = () => {
                   },
                 ]}
               >
-                <TouchableOpacity
-                  style={[dynamicStyles.button, styles.primaryButton]}
-                  onPress={() => router.push('/auth/login')}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.buttonText}>Login</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[dynamicStyles.button, styles.secondaryButton]}
-                  onPress={() => router.push('/auth/register')}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.buttonText}>Register</Text>
-                </TouchableOpacity>
+                {Buttons}
               </Animated.View>
             )}
           </Animated.View>
@@ -164,20 +184,7 @@ const Home = () => {
             },
           ]}
         >
-          <TouchableOpacity
-            style={[dynamicStyles.button, styles.primaryButton]}
-            onPress={() => router.push('/auth/login')}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[dynamicStyles.button, styles.secondaryButton]}
-            onPress={() => router.push('/auth/register')}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>Register</Text>
-          </TouchableOpacity>
+          {Buttons}
         </Animated.View>
       )}
     </View>
@@ -275,45 +282,42 @@ const styles = StyleSheet.create({
   },
   button: {
     borderRadius: 30,
+    overflow: 'hidden',
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 6,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    transform: [{ scale: 1 }],
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
     transition: 'all 0.3s ease', // Web-specific smooth transitions
   },
-  primaryButton: {
-    backgroundColor: '#00bfa5',
-    borderWidth: 2,
-    borderColor: 'rgba(0, 191, 165, 0.3)',
-    // Web-specific hover effects
-    cursor: 'pointer',
-    ':hover': {
-      backgroundColor: '#26a69a',
-      transform: 'scale(1.05)',
-    },
-  },
   secondaryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.6)',
-    backdropFilter: 'blur(10px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.55)',
+    backdropFilter: 'blur(12px)',
     // Web-specific hover effects
     cursor: 'pointer',
     ':hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.25)',
-      borderColor: 'rgba(255, 255, 255, 0.8)',
+      backgroundColor: 'rgba(255, 255, 255, 0.22)',
+      borderColor: 'rgba(255, 255, 255, 0.85)',
     },
   },
-  buttonText: {
+  primaryButtonText: {
+    color: premiumTheme.text.inverse,
+    fontSize: 18,
+    fontWeight: '800',
+    textAlign: 'center',
+    letterSpacing: 0.3,
+  },
+  secondaryButtonText: {
     color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '800',
     textAlign: 'center',
+    letterSpacing: 0.3,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
