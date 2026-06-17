@@ -10,7 +10,6 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { useSelector } from 'react-redux';
 
 import GlassCard from '../components/premium/GlassCard';
 import StatTile from '../components/premium/StatTile';
@@ -19,7 +18,6 @@ import PremiumDateSelector from '../components/premium/PremiumDateSelector';
 import PremiumChart from '../components/premium/PremiumChart';
 
 import { fetchSolarData as fetchSolarDataFromService } from '../services/dataService';
-import { selectDataMode } from '../(redux)/settingsSlice';
 import useCurrentWeatherData from '../hooks/useCurrentWeatherData';
 import { premiumTheme } from '../theme/premiumTheme';
 
@@ -142,7 +140,6 @@ export default function GrowattPremium(): React.ReactElement {
   const [genDelta, setGenDelta] = useState<number | null>(null);
   const [revDelta, setRevDelta] = useState<number | null>(null);
 
-  const currentDataMode = useSelector(selectDataMode);
   const { currentTemp, neighborhood } = useCurrentWeatherData();
 
   const { width } = useWindowDimensions();
@@ -196,7 +193,7 @@ export default function GrowattPremium(): React.ReactElement {
   useEffect(() => {
     fetchMain();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pickerDate, timespan, currentDataMode]);
+  }, [pickerDate, timespan]);
 
   useEffect(() => {
     if (metrics.todayGeneration > 0 || metrics.todayRevenue > 0) {

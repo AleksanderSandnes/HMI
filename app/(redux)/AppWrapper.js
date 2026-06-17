@@ -1,11 +1,8 @@
 import { Stack } from 'expo-router';
 import { loadUser } from './authSlice';
-import { loadSettings } from './settingsSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import AuthLoadingScreen from '../components/AuthLoadingScreen';
-import { setStoreReference } from '../services/dataConfig';
-import { store } from './store';
 import { useRouter, useSegments } from 'expo-router';
 
 const AppWrapper = () => {
@@ -15,19 +12,10 @@ const AppWrapper = () => {
   const segments = useSegments();
 
   useEffect(() => {
-    console.log('[AppWrapper] Initializing app - loading user and settings');
-    console.log('[AppWrapper] Initial auth state:', {
-      isLoading,
-      user: !!user,
-      userEmail: user?.email,
-    });
+    console.log('[AppWrapper] Initializing app - loading user');
 
-    // Set store reference for data config
-    setStoreReference(store);
-
-    // Load user and settings
+    // Load user
     dispatch(loadUser());
-    dispatch(loadSettings());
   }, [dispatch]);
 
   useEffect(() => {

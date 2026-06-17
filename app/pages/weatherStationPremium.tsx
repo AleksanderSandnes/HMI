@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,6 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { useSelector } from 'react-redux';
 
 import GlassCard from '../components/premium/GlassCard';
 import StatTile from '../components/premium/StatTile';
@@ -189,10 +188,6 @@ export default function WeatherStationPremium(): React.ReactElement {
     ? 340
     : desktopChartHeight;
 
-  const dataMode = useSelector(
-    (state: any) => state.settings?.dataMode || 'production'
-  );
-
   const {
     neighborhood,
     countryName,
@@ -205,16 +200,11 @@ export default function WeatherStationPremium(): React.ReactElement {
   const { pickerDate, formattedPickerDate, onConfirm } = useDatePicker();
 
   const [timespan, setTimespan] = useState('hourly');
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const { weatherData, dataType, setDataType } = useHistoricalWeatherData(
     formattedPickerDate,
     timespan
   );
-
-  useEffect(() => {
-    setRefreshKey((p) => p + 1);
-  }, [dataMode]);
 
   const handleDateChange = useCallback(
     (iso: string) => {
@@ -396,7 +386,6 @@ export default function WeatherStationPremium(): React.ReactElement {
         </View>
       )}
       <PremiumLineChart
-        key={refreshKey}
         labels={labels}
         series={series}
         unit={meta.unit === 'UV' ? '' : meta.unit}

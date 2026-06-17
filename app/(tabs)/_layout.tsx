@@ -1,7 +1,7 @@
 import React from 'react';
 import { FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { useWindowDimensions } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 import PremiumTabBar, { navWidth } from '../components/navigation/PremiumTabBar';
 import { premiumTheme } from '../theme/premiumTheme';
 
@@ -21,6 +21,12 @@ function SettingsIcon({ color }: { color: string }) {
   const { width } = useWindowDimensions();
   const size = width <= 768 ? 22 : 20;
   return <FontAwesome6 size={size} name="gear" color={color} />;
+}
+
+function NotificationsIcon({ color }: { color: string }) {
+  const { width } = useWindowDimensions();
+  const size = width <= 768 ? 22 : 20;
+  return <FontAwesome5 size={size} name="bell" color={color} solid />;
 }
 
 export default function TabLayout() {
@@ -43,6 +49,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="weatherStation"
         options={{ title: 'Weather Station', tabBarIcon: CloudSunIcon }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: 'Notifications',
+          tabBarIcon: NotificationsIcon,
+          // Notification center is web-only; native apps use push notifications.
+          href: Platform.OS === 'web' ? undefined : null,
+        }}
       />
       <Tabs.Screen
         name="settings"

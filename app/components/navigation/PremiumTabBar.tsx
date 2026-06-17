@@ -5,12 +5,16 @@ import {
   Pressable,
   StyleSheet,
   Platform,
+  Alert,
   useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome6 } from '@expo/vector-icons';
+import { FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
+import { useDispatch } from 'react-redux';
+import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { premiumTheme, glassBlur, glow } from '../../theme/premiumTheme';
+import { logoutAction } from '../../(redux)/authSlice';
 
 export const SIDEBAR_WIDTH_FULL = 248;
 export const SIDEBAR_WIDTH_RAIL = 88;
@@ -30,33 +34,74 @@ export default function PremiumTabBar({
   insets,
 }: BottomTabBarProps) {
   const { width } = useWindowDimensions();
+  const dispatch = useDispatch();
+  const router = useRouter();
   const mode: 'bottom' | 'rail' | 'full' =
     width <= 768 ? 'bottom' : width <= 1024 ? 'rail' : 'full';
 
-  const items = state.routes.map((route, index) => {
-    const { options } = descriptors[route.key];
-    const focused = state.index === index;
-    const label =
-      typeof options.title === 'string' ? options.title : route.name;
-
-    const onPress = () => {
-      const event = navigation.emit({
-        type: 'tabPress',
-        target: route.key,
-        canPreventDefault: true,
-      });
-      if (!focused && !event.defaultPrevented) {
-        navigation.navigate(route.name as never);
+  const handleLogout = () => {
+    const doLogout = () => {
+      dispatch(logoutAction());
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      } else {
+        router.push('/');
       }
     };
 
-    const color = focused ? ACTIVE : INACTIVE;
-    const icon = options.tabBarIcon
-      ? options.tabBarIcon({ focused, color, size: 22 })
-      : null;
+    if (Platform.OS === 'web') {
+      const confirmed =
+        typeof window !== 'undefined'
+          ? window.confirm('Are you sure you want to logout?')
+          : true;
+      if (confirmed) doLogout();
+    } else {
+      Alert.alert('Logout', 'Are you sure you want to logout?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Logout', style: 'destructive', onPress: doLogout },
+      ]);
+    }
+  };
 
-    return { key: route.key, label, focused, onPress, icon, color };
-  });
+  const activeKey = state.routes[state.index]?.key;
+  const items = state.routes
+    .filter((route) => {
+      // Routes hidden via `href: null` get a tabBarButton that renders null.
+      // Our custom bar must honor that and skip them (e.g. web-only screens).
+      const btn = descriptors[route.key].options.tabBarButton as
+        | ((props: any) => React.ReactNode)
+        | undefined;
+      if (!btn) return true;
+      try {
+        return btn({}) !== null;
+      } catch {
+        return true;
+      }
+    })
+    .map((route) => {
+      const { options } = descriptors[route.key];
+      const focused = route.key === activeKey;
+      const label =
+        typeof options.title === 'string' ? options.title : route.name;
+
+      const onPress = () => {
+        const event = navigation.emit({
+          type: 'tabPress',
+          target: route.key,
+          canPreventDefault: true,
+        });
+        if (!focused && !event.defaultPrevented) {
+          navigation.navigate(route.name as never);
+        }
+      };
+
+      const color = focused ? ACTIVE : INACTIVE;
+      const icon = options.tabBarIcon
+        ? options.tabBarIcon({ focused, color, size: 22 })
+        : null;
+
+      return { key: route.key, label, focused, onPress, icon, color };
+    });
 
   /* ---------- Mobile bottom bar ---------- */
   if (mode === 'bottom') {
@@ -151,6 +196,33 @@ export default function PremiumTabBar({
           )
         )}
       </View>
+
+      {/* Sign out pinned to the bottom */}
+      <View style={styles.footer}>
+        {full ? (
+          <Pressable
+            onPress={handleLogout}
+            style={styles.logoutFull}
+            accessibilityRole="button"
+            accessibilityLabel="Sign out"
+          >
+            <View style={styles.navIcon}>
+              <FontAwesome5 name="sign-out-alt" size={18} color={premiumTheme.negative} solid />
+            </View>
+            <Text style={styles.logoutLabel}>Sign out</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={handleLogout}
+            style={styles.logoutRail}
+            accessibilityRole="button"
+            accessibilityLabel="Sign out"
+          >
+            <FontAwesome5 name="sign-out-alt" size={18} color={premiumTheme.negative} solid />
+            <Text style={styles.railLogoutLabel}>Sign out</Text>
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }
@@ -197,8 +269,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  nav: { gap: 8 },
-  navRail: { alignItems: 'center', gap: 12 },
+  nav: { gap: 8, flex: 1 },
+  navRail: { alignItems: 'center', gap: 12, flex: 1 },
 
   navItem: {
     flexDirection: 'row',
@@ -231,6 +303,46 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(245, 158, 11, 0.35)',
   },
   railLabel: { fontSize: 10.5, fontWeight: '700' },
+
+  /* sign-out footer */
+  footer: {
+    borderTopWidth: 1,
+    borderTopColor: premiumTheme.glass.border,
+    paddingTop: 14,
+    marginTop: 8,
+  },
+  logoutFull: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: premiumTheme.radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 113, 133, 0.28)',
+    backgroundColor: 'rgba(251, 113, 133, 0.08)',
+  },
+  logoutLabel: {
+    fontSize: 14.5,
+    fontWeight: '700',
+    color: premiumTheme.negative,
+  },
+  logoutRail: {
+    width: 62,
+    paddingVertical: 12,
+    borderRadius: premiumTheme.radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 113, 133, 0.28)',
+    backgroundColor: 'rgba(251, 113, 133, 0.08)',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'center',
+  },
+  railLogoutLabel: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: premiumTheme.negative,
+  },
 
   /* mobile bottom bar */
   bottomBar: {

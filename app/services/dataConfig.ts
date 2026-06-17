@@ -1,6 +1,9 @@
 /**
  * Data Configuration Service
- * Manages data mode from Redux store - NO FALLBACKS
+ * The active data mode (production vs development) is selected purely at
+ * BUILD TIME via the `EXPO_PUBLIC_DATA_MODE` environment variable.
+ * There is no runtime toggle — set the env var via the build command
+ * (see package.json `*:dev` / `*:prod` scripts, vercel.json, or Render env).
  */
 
 export type DataMode = 'production' | 'development';
@@ -14,44 +17,21 @@ export interface DataConfig {
   environment: string;
 }
 
-// Store reference to be set by the app
-let _store: any = null;
-
 /**
- * Set the Redux store reference
+ * Resolve the current data mode from the build-time environment variable.
+ * Defaults to 'development' (local APIs) when unset.
  */
-export function setStoreReference(store: any) {
-  _store = store;
+export function getDataMode(): DataMode {
+  const envMode = process.env.EXPO_PUBLIC_DATA_MODE;
+  return envMode === 'production' ? 'production' : 'development';
 }
 
 /**
- * Get the current data configuration from Redux store
+ * Get the current data configuration.
  */
 export function getDataConfig(): DataConfig {
-  let mode: DataMode = 'development'; // Default to development mode
-
-  // Try to get from Redux store first
-  if (_store && _store.getState) {
-    try {
-      const state = _store.getState();
-      if (state.settings && state.settings.dataMode) {
-        mode = state.settings.dataMode;
-      }
-    } catch (error) {
-      console.warn('[DataConfig] Could not read from Redux store:', error);
-    }
-  }
-
-  // Fallback to environment variable only if Redux is not available
-  if (!_store) {
-    const envMode = process.env.EXPO_PUBLIC_DATA_MODE as DataMode;
-    if (envMode === 'production' || envMode === 'development') {
-      mode = envMode;
-    }
-  }
-
   return {
-    mode,
+    mode: getDataMode(),
     apiEndpoints: {
       production:
         process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION ||
@@ -84,13 +64,6 @@ export function getApiEndpoint(): string {
  */
 export function shouldUseDevelopmentData(): boolean {
   return getDataConfig().mode === 'development';
-}
-
-/**
- * Get current data mode
- */
-export function getDataMode(): DataMode {
-  return getDataConfig().mode;
 }
 
 /**
