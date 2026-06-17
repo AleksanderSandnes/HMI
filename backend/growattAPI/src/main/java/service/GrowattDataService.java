@@ -59,7 +59,7 @@ public class GrowattDataService {
 
 	/** Range discriminator stored alongside each cached entry. */
 	public enum CacheType {
-		DAY, MONTH, YEAR
+		DAY, WEEK, MONTH, YEAR
 	}
 
 	private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -88,8 +88,18 @@ public class GrowattDataService {
 	 * calendar months, so this performs one or two {@link #getMonthChart} calls, each of which
 	 * goes through the regular cache. The requested date is treated as the (inclusive) last day
 	 * of the window; a blank/unparseable date falls back to today.</p>
+	 *
+	 * <p>The assembled response is itself cached (type {@code WEEK}, keyed by the window's end
+	 * date) via the shared {@link #getOrFetch} cache-aside, so a completed past week is saved on
+	 * first request and served from MongoDB afterwards without re-assembling. A week that still
+	 * includes today is treated as the current, incomplete period and is never cached.</p>
 	 */
 	public WeekResponse getWeekChart(EnergyRequest request) {
+		return getOrFetch(CacheType.WEEK, request, WeekResponse.class, this::assembleWeekChart);
+	}
+
+	/** Assemble the weekly view live from the daily totals of the covering month chart(s). */
+	private WeekResponse assembleWeekChart(EnergyRequest request) {
 		LocalDate end;
 		try {
 			end = LocalDate.parse(request.getDate(), DAY_FMT);
@@ -204,6 +214,9 @@ public class GrowattDataService {
 			switch (type) {
 				case DAY:
 					return LocalDate.parse(date, DAY_FMT).isEqual(LocalDate.now());
+				case WEEK:
+					// A week is still in progress while its (inclusive) end date is today or later.
+					return !LocalDate.parse(date, DAY_FMT).isBefore(LocalDate.now());
 				case MONTH:
 					return YearMonth.parse(date, MONTH_FMT).equals(YearMonth.now());
 				case YEAR:
