@@ -1,3 +1,4 @@
+import './premiumFont';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppWrapper from './(redux)/AppWrapper';
 import { Provider } from 'react-redux';
@@ -10,7 +11,7 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <StatusBar style="light" backgroundColor="#1e3a8a" />
+        <StatusBar style="light" backgroundColor="#070b16" />
         <AppWrapper />
       </QueryClientProvider>
     </Provider>
