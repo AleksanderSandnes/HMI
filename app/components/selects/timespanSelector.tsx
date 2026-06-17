@@ -63,7 +63,6 @@ export default function TimespanSelector({
 
   const options = [
     { label: isMobile ? '1H' : 'Hourly', value: 'hourly' },
-    { label: isMobile ? '1D' : 'Daily', value: 'daily' },
     { label: isMobile ? '1W' : 'Weekly', value: 'weekly' },
     { label: isMobile ? '1M' : 'Monthly', value: 'monthly' },
     { label: isMobile ? '1Y' : 'Yearly', value: 'yearly' },

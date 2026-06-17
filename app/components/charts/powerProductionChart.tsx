@@ -65,34 +65,6 @@ const chartConfig = {
   formatXLabel: (value: any) => value,
 };
 
-// Bar chart specific configuration for daily time range
-const dailyBarChartConfig = {
-  ...chartConfig,
-  barPercentage: 0.6,
-  fillShadowGradient: '#3b82f6',
-  fillShadowGradientTo: '#60a5fa',
-  fillShadowGradientFromOpacity: 0.9,
-  fillShadowGradientToOpacity: 0.7,
-  propsForVerticalLabels: {
-    fill: solarTheme.chart.label,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  propsForHorizontalLabels: {
-    fill: solarTheme.chart.label,
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  propsForBackgroundLines: {
-    stroke: solarTheme.chart.grid,
-    strokeWidth: 0.5,
-    strokeDasharray: '',
-  },
-  decimalPlaces: 0,
-  formatYLabel: (value: any) => `${Math.round(value)}`,
-  formatXLabel: (value: any) => value,
-};
-
 // Bar chart specific configuration
 const barChartConfig = {
   ...chartConfig,
@@ -156,7 +128,7 @@ export interface ChartData {
 interface PowerProductionChartProps {
   data: ChartData;
   loading?: boolean;
-  timespan?: string; // 'hourly', 'daily', 'weekly', 'monthly', 'yearly'
+  timespan?: string; // 'hourly', 'weekly', 'monthly', 'yearly'
 }
 
 // Enhanced hover tooltip component
@@ -188,7 +160,6 @@ function HoverTooltip({
   const getUnit = () => {
     switch (timespan) {
       case 'hourly':
-      case 'daily':
         return 'W';
       default:
         return 'kWh';
@@ -358,7 +329,7 @@ const styles = StyleSheet.create({
 export default function PowerProductionChart({
   data,
   loading = false,
-  timespan = 'daily',
+  timespan = 'hourly',
 }: PowerProductionChartProps) {
   const windowDimensions = useWindowDimensions();
   const isMobile = windowDimensions.width <= 768;
@@ -367,27 +338,6 @@ export default function PowerProductionChart({
   // Mobile-specific chart configuration with aggressive label reduction
   const getMobileChartConfig = () => ({
     ...chartConfig,
-    propsForLabels: {
-      fill: solarTheme.chart.label,
-      fontSize: isMobile ? 12 : 14,
-      fontWeight: '600',
-    },
-    propsForVerticalLabels: {
-      fill: solarTheme.chart.label,
-      fontSize: isMobile ? 11 : 13,
-      fontWeight: '500',
-    },
-    propsForHorizontalLabels: {
-      fill: solarTheme.chart.label,
-      fontSize: isMobile ? 11 : 13,
-      fontWeight: '500',
-    },
-    formatYLabel: (value: any) =>
-      isMobile ? `${Math.round(value / 1000)}k` : `${Math.round(value)}`,
-  });
-
-  const getMobileDailyBarChartConfig = () => ({
-    ...dailyBarChartConfig,
     propsForLabels: {
       fill: solarTheme.chart.label,
       fontSize: isMobile ? 12 : 14,
@@ -737,25 +687,6 @@ export default function PowerProductionChart({
               })}
             />
           </View>
-        );
-      case 'daily':
-        // Enhanced bar chart for daily data showing hourly breakdown
-        const dailyData = getFilteredData(data, 12); // Max 12 labels on mobile
-
-        return (
-          <BarChart
-            data={dailyData}
-            width={chartWidth}
-            height={chartHeight}
-            chartConfig={getMobileDailyBarChartConfig()}
-            withVerticalLabels={true}
-            withHorizontalLabels={true}
-            fromZero={true}
-            showValuesOnTopOfBars={false}
-            yAxisLabel=""
-            yAxisSuffix={isMobile ? '' : ' W'}
-            style={baseStyle}
-          />
         );
       case 'weekly':
         // Bar chart for weekly data (discrete daily values)

@@ -219,9 +219,6 @@ function optimizeChartData(
   if (timespan === 'hourly') {
     // For hourly view: Mobile shows every hour, Desktop shows every hour too
     samplingInterval = isMobile ? 12 : 12; // Both show every hour (12 * 5min = 60min)
-  } else if (timespan === 'daily') {
-    // For daily view, show every 30 minutes during active period
-    samplingInterval = isMobile ? 12 : 6; // Mobile: 1 hour, Desktop: 30 minutes
   } else {
     // For other timespans, use current logic
     samplingInterval = 12; // Every hour
@@ -306,10 +303,9 @@ function calculateMetrics(
       finalTotalGeneration =
         totalGenerationFromApi ?? calculatedTodayGenerationKwh;
       break;
-    case 'daily':
     case 'hourly':
     default:
-      // For daily/hourly view, show today's generation and total
+      // For hourly view, show today's generation and total
       finalTodayGeneration =
         todayGenerationFromApi ?? calculatedTodayGenerationKwh;
       finalTotalGeneration =

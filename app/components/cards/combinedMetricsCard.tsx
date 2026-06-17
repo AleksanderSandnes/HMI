@@ -24,7 +24,7 @@ interface CombinedMetricsCardProps {
   };
   isLoading?: boolean;
   isMobile?: boolean;
-  timespan?: string; // 'daily', 'weekly', 'monthly'
+  timespan?: string; // 'hourly', 'weekly', 'monthly', 'yearly'
 }
 
 const styles = StyleSheet.create({
@@ -166,7 +166,7 @@ export default function CombinedMetricsCard({
   revenue,
   isLoading = false,
   isMobile = false,
-  timespan = 'daily',
+  timespan = 'hourly',
 }: CombinedMetricsCardProps) {
   const containerStyle = isMobile ? styles.mobileContainer : styles.container;
   const metricSectionStyle = isMobile
@@ -184,8 +184,6 @@ export default function CombinedMetricsCard({
     switch (timespan) {
       case 'hourly':
         return 'This Hour';
-      case 'daily':
-        return 'Today';
       case 'weekly':
         return 'This Week';
       case 'monthly':
@@ -202,8 +200,6 @@ export default function CombinedMetricsCard({
     switch (timespan) {
       case 'hourly':
         return "This hour's performance overview";
-      case 'daily':
-        return "Today's performance overview";
       case 'weekly':
         return "This week's performance overview";
       case 'monthly':

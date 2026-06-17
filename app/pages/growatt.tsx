@@ -413,7 +413,7 @@ function Growatt(): React.ReactElement {
   yesterday.setDate(today.getDate() - 1);
 
   const [data, setData] = useState<ChartData>({ labels: [], datasets: [] });
-  const [timespan, setTimespan] = useState('daily');
+  const [timespan, setTimespan] = useState('hourly');
   const [pickerDate, setPickerDate] = useState(
     yesterday.toISOString().split('T')[0]
   );
@@ -509,7 +509,6 @@ function Growatt(): React.ReactElement {
     );
     if (
       timespan === 'hourly' ||
-      timespan === 'daily' ||
       timespan === 'weekly' ||
       timespan === 'monthly' ||
       timespan === 'yearly'
@@ -595,8 +594,6 @@ function Growatt(): React.ReactElement {
                 <Text style={mobile.chartSubtitle}>
                   {timespan === 'hourly' &&
                     `Real-time output for ${new Date(pickerDate).toLocaleDateString()}`}
-                  {timespan === 'daily' &&
-                    `Hourly output for ${new Date(pickerDate).toLocaleDateString()}`}
                   {timespan === 'weekly' &&
                     `Daily aggregated output for the last 7 days`}
                   {timespan === 'monthly' &&
@@ -672,8 +669,6 @@ function Growatt(): React.ReactElement {
               <Text style={web.chartSubtitle}>
                 {timespan === 'hourly' &&
                   `Real-time output for ${new Date(pickerDate).toLocaleDateString()}`}
-                {timespan === 'daily' &&
-                  `Hourly output for ${new Date(pickerDate).toLocaleDateString()}`}
                 {timespan === 'weekly' &&
                   `Daily aggregated output for the last 7 days`}
                 {timespan === 'monthly' &&
