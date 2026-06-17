@@ -23,7 +23,11 @@ import lombok.Setter;
  * as unread.</p>
  */
 @Document(collection = "notifications")
-@CompoundIndex(name = "user_created_idx", def = "{'userId': 1, 'createdAt': -1}")
+// No explicit index name: Spring Data derives the default name "userId_1_createdAt_-1",
+// which matches the index Mongoose auto-creates for the same keys in the Node backend.
+// Using a custom name here would clash (MongoDB error 85) since both backends share this
+// collection and MongoDB forbids two indexes with identical keys but different names.
+@CompoundIndex(def = "{'userId': 1, 'createdAt': -1}")
 @Getter
 @Setter
 @NoArgsConstructor
