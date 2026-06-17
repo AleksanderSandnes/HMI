@@ -1,3 +1,13 @@
+export interface ChartData {
+  labels: string[];
+  datasets: {
+    data: number[];
+    color: () => string;
+    strokeWidth: number;
+    withDots?: boolean;
+  }[];
+}
+
 export interface TemperatureDataItem {
   metric: { tempAvg: number; dewptAvg: number };
   obsTimeLocal: string;

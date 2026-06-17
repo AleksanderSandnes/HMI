@@ -9,7 +9,7 @@ import {
   SolarRadiationDataItem,
   UvIndexDataItem,
 } from '../interface/weatherInterface';
-import { ChartData } from '../components/charts/weatherChart';
+import { ChartData } from '../interface/weatherInterface';
 import {
   getHistoricalWeatherData,
   getHourlyWeatherData,
