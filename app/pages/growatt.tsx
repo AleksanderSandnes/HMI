@@ -595,11 +595,11 @@ function Growatt(): React.ReactElement {
                   {timespan === 'hourly' &&
                     `Real-time output for ${new Date(pickerDate).toLocaleDateString()}`}
                   {timespan === 'weekly' &&
-                    `Daily aggregated output for the last 7 days`}
+                    `Daily aggregated output for 7 days from ${new Date(pickerDate).toLocaleString('en-US', { month: 'long' })}, ${new Date(pickerDate).getDate()}`}
                   {timespan === 'monthly' &&
-                    `Monthly aggregated output for ${new Date(pickerDate).getFullYear()}`}
+                    `Monthly aggregated output for ${new Date(pickerDate).toLocaleString('en-US', { month: 'long' })}, ${new Date(pickerDate).getFullYear()}`}
                   {timespan === 'yearly' &&
-                    `Yearly aggregated output for the last 5 years`}
+                    `Aggregated output for ${new Date(pickerDate).getFullYear()}`}
                 </Text>
               </View>
               <PowerProductionChart
@@ -670,11 +670,11 @@ function Growatt(): React.ReactElement {
                 {timespan === 'hourly' &&
                   `Real-time output for ${new Date(pickerDate).toLocaleDateString()}`}
                 {timespan === 'weekly' &&
-                  `Daily aggregated output for the last 7 days`}
+                  `Daily aggregated output for 7 days from ${new Date(pickerDate).toLocaleString('en-US', { month: 'long' })}, ${new Date(pickerDate).getDate()}`}
                 {timespan === 'monthly' &&
-                  `Monthly aggregated output for ${new Date(pickerDate).getFullYear()}`}
+                  `Monthly aggregated output for ${new Date(pickerDate).toLocaleString('en-US', { month: 'long' })}, ${new Date(pickerDate).getFullYear()}`}
                 {timespan === 'yearly' &&
-                  `Yearly aggregated output for the last 5 years`}
+                  `Aggregated output for ${new Date(pickerDate).getFullYear()}`}
               </Text>
             </View>
             <View style={web.dateDisplay}>

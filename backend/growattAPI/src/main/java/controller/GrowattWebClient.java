@@ -129,9 +129,13 @@ public class GrowattWebClient {
 	
 	/**
 	 * Retrieve generic informations and about the power production.
+	 *
+	 * <p>This is a cumulative "as of now" snapshot and is <b>not</b> tied to a specific date.
+	 * The {@code date} is intentionally not forwarded to Growatt: sending one (e.g. a future
+	 * date relative to Growatt's server) makes the endpoint return {@code 400 Bad Request}.</p>
 	 */
 	public TotalDataResponse getTotalData(EnergyRequest energyRequest) {
-		return (TotalDataResponse) request("/indexbC/getTotalData", energyRequest.getPlantId(), energyRequest.getDate(), TotalDataResponse.class);
+		return (TotalDataResponse) request("/indexbC/getTotalData", energyRequest.getPlantId(), null, TotalDataResponse.class);
 	}
 
 	/**
@@ -160,9 +164,12 @@ public class GrowattWebClient {
 	
 	/**
 	 * Retrieve some data about the power production for a specificc plant.
+	 *
+	 * <p>Like {@link #getTotalData}, this is a cumulative snapshot that is not tied to a date,
+	 * so the {@code date} is intentionally not forwarded to Growatt.</p>
 	 */
 	public TotalDataInvResponse getInvTotalData(EnergyRequest energyRequest) {
-		return (TotalDataInvResponse) request("/indexbC/inv/getInvTotalData", energyRequest.getPlantId(), energyRequest.getDate(), TotalDataInvResponse.class);
+		return (TotalDataInvResponse) request("/indexbC/inv/getInvTotalData", energyRequest.getPlantId(), null, TotalDataInvResponse.class);
 	}
 
 	private Object request(String uri, String plantId, String date, Class<?> clazz) {
