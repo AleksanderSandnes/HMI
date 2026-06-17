@@ -2,7 +2,6 @@ const express = require('express');
 const isAuthenticated = require('../middleware/isAuth.js');
 const {
   getHourlyWeather,
-  getDailyWeather,
   getAllWeather,
   getCurrentWeather,
   getWeeklyWeather,
@@ -17,7 +16,6 @@ const router = express.Router();
 // Core weather data routes using optimal Weather.com PWS endpoints
 // These routes now use authentication to get user-specific weather settings
 router.get('/hourly/:date', isAuthenticated, getHourlyWeather); // Uses /history/hourly
-router.get('/daily/:date', isAuthenticated, getDailyWeather); // Uses /history/all
 router.get('/all/:date', isAuthenticated, getAllWeather); // Uses /history/all
 router.get('/current', isAuthenticated, getCurrentWeather); // Uses /observations/current
 

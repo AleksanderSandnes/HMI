@@ -8,7 +8,7 @@ export const dataTypeConfig = [
   { key: 'uvIndex', label: 'UV', icon: '🟣' },
 ];
 
-export const timespanOptions = ['Hourly', 'Daily', 'Weekly'];
+export const timespanOptions = ['Hourly', 'Weekly'];
 
 export const dataModeConfig = {
   production: { label: '🟢 Production API', color: '#10b981' },

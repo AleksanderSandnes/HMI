@@ -13,7 +13,6 @@ import { ChartData } from '../components/charts/weatherChart';
 import {
   getHistoricalWeatherData,
   getHourlyWeatherData,
-  getDailyWeatherData,
   getWeeklyWeatherData,
   getWeeklyHourlyWeatherData,
 } from '../services/weatherApiService';
@@ -21,7 +20,7 @@ import { getDataMode } from '../services/dataConfig';
 
 const useHistoricalWeatherData = (
   formattedPickerDate: string,
-  timespan: string = 'daily'
+  timespan: string = 'hourly'
 ) => {
   const [weatherData, setWeatherData] = useState<ChartData>({
     labels: [],
@@ -78,7 +77,7 @@ const useHistoricalWeatherData = (
 
   const fetchDailyWeatherData = async (
     formattedPickerDate: string,
-    timespan: string = 'daily'
+    timespan: string = 'hourly'
   ) => {
     const dataMode = getDataMode();
 
@@ -91,9 +90,6 @@ const useHistoricalWeatherData = (
 
       // Use the appropriate API function based on timespan
       switch (timespan) {
-        case 'hourly':
-          json = await getHourlyWeatherData(formattedPickerDate);
-          break;
         case 'weekly':
           // For weekly, calculate the week and get all hourly data for the week
           const { startDate, endDate } =
@@ -103,9 +99,9 @@ const useHistoricalWeatherData = (
           );
           json = await getWeeklyHourlyWeatherData(startDate, endDate);
           break;
-        case 'daily':
+        case 'hourly':
         default:
-          json = await getDailyWeatherData(formattedPickerDate);
+          json = await getHourlyWeatherData(formattedPickerDate);
           break;
       }
 
@@ -118,7 +114,7 @@ const useHistoricalWeatherData = (
         // Fallback for weekly endpoints that return summaries array
         observations = json.summaries || [];
       } else {
-        // Hourly and daily endpoints return observations array
+        // Hourly endpoint returns observations array
         observations = json.observations || [];
       }
 
@@ -424,18 +420,6 @@ const useHistoricalWeatherData = (
           const [hour, minute] = time.split(':').map(Number);
           return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         });
-      } else if (timespan === 'daily') {
-        // Daily data - aggregate by hour
-        formattedData = data.map((item) => ({
-          time: item.obsTimeLocal,
-          tempAvg: item.metric?.tempAvg || item.tempHigh || 0,
-          dewptAvg: item.metric?.dewptAvg || item.dewptHigh || 0,
-        }));
-
-        labels = formattedData.map((item) => {
-          const time = item.time.split(' ')[1];
-          return time.slice(0, 5); // HH:MM format
-        });
       } else {
         // Weekly - use all hourly data for the week, keep all data points including zero temperatures
         // Sample data every 3 hours to reduce density (8 points per day instead of 24)
@@ -558,19 +542,6 @@ const useHistoricalWeatherData = (
         }
         return minute === 59 ? `${hour}:${minute}` : '';
       });
-    } else if (timespan === 'daily') {
-      formattedData = data.map((item) => ({
-        time: item.obsTimeLocal,
-        windspeedAvg: item.metric?.windspeedAvg || item.windspeedHigh || 0,
-        windgustAvg: item.metric?.windgustAvg || item.windgustHigh || 0,
-      }));
-
-      labels = formattedData.map((item, index) => {
-        if (isMobile) {
-          return index % 4 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
-        }
-        return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
-      });
     } else {
       // Weekly - use all hourly data for the week, keep all data points including zero wind values
       // Sample data every 3 hours to reduce density (8 points per day instead of 24)
@@ -641,27 +612,20 @@ const useHistoricalWeatherData = (
     let formattedData: any[] = [];
     let labels: string[] = [];
 
-    if (timespan === 'hourly' || timespan === 'daily') {
+    if (timespan === 'hourly') {
       formattedData = data.map((item) => ({
         time: item.obsTimeLocal,
         precipRate: item.metric?.precipRate || item.precipRate || 0,
         precipTotal: item.metric?.precipTotal || item.precipTotal || 0,
       }));
 
-      labels = formattedData.map((item, index) => {
-        if (timespan === 'hourly') {
-          const time = item.time.split(' ')[1];
-          const [hour, minute] = time.split(':').map(Number);
-          if (isMobile) {
-            return minute === 59 && hour % 4 === 0 ? `${hour}:${minute}` : '';
-          }
-          return minute === 59 ? `${hour}:${minute}` : '';
-        } else {
-          if (isMobile) {
-            return index % 4 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
-          }
-          return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
+      labels = formattedData.map((item) => {
+        const time = item.time.split(' ')[1];
+        const [hour, minute] = time.split(':').map(Number);
+        if (isMobile) {
+          return minute === 59 && hour % 4 === 0 ? `${hour}:${minute}` : '';
         }
+        return minute === 59 ? `${hour}:${minute}` : '';
       });
     } else {
       // Weekly - use all hourly data for the week, keep all data points including zero precipitation (dry periods)
@@ -737,18 +701,6 @@ const useHistoricalWeatherData = (
         }
         return minute === 59 ? `${hour}:${minute}` : '';
       });
-    } else if (timespan === 'daily') {
-      formattedData = data.map((item) => ({
-        time: item.obsTimeLocal,
-        pressureMax: item.metric?.pressureMax || item.pressureMax || 0,
-      }));
-
-      labels = formattedData.map((item, index) => {
-        if (isMobile) {
-          return index % 4 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
-        }
-        return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
-      });
     } else {
       // Weekly - use all hourly data for the week, keep all data points including zero pressure values
       // Sample data every 3 hours to reduce density (8 points per day instead of 24)
@@ -822,18 +774,6 @@ const useHistoricalWeatherData = (
         }
         return minute === 59 ? `${hour}:${minute}` : '';
       });
-    } else if (timespan === 'daily') {
-      formattedData = data.map((item) => ({
-        time: item.obsTimeLocal,
-        solarRadiationHigh: item.solarRadiationHigh || 0,
-      }));
-
-      labels = formattedData.map((item, index) => {
-        if (isMobile) {
-          return index % 4 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
-        }
-        return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
-      });
     } else {
       // Weekly - use all hourly data for the week, keep all data points including zero solar radiation (nighttime/cloudy periods)
       // Sample data every 3 hours to reduce density (8 points per day instead of 24)
@@ -903,18 +843,6 @@ const useHistoricalWeatherData = (
         }
         return minute === 59 ? `${hour}:${minute}` : '';
       });
-    } else if (timespan === 'daily') {
-      formattedData = data.map((item) => ({
-        time: item.obsTimeLocal,
-        uvHigh: item.uvHigh || 0,
-      }));
-
-      labels = formattedData.map((item, index) => {
-        if (isMobile) {
-          return index % 4 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
-        }
-        return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
-      });
     } else {
       // Weekly - use all hourly data for the week, keep all data points including zero UV (nighttime/cloudy days)
       // Sample data every 3 hours to reduce density (8 points per day instead of 24)
@@ -981,18 +909,6 @@ const useHistoricalWeatherData = (
           return minute === 59 && hour % 4 === 0 ? `${hour}:${minute}` : '';
         }
         return minute === 59 ? `${hour}:${minute}` : '';
-      });
-    } else if (timespan === 'daily') {
-      formattedData = data.map((item) => ({
-        time: item.obsTimeLocal,
-        winddirAvg: item.winddirAvg || 0,
-      }));
-
-      labels = formattedData.map((item, index) => {
-        if (isMobile) {
-          return index % 4 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
-        }
-        return index % 2 === 0 ? item.time.split(' ')[1].slice(0, 5) : '';
       });
     } else {
       // Weekly - use all hourly data for the week, keep all data points including zero wind direction values

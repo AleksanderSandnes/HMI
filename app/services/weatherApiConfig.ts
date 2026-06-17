@@ -10,7 +10,6 @@ export interface WeatherApiConfig {
   currentWeatherEndpoint: string;
   historicalWeatherEndpoint: (date: string) => string;
   hourlyWeatherEndpoint: (date: string) => string;
-  dailyWeatherEndpoint: (date: string) => string;
   weeklyWeatherEndpoint: (date?: string) => string;
 }
 
@@ -42,8 +41,6 @@ export function getWeatherApiConfig(): WeatherApiConfig {
       `${baseUrl}/api/weather/all/${date}`,
     hourlyWeatherEndpoint: (date: string) =>
       `${baseUrl}/api/weather/hourly/${date}`,
-    dailyWeatherEndpoint: (date: string) =>
-      `${baseUrl}/api/weather/daily/${date}`,
     // Updated weekly endpoint to support specific date-based week calculation
     weeklyWeatherEndpoint: (date?: string) =>
       date
@@ -65,10 +62,6 @@ export function getWeatherEndpointByTimeRange(
     case 'hourly':
       return date
         ? config.hourlyWeatherEndpoint(date)
-        : config.historicalWeatherEndpoint(date || '');
-    case 'daily':
-      return date
-        ? config.dailyWeatherEndpoint(date)
         : config.historicalWeatherEndpoint(date || '');
     case 'weekly':
       return config.weeklyWeatherEndpoint(date);

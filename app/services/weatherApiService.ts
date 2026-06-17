@@ -101,14 +101,6 @@ export async function getHourlyWeatherData(date: string): Promise<any> {
 }
 
 /**
- * Get daily weather data for a specific date
- */
-export async function getDailyWeatherData(date: string): Promise<any> {
-  const config = getWeatherApiConfig();
-  return await makeAuthenticatedRequest(config.dailyWeatherEndpoint(date));
-}
-
-/**
  * Get weekly weather data
  */
 export async function getWeeklyWeatherData(date?: string): Promise<any> {

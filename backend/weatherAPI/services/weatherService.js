@@ -257,37 +257,6 @@ const fetchHourlyWeather = async (date, userId = null) => {
   return { observations };
 };
 
-const fetchDailyWeather = async (date, userId = null) => {
-  try {
-    await client.connect();
-    await client.db('HMI').command({ ping: 1 });
-    console.log(
-      'Pinged your deployment. You successfully connected to MongoDB!'
-    );
-
-    const collection = client.db('HMI').collection('weather_data');
-
-    let data = await collection.findOne({ date: date });
-
-    if (!data) {
-      const credentials = await getWeatherCredentials(userId);
-
-      // Use daily/all endpoint for comprehensive daily data
-      const response = await axios.get(
-        `${BASE_URL}${PWS_ENDPOINTS.DAILY_ALL}?stationId=${credentials.stationId}&format=json&units=m&date=${date}&numericPrecision=decimal&apiKey=${credentials.apiKey}`
-      );
-      data = response.data;
-      await collection.insertOne({ ...data, date: date });
-    }
-
-    return data;
-  } finally {
-    if (client) {
-      await client.close();
-    }
-  }
-};
-
 const fetchAllWeather = async (date, userId = null) => {
   try {
     await client.connect();
@@ -469,12 +438,6 @@ const getOptimalEndpointForTimeRange = (timeRange, date) => {
         params: { date },
         description: 'Hourly historical data for specific date',
       };
-    case 'daily':
-      return {
-        endpoint: PWS_ENDPOINTS.DAILY_ALL,
-        params: { date },
-        description: 'All observations for specific date',
-      };
     case 'weekly':
       return {
         endpoint: PWS_ENDPOINTS.DAILY_SUMMARY,
@@ -504,7 +467,6 @@ const getOptimalEndpointForTimeRange = (timeRange, date) => {
 
 module.exports = {
   fetchHourlyWeather,
-  fetchDailyWeather,
   fetchAllWeather,
   fetchCurrentWeather,
   fetchDailySummary,

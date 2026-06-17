@@ -1,6 +1,5 @@
 const {
   fetchHourlyWeather,
-  fetchDailyWeather,
   fetchAllWeather,
   fetchCurrentWeather,
   fetchDailySummary,
@@ -23,23 +22,6 @@ const getHourlyWeather = async (req, res) => {
     );
     res.status(500).json({
       message: 'Error fetching hourly weather data',
-      error: error.message,
-    });
-  }
-};
-
-const getDailyWeather = async (req, res) => {
-  try {
-    const userId = req.user; // Get user ID from authentication middleware
-    const weatherData = await fetchDailyWeather(req.params.date, userId);
-    res.json(weatherData);
-  } catch (error) {
-    console.error(
-      '[WeatherController] Error fetching daily weather data:',
-      error
-    );
-    res.status(500).json({
-      message: 'Error fetching daily weather data',
       error: error.message,
     });
   }
@@ -131,7 +113,6 @@ const getEndpointInfo = async (req, res) => {
 
 module.exports = {
   getHourlyWeather,
-  getDailyWeather,
   getAllWeather,
   getCurrentWeather,
   getWeeklyWeather,

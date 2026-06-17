@@ -53,7 +53,7 @@ export default function WeatherStation() {
     openDatePicker,
   } = useDatePicker();
 
-  const [timespan, setTimespan] = useState('daily');
+  const [timespan, setTimespan] = useState('hourly');
   const [isLoading, setIsLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
