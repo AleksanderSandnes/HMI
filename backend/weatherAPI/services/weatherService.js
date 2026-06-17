@@ -154,22 +154,107 @@ const PWS_ENDPOINTS = {
   // Using /dailysummary/7day instead for weekly data
 };
 
-const fetchHourlyWeather = async (date, userId = null) => {
-  const historicalData = await Historical.findOne({ date });
+// Format a Date as YYYYMMDD using local time (matches the frontend's date format).
+const toYyyyMmDd = (d) =>
+  `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(
+    d.getDate()
+  ).padStart(2, '0')}`;
 
-  if (historicalData) {
-    return historicalData;
-  } else {
-    const credentials = await getWeatherCredentials(userId);
+// Today and yesterday as YYYYMMDD (local time). Neither is persisted to the cache:
+// today is still in progress, and yesterday is backfilled by a daily background job.
+const getTodayAndYesterday = () => {
+  const now = new Date();
+  const yesterdayDate = new Date(now);
+  yesterdayDate.setDate(now.getDate() - 1);
+  return { today: toYyyyMmDd(now), yesterday: toYyyyMmDd(yesterdayDate) };
+};
 
-    // Use hourly endpoint for specific date hourly data
+/**
+ * Hourly observations for a single day with a transparent MongoDB cache.
+ *
+ * Cache-aside keyed by (stationId, date):
+ *  - Today: always fetched live, never cached (the day is still in progress).
+ *  - Yesterday: read from the cache if present, otherwise fetched live but NOT saved
+ *    (a daily background job backfills yesterday's data).
+ *  - Older past days: read from the cache first; on a miss they are fetched live and saved.
+ *  - Empty responses (no observations) are never saved.
+ *
+ * Only the schema-whitelisted fields (temp, wind, rain, pressure, solar, uv, ...) are
+ * stored. Returns the observations array for the day. Shared by the hourly and weekly
+ * (7-day hourly) paths so both use the same cache and rules. Because each day is resolved
+ * independently, a partial week (some days cached, some missing) transparently reads the
+ * cached days, fetches + saves the missing ones, and the caller combines them.
+ */
+const getHourlyObservationsForDay = async (
+  date,
+  stationId,
+  apiKey,
+  today,
+  yesterday
+) => {
+  const fetchLive = async () => {
     const weatherResponse = await axios.get(
-      `${BASE_URL}${PWS_ENDPOINTS.HOURLY}?stationId=${credentials.stationId}&format=json&units=m&date=${date}&apiKey=${credentials.apiKey}`
+      `${BASE_URL}${PWS_ENDPOINTS.HOURLY}?stationId=${stationId}&format=json&units=m&date=${date}&apiKey=${apiKey}`
     );
-    const newHistoricalData = new Historical(weatherResponse.data);
-    // await newHistoricalData.save();
-    return weatherResponse.data;
+    return weatherResponse.data?.observations || [];
+  };
+
+  // Today is incomplete - always go live, never cache.
+  if (date === today) {
+    console.log(`[Weather] Hourly ${stationId}/${date} is today -> live fetch (no cache)`);
+    return await fetchLive();
   }
+
+  // 1) Try the cache first.
+  const cached = await Historical.findOne({ stationId, date });
+  if (cached) {
+    console.log(`[Weather] Hourly cache HIT ${stationId}/${date}`);
+    return cached.observations || [];
+  }
+
+  // 2) Cache miss -> fetch live.
+  console.log(`[Weather] Hourly cache MISS ${stationId}/${date} -> calling Weather.com`);
+  const observations = await fetchLive();
+
+  // 3) Save completed past days that actually contain data, but never persist
+  //    yesterday (a daily background job backfills it) or empty responses.
+  const shouldPersist = date !== yesterday;
+  if (observations.length > 0 && shouldPersist) {
+    try {
+      await new Historical({
+        date,
+        stationId,
+        observations,
+        cachedAt: new Date(),
+      }).save();
+      console.log(`[Weather] Hourly cache SAVE ${stationId}/${date} (${observations.length} obs)`);
+    } catch (error) {
+      // Never let a cache write break the request (e.g. duplicate-key race).
+      console.warn(`[Weather] Hourly cache save failed for ${stationId}/${date}: ${error.message}`);
+    }
+  } else if (!shouldPersist) {
+    console.log(`[Weather] Hourly ${stationId}/${date} is yesterday -> not cached (background job will backfill)`);
+  } else {
+    console.log(`[Weather] Hourly ${stationId}/${date} has no observations -> not cached`);
+  }
+
+  return observations;
+};
+
+/**
+ * Hourly weather for a specific day, served through the shared cache-aside helper.
+ */
+const fetchHourlyWeather = async (date, userId = null) => {
+  const credentials = await getWeatherCredentials(userId);
+  const { today, yesterday } = getTodayAndYesterday();
+  const observations = await getHourlyObservationsForDay(
+    date,
+    credentials.stationId,
+    credentials.apiKey,
+    today,
+    yesterday
+  );
+  return { observations };
 };
 
 const fetchDailyWeather = async (date, userId = null) => {
@@ -317,26 +402,27 @@ const fetchWeeklyHourlyData = async (selectedDate, userId = null) => {
   console.log(`[Weather] Week dates for ${selectedDate}:`, weekDates);
 
   const credentials = await getWeatherCredentials(userId);
+  const { today, yesterday } = getTodayAndYesterday();
   let weeklyData = [];
 
-  // Fetch hourly data for each day of the week
+  // Fetch hourly data for each day of the week, served through the shared cache
+  // (today/yesterday are fetched live and not saved; older days are read from /
+  // written to historical_weather). A partial week reads the cached days and
+  // fetches + saves only the missing ones, then they are combined below.
   for (const dateStr of weekDates) {
     try {
-      console.log(`[Weather] Fetching hourly data for ${dateStr}`);
-
-      const weatherResponse = await axios.get(
-        `${BASE_URL}${PWS_ENDPOINTS.HOURLY}?stationId=${credentials.stationId}&format=json&units=m&date=${dateStr}&apiKey=${credentials.apiKey}`
+      const dayObservations = await getHourlyObservationsForDay(
+        dateStr,
+        credentials.stationId,
+        credentials.apiKey,
+        today,
+        yesterday
       );
 
-      if (weatherResponse.data && weatherResponse.data.observations) {
-        // Include all hourly observations (no filtering)
-        const allObservations = weatherResponse.data.observations;
-
-        console.log(
-          `[Weather] ${dateStr}: ${allObservations.length} hourly observations`
-        );
-        weeklyData = weeklyData.concat(allObservations);
-      }
+      console.log(
+        `[Weather] ${dateStr}: ${dayObservations.length} hourly observations`
+      );
+      weeklyData = weeklyData.concat(dayObservations);
     } catch (error) {
       console.error(
         `[Weather] Error fetching data for ${dateStr}:`,
