@@ -15,6 +15,8 @@ import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { premiumTheme, glassBlur, glow } from '../../theme/premiumTheme';
 import { logoutAction } from '../../(redux)/authSlice';
+import { useNotifications } from '../../context/NotificationsContext';
+import { unregisterPushOnLogout } from '../../services/pushNotifications';
 
 export const SIDEBAR_WIDTH_FULL = 248;
 export const SIDEBAR_WIDTH_RAIL = 88;
@@ -27,6 +29,22 @@ export function navWidth(width: number): number {
 const ACTIVE = premiumTheme.solar.light;
 const INACTIVE = premiumTheme.text.muted;
 
+/** Small red unread-count bubble shown on the Notifications nav item (web). */
+function UnreadBadge({
+  count,
+  style,
+}: {
+  count: number;
+  style?: object;
+}): React.ReactElement | null {
+  if (count <= 0) return null;
+  return (
+    <View style={[styles.badge, style]} pointerEvents="none">
+      <Text style={styles.badgeText}>{count > 9 ? '9+' : count}</Text>
+    </View>
+  );
+}
+
 export default function PremiumTabBar({
   state,
   descriptors,
@@ -36,11 +54,14 @@ export default function PremiumTabBar({
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
   const router = useRouter();
+  const { count: unreadCount } = useNotifications();
   const mode: 'bottom' | 'rail' | 'full' =
     width <= 768 ? 'bottom' : width <= 1024 ? 'rail' : 'full';
 
   const handleLogout = () => {
-    const doLogout = () => {
+    const doLogout = async () => {
+      // Forget this device's push token server-side while still authenticated (native only).
+      await unregisterPushOnLogout();
       dispatch(logoutAction());
       if (typeof window !== 'undefined') {
         window.location.href = '/';
@@ -100,7 +121,7 @@ export default function PremiumTabBar({
         ? options.tabBarIcon({ focused, color, size: 22 })
         : null;
 
-      return { key: route.key, label, focused, onPress, icon, color };
+      return { key: route.key, label, focused, onPress, icon, color, name: route.name };
     });
 
   /* ---------- Mobile bottom bar ---------- */
@@ -122,7 +143,12 @@ export default function PremiumTabBar({
             accessibilityState={{ selected: it.focused }}
           >
             {it.focused && <View style={styles.bottomActiveDot} />}
-            {it.icon}
+            <View style={styles.bottomIconWrap}>
+              {it.icon}
+              {it.name === 'notifications' && (
+                <UnreadBadge count={unreadCount} style={styles.badgeBottom} />
+              )}
+            </View>
           </Pressable>
         ))}
       </View>
@@ -169,7 +195,12 @@ export default function PremiumTabBar({
               accessibilityRole="button"
               accessibilityState={{ selected: it.focused }}
             >
-              <View style={styles.navIcon}>{it.icon}</View>
+              <View style={styles.navIcon}>
+                {it.icon}
+                {it.name === 'notifications' && (
+                  <UnreadBadge count={unreadCount} style={styles.badgeNav} />
+                )}
+              </View>
               <Text
                 numberOfLines={1}
                 style={[styles.navLabel, { color: it.color }]}
@@ -185,7 +216,12 @@ export default function PremiumTabBar({
               accessibilityRole="button"
               accessibilityState={{ selected: it.focused }}
             >
-              {it.icon}
+              <View style={styles.railIconWrap}>
+                {it.icon}
+                {it.name === 'notifications' && (
+                  <UnreadBadge count={unreadCount} style={styles.badgeRail} />
+                )}
+              </View>
               <Text
                 numberOfLines={1}
                 style={[styles.railLabel, { color: it.color }]}
@@ -288,6 +324,25 @@ const styles = StyleSheet.create({
   },
   navIcon: { width: 24, alignItems: 'center' },
   navLabel: { fontSize: 14.5, fontWeight: '700' },
+  railIconWrap: { alignSelf: 'center' },
+
+  /* unread badge */
+  badge: {
+    position: 'absolute',
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 5,
+    borderRadius: 9,
+    backgroundColor: premiumTheme.negative,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(8, 12, 22, 0.95)',
+  },
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  badgeNav: { top: -7, right: -9 },
+  badgeRail: { top: -7, right: -9 },
+  badgeBottom: { top: -8, right: -10 },
 
   railItem: {
     width: 62,
@@ -362,6 +417,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 4,
   },
+  bottomIconWrap: { alignItems: 'center', justifyContent: 'center' },
   bottomActiveDot: {
     position: 'absolute',
     top: -2,

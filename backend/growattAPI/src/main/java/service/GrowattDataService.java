@@ -148,6 +148,33 @@ public class GrowattDataService {
 		return getOrFetch(CacheType.YEAR, request, YearResponse.class, client::getInvEnergyYearChart);
 	}
 
+	/**
+	 * Force-persist a freshly fetched DAY chart for a past date, bypassing the
+	 * {@link #shouldPersist} "skip yesterday" rule. This is the explicit backfill hook the
+	 * daily solar job uses to save yesterday's day chart (which the cache path deliberately
+	 * never saves). Upserts so a repeated run updates instead of violating the unique index.
+	 * Empty/unsuccessful responses are skipped. Never throws.
+	 */
+	public void backfillDayChart(String plantId, String date, DayResponse response) {
+		if (!isSuccessful(response) || !response.hasData()) {
+			log.info("[Cache] SKIP backfill for {} - no successful production data",
+					logKey(CacheType.DAY, plantId, date));
+			return;
+		}
+		try {
+			SolarDataCache document = repository
+					.findFirstByTypeAndPlantIdAndDate(CacheType.DAY.name(), plantId, date)
+					.orElseGet(() -> new SolarDataCache(CacheType.DAY.name(), plantId, date, null, null));
+			document.setPayload(objectMapper.writeValueAsString(response));
+			document.setCachedAt(Instant.now());
+			repository.save(document);
+			log.info("[Cache] BACKFILL SAVE {}", logKey(CacheType.DAY, plantId, date));
+		} catch (Exception e) {
+			log.warn("[Cache] backfill save failed for {} ({})", logKey(CacheType.DAY, plantId, date),
+					e.getMessage());
+		}
+	}
+
 	private <T extends GrowattResponse> T getOrFetch(CacheType type, EnergyRequest request, Class<T> clazz,
 			Function<EnergyRequest, T> liveFetch) {
 		String plantId = request.getPlantId();

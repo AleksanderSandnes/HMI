@@ -29,7 +29,17 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router"
-    ]
+      "expo-router",
+      "expo-notifications"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "c60946ae-e0d6-49ca-940e-c99467dbc69a"
+      }
+    },
+    "owner": "sandnes"
   }
 }

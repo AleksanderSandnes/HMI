@@ -52,7 +52,9 @@
     "react-native-svg": "15.2.0",
     "react-native-web": "~0.19.6",
     "react-redux": "^9.1.2",
-    "yup": "^1.4.0"
+    "yup": "^1.4.0",
+    "expo-notifications": "~0.28.19",
+    "expo-device": "~6.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.24.4",

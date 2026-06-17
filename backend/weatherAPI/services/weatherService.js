@@ -429,6 +429,61 @@ const fetchYearlyData = async (userId = null) => {
   return await fetchDailySummary(userId);
 };
 
+/**
+ * Backfill YESTERDAY's data into the persistent caches. The normal cache-aside paths
+ * deliberately never save "yesterday" (see getHourlyObservationsForDay), leaving it for
+ * this daily background job:
+ *   - Hourly observations are force-upserted into `historical_weather` (feeds the hourly
+ *     and weekly views).
+ *   - All-observations are saved into `weather_data` via fetchAllWeather (saves for any
+ *     non-today date).
+ * Returns a small summary used by the cron to build a notification. Throws on credential
+ * or hourly-fetch failure so the cron can record an error notification.
+ */
+const backfillYesterday = async (userId = null) => {
+  const credentials = await getWeatherCredentials(userId);
+  const { yesterday } = getTodayAndYesterday();
+  const result = {
+    date: yesterday,
+    stationId: credentials.stationId,
+    hourlyObservations: 0,
+    allSaved: false,
+  };
+
+  // 1) Hourly -> historical_weather (force upsert; cache path skips yesterday).
+  const hourlyResponse = await axios.get(
+    `${BASE_URL}${PWS_ENDPOINTS.HOURLY}?stationId=${credentials.stationId}&format=json&units=m&date=${yesterday}&apiKey=${credentials.apiKey}`
+  );
+  const observations = hourlyResponse.data?.observations || [];
+  result.hourlyObservations = observations.length;
+
+  if (observations.length > 0) {
+    await Historical.findOneAndUpdate(
+      { stationId: credentials.stationId, date: yesterday },
+      { $set: { observations, cachedAt: new Date() } },
+      { upsert: true, setDefaultsOnInsert: true }
+    );
+    console.log(
+      `[Weather] Backfilled hourly ${credentials.stationId}/${yesterday} (${observations.length} obs)`
+    );
+  } else {
+    console.log(
+      `[Weather] Backfill: no hourly observations for ${credentials.stationId}/${yesterday}`
+    );
+  }
+
+  // 2) All observations -> weather_data (fetchAllWeather persists non-today dates).
+  try {
+    const all = await fetchAllWeather(yesterday, userId);
+    result.allSaved = Boolean(all);
+  } catch (error) {
+    console.warn(`[Weather] Backfill all-observations failed: ${error.message}`);
+    result.allError = error.message;
+  }
+
+  return result;
+};
+
 // Utility function to get the best endpoint for a given time range
 const getOptimalEndpointForTimeRange = (timeRange, date) => {
   switch (timeRange.toLowerCase()) {
@@ -474,4 +529,5 @@ module.exports = {
   fetchWeeklyHourlyData,
   getOptimalEndpointForTimeRange,
   getWeatherCredentials, // Export for testing and API endpoint use
+  backfillYesterday, // Used by the daily background cron
 };

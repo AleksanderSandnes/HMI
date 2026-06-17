@@ -3,6 +3,8 @@ const express = require('express');
 const weatherRoutes = require('./routes/weatherRoutes.js');
 const userRoutes = require('./routes/user.js');
 const apiSettingsRoutes = require('./routes/apiSettings.js');
+const notificationRoutes = require('./routes/notifications.js');
+const { scheduleWeatherBackfill } = require('./cron/weatherBackfill.js');
 const cors = require('cors');
 const { default: mongoose } = require('mongoose');
 const errorHandler = require('./middleware/errorHandler.js');
@@ -63,7 +65,11 @@ app.get('/api/health', (req, res) => {
 app.use('/api/weather', weatherRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/settings', apiSettingsRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use(errorHandler);
+
+// Start background jobs once the server is up.
+scheduleWeatherBackfill();
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -17,6 +17,8 @@ const userSchema = new mongoose.Schema(
       },
       updatedAt: { type: Date, default: Date.now },
     },
+    // Expo push tokens for this user's mobile/tablet devices (push notifications).
+    expoPushTokens: { type: [String], default: [] },
   },
   {
     timestamps: true,

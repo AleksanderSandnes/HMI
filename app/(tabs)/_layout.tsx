@@ -4,6 +4,8 @@ import { Tabs } from 'expo-router';
 import { Platform, useWindowDimensions } from 'react-native';
 import PremiumTabBar, { navWidth } from '../components/navigation/PremiumTabBar';
 import { premiumTheme } from '../theme/premiumTheme';
+import { NotificationsProvider } from '../context/NotificationsContext';
+import PushRegistrar from '../components/PushRegistrar';
 
 function SolarPanelIcon({ color }: { color: string }) {
   const { width } = useWindowDimensions();
@@ -34,35 +36,38 @@ export default function TabLayout() {
   const padLeft = navWidth(width);
 
   return (
-    <Tabs
-      tabBar={(props) => <PremiumTabBar {...props} />}
-      sceneContainerStyle={{
-        paddingLeft: padLeft,
-        backgroundColor: premiumTheme.bg.base,
-      }}
-      screenOptions={{ headerShown: false }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{ title: 'Growatt', tabBarIcon: SolarPanelIcon }}
-      />
-      <Tabs.Screen
-        name="weatherStation"
-        options={{ title: 'Weather Station', tabBarIcon: CloudSunIcon }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: 'Notifications',
-          tabBarIcon: NotificationsIcon,
-          // Notification center is web-only; native apps use push notifications.
-          href: Platform.OS === 'web' ? undefined : null,
+    <NotificationsProvider>
+      <PushRegistrar />
+      <Tabs
+        tabBar={(props) => <PremiumTabBar {...props} />}
+        sceneContainerStyle={{
+          paddingLeft: padLeft,
+          backgroundColor: premiumTheme.bg.base,
         }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{ title: 'Settings', tabBarIcon: SettingsIcon }}
-      />
-    </Tabs>
+        screenOptions={{ headerShown: false }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{ title: 'Growatt', tabBarIcon: SolarPanelIcon }}
+        />
+        <Tabs.Screen
+          name="weatherStation"
+          options={{ title: 'Weather Station', tabBarIcon: CloudSunIcon }}
+        />
+        <Tabs.Screen
+          name="notifications"
+          options={{
+            title: 'Notifications',
+            tabBarIcon: NotificationsIcon,
+            // Notification center is web-only; native apps use push notifications.
+            href: Platform.OS === 'web' ? undefined : null,
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{ title: 'Settings', tabBarIcon: SettingsIcon }}
+        />
+      </Tabs>
+    </NotificationsProvider>
   );
 }
