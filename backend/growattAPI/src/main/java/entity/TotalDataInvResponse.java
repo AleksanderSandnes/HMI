@@ -7,10 +7,15 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TotalDataInvResponse {
+public class TotalDataInvResponse implements GrowattResponse {
 
 	private Long result;
 	private Obj obj;
+
+	@Override
+	public boolean hasData() {
+		return obj != null;
+	}
 
 	@Getter
 	@NoArgsConstructor

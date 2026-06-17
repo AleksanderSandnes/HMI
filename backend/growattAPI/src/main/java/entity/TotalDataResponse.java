@@ -11,12 +11,17 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TotalDataResponse {
+public class TotalDataResponse implements GrowattResponse {
 
 	/** Status of query: 1 == ok */
 	private Long result;
 	
 	private Obj obj;
+
+	@Override
+	public boolean hasData() {
+		return obj != null;
+	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	@Getter

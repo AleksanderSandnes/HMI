@@ -23,6 +23,7 @@ import entity.YearResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import service.GrowattDataService;
 
 @RestController
 @RequestMapping("/api/growatt")
@@ -32,6 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 public class GrowattApiController {
 
     private final GrowattWebClient growattWebClient;
+
+    private final GrowattDataService growattDataService;
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
@@ -125,7 +128,7 @@ public class GrowattApiController {
                 }
             }
             
-            DayResponse response = growattWebClient.getInvEnergyDayChart(request);
+            DayResponse response = growattDataService.getDayChart(request);
             long duration = System.currentTimeMillis() - startTime;
             
             log.info("DayChart request successful in {}ms", duration);
@@ -162,7 +165,7 @@ public class GrowattApiController {
                 }
             }
             
-            MonthResponse response = growattWebClient.getInvEnergyMonthChart(request);
+            MonthResponse response = growattDataService.getMonthChart(request);
             long duration = System.currentTimeMillis() - startTime;
             
             log.info("MonthChart request successful in {}ms", duration);
@@ -199,7 +202,7 @@ public class GrowattApiController {
                 }
             }
             
-            YearResponse response = growattWebClient.getInvEnergyYearChart(request);
+            YearResponse response = growattDataService.getYearChart(request);
             long duration = System.currentTimeMillis() - startTime;
             
             log.info("YearChart request successful in {}ms", duration);

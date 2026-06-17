@@ -14,6 +14,10 @@ services:
         value: https://hmi-git-main-apsandnes-projects.vercel.app
       - key: BACKEND_URL
         value: https://weatherAPI.onrender.com
+      - key: MONGODB_URI
+        sync: false
+      - key: GROWATT_CACHE_ENABLED
+        value: 'true'
     healthCheckPath: /actuator/health
     autoDeploy: true
     branch: main

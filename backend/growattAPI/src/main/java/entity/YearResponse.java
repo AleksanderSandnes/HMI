@@ -9,10 +9,17 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class YearResponse {
+public class YearResponse implements GrowattResponse {
 	
 	private Long result;
 	private Obj obj;
+
+	/** True when at least one month of the year has real production. */
+	@Override
+	public boolean hasData() {
+		return obj != null && obj.getEnergy() != null
+				&& obj.getEnergy().stream().anyMatch(value -> value != null && value > 0);
+	}
 
 	@Getter
 	@NoArgsConstructor
