@@ -55,7 +55,7 @@ HMI is a monorepo with three deployable services backed by a shared MongoDB data
 
 | Layer | Technologies |
 |-------|--------------|
-| **Frontend** | React Native 0.74, Expo 51, Expo Router, TypeScript, Redux Toolkit, TanStack React Query, Gluestack UI, `react-native-chart-kit`, Formik + Yup, Axios, `crypto-js`, `expo-notifications` |
+| **Frontend** | React Native 0.81, Expo SDK 54, React 19, Expo Router, TypeScript, Redux Toolkit, TanStack React Query, Gluestack UI, `react-native-chart-kit`, Formik + Yup, Axios, `crypto-js`, `expo-notifications`, `expo-video` |
 | **Weather API** | Node.js, Express 4, Mongoose 8, JWT (`jsonwebtoken`), `bcrypt`, `node-cron`, Axios |
 | **Growatt API** | Java 17, Spring Boot, Spring Security, Spring Data MongoDB, Maven, Lombok |
 | **Data & infra** | MongoDB Atlas, Vercel (frontend), Render (both backends, Docker for Java) |

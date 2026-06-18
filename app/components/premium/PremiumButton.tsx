@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { premiumTheme } from '../../theme/premiumTheme';
+import { premiumTheme, type GradientColors } from '../../theme/premiumTheme';
 
 type Variant = 'primary' | 'ghost' | 'danger';
 
@@ -21,7 +21,7 @@ interface PremiumButtonProps {
   icon?: React.ComponentProps<typeof FontAwesome5>['name'];
   loading?: boolean;
   disabled?: boolean;
-  gradient?: readonly string[];
+  gradient?: GradientColors;
   style?: StyleProp<ViewStyle>;
 }
 

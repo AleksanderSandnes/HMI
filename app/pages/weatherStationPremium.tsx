@@ -19,7 +19,7 @@ import PremiumDateSelector from '../components/premium/PremiumDateSelector';
 import PremiumLineChart, {
   LineSeries,
 } from '../components/premium/PremiumLineChart';
-import { premiumTheme } from '../theme/premiumTheme';
+import { premiumTheme, type GradientColors } from '../theme/premiumTheme';
 
 import useCurrentWeatherData from '../hooks/useCurrentWeatherData';
 import { useDatePicker } from '../hooks/useDatePicker';
@@ -36,7 +36,7 @@ interface DataTypeMeta {
   unit: string;
   title: string;
   accent: string;
-  gradient: readonly string[];
+  gradient: GradientColors;
   series: { label: string; color: string }[];
 }
 

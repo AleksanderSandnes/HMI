@@ -8,17 +8,30 @@ import {
   Platform,
 } from 'react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Video, ResizeMode } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { solarTheme } from '../theme/solarTheme';
 import { SPACING, TYPOGRAPHY, ANIMATION_DURATION } from '../constants';
 
+const BACKGROUND_VIDEO_URI =
+  'https://cdn.pixabay.com/video/2023/11/13/188912-884171167_large.mp4';
+
 const Home = () => {
-  const video = React.useRef(null);
+  const player = useVideoPlayer(BACKGROUND_VIDEO_URI, (instance) => {
+    instance.loop = true;
+    instance.muted = true;
+    instance.play();
+  });
   const router = useRouter();
   const windowDimensions = useWindowDimensions();
   const isMobile = windowDimensions.width <= 768;
+
+  // Re-assert playback after the VideoView mounts (the setup-callback play()
+  // runs before the web <video> element exists, so it's a no-op there).
+  useEffect(() => {
+    player.play();
+  }, [player]);
   const [buttonPressed, setButtonPressed] = useState({
     login: false,
     register: false,
@@ -104,16 +117,12 @@ const Home = () => {
 
   return (
     <View style={dynamicStyles.container}>
-      <Video
-        ref={video}
+      <VideoView
         style={styles.video}
-        source={{
-          uri: 'https://cdn.pixabay.com/video/2023/11/13/188912-884171167_large.mp4',
-        }}
-        resizeMode={ResizeMode.COVER}
-        shouldPlay
-        isLooping
-        isMuted={true}
+        player={player}
+        contentFit="cover"
+        nativeControls={false}
+        playsInline
       />
 
       <LinearGradient

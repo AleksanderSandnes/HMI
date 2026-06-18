@@ -40,11 +40,13 @@ export default function TabLayout() {
       <PushRegistrar />
       <Tabs
         tabBar={(props) => <PremiumTabBar {...props} />}
-        sceneContainerStyle={{
-          paddingLeft: padLeft,
-          backgroundColor: premiumTheme.bg.base,
+        screenOptions={{
+          headerShown: false,
+          sceneStyle: {
+            paddingLeft: padLeft,
+            backgroundColor: premiumTheme.bg.base,
+          },
         }}
-        screenOptions={{ headerShown: false }}
       >
         <Tabs.Screen
           name="index"

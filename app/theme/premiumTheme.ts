@@ -4,6 +4,12 @@
  */
 import { Platform } from 'react-native';
 
+/**
+ * Colors accepted by `expo-linear-gradient` (SDK 54+): a non-empty tuple of at
+ * least two colors, rather than a plain `string[]`.
+ */
+export type GradientColors = readonly [string, string, ...string[]];
+
 export const premiumTheme = {
   bg: {
     base: '#070b16',

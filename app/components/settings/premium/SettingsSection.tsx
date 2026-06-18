@@ -3,11 +3,11 @@ import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
 import GlassCard from '../../premium/GlassCard';
-import { premiumTheme } from '../../../theme/premiumTheme';
+import { premiumTheme, type GradientColors } from '../../../theme/premiumTheme';
 
 interface SettingsSectionProps {
   icon: React.ComponentProps<typeof FontAwesome5>['name'];
-  gradient: readonly string[];
+  gradient: GradientColors;
   title: string;
   subtitle?: string;
   children: React.ReactNode;

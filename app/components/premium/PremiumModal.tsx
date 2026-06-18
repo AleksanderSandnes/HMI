@@ -11,13 +11,13 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { premiumTheme, glassBlur, glow } from '../../theme/premiumTheme';
+import { premiumTheme, glassBlur, glow, type GradientColors } from '../../theme/premiumTheme';
 
 interface PremiumModalProps {
   visible: boolean;
   onClose: () => void;
   icon: React.ComponentProps<typeof FontAwesome5>['name'];
-  gradient: readonly string[];
+  gradient: GradientColors;
   title: string;
   subtitle?: string;
   children: React.ReactNode;

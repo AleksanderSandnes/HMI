@@ -6,7 +6,7 @@ import {
   Animated,
 } from 'react-native';
 import React, { useEffect, useRef } from 'react';
-import { Video, ResizeMode } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { solarTheme } from './theme/solarTheme';
@@ -14,10 +14,25 @@ import { premiumTheme } from './theme/premiumTheme';
 import { useResponsive } from './utils/responsive';
 import { ANIMATION_DURATION, SPACING } from './constants';
 
+const BACKGROUND_VIDEO_URI =
+  'https://cdn.pixabay.com/video/2023/11/13/188912-884171167_large.mp4';
+
 const Home = () => {
-  const video = React.useRef(null);
+  const player = useVideoPlayer(BACKGROUND_VIDEO_URI, (instance) => {
+    instance.loop = true;
+    instance.muted = true;
+    instance.play();
+  });
   const router = useRouter();
   const { isMobile, getFontSize, getSpacing } = useResponsive();
+
+  // On web the <video> element has no `autoplay` attribute and is only mounted
+  // to the player after this component renders, so the play() call in the
+  // useVideoPlayer setup runs before any element exists (a no-op). Re-assert
+  // playback once the VideoView has mounted.
+  useEffect(() => {
+    player.play();
+  }, [player]);
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -100,16 +115,12 @@ const Home = () => {
 
   return (
     <View style={styles.container}>
-      <Video
-        ref={video}
+      <VideoView
         style={styles.video}
-        source={{
-          uri: 'https://cdn.pixabay.com/video/2023/11/13/188912-884171167_large.mp4',
-        }}
-        resizeMode={ResizeMode.COVER}
-        shouldPlay
-        isLooping
-        isMuted={true}
+        player={player}
+        contentFit="cover"
+        nativeControls={false}
+        playsInline
       />
 
       <LinearGradient
