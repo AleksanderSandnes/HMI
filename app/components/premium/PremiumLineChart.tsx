@@ -135,7 +135,7 @@ export default function PremiumLineChart({
 
   if (loading) {
     return (
-      <View style={[styles.wrap, styles.center, { height }]}>
+      <View style={[styles.wrap, styles.center, { height }]} onLayout={onLayout}>
         <ActivityIndicator color={premiumTheme.solar.light} size="large" />
       </View>
     );
@@ -201,7 +201,17 @@ export default function PremiumLineChart({
   }
 
   return (
-    <View style={[styles.wrap, { height }]} onLayout={onLayout}>
+    <View
+      style={[
+        styles.wrap,
+        { height },
+        // On native, keep the whole chart non-interactive so touches pass
+        // through to the parent ScrollView (the SVG view and any touch overlay
+        // otherwise capture the gesture and block vertical scrolling).
+        Platform.OS !== 'web' && { pointerEvents: 'none' },
+      ]}
+      onLayout={onLayout}
+    >
       <Svg width={width} height={height}>
         <Defs>
           {cleanSeries.map((s, si) => (
@@ -335,27 +345,31 @@ export default function PremiumLineChart({
         )}
       </Svg>
 
-      {/* Interaction overlay: hover on web, tap on native */}
-      <Pressable style={StyleSheet.absoluteFill} onHoverOut={() => setActive(null)}>
-        {Array.from({ length: n }).map((_, i) => {
-          const slotW = innerW / Math.max(1, n - 1);
-          const zoneX = xFor(i) - slotW / 2;
-          return (
-            <Pressable
-              key={`touch-${i}`}
-              onHoverIn={() => setActive(i)}
-              onPressIn={() => setActive(i)}
-              style={{
-                position: 'absolute',
-                left: Math.max(PAD.left - slotW / 2, zoneX),
-                top: PAD.top,
-                width: slotW,
-                height: innerH,
-              }}
-            />
-          );
-        })}
-      </Pressable>
+      {/* Interaction overlay (web only). Hover zones drive the tooltip. On
+          native this is omitted and the chart is non-interactive (see the
+          wrapper's pointerEvents) so the parent ScrollView can scroll. */}
+      {Platform.OS === 'web' && (
+        <Pressable style={StyleSheet.absoluteFill} onHoverOut={() => setActive(null)}>
+          {Array.from({ length: n }).map((_, i) => {
+            const slotW = innerW / Math.max(1, n - 1);
+            const zoneX = xFor(i) - slotW / 2;
+            return (
+              <Pressable
+                key={`touch-${i}`}
+                onHoverIn={() => setActive(i)}
+                onPressIn={() => setActive(i)}
+                style={{
+                  position: 'absolute',
+                  left: Math.max(PAD.left - slotW / 2, zoneX),
+                  top: PAD.top,
+                  width: slotW,
+                  height: innerH,
+                }}
+              />
+            );
+          })}
+        </Pressable>
+      )}
 
       {active !== null && (
         <View style={[styles.tooltip, { left: tipLeft, top: tipTop }]} pointerEvents="none">

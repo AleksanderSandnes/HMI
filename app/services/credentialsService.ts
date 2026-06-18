@@ -87,7 +87,7 @@ export async function storeGrowattCredentials(
       },
     };
 
-    if (typeof window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       // Web: Use localStorage
       localStorage.setItem('userCredentials', JSON.stringify(updatedSettings));
     } else {
@@ -119,7 +119,7 @@ async function getUserStoredCredentials(): Promise<any> {
   try {
     let credentialsString: string | null = null;
 
-    if (typeof window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       // Web: Use localStorage
       credentialsString = localStorage.getItem('userCredentials');
     } else {
@@ -148,7 +148,7 @@ async function getUserStoredCredentials(): Promise<any> {
  */
 export async function clearStoredCredentials(): Promise<void> {
   try {
-    if (typeof window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       // Web: Clear localStorage
       localStorage.removeItem('userCredentials');
     } else {

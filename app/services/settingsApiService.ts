@@ -54,7 +54,7 @@ export interface ApiSettingsResponse {
 async function getAuthToken(): Promise<string | null> {
   try {
     console.log('[SettingsAPI] Getting auth token...');
-    if (typeof window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       // Web: Use localStorage
       const userInfo = localStorage.getItem('userInfo');
       console.log('[SettingsAPI] Web - userInfo from localStorage:', userInfo);

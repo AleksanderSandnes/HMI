@@ -74,7 +74,7 @@ const createApiRequest = (getUrl, method = 'GET', logPrefix = '') => {
 // Helper to get JWT token from storage (web or React Native)
 async function getAuthToken() {
   try {
-    if (typeof window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       // Web: Use localStorage
       const userInfo = localStorage.getItem('userInfo');
       if (userInfo) {

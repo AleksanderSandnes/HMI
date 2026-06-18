@@ -63,7 +63,7 @@ export default function PremiumTabBar({
       // Forget this device's push token server-side while still authenticated (native only).
       await unregisterPushOnLogout();
       dispatch(logoutAction());
-      if (typeof window !== 'undefined') {
+      if (Platform.OS === 'web') {
         window.location.href = '/';
       } else {
         router.push('/');

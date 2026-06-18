@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 /**
  * Creates responsive styles based on screen width breakpoints
@@ -87,11 +87,11 @@ export const createPlatformStyles = (styles) => {
       }
 
       // Apply platform-specific styles
-      if (style.web && typeof window !== 'undefined') {
+      if (style.web && Platform.OS === 'web') {
         Object.assign(platformStyles[key], style.web);
       }
 
-      if (style.native && typeof window === 'undefined') {
+      if (style.native && Platform.OS !== 'web') {
         Object.assign(platformStyles[key], style.native);
       }
     } else {

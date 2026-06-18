@@ -32,7 +32,7 @@ export default function SettingsPremium(): React.ReactElement {
   const handleLogout = () => {
     const doLogout = () => {
       dispatch(logoutAction());
-      if (typeof window !== 'undefined') {
+      if (Platform.OS === 'web') {
         window.location.href = '/';
       } else {
         router.push('/');

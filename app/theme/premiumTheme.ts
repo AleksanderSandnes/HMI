@@ -21,9 +21,13 @@ export const premiumTheme = {
     glowViolet: 'rgba(139, 92, 246, 0.16)',
   },
   glass: {
-    fill: 'rgba(255, 255, 255, 0.045)',
-    fillStrong: 'rgba(255, 255, 255, 0.075)',
-    fillSubtle: 'rgba(255, 255, 255, 0.025)',
+    // On web the translucent white fills pair with `backdropFilter: blur()` to
+    // create the frosted look. Native has no backdrop blur, so equally faint
+    // fills would be ~95% see-through (content bleeds through cards/modals).
+    // Use opaque dark surfaces on native instead so cards/modals are solid.
+    fill: Platform.OS === 'web' ? 'rgba(255, 255, 255, 0.045)' : '#141b2e',
+    fillStrong: Platform.OS === 'web' ? 'rgba(255, 255, 255, 0.075)' : '#1b2440',
+    fillSubtle: Platform.OS === 'web' ? 'rgba(255, 255, 255, 0.025)' : '#0d1322',
     border: 'rgba(255, 255, 255, 0.09)',
     borderStrong: 'rgba(255, 255, 255, 0.16)',
   },

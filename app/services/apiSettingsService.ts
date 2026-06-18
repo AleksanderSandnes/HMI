@@ -133,7 +133,7 @@ export async function clearApiSettings(): Promise<boolean> {
  */
 async function getAuthToken(): Promise<string | null> {
   try {
-    if (typeof window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       // Web: Use localStorage
       return localStorage.getItem('authToken');
     } else {

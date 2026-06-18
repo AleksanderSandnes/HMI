@@ -50,7 +50,7 @@ const STEPS = [
 /** Persist the auth payload so settings saves can read the token immediately. */
 async function persistUserInfo(data) {
   try {
-    if (typeof window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       localStorage.setItem('userInfo', JSON.stringify(data));
     } else {
       const AsyncStorage =
