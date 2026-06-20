@@ -16,19 +16,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-import { registerUser } from '../(services)/api/api';
-import { loginUserAction } from '../(redux)/authSlice';
-import AuthBackground from '../components/auth/AuthBackground';
-import GlassCard from '../components/premium/GlassCard';
-import PremiumField from '../components/premium/PremiumField';
-import PremiumButton from '../components/premium/PremiumButton';
-import StatusBanner from '../components/settings/premium/StatusBanner';
-import { premiumTheme } from '../theme/premiumTheme';
-import { storeGrowattCredentials } from '../services/credentialsService';
+import { registerUser } from '../../src/services/api/api';
+import { loginUserAction } from '../../src/redux/authSlice';
+import AuthBackground from '../../src/components/auth/AuthBackground';
+import GlassCard from '../../src/components/premium/GlassCard';
+import PremiumField from '../../src/components/premium/PremiumField';
+import PremiumButton from '../../src/components/premium/PremiumButton';
+import StatusBanner from '../../src/components/settings/premium/StatusBanner';
+import { premiumTheme } from '../../src/theme/premiumTheme';
+import { storeGrowattCredentials } from '../../src/services/credentialsService';
 import {
   saveGrowattApiSettings,
   saveWeatherApiSettings,
-} from '../services/settingsApiService';
+} from '../../src/services/settingsApiService';
 
 const accountSchema = Yup.object().shape({
   email: Yup.string().required('Email is required').email().label('Email'),
@@ -177,7 +177,7 @@ const Register = () => {
         growatt: { email, password, plantId: growatt.plantId.trim() },
       });
       setStep(2);
-    } catch (e) {
+    } catch {
       setStepError('Could not save Growatt credentials. You can add them later in Settings.');
     } finally {
       setSaving(false);
@@ -203,7 +203,7 @@ const Register = () => {
       setSaving(true);
       await saveWeatherApiSettings({ weather: { apiKey, stationId } });
       finalize();
-    } catch (e) {
+    } catch {
       setStepError('Could not save weather credentials. You can add them later in Settings.');
     } finally {
       setSaving(false);

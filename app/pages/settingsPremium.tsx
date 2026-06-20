@@ -14,13 +14,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
 
-import GlassCard from '../components/premium/GlassCard';
-import PremiumButton from '../components/premium/PremiumButton';
-import AccountCard from '../components/settings/premium/AccountCard';
-import GrowattCredentialsCard from '../components/settings/premium/GrowattCredentialsCard';
-import WeatherCredentialsCard from '../components/settings/premium/WeatherCredentialsCard';
-import { premiumTheme } from '../theme/premiumTheme';
-import { logoutAction } from '../(redux)/authSlice';
+import GlassCard from '../../src/components/premium/GlassCard';
+import PremiumButton from '../../src/components/premium/PremiumButton';
+import AccountCard from '../../src/components/settings/premium/AccountCard';
+import GrowattCredentialsCard from '../../src/components/settings/premium/GrowattCredentialsCard';
+import WeatherCredentialsCard from '../../src/components/settings/premium/WeatherCredentialsCard';
+import { premiumTheme } from '../../src/theme/premiumTheme';
+import { logoutAction } from '../../src/redux/authSlice';
 
 export default function SettingsPremium(): React.ReactElement {
   const dispatch = useDispatch();

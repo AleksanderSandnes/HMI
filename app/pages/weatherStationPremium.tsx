@@ -13,18 +13,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-import GlassCard from '../components/premium/GlassCard';
-import StatTile from '../components/premium/StatTile';
-import SegmentedControl from '../components/premium/SegmentedControl';
-import PremiumDateSelector from '../components/premium/PremiumDateSelector';
+import GlassCard from '../../src/components/premium/GlassCard';
+import StatTile from '../../src/components/premium/StatTile';
+import SegmentedControl from '../../src/components/premium/SegmentedControl';
+import PremiumDateSelector from '../../src/components/premium/PremiumDateSelector';
 import PremiumLineChart, {
   LineSeries,
-} from '../components/premium/PremiumLineChart';
-import { premiumTheme, type GradientColors } from '../theme/premiumTheme';
+} from '../../src/components/premium/PremiumLineChart';
+import { premiumTheme, type GradientColors } from '../../src/theme/premiumTheme';
 
-import useCurrentWeatherData from '../hooks/useCurrentWeatherData';
-import { useDatePicker } from '../hooks/useDatePicker';
-import useHistoricalWeatherData from '../hooks/useHistoricalWeatherData';
+import useCurrentWeatherData from '../../src/hooks/useCurrentWeatherData';
+import { useDatePicker } from '../../src/hooks/useDatePicker';
+import useHistoricalWeatherData from '../../src/hooks/useHistoricalWeatherData';
 
 /* ---------- configuration ---------- */
 
@@ -227,6 +227,7 @@ export default function WeatherStationPremium(): React.ReactElement {
     }));
   }, [weatherData, meta]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const labels = weatherData?.labels ?? [];
   const selectedISO = pickerDate.toISOString().split('T')[0];
 

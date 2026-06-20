@@ -66,26 +66,35 @@ HMI is a monorepo with three deployable services backed by a shared MongoDB data
 
 ```
 HMI/
-├── app/                      # Expo Router frontend
+├── app/                      # Expo Router routes ONLY (every file here is a route)
 │   ├── (tabs)/               # Growatt, Weather Station, Notifications, Settings
-│   ├── (services)/api/       # Axios API client
-│   ├── (redux)/              # Redux store, auth slice, app wrapper
 │   ├── auth/                 # Login & register screens
 │   ├── pages/                # "Premium" page implementations
+│   ├── api/swagger.tsx       # Web-only Swagger UI page (/api/swagger)
+│   ├── index.js              # Landing screen
+│   └── _layout.tsx           # Root layout
+├── src/                      # Non-route application code
 │   ├── components/           # Shared UI components
-│   ├── context/ hooks/       # React context & hooks
-│   └── services/             # Data-mode + per-domain service layer
+│   ├── services/             # Data-mode + per-domain service layer
+│   ├── redux/                # Redux store, auth slice, app wrapper
+│   ├── context/  hooks/      # React context & hooks
+│   ├── constants/  theme/  utils/  interface/
+│   ├── api/openapi.ts        # OpenAPI spec powering the Swagger page
+│   └── __tests__/            # Frontend Jest tests
 ├── backend/
 │   ├── weatherAPI/           # Node.js / Express service
 │   │   ├── controllers/  routes/  services/  models/
 │   │   ├── middleware/  cron/  utils/  database/
+│   │   ├── __tests__/        # Jest tests
 │   │   └── server.js
 │   └── growattAPI/           # Java / Spring Boot service
 │       ├── src/main/java/    # controllers, entities, services, repositories
+│       ├── src/test/java/    # JUnit 5 tests
 │       ├── Dockerfile
 │       └── pom.xml
 ├── assets/                   # Icons, splash, images
 ├── app.json                  # Expo config
+├── jest.config.js            # Frontend Jest config
 ├── vercel.json               # Vercel build config
 └── render.yaml               # Render service config
 ```
@@ -166,7 +175,38 @@ Use `npm run web:prod` / `npm run start:prod` to run the frontend against produc
 
 ---
 
+## 🧪 Testing
+
+Each stack has its own independent test runner — run them from the locations below.
+
+| Stack | Command | Framework | Test location |
+|-------|---------|-----------|---------------|
+| **Frontend** | `npm test` (from repo root) | Jest + `jest-expo` | `src/__tests__/` |
+| **Weather API** | `cd backend/weatherAPI && npm test` | Jest (node) | `backend/weatherAPI/__tests__/` |
+| **Growatt API** | `cd backend/growattAPI && mvn test` | JUnit 5 | `backend/growattAPI/src/test/java/` |
+
+Frontend extras: `npm run test:watch` (watch mode) and `npm run test:coverage` (coverage report).
+
+> ℹ️ The Growatt API includes a live-API integration test (`GrowattWebClientTest`) that is
+> `@Disabled` by default so it never breaks the build. To run it locally, add real credentials
+> to `backend/growattAPI/src/test/resources/application.properties` and remove the `@Disabled`
+> annotation. `MD5Test` reaches out to Growatt's servers and is skipped automatically when offline.
+
+### Linting
+
+```bash
+npm run lint        # ESLint (Expo config) over app/ and src/
+npm run lint:fix    # auto-fix where possible
+```
+
+---
+
 ## 📡 API reference
+
+> 🔎 **Interactive docs:** when signed in on the web app, visit **`/api/swagger`** for a live
+> Swagger UI covering every endpoint below (auth, account, weather, settings, notifications, and
+> Growatt). The page is web-only and requires authentication.
+
 
 ### Weather API — `weatherAPI` (base `/api`)
 

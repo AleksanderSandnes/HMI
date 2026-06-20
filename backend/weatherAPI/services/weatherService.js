@@ -2,6 +2,13 @@ const axios = require('axios');
 const { Historical, Current } = require('../models/weatherModels');
 require('dotenv').config();
 const client = require('../database/database');
+const {
+  PWS_ENDPOINTS,
+  toYyyyMmDd,
+  getSelectedDateParts,
+  getWeekDatesFromDateParts,
+  getOptimalEndpointForTimeRange,
+} = require('./weatherHelpers');
 
 const BASE_URL = 'https://api.weather.com/v2/pws';
 
@@ -133,33 +140,6 @@ const getWeatherCredentials = async (userId = null) => {
   return credentials;
 };
 
-// Optimal endpoint mapping based on Weather.com API documentation
-const PWS_ENDPOINTS = {
-  // Current weather - most accurate real-time data
-  CURRENT: '/observations/current',
-
-  // Hourly data - best for same-day hourly breakdown
-  HOURLY: '/history/hourly',
-
-  // Daily historical - best for specific date all observations
-  DAILY_ALL: '/history/all',
-
-  // Recent observations - best for recent 24-48 hour data
-  RECENT_DAY: '/observations/all/1day',
-
-  // Daily summaries - best for weekly/monthly aggregate data
-  DAILY_SUMMARY: '/dailysummary/7day',
-
-  // NOTE: /observations/hourly/7day endpoint appears unreliable
-  // Using /dailysummary/7day instead for weekly data
-};
-
-// Format a Date as YYYYMMDD using local time (matches the frontend's date format).
-const toYyyyMmDd = (d) =>
-  `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(
-    d.getDate()
-  ).padStart(2, '0')}`;
-
 // Today and yesterday as YYYYMMDD (local time). Neither is persisted to the cache:
 // today is still in progress, and yesterday is backfilled by a daily background job.
 const getTodayAndYesterday = () => {
@@ -264,9 +244,7 @@ const fetchAllWeather = async (date, userId = null) => {
     const collection = client.db('HMI').collection('weather_data');
 
     const today = new Date();
-    const formattedToday = `${today.getFullYear()}${String(
-      today.getMonth() + 1
-    ).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    const formattedToday = toYyyyMmDd(today);
 
     let dbData = await collection.findOne({ date: date });
 
@@ -345,28 +323,13 @@ const fetchWeeklyHourlyData = async (selectedDate, userId = null) => {
     `[Weather] Fetching weekly hourly data for date: ${selectedDate}`
   );
 
-  // Parse YYYYMMDD format correctly
-  const year = parseInt(selectedDate.slice(0, 4));
-  const month = parseInt(selectedDate.slice(4, 6)) - 1; // Month is 0-indexed
-  const day = parseInt(selectedDate.slice(6, 8));
+  const { year, month, day } = getSelectedDateParts(selectedDate);
 
   console.log(
     `[Weather] Parsed date: Year=${year}, Month=${month + 1}, Day=${day}`
   );
 
-  // Calculate week dates (Sunday to Saturday)
-  const date = new Date(year, month, day);
-  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  const startDate = new Date(date);
-  startDate.setDate(date.getDate() - dayOfWeek); // Go to Sunday of this week
-
-  const weekDates = [];
-  for (let i = 0; i < 7; i++) {
-    const weekDate = new Date(startDate);
-    weekDate.setDate(startDate.getDate() + i);
-    const formattedDate = `${weekDate.getFullYear()}${String(weekDate.getMonth() + 1).padStart(2, '0')}${String(weekDate.getDate()).padStart(2, '0')}`;
-    weekDates.push(formattedDate);
-  }
+  const weekDates = getWeekDatesFromDateParts(year, month, day);
 
   console.log(`[Weather] Week dates for ${selectedDate}:`, weekDates);
 
@@ -482,42 +445,6 @@ const backfillYesterday = async (userId = null) => {
   }
 
   return result;
-};
-
-// Utility function to get the best endpoint for a given time range
-const getOptimalEndpointForTimeRange = (timeRange, date) => {
-  switch (timeRange.toLowerCase()) {
-    case 'hourly':
-      return {
-        endpoint: PWS_ENDPOINTS.HOURLY,
-        params: { date },
-        description: 'Hourly historical data for specific date',
-      };
-    case 'weekly':
-      return {
-        endpoint: PWS_ENDPOINTS.DAILY_SUMMARY,
-        params: {},
-        description: '7-day daily summary (best available for weekly view)',
-      };
-    case 'current':
-      return {
-        endpoint: PWS_ENDPOINTS.CURRENT,
-        params: {},
-        description: 'Current weather observations',
-      };
-    case 'recent':
-      return {
-        endpoint: PWS_ENDPOINTS.RECENT_DAY,
-        params: {},
-        description: 'Recent 24-hour observations',
-      };
-    default:
-      return {
-        endpoint: PWS_ENDPOINTS.DAILY_ALL,
-        params: { date },
-        description: 'Default: All observations for specific date',
-      };
-  }
 };
 
 module.exports = {

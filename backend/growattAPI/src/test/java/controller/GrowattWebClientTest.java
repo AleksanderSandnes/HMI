@@ -18,6 +18,15 @@ import entity.TotalDataInvResponse;
 import entity.TotalDataResponse;
 import entity.YearResponse;
 
+import org.junit.jupiter.api.Disabled;
+
+/**
+ * Integration test exercising the live Growatt API. It requires real credentials in
+ * {@code src/test/resources/application.properties} (growatt.account / growatt.password /
+ * proxy.url / proxy.port) and outbound network access. It is {@link Disabled} so it never
+ * breaks the normal {@code mvn test} build; remove the annotation locally to run it.
+ */
+@Disabled("Integration test: requires real Growatt credentials and src/test/resources/application.properties. Enable locally to run against the live Growatt API.")
 @ExtendWith(SpringExtension.class)
 @TestPropertySource("classpath:application.properties") 
 class GrowattWebClientTest {

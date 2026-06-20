@@ -133,7 +133,9 @@ public class GrowattDataService {
 	}
 
 	/** Pull a single day's energy (1-based day-of-month) from a month chart, defaulting to 0. */
-	private Double extractDayEnergy(MonthResponse month, int dayOfMonth) {
+	// Package-private (instead of private) so unit tests in the same package can verify the
+	// pure energy-extraction logic directly.
+	Double extractDayEnergy(MonthResponse month, int dayOfMonth) {
 		if (month != null && month.getObj() != null && month.getObj().getEnergy() != null) {
 			List<Double> values = month.getObj().getEnergy();
 			int index = dayOfMonth - 1;
@@ -233,7 +235,8 @@ public class GrowattDataService {
 	 * incomplete and must always be fetched live. A blank or unparseable date is treated as
 	 * "current" so we never cache an ambiguous key.
 	 */
-	private boolean isCurrentPeriod(CacheType type, String date) {
+	// Package-private for unit testing of the period-classification logic.
+	boolean isCurrentPeriod(CacheType type, String date) {
 		if (StringUtils.isBlank(date)) {
 			return true;
 		}
@@ -262,7 +265,8 @@ public class GrowattDataService {
 	 * never reaches this check (it bypasses the cache entirely). For the day type we skip
 	 * yesterday, because a background job is responsible for backfilling the previous day.
 	 */
-	private boolean shouldPersist(CacheType type, String date) {
+	// Package-private for unit testing of the persistence-eligibility logic.
+	boolean shouldPersist(CacheType type, String date) {
 		try {
 			if (type == CacheType.DAY) {
 				return !LocalDate.parse(date, DAY_FMT).isEqual(LocalDate.now().minusDays(1));

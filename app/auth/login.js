@@ -17,14 +17,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-import { loginUser } from '../(services)/api/api';
-import { loginUserAction } from '../(redux)/authSlice';
-import AuthBackground from '../components/auth/AuthBackground';
-import GlassCard from '../components/premium/GlassCard';
-import PremiumField from '../components/premium/PremiumField';
-import PremiumButton from '../components/premium/PremiumButton';
-import StatusBanner from '../components/settings/premium/StatusBanner';
-import { premiumTheme } from '../theme/premiumTheme';
+import { loginUser } from '../../src/services/api/api';
+import { loginUserAction } from '../../src/redux/authSlice';
+import AuthBackground from '../../src/components/auth/AuthBackground';
+import GlassCard from '../../src/components/premium/GlassCard';
+import PremiumField from '../../src/components/premium/PremiumField';
+import PremiumButton from '../../src/components/premium/PremiumButton';
+import StatusBanner from '../../src/components/settings/premium/StatusBanner';
+import { premiumTheme } from '../../src/theme/premiumTheme';
 
 const validationSchema = Yup.object().shape({
   email: Yup.string().required('Email is required').email().label('Email'),

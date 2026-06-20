@@ -15,14 +15,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-import GlassCard from '../components/premium/GlassCard';
-import { premiumTheme } from '../theme/premiumTheme';
-import { useNotifications } from '../context/NotificationsContext';
+import GlassCard from '../../src/components/premium/GlassCard';
+import { premiumTheme } from '../../src/theme/premiumTheme';
+import { useNotifications } from '../../src/context/NotificationsContext';
 import {
   NotificationItem,
   NotificationLevel,
   NotificationType,
-} from '../services/notificationsApiService';
+} from '../../src/services/notificationsApiService';
 
 /** Visual treatment per outcome severity. */
 const LEVEL_STYLES: Record<

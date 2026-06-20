@@ -9,11 +9,11 @@ import React, { useEffect, useRef } from 'react';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { solarTheme } from './theme/solarTheme';
-import { premiumTheme } from './theme/premiumTheme';
-import { useResponsive } from './utils/responsive';
+import { solarTheme } from '../src/theme/solarTheme';
+import { premiumTheme } from '../src/theme/premiumTheme';
+import { useResponsive } from '../src/utils/responsive';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ANIMATION_DURATION, SPACING } from './constants';
+import { ANIMATION_DURATION, SPACING } from '../src/constants';
 
 const BACKGROUND_VIDEO_URI =
   'https://cdn.pixabay.com/video/2023/11/13/188912-884171167_large.mp4';
@@ -25,7 +25,7 @@ const Home = () => {
     instance.play();
   });
   const router = useRouter();
-  const { isMobile, getFontSize, getSpacing } = useResponsive();
+  const { isMobile } = useResponsive();
   const insets = useSafeAreaInsets();
 
   // On web the <video> element has no `autoplay` attribute and is only mounted
@@ -53,6 +53,7 @@ const Home = () => {
         useNativeDriver: true,
       }),
     ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const dynamicStyles = {

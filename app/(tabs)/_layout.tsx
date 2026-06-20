@@ -3,10 +3,10 @@ import { FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { Platform, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import PremiumTabBar, { navWidth } from '../components/navigation/PremiumTabBar';
-import { premiumTheme } from '../theme/premiumTheme';
-import { NotificationsProvider } from '../context/NotificationsContext';
-import PushRegistrar from '../components/PushRegistrar';
+import PremiumTabBar, { navWidth } from '../../src/components/navigation/PremiumTabBar';
+import { premiumTheme } from '../../src/theme/premiumTheme';
+import { NotificationsProvider } from '../../src/context/NotificationsContext';
+import PushRegistrar from '../../src/components/PushRegistrar';
 
 function SolarPanelIcon({ color }: { color: string }) {
   const { width } = useWindowDimensions();

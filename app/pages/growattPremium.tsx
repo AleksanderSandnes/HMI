@@ -12,117 +12,28 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-import GlassCard from '../components/premium/GlassCard';
-import StatTile from '../components/premium/StatTile';
-import SegmentedControl from '../components/premium/SegmentedControl';
-import PremiumDateSelector from '../components/premium/PremiumDateSelector';
-import PremiumChart from '../components/premium/PremiumChart';
+import GlassCard from '../../src/components/premium/GlassCard';
+import StatTile from '../../src/components/premium/StatTile';
+import SegmentedControl from '../../src/components/premium/SegmentedControl';
+import PremiumDateSelector from '../../src/components/premium/PremiumDateSelector';
+import PremiumChart from '../../src/components/premium/PremiumChart';
 
-import { fetchSolarData as fetchSolarDataFromService } from '../services/dataService';
-import useCurrentWeatherData from '../hooks/useCurrentWeatherData';
-import { premiumTheme } from '../theme/premiumTheme';
-
-const CO2_PER_KWH = 0.4; // kg CO₂ avoided per kWh of solar (grid average)
-
-type ChartData = {
-  labels: string[];
-  datasets: { data: number[] }[];
-};
-
-const toISO = (d: Date) => d.toISOString().split('T')[0];
-
-function previousPeriodDate(timespan: string, dateStr: string): string {
-  const d = new Date(dateStr);
-  switch (timespan) {
-    case 'hourly':
-      d.setDate(d.getDate() - 1);
-      break;
-    case 'weekly':
-      d.setDate(d.getDate() - 7);
-      break;
-    case 'monthly':
-      d.setMonth(d.getMonth() - 1);
-      break;
-    case 'yearly':
-      d.setFullYear(d.getFullYear() - 1);
-      break;
-  }
-  return toISO(d);
-}
-
-function periodLabel(timespan: string): string {
-  return timespan === 'hourly'
-    ? 'Today'
-    : timespan === 'weekly'
-      ? 'This week'
-      : timespan === 'monthly'
-        ? 'This month'
-        : 'This year';
-}
-
-function comparisonLabel(timespan: string): string {
-  return timespan === 'hourly'
-    ? 'vs yesterday'
-    : timespan === 'weekly'
-      ? 'vs last week'
-      : timespan === 'monthly'
-        ? 'vs last month'
-        : 'vs last year';
-}
-
-function chartSubtitle(timespan: string, dateStr: string): string {
-  const d = new Date(dateStr);
-  const month = d.toLocaleString('en-US', { month: 'long' });
-  if (timespan === 'hourly')
-    return `Power output · ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-  if (timespan === 'weekly') return `7-day output from ${month} ${d.getDate()}`;
-  if (timespan === 'monthly') return `Daily output · ${month} ${d.getFullYear()}`;
-  return `Monthly output · ${d.getFullYear()}`;
-}
-
-function formatCO2(kg: number): { value: string; unit: string } {
-  if (kg >= 1000) return { value: (kg / 1000).toFixed(2), unit: 't' };
-  return { value: kg.toFixed(kg < 10 ? 1 : 0), unit: 'kg' };
-}
-
-function formatPeak(v: number): string {
-  if (v >= 1000) return (v / 1000).toFixed(1);
-  return v.toFixed(v < 10 ? 1 : 0);
-}
-
-const DAY_NAMES: Record<string, string> = {
-  Mon: 'Monday',
-  Tue: 'Tuesday',
-  Wed: 'Wednesday',
-  Thu: 'Thursday',
-  Fri: 'Friday',
-  Sat: 'Saturday',
-  Sun: 'Sunday',
-};
-
-const MONTH_NAMES: Record<string, string> = {
-  Jan: 'January',
-  Feb: 'February',
-  Mar: 'March',
-  Apr: 'April',
-  May: 'May',
-  Jun: 'June',
-  Jul: 'July',
-  Aug: 'August',
-  Sep: 'September',
-  Oct: 'October',
-  Nov: 'November',
-  Dec: 'December',
-};
-
-/** Human-friendly "when" for the peak-output tile. */
-function peakSublabel(timespan: string, label: string): string {
-  if (!label) return 'No data';
-  if (timespan === 'hourly') return `at ${label}`;
-  if (timespan === 'weekly') return `on ${DAY_NAMES[label] ?? label}`;
-  if (timespan === 'monthly') return `on day ${label}`;
-  return `in ${MONTH_NAMES[label] ?? label}`;
-}
+import { fetchSolarData as fetchSolarDataFromService } from '../../src/services/dataService';
+import useCurrentWeatherData from '../../src/hooks/useCurrentWeatherData';
+import { premiumTheme } from '../../src/theme/premiumTheme';
+import {
+  CO2_PER_KWH,
+  chartSubtitle,
+  comparisonLabel,
+  formatCO2,
+  formatPeak,
+  getPeakOutput,
+  peakSublabel,
+  periodLabel,
+  previousPeriodDate,
+  toISO,
+  type ChartData,
+} from '../../src/utils/growattPremiumHelpers';
 
 export default function GrowattPremium(): React.ReactElement {
   const yesterday = new Date();
@@ -159,7 +70,7 @@ export default function GrowattPremium(): React.ReactElement {
       const res = await fetchSolarDataFromService(timespan, pickerDate, isMobile);
       setData(res.chartData);
       setMetrics(res.metrics);
-    } catch (e) {
+    } catch {
       setData({ labels: [], datasets: [{ data: [] }] });
       setMetrics({
         todayGeneration: 0,
@@ -186,7 +97,7 @@ export default function GrowattPremium(): React.ReactElement {
       setRevDelta(
         prevRev > 0 ? ((metrics.todayRevenue - prevRev) / prevRev) * 100 : null
       );
-    } catch (e) {
+    } catch {
       setGenDelta(null);
       setRevDelta(null);
     }
@@ -208,16 +119,7 @@ export default function GrowattPremium(): React.ReactElement {
   }, [metrics.todayGeneration, metrics.todayRevenue, timespan]);
 
   const peak = useMemo(() => {
-    const vals = data?.datasets?.[0]?.data ?? [];
-    if (!vals.length) return null;
-    const max = Math.max(...vals);
-    if (max <= 0) return null;
-    const idx = vals.indexOf(max);
-    return {
-      value: max,
-      label: data.labels[idx] ?? '',
-      unit: timespan === 'hourly' ? 'W' : 'kWh',
-    };
+    return getPeakOutput(data, timespan);
   }, [data, timespan]);
 
   const co2 = formatCO2(metrics.todayGeneration * CO2_PER_KWH);
