@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { useDispatch } from 'react-redux';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { loginUser } from '../(services)/api/api';
@@ -41,6 +42,7 @@ const Login = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isMobile = width <= 768;
 
   return (
@@ -50,7 +52,15 @@ const Login = () => {
         style={styles.flex}
       >
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            {
+              paddingTop: 20 + insets.top,
+              paddingBottom: 20 + insets.bottom,
+              paddingLeft: 20 + insets.left,
+              paddingRight: 20 + insets.right,
+            },
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -181,7 +191,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   card: { width: '100%' },
   brand: { alignItems: 'center', marginBottom: 24 },

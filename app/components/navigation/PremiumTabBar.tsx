@@ -131,7 +131,11 @@ export default function PremiumTabBar({
         style={[
           styles.bottomBar,
           glassBlur(20),
-          { paddingBottom: Math.max(insets?.bottom ?? 0, 8) },
+          {
+            paddingBottom: Math.max(insets?.bottom ?? 0, 8),
+            paddingLeft: 8 + (insets?.left ?? 0),
+            paddingRight: 8 + (insets?.right ?? 0),
+          },
         ]}
       >
         {items.map((it) => (
@@ -161,7 +165,13 @@ export default function PremiumTabBar({
     <View
       style={[
         styles.sidebar,
-        { width: full ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_RAIL },
+        {
+          width:
+            (full ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_RAIL) +
+            (insets?.left ?? 0),
+          paddingTop: 22 + (insets?.top ?? 0),
+          paddingLeft: 14 + (insets?.left ?? 0),
+        },
         glassBlur(24),
         glow(),
       ]}

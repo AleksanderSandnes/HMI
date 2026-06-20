@@ -2,6 +2,7 @@ import React from 'react';
 import { FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { Platform, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PremiumTabBar, { navWidth } from '../components/navigation/PremiumTabBar';
 import { premiumTheme } from '../theme/premiumTheme';
 import { NotificationsProvider } from '../context/NotificationsContext';
@@ -33,7 +34,11 @@ function NotificationsIcon({ color }: { color: string }) {
 
 export default function TabLayout() {
   const { width } = useWindowDimensions();
-  const padLeft = navWidth(width);
+  const insets = useSafeAreaInsets();
+  // When the sidebar is visible it occupies the base rail/full width plus any
+  // left safe-area inset (landscape notch); the scene must be padded to match.
+  const sidebar = navWidth(width);
+  const padLeft = sidebar > 0 ? sidebar + insets.left : 0;
 
   return (
     <NotificationsProvider>

@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { useDispatch } from 'react-redux';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { registerUser } from '../(services)/api/api';
@@ -66,6 +67,7 @@ const Register = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isMobile = width <= 768;
 
   const registerMutation = useMutation({
@@ -240,7 +242,15 @@ const Register = () => {
         style={styles.flex}
       >
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            {
+              paddingTop: 20 + insets.top,
+              paddingBottom: 20 + insets.bottom,
+              paddingLeft: 20 + insets.left,
+              paddingRight: 20 + insets.right,
+            },
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -530,7 +540,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   card: { width: '100%' },
 

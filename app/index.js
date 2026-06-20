@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { solarTheme } from './theme/solarTheme';
 import { premiumTheme } from './theme/premiumTheme';
 import { useResponsive } from './utils/responsive';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ANIMATION_DURATION, SPACING } from './constants';
 
 const BACKGROUND_VIDEO_URI =
@@ -25,6 +26,7 @@ const Home = () => {
   });
   const router = useRouter();
   const { isMobile, getFontSize, getSpacing } = useResponsive();
+  const insets = useSafeAreaInsets();
 
   // On web the <video> element has no `autoplay` attribute and is only mounted
   // to the player after this component renders, so the play() call in the
@@ -70,7 +72,7 @@ const Home = () => {
       gap: isMobile ? 15 : 30,
       paddingHorizontal: isMobile ? 40 : 60,
       position: isMobile ? 'absolute' : 'relative',
-      bottom: isMobile ? 60 : 'auto',
+      bottom: isMobile ? 40 + insets.bottom : 'auto',
       marginTop: isMobile ? 0 : 40,
     },
     button: {

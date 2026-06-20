@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import GlassCard from '../components/premium/GlassCard';
@@ -143,6 +144,7 @@ export default function GrowattPremium(): React.ReactElement {
   const { currentTemp, neighborhood } = useCurrentWeatherData();
 
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isMobile = width <= 768;
   const isTablet = width > 768 && width <= 1024;
   const isDesktop = width > 1024;
@@ -371,8 +373,13 @@ export default function GrowattPremium(): React.ReactElement {
         contentContainerStyle={[
           styles.scroll,
           {
-            paddingHorizontal: isMobile ? 16 : isTablet ? 24 : isWide ? 48 : 32,
-            maxWidth: contentMaxWidth,
+            paddingTop: (Platform.OS === 'web' ? 28 : 14) + insets.top,
+            paddingBottom: 36 + insets.bottom,
+            paddingLeft:
+              (isMobile ? 16 : isTablet ? 24 : isWide ? 48 : 32) + insets.left,
+            paddingRight:
+              (isMobile ? 16 : isTablet ? 24 : isWide ? 48 : 32) + insets.right,
+            maxWidth: contentMaxWidth + insets.left + insets.right,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -451,10 +458,7 @@ function Blob({
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: premiumTheme.bg.base },
   scroll: {
-    paddingTop: Platform.OS === 'web' ? 28 : 54,
-    paddingBottom: 36,
     gap: premiumTheme.space.lg,
-    maxWidth: 1480,
     width: '100%',
     alignSelf: 'center',
   },

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
 
@@ -26,6 +27,7 @@ export default function SettingsPremium(): React.ReactElement {
   const router = useRouter();
 
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isMobile = width <= 768;
   const isWide = width >= 1600;
 
@@ -72,7 +74,12 @@ export default function SettingsPremium(): React.ReactElement {
         style={{ flex: 1 }}
         contentContainerStyle={[
           styles.scroll,
-          { paddingHorizontal: isMobile ? 16 : 24 },
+          {
+            paddingTop: (Platform.OS === 'web' ? 28 : 14) + insets.top,
+            paddingBottom: 48 + insets.bottom,
+            paddingLeft: (isMobile ? 16 : 24) + insets.left,
+            paddingRight: (isMobile ? 16 : 24) + insets.right,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -144,7 +151,6 @@ function Blob({
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: premiumTheme.bg.base },
   scroll: {
-    paddingTop: Platform.OS === 'web' ? 28 : 54,
     paddingBottom: 48,
   },
   column: {
