@@ -1,0 +1,21 @@
+name: Create Production Builds
+
+# Automatically run this workflow on every push to main.
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_android:
+    name: Build Android
+    type: build
+    params:
+      platform: android
+      profile: production
+  build_ios:
+    name: Build iOS
+    type: build
+    params:
+      platform: ios
+      profile: production
