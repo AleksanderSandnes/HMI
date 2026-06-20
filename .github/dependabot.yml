@@ -1,0 +1,37 @@
+version: 2
+updates:
+  # Maven backend (growattAPI, Spring Boot / Java 17)
+  - package-ecosystem: "maven"
+    directory: "/backend/growattAPI"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps(growattAPI)"
+    labels:
+      - "dependencies"
+      - "java"
+
+  # npm frontend (Expo / React Native)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps(frontend)"
+    labels:
+      - "dependencies"
+      - "javascript"
+
+  # npm backend (weatherAPI, Node / Express)
+  - package-ecosystem: "npm"
+    directory: "/backend/weatherAPI"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps(weatherAPI)"
+    labels:
+      - "dependencies"
+      - "javascript"
