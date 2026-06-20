@@ -21,3 +21,6 @@ services:
     healthCheckPath: /actuator/health
     autoDeploy: true
     branch: main
+    buildFilter:
+      paths:
+        - backend/growattAPI/**

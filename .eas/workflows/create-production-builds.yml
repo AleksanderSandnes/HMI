@@ -1,10 +1,10 @@
 name: Create Production Builds
 
-# Automatically run this workflow on every push to main.
-on:
-  push:
-    branches:
-      - main
+# Manual-only workflow (no triggers): run on demand when you want a
+# production build, e.g. from the EAS dashboard or with
+#   npx eas-cli@latest workflow:run create-production-builds.yml
+# iOS requires an Apple Developer account configured in EAS before it
+# can build/sign; Android works without one.
 
 jobs:
   build_android:

@@ -26,3 +26,6 @@ services:
     healthCheckPath: /api/health
     autoDeploy: true
     branch: main
+    buildFilter:
+      paths:
+        - backend/weatherAPI/**

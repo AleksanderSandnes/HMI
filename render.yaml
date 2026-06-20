@@ -26,6 +26,9 @@ services:
     healthCheckPath: /api/health
     autoDeploy: true
     branch: main
+    buildFilter:
+      paths:
+        - backend/weatherAPI/**
 
   - type: web
     name: hmi-java-api
@@ -45,3 +48,6 @@ services:
     healthCheckPath: /actuator/health
     autoDeploy: true
     branch: main
+    buildFilter:
+      paths:
+        - backend/growattAPI/**

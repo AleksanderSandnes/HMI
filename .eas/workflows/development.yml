@@ -1,0 +1,16 @@
+name: Development Build
+
+# Automatically build a development Android client on every push to main.
+# Web is deployed separately via Vercel; iOS is not built in development.
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_android:
+    name: Build Android (development)
+    type: build
+    params:
+      platform: android
+      profile: development
