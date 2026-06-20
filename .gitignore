@@ -10,8 +10,6 @@
 /node_modules
 /backend/node_modules
 /backend/weatherAPI/node_modules
-package-lock.json
-/backend/weatherAPI/package-lock.json
 
 # ==============================================
 # JAVA & MAVEN (GrowattAPI)
