@@ -19,7 +19,7 @@
         "express": "^4.17.1",
         "express-async-handler": "^1.2.0",
         "jsonwebtoken": "^9.0.2",
-        "mongodb": "^6.5.0",
+        "mongodb": "^7.3.0",
         "mongoose": "^8.7.2",
         "node-cron": "^4.3.0"
     },
