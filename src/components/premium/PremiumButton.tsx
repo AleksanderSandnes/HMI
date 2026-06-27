@@ -66,6 +66,9 @@ export default function PremiumButton({
             />
           ) : null}
           <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.85}
             style={[
               styles.label,
               variant === 'primary' && styles.labelPrimary,
@@ -129,7 +132,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 18,
   },
-  inner: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  inner: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
   ghost: {
     backgroundColor: premiumTheme.glass.fill,
     borderWidth: 1,
@@ -146,6 +149,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: premiumTheme.text.primary,
     letterSpacing: 0.2,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   labelPrimary: { color: premiumTheme.text.inverse },
   labelDanger: { color: premiumTheme.negative },
