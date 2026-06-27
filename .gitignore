@@ -59,6 +59,9 @@ build/
 /backend/.env
 /backend/weatherAPI/.env
 
+# Google Play service account key (eas submit)
+play-service-account.json
+
 # Application properties with sensitive data
 **/application.properties
 **/application-local.properties
