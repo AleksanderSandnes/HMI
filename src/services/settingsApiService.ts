@@ -91,3 +91,27 @@ export async function clearWeatherApiSettings(): Promise<void> {
   });
   if (error) throw new Error(error.message);
 }
+
+/**
+ * Subscribe to live settings/profile changes for the current user (cross-device sync).
+ * Calls `onChange` whenever this user's user_settings or profiles row changes on another
+ * device. Returns an unsubscribe function. (RLS ensures only the user's own rows arrive.)
+ */
+export function subscribeSettings(onChange: () => void): () => void {
+  const channel = supabase
+    .channel('settings-sync')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'user_settings' },
+      () => onChange()
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'profiles' },
+      () => onChange()
+    )
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}

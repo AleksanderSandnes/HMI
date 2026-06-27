@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import GrowattCredentialsCard from '../../src/components/settings/premium/Growat
 import WeatherCredentialsCard from '../../src/components/settings/premium/WeatherCredentialsCard';
 import { premiumTheme } from '../../src/theme/premiumTheme';
 import { logoutAction } from '../../src/redux/authSlice';
+import { subscribeSettings } from '../../src/services/settingsApiService';
 
 export default function SettingsPremium(): React.ReactElement {
   const dispatch = useDispatch();
@@ -30,6 +31,16 @@ export default function SettingsPremium(): React.ReactElement {
   const insets = useSafeAreaInsets();
   const isMobile = width <= 768;
   const isWide = width >= 1600;
+
+  // Live cross-device sync: bump a signal whenever this user's settings/profile change
+  // on another device, so the cards below re-load their values.
+  const [refreshSignal, setRefreshSignal] = useState(0);
+  useEffect(() => {
+    const unsubscribe = subscribeSettings(() =>
+      setRefreshSignal((s) => s + 1)
+    );
+    return unsubscribe;
+  }, []);
 
   const handleLogout = () => {
     const doLogout = () => {
@@ -85,9 +96,9 @@ export default function SettingsPremium(): React.ReactElement {
       >
         <View style={styles.column}>
           {Header}
-          <AccountCard />
-          <GrowattCredentialsCard />
-          <WeatherCredentialsCard />
+          <AccountCard refreshSignal={refreshSignal} />
+          <GrowattCredentialsCard refreshSignal={refreshSignal} />
+          <WeatherCredentialsCard refreshSignal={refreshSignal} />
 
           {isMobile ? (
             <GlassCard style={styles.logoutCard}>

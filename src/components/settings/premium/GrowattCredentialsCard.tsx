@@ -16,7 +16,11 @@ const MASK = '••••••••';
  * Growatt API credentials card — stores account + password in Supabase Vault. The plant id
  * is no longer collected: the backend derives it from the server-side Growatt login.
  */
-export default function GrowattCredentialsCard() {
+export default function GrowattCredentialsCard({
+  refreshSignal,
+}: {
+  refreshSignal?: number;
+}) {
   const [account, setAccount] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,7 +43,7 @@ export default function GrowattCredentialsCard() {
         setSyncStatus('error');
       }
     })();
-  }, []);
+  }, [refreshSignal]);
 
   const handleSave = async () => {
     setError(null);

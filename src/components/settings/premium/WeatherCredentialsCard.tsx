@@ -16,7 +16,11 @@ const MASK = '••••••••••••••••';
  * Weather.com API credentials card — station ID + API key, synced to backend.
  * Submitting empty values clears the stored credentials.
  */
-export default function WeatherCredentialsCard() {
+export default function WeatherCredentialsCard({
+  refreshSignal,
+}: {
+  refreshSignal?: number;
+}) {
   const [apiKey, setApiKey] = useState('');
   const [stationId, setStationId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,7 +43,7 @@ export default function WeatherCredentialsCard() {
         setSyncStatus('error');
       }
     })();
-  }, []);
+  }, [refreshSignal]);
 
   const handleSave = async () => {
     setError(null);

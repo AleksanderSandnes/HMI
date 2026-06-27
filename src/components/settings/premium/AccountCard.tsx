@@ -22,7 +22,11 @@ import { loginUserAction } from '../../../redux/authSlice';
  * Account card — shows profile summary with modal-based editing for
  * profile (username/email) and password.
  */
-export default function AccountCard() {
+export default function AccountCard({
+  refreshSignal,
+}: {
+  refreshSignal?: number;
+}) {
   const dispatch = useDispatch();
   const { user } = useSelector((state: any) => state.auth);
 
@@ -43,7 +47,7 @@ export default function AccountCard() {
         setLoadError(e.message || 'Failed to load profile');
       }
     })();
-  }, []);
+  }, [refreshSignal]);
 
   /* ---------- profile edit modal ---------- */
   const [pUsername, setPUsername] = useState('');
