@@ -24,7 +24,6 @@ import PremiumField from '../../src/components/premium/PremiumField';
 import PremiumButton from '../../src/components/premium/PremiumButton';
 import StatusBanner from '../../src/components/settings/premium/StatusBanner';
 import { premiumTheme } from '../../src/theme/premiumTheme';
-import { storeGrowattCredentials } from '../../src/services/credentialsService';
 import {
   saveGrowattApiSettings,
   saveWeatherApiSettings,
@@ -95,7 +94,6 @@ const Register = () => {
   const [growatt, setGrowatt] = useState({
     email: '',
     password: '',
-    plantId: '',
   });
 
   // Step 3 — Weather
@@ -168,13 +166,8 @@ const Register = () => {
 
     try {
       setSaving(true);
-      await storeGrowattCredentials({
-        account: email,
-        password,
-        plantId: growatt.plantId.trim(),
-      });
       await saveGrowattApiSettings({
-        growatt: { email, password, plantId: growatt.plantId.trim() },
+        growatt: { email, password },
       });
       setStep(2);
     } catch {
@@ -371,14 +364,6 @@ const Register = () => {
                   value={growatt.password}
                   onChangeText={setGrowattField('password')}
                   placeholder="Enter your Growatt password"
-                  editable={!saving}
-                />
-                <PremiumField
-                  label="PLANT ID (OPTIONAL)"
-                  icon="hashtag"
-                  value={growatt.plantId}
-                  onChangeText={setGrowattField('plantId')}
-                  placeholder="Enter your plant ID"
                   editable={!saving}
                 />
 

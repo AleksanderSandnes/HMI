@@ -1,122 +1,98 @@
 /**
- * Authenticated Weather API Service
- * Handles weather API calls with user authentication
+ * Weather service — reads cached history straight from Supabase (`weather_historical`, via
+ * PostgREST, RLS-scoped to the user's station) and falls back to the `weather-history` Edge
+ * Function on a cache miss. Current conditions come from the `weather-current` Edge Function
+ * (a live Weather.com call). Replaces the Node `/api/weather/*` endpoints; return shapes are
+ * preserved (`{ observations }`) so the existing frontend transforms are unchanged.
  */
+import { supabase } from './supabaseClient';
 
-import { getWeatherApiConfig } from './weatherApiConfig';
-
-/**
- * Get authentication token from storage
- */
-async function getAuthToken(): Promise<string | null> {
-  try {
-    if (typeof localStorage !== 'undefined') {
-      // Web: Use localStorage
-      const userInfo = localStorage.getItem('userInfo');
-      if (userInfo) {
-        const user = JSON.parse(userInfo);
-        return user.token || null;
-      }
-    } else {
-      // React Native: Use AsyncStorage
-      const AsyncStorage =
-        require('@react-native-async-storage/async-storage').default;
-      const userInfo = await AsyncStorage.getItem('userInfo');
-      if (userInfo) {
-        const user = JSON.parse(userInfo);
-        return user.token || null;
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error('[WeatherAPI] Error getting auth token:', error);
-    return null;
-  }
+function toYmd(d: Date): string {
+  return (
+    `${d.getFullYear()}` +
+    `${String(d.getMonth() + 1).padStart(2, '0')}` +
+    `${String(d.getDate()).padStart(2, '0')}`
+  );
 }
 
-/**
- * Make authenticated API request
- */
-async function makeAuthenticatedRequest(url: string): Promise<any> {
-  try {
-    const token = await getAuthToken();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-      console.log('[WeatherAPI] Making authenticated request to:', url);
-    } else {
-      console.warn(
-        '[WeatherAPI] No auth token available, making unauthenticated request to:',
-        url
-      );
-    }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('[WeatherAPI] Request failed:', response.status, errorData);
-      throw new Error(
-        `Weather API request failed: ${response.status} ${errorData}`
-      );
-    }
-
-    const data = await response.json();
-    console.log('[WeatherAPI] Request successful');
-    return data;
-  } catch (error) {
-    console.error('[WeatherAPI] Request error:', error);
-    throw error;
-  }
+function parseYmd(s: string): Date {
+  return new Date(
+    Number(s.slice(0, 4)),
+    Number(s.slice(4, 6)) - 1,
+    Number(s.slice(6, 8))
+  );
 }
 
-/**
- * Get current weather data
- */
+/** The 7 YYYYMMDD dates (oldest first) ending on `end` (or today). */
+function weekDatesEnding(end?: string): string[] {
+  const last = end ? parseYmd(end) : new Date();
+  const out: string[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(last);
+    d.setDate(last.getDate() - i);
+    out.push(toYmd(d));
+  }
+  return out;
+}
+
+/** Hourly observations for one day: cache first (PostgREST), then the Edge Function. */
+async function readDay(date: string): Promise<any[]> {
+  const { data } = await supabase
+    .from('weather_historical')
+    .select('observations')
+    .eq('date', date)
+    .maybeSingle();
+  if (data?.observations) return data.observations;
+
+  const { data: fn, error } = await supabase.functions.invoke(
+    'weather-history',
+    { body: { date } }
+  );
+  if (error) return [];
+  return fn?.observations ?? [];
+}
+
+/** Current conditions (live via Edge Function). */
 export async function getCurrentWeatherData(): Promise<any> {
-  const config = getWeatherApiConfig();
-  return await makeAuthenticatedRequest(config.currentWeatherEndpoint);
+  const { data, error } = await supabase.functions.invoke('weather-current');
+  if (error) throw new Error(error.message);
+  return data;
 }
 
-/**
- * Get historical weather data for a specific date
- */
+/** Full-day observations for a date. */
 export async function getHistoricalWeatherData(date: string): Promise<any> {
-  const config = getWeatherApiConfig();
-  return await makeAuthenticatedRequest(config.historicalWeatherEndpoint(date));
+  return { observations: await readDay(date) };
 }
 
-/**
- * Get hourly weather data for a specific date
- */
+/** Hourly observations for a date. */
 export async function getHourlyWeatherData(date: string): Promise<any> {
-  const config = getWeatherApiConfig();
-  return await makeAuthenticatedRequest(config.hourlyWeatherEndpoint(date));
+  return { observations: await readDay(date) };
 }
 
-/**
- * Get weekly weather data
- */
+/** 7-day weekly view (observations across the week ending on `date`). */
 export async function getWeeklyWeatherData(date?: string): Promise<any> {
-  const config = getWeatherApiConfig();
-  return await makeAuthenticatedRequest(config.weeklyWeatherEndpoint(date));
+  const dates = weekDatesEnding(date);
+  let observations: any[] = [];
+  for (const d of dates) {
+    observations = observations.concat(await readDay(d));
+  }
+  return { observations, weekDates: dates };
 }
 
-/**
- * Get hourly weather data for a specific date range (for weekly mode)
- */
+/** Hourly observations across the week ending on `startDate`. */
 export async function getWeeklyHourlyWeatherData(
   startDate: string,
-  endDate: string
+  _endDate?: string
 ): Promise<any> {
-  const config = getWeatherApiConfig();
-  // Use startDate as the date parameter since backend calculates the week from it
-  const url = `${config.baseUrl}/api/weather/weekly-hourly/${startDate}`;
-  return await makeAuthenticatedRequest(url);
+  const dates = weekDatesEnding(startDate);
+  let observations: any[] = [];
+  for (const d of dates) {
+    observations = observations.concat(await readDay(d));
+  }
+  return {
+    weeklyData: observations,
+    observations,
+    weekDates: dates,
+    selectedDate: startDate,
+  };
 }

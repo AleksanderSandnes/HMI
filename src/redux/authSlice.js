@@ -36,20 +36,6 @@ const getStorage = () => {
 
 const storage = getStorage();
 
-const loadUserFromStorage = async () => {
-  try {
-    console.log('[AuthSlice] Loading user from storage...');
-    const userInfo = await storage.getItem('userInfo');
-    console.log('[AuthSlice] Raw userInfo from storage:', userInfo);
-    const parsedUser = userInfo ? JSON.parse(userInfo) : null;
-    console.log('[AuthSlice] Parsed user:', parsedUser);
-    return parsedUser;
-  } catch (error) {
-    console.error('Error loading user from storage:', error);
-    return null;
-  }
-};
-
 const saveUserToStorage = async (userInfo) => {
   try {
     await storage.setItem('userInfo', JSON.stringify(userInfo));
@@ -87,6 +73,12 @@ const authSlice = createSlice({
       state.isLoading = false;
       removeUserFromStorage();
       clearStoredCredentials();
+      // End the Supabase session (best-effort; clears persisted tokens).
+      try {
+        require('../services/supabaseClient').supabase.auth.signOut();
+      } catch {
+        /* ignore */
+      }
     },
     setUserAction: (state, action) => {
       state.user = action.payload;
@@ -110,11 +102,23 @@ export const authReducer = authSlice.reducer;
 export const loadUser = () => async (dispatch) => {
   try {
     dispatch(setLoadingAction(true));
-    const userInfo = await loadUserFromStorage();
-    if (userInfo) {
-      dispatch(setUserAction(userInfo));
+    // The live Supabase session is the source of truth (auto-refreshed).
+    const { supabase } = require('../services/supabaseClient');
+    const { data } = await supabase.auth.getSession();
+    if (data?.session) {
+      const u = data.session.user;
+      dispatch(
+        setUserAction({
+          id: u.id,
+          email: u.email,
+          username:
+            u.user_metadata?.username ||
+            (u.email ? u.email.split('@')[0] : ''),
+          token: data.session.access_token,
+        })
+      );
     } else {
-      dispatch(setLoadingAction(false));
+      dispatch(setUserAction(null));
     }
   } catch (error) {
     console.error('Error loading user:', error);

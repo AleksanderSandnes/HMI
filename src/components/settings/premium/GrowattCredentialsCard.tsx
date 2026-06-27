@@ -6,11 +6,6 @@ import PremiumField from '../../premium/PremiumField';
 import PremiumButton from '../../premium/PremiumButton';
 import { premiumTheme } from '../../../theme/premiumTheme';
 import {
-  getGrowattCredentials,
-  storeGrowattCredentials,
-  hasStoredCredentials,
-} from '../../../services/credentialsService';
-import {
   saveGrowattApiSettings,
   getApiSettings,
 } from '../../../services/settingsApiService';
@@ -18,13 +13,12 @@ import {
 const MASK = '••••••••';
 
 /**
- * Growatt API credentials card — store account/password/plantId,
- * synced to local storage + backend. Submitting empty values clears them.
+ * Growatt API credentials card — stores account + password in Supabase Vault. The plant id
+ * is no longer collected: the backend derives it from the server-side Growatt login.
  */
 export default function GrowattCredentialsCard() {
   const [account, setAccount] = useState('');
   const [password, setPassword] = useState('');
-  const [plantId, setPlantId] = useState('');
   const [loading, setLoading] = useState(false);
   const [hasCredentials, setHasCredentials] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(null);
@@ -34,30 +28,15 @@ export default function GrowattCredentialsCard() {
   useEffect(() => {
     (async () => {
       try {
-        const stored = await hasStoredCredentials();
-        setHasCredentials(stored);
-        if (stored) {
-          const creds = await getGrowattCredentials();
-          setAccount(creds.account);
-          setPassword(MASK);
-          setPlantId(creds.plantId || '');
-        }
-        try {
-          const backend = await getApiSettings();
-          if (backend?.growatt) {
-            setSyncStatus('synced');
-            if (!stored) {
-              setAccount(backend.growatt.email);
-              setPlantId(backend.growatt.plantId || '');
-              setPassword(backend.growatt.hasPassword ? MASK : '');
-              setHasCredentials(!!backend.growatt.hasPassword);
-            }
-          }
-        } catch {
-          setSyncStatus('error');
+        const backend = await getApiSettings();
+        if (backend?.growatt) {
+          setSyncStatus('synced');
+          setAccount(backend.growatt.email);
+          setPassword(backend.growatt.hasPassword ? MASK : '');
+          setHasCredentials(!!backend.growatt.hasPassword);
         }
       } catch {
-        // ignore
+        setSyncStatus('error');
       }
     })();
   }, []);
@@ -77,34 +56,13 @@ export default function GrowattCredentialsCard() {
 
     try {
       setLoading(true);
-      await storeGrowattCredentials({
-        account: account.trim(),
-        password: password.trim(),
-        plantId: plantId.trim(),
+      await saveGrowattApiSettings({
+        growatt: { email: account.trim(), password: password.trim() },
       });
-
-      let backendSuccess = false;
-      try {
-        await saveGrowattApiSettings({
-          growatt: {
-            email: account.trim(),
-            password: password.trim(),
-            plantId: plantId.trim(),
-          },
-        });
-        backendSuccess = true;
-        setSyncStatus('synced');
-      } catch {
-        setSyncStatus('error');
-      }
-
+      setSyncStatus('synced');
       setHasCredentials(true);
       setPassword(MASK);
-      setSuccess(
-        backendSuccess
-          ? 'Credentials saved to device and cloud'
-          : 'Saved to device. Cloud sync failed — will retry later.'
-      );
+      setSuccess('Credentials saved securely');
       setTimeout(() => setSuccess(null), 3500);
     } catch {
       setError('Failed to save credentials. Please try again.');
@@ -143,14 +101,6 @@ export default function GrowattCredentialsCard() {
         onChangeText={setPassword}
         onFocusClearMask={() => password === MASK && setPassword('')}
         placeholder="Enter your password"
-        editable={!loading}
-      />
-      <PremiumField
-        label="PLANT ID (OPTIONAL)"
-        icon="hashtag"
-        value={plantId}
-        onChangeText={setPlantId}
-        placeholder="Enter your plant ID"
         editable={!loading}
       />
 

@@ -1,57 +1,8 @@
 /**
- * Account API Service
- * Handles API calls for user account management
+ * Account service — user profile + password management via Supabase Auth + the `profiles`
+ * table (replaces the Node `/api/user/account` endpoints).
  */
-
-import { getDataMode } from './dataConfig';
-
-// Get the correct API URL based on mode
-function getApiBaseUrl(): string {
-  const dataMode = getDataMode();
-
-  if (dataMode === 'production') {
-    return (
-      process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION ||
-      'https://weatherapi-sbwb.onrender.com'
-    );
-  } else if (dataMode === 'development') {
-    return (
-      process.env.EXPO_PUBLIC_WEATHER_API_DEVELOPMENT || 'http://localhost:5000'
-    );
-  } else {
-    // Development mode fallback
-    return 'http://localhost:5000';
-  }
-}
-
-/**
- * Get authentication token from storage
- */
-async function getAuthToken(): Promise<string | null> {
-  try {
-    if (typeof localStorage !== 'undefined') {
-      // Web: Use localStorage
-      const userInfo = localStorage.getItem('userInfo');
-      if (userInfo) {
-        const user = JSON.parse(userInfo);
-        return user.token || null;
-      }
-    } else {
-      // React Native: Use AsyncStorage
-      const AsyncStorage =
-        require('@react-native-async-storage/async-storage').default;
-      const userInfo = await AsyncStorage.getItem('userInfo');
-      if (userInfo) {
-        const user = JSON.parse(userInfo);
-        return user.token || null;
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error('[AccountAPI] Error getting auth token:', error);
-    return null;
-  }
-}
+import { supabase } from './supabaseClient';
 
 export interface UserProfile {
   id: string;
@@ -71,128 +22,71 @@ export interface UpdatePasswordData {
   newPassword: string;
 }
 
-/**
- * Get user profile data
- */
-export async function getUserProfile(): Promise<UserProfile> {
-  try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    // Add authentication
-    const token = await getAuthToken();
-    if (!token) {
-      throw new Error('Authentication required. Please log in again.');
-    }
-    headers['Authorization'] = `Bearer ${token}`;
-
-    const apiUrl = `${getApiBaseUrl()}/api/user/account`;
-    console.log('[AccountAPI] Making request to:', apiUrl);
-
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers,
-    });
-
-    console.log('[AccountAPI] Response status:', response.status);
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Session expired. Please log in again.');
-      }
-      const errorText = await response.text();
-      console.error('[AccountAPI] Error response:', errorText);
-      throw new Error(
-        `Failed to get profile: ${response.status} ${response.statusText}`
-      );
-    }
-
-    const data = await response.json();
-    console.log('[AccountAPI] ✅ Profile retrieved successfully');
-    return data.user;
-  } catch (error) {
-    console.error('[AccountAPI] ❌ Failed to get profile:', error);
-    throw error;
-  }
+async function requireUserId(): Promise<string> {
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) throw new Error('Authentication required. Please log in again.');
+  return data.user.id;
 }
 
-/**
- * Update user profile (username, email)
- */
+/** Get the signed-in user's profile. */
+export async function getUserProfile(): Promise<UserProfile> {
+  const authId = await requireUserId();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, email, created_at, updated_at')
+    .eq('auth_id', authId)
+    .single();
+  if (error) throw new Error(error.message);
+  return {
+    id: data.id,
+    username: data.username,
+    email: data.email,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+/** Update username/email. Email changes also update the auth user. */
 export async function updateUserProfile(
   profileData: UpdateProfileData
 ): Promise<UserProfile> {
-  try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+  const authId = await requireUserId();
 
-    // Add authentication
-    const token = await getAuthToken();
-    if (!token) {
-      throw new Error('Authentication required. Please log in again.');
-    }
-    headers['Authorization'] = `Bearer ${token}`;
+  const { data: current } = await supabase
+    .from('profiles')
+    .select('email')
+    .eq('auth_id', authId)
+    .single();
 
-    const response = await fetch(
-      `${getApiBaseUrl()}/api/user/account/profile`,
-      {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(profileData),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to update profile');
-    }
-
-    const data = await response.json();
-    console.log('[AccountAPI] ✅ Profile updated successfully');
-    return data.user;
-  } catch (error) {
-    console.error('[AccountAPI] ❌ Failed to update profile:', error);
-    throw error;
+  if (current && profileData.email && profileData.email !== current.email) {
+    const { error: authErr } = await supabase.auth.updateUser({
+      email: profileData.email,
+    });
+    if (authErr) throw new Error(authErr.message);
   }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ username: profileData.username, email: profileData.email })
+    .eq('auth_id', authId)
+    .select('id, username, email, created_at, updated_at')
+    .single();
+  if (error) throw new Error(error.message);
+  return {
+    id: data.id,
+    username: data.username,
+    email: data.email,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
 }
 
-/**
- * Update user password
- */
+/** Change the signed-in user's password. */
 export async function updateUserPassword(
   passwordData: UpdatePasswordData
 ): Promise<void> {
-  try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    // Add authentication
-    const token = await getAuthToken();
-    if (!token) {
-      throw new Error('Authentication required. Please log in again.');
-    }
-    headers['Authorization'] = `Bearer ${token}`;
-
-    const response = await fetch(
-      `${getApiBaseUrl()}/api/user/account/password`,
-      {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(passwordData),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to update password');
-    }
-
-    console.log('[AccountAPI] ✅ Password updated successfully');
-  } catch (error) {
-    console.error('[AccountAPI] ❌ Failed to update password:', error);
-    throw error;
-  }
+  const { error } = await supabase.auth.updateUser({
+    password: passwordData.newPassword,
+  });
+  if (error) throw new Error(error.message);
 }

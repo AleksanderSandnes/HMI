@@ -1,9 +1,14 @@
 /**
- * Credentials Service
- * Manages secure credential retrieval from user settings or environment variables
+ * Credentials Service (compatibility shim).
+ *
+ * Growatt login now happens server-side from Vault, so the frontend no longer holds the
+ * Growatt password. These helpers remain for call-site compatibility:
+ *  - storeGrowattCredentials -> routes to the `save_user_credentials` Vault RPC
+ *  - getGrowattCredentials   -> returns the (non-secret) email/plant from settings
+ *  - clearStoredCredentials  -> no-op (logout must NOT wipe saved Vault credentials)
+ *  - hasStoredCredentials    -> whether Growatt is configured for the current user
  */
-
-import { getDataMode } from './dataConfig';
+import { supabase } from './supabaseClient';
 
 export interface GrowattCredentials {
   account: string;
@@ -11,170 +16,40 @@ export interface GrowattCredentials {
   plantId?: string;
 }
 
-/**
- * Get Growatt credentials from user settings or environment variables
- * Priority: User Settings > Environment Variables (dev mode only) > Error
- */
+/** Non-secret Growatt identity from settings (password is never returned to the client). */
 export async function getGrowattCredentials(): Promise<GrowattCredentials> {
-  const dataMode = getDataMode();
-
-  console.log(
-    `[CredentialsService] Getting Growatt credentials for ${dataMode} mode`
-  );
-
-  // Try to get from user settings first (stored in localStorage or AsyncStorage)
-  try {
-    const storedCredentials = await getUserStoredCredentials();
-    if (
-      storedCredentials?.growatt?.account &&
-      storedCredentials?.growatt?.password
-    ) {
-      console.log('[CredentialsService] ✅ Using user-stored credentials');
-      return {
-        account: storedCredentials.growatt.account,
-        password: storedCredentials.growatt.password,
-        plantId: storedCredentials.growatt.plantId,
-      };
-    }
-  } catch (error) {
-    console.warn(
-      '[CredentialsService] Could not retrieve user-stored credentials:',
-      error
-    );
-  }
-
-  // Only use environment variables in development mode
-  if (dataMode === 'development') {
-    const envAccount = process.env.EXPO_PUBLIC_GROWATT_USERNAME;
-    const envPassword = process.env.EXPO_PUBLIC_GROWATT_PASSWORD;
-    const envPlantId = process.env.EXPO_PUBLIC_GROWATT_PLANT_ID;
-
-    if (envAccount && envPassword) {
-      console.log(
-        '[CredentialsService] ⚠️ Using environment variable credentials (development mode only)'
-      );
-      return {
-        account: envAccount,
-        password: envPassword,
-        plantId: envPlantId,
-      };
-    }
-  }
-
-  // No credentials available
-  console.error('[CredentialsService] ❌ No Growatt credentials available');
-  throw new Error(
-    dataMode === 'development'
-      ? 'No Growatt credentials available. Please set them in Settings or environment variables.'
-      : 'No Growatt credentials available. Please set them in Settings > API Credentials.'
-  );
+  const { data } = await supabase
+    .from('user_settings')
+    .select('growatt_email, growatt_plant_id')
+    .maybeSingle();
+  return {
+    account: data?.growatt_email ?? '',
+    password: '',
+    plantId: data?.growatt_plant_id ?? undefined,
+  };
 }
 
-/**
- * Store Growatt credentials in user settings
- */
+/** Persist Growatt credentials to Vault + settings via the RPC. */
 export async function storeGrowattCredentials(
   credentials: GrowattCredentials
 ): Promise<void> {
-  try {
-    const existingSettings = (await getUserStoredCredentials()) || {};
-    const updatedSettings = {
-      ...existingSettings,
-      growatt: {
-        account: credentials.account,
-        password: credentials.password,
-        plantId: credentials.plantId,
-      },
-    };
-
-    if (typeof localStorage !== 'undefined') {
-      // Web: Use localStorage
-      localStorage.setItem('userCredentials', JSON.stringify(updatedSettings));
-    } else {
-      // React Native: Use AsyncStorage
-      const AsyncStorage =
-        require('@react-native-async-storage/async-storage').default;
-      await AsyncStorage.setItem(
-        'userCredentials',
-        JSON.stringify(updatedSettings)
-      );
-    }
-
-    console.log(
-      '[CredentialsService] ✅ Growatt credentials stored successfully'
-    );
-  } catch (error) {
-    console.error(
-      '[CredentialsService] ❌ Failed to store credentials:',
-      error
-    );
-    throw new Error('Failed to store credentials');
-  }
+  const { error } = await supabase.rpc('save_user_credentials', {
+    p_growatt_email: credentials.account,
+    p_growatt_password: credentials.password,
+  });
+  if (error) throw new Error(error.message);
 }
 
-/**
- * Get user-stored credentials from local storage
- */
-async function getUserStoredCredentials(): Promise<any> {
-  try {
-    let credentialsString: string | null = null;
-
-    if (typeof localStorage !== 'undefined') {
-      // Web: Use localStorage
-      credentialsString = localStorage.getItem('userCredentials');
-    } else {
-      // React Native: Use AsyncStorage
-      const AsyncStorage =
-        require('@react-native-async-storage/async-storage').default;
-      credentialsString = await AsyncStorage.getItem('userCredentials');
-    }
-
-    if (credentialsString) {
-      return JSON.parse(credentialsString);
-    }
-
-    return null;
-  } catch (error) {
-    console.warn(
-      '[CredentialsService] Error reading stored credentials:',
-      error
-    );
-    return null;
-  }
-}
-
-/**
- * Clear stored credentials
- */
+/** No-op: there are no client-side credentials to clear (logout keeps Vault data). */
 export async function clearStoredCredentials(): Promise<void> {
-  try {
-    if (typeof localStorage !== 'undefined') {
-      // Web: Clear localStorage
-      localStorage.removeItem('userCredentials');
-    } else {
-      // React Native: Clear AsyncStorage
-      const AsyncStorage =
-        require('@react-native-async-storage/async-storage').default;
-      await AsyncStorage.removeItem('userCredentials');
-    }
-
-    console.log('[CredentialsService] ✅ Stored credentials cleared');
-  } catch (error) {
-    console.error(
-      '[CredentialsService] ❌ Failed to clear credentials:',
-      error
-    );
-  }
+  /* intentionally empty */
 }
 
-/**
- * Check if credentials are available
- */
+/** Whether the current user has Growatt credentials configured. */
 export async function hasStoredCredentials(): Promise<boolean> {
-  try {
-    const credentials = await getUserStoredCredentials();
-    return !!(credentials?.growatt?.account && credentials?.growatt?.password);
-  } catch {
-    return false;
-  }
+  const { data } = await supabase
+    .from('user_settings')
+    .select('growatt_password_secret_id')
+    .maybeSingle();
+  return data?.growatt_password_secret_id != null;
 }

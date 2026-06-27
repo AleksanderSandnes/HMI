@@ -1,34 +1,16 @@
 /**
- * Settings API Service
- * Handles API calls for saving and retrieving user settings to/from backend
+ * Settings service — persists per-user integration settings to Supabase. Sensitive values
+ * (Weather.com API key, Growatt password) go into Vault via the `save_user_credentials`
+ * RPC and are never stored in a plain column or on the client. The Growatt plant id is no
+ * longer collected: the Java service derives it from the server-side Growatt login.
  */
-
-import { getDataMode } from './dataConfig';
-
-// Get the correct API URL based on mode
-function getApiBaseUrl(): string {
-  const dataMode = getDataMode();
-
-  if (dataMode === 'development') {
-    return (
-      process.env.EXPO_PUBLIC_WEATHER_API_DEVELOPMENT || 'http://localhost:5000'
-    );
-  } else if (dataMode === 'production') {
-    return (
-      process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION ||
-      'https://weatherapi-sbwb.onrender.com'
-    );
-  }
-
-  // Default fallback
-  return 'https://weatherapi-sbwb.onrender.com';
-}
+import { supabase } from './supabaseClient';
 
 export interface ApiSettingsData {
   growatt?: {
     email: string;
     password: string;
-    plantId?: string;
+    plantId?: string; // accepted for back-compat but ignored (derived server-side)
   };
   weather?: {
     apiKey: string;
@@ -48,229 +30,64 @@ export interface ApiSettingsResponse {
   };
 }
 
-/**
- * Get authentication token from storage
- */
-async function getAuthToken(): Promise<string | null> {
-  try {
-    console.log('[SettingsAPI] Getting auth token...');
-    if (typeof localStorage !== 'undefined') {
-      // Web: Use localStorage
-      const userInfo = localStorage.getItem('userInfo');
-      console.log('[SettingsAPI] Web - userInfo from localStorage:', userInfo);
-      if (userInfo) {
-        const user = JSON.parse(userInfo);
-        console.log('[SettingsAPI] Web - parsed user:', user);
-        console.log('[SettingsAPI] Web - token:', user.token);
-        return user.token || null;
-      }
-    } else {
-      // React Native: Use AsyncStorage
-      const AsyncStorage =
-        require('@react-native-async-storage/async-storage').default;
-      const userInfo = await AsyncStorage.getItem('userInfo');
-      console.log(
-        '[SettingsAPI] Mobile - userInfo from AsyncStorage:',
-        userInfo
-      );
-      if (userInfo) {
-        const user = JSON.parse(userInfo);
-        console.log('[SettingsAPI] Mobile - parsed user:', user);
-        console.log('[SettingsAPI] Mobile - token:', user.token);
-        return user.token || null;
-      }
-    }
-    console.log('[SettingsAPI] No token found');
-    return null;
-  } catch (error) {
-    console.error('[SettingsAPI] Error getting auth token:', error);
-    return null;
-  }
+/** Save any subset of Growatt/Weather settings (secrets routed to Vault by the RPC). */
+export async function saveApiSettings(settings: ApiSettingsData): Promise<void> {
+  const { error } = await supabase.rpc('save_user_credentials', {
+    p_weather_station_id: settings.weather?.stationId ?? null,
+    p_weather_api_key: settings.weather?.apiKey ?? null,
+    p_growatt_email: settings.growatt?.email ?? null,
+    p_growatt_password: settings.growatt?.password ?? null,
+  });
+  if (error) throw new Error(error.message);
 }
 
-/**
- * Save API settings to backend
- */
-export async function saveApiSettings(
-  settings: ApiSettingsData
-): Promise<void> {
-  try {
-    console.log('[SettingsAPI] Saving settings:', settings);
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    // Add authentication
-    const token = await getAuthToken();
-    console.log(
-      '[SettingsAPI] Retrieved token:',
-      token ? `${token.substring(0, 20)}...` : 'null'
-    );
-
-    if (!token) {
-      throw new Error('Authentication required. Please log in again.');
-    }
-    headers['Authorization'] = `Bearer ${token}`;
-
-    const apiUrl = `${getApiBaseUrl()}/api/settings/api`;
-    console.log('[SettingsAPI] Making request to:', apiUrl);
-    console.log('[SettingsAPI] Headers:', headers);
-
-    const response = await fetch(apiUrl, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(settings),
-    });
-
-    console.log('[SettingsAPI] Response status:', response.status);
-    console.log('[SettingsAPI] Response ok:', response.ok);
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('[SettingsAPI] Response error:', error);
-      throw new Error(`Failed to save settings: ${error}`);
-    }
-
-    console.log('[SettingsAPI] ✅ Settings saved to backend successfully');
-  } catch (error) {
-    console.error('[SettingsAPI] ❌ Failed to save settings:', error);
-    throw error;
-  }
-}
-
-/**
- * Save Growatt API settings specifically
- */
 export async function saveGrowattApiSettings(settings: {
   growatt: ApiSettingsData['growatt'];
 }): Promise<void> {
   return saveApiSettings(settings);
 }
 
-/**
- * Save Weather API settings specifically
- */
 export async function saveWeatherApiSettings(settings: {
   weather: ApiSettingsData['weather'];
 }): Promise<void> {
   return saveApiSettings(settings);
 }
 
-/**
- * Get API settings from backend
- */
+/** Read the current user's settings (presence flags, not the secret values). */
 export async function getApiSettings(): Promise<ApiSettingsResponse | null> {
-  try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    // Add authentication
-    const token = await getAuthToken();
-    if (!token) {
-      console.warn('[SettingsAPI] No authentication token available');
-      return null; // Return null instead of throwing error for graceful degradation
-    }
-    headers['Authorization'] = `Bearer ${token}`;
-
-    const response = await fetch(`${getApiBaseUrl()}/api/settings/api`, {
-      method: 'GET',
-      headers,
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null; // No settings found
-      }
-      const error = await response.text();
-      throw new Error(`Failed to get settings: ${error}`);
-    }
-
-    const data = await response.json();
-    console.log(
-      '[SettingsAPI] ✅ Settings retrieved from backend successfully'
-    );
-    // The backend wraps the payload as { success, apiSettings: {...} }. Unwrap it
-    // here so callers get the flat { growatt, weather } shape (ApiSettingsResponse).
-    // Fall back to the raw body in case an older endpoint returns it directly.
-    return (data?.apiSettings ?? data) as ApiSettingsResponse;
-  } catch (error) {
-    console.error('[SettingsAPI] ❌ Failed to get settings:', error);
-    throw error;
-  }
+  const { data, error } = await supabase
+    .from('user_settings')
+    .select(
+      'growatt_email, growatt_plant_id, growatt_password_secret_id, weather_station_id, weather_api_key_secret_id'
+    )
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+  return {
+    growatt: {
+      email: data.growatt_email ?? '',
+      plantId: data.growatt_plant_id ?? '',
+      hasPassword: data.growatt_password_secret_id != null,
+    },
+    weather: {
+      stationId: data.weather_station_id ?? '',
+      hasApiKey: data.weather_api_key_secret_id != null,
+    },
+  };
 }
 
-/**
- * Clear API settings from backend
- */
+/** Clear all integration credentials for the current user. */
 export async function clearApiSettings(): Promise<void> {
-  try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    // Add authentication
-    const token = await getAuthToken();
-    if (!token) {
-      throw new Error('Authentication required. Please log in again.');
-    }
-    headers['Authorization'] = `Bearer ${token}`;
-
-    const response = await fetch(`${getApiBaseUrl()}/api/settings/api`, {
-      method: 'DELETE',
-      headers,
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to clear settings: ${error}`);
-    }
-
-    console.log('[SettingsAPI] ✅ Settings cleared from backend successfully');
-  } catch (error) {
-    console.error('[SettingsAPI] ❌ Failed to clear settings:', error);
-    throw error;
-  }
+  const g = await supabase.rpc('clear_user_credentials', { p_kind: 'growatt' });
+  if (g.error) throw new Error(g.error.message);
+  const w = await supabase.rpc('clear_user_credentials', { p_kind: 'weather' });
+  if (w.error) throw new Error(w.error.message);
 }
 
-/**
- * Clear Weather API settings specifically
- */
+/** Clear just the Weather.com credentials. */
 export async function clearWeatherApiSettings(): Promise<void> {
-  try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    // Add authentication
-    const token = await getAuthToken();
-    if (!token) {
-      throw new Error('Authentication required. Please log in again.');
-    }
-    headers['Authorization'] = `Bearer ${token}`;
-
-    const response = await fetch(`${getApiBaseUrl()}/api/settings/api`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify({
-        weather: {
-          apiKey: '',
-          stationId: '',
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to clear weather settings: ${error}`);
-    }
-
-    console.log(
-      '[SettingsAPI] ✅ Weather settings cleared from backend successfully'
-    );
-  } catch (error) {
-    console.error('[SettingsAPI] ❌ Failed to clear weather settings:', error);
-    throw error;
-  }
+  const { error } = await supabase.rpc('clear_user_credentials', {
+    p_kind: 'weather',
+  });
+  if (error) throw new Error(error.message);
 }

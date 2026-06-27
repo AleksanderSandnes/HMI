@@ -1,9 +1,9 @@
 /**
- * Notifications API Service
- * Talks to the Node weatherAPI `/api/notifications` endpoints (auth-gated).
+ * Notifications service — reads/writes the Supabase `notifications` table directly
+ * (RLS-scoped to the signed-in user) and exposes a Realtime subscription so the web
+ * notification center updates live instead of polling.
  */
-
-import { getDataMode } from './dataConfig';
+import { supabase, getCurrentUserId } from './supabaseClient';
 
 export type NotificationLevel = 'success' | 'error' | 'info' | 'warning';
 export type NotificationType = 'weather_sync' | 'solar_sync' | 'system';
@@ -18,102 +18,103 @@ export interface NotificationItem {
   createdAt: string;
 }
 
-function getApiBaseUrl(): string {
-  const dataMode = getDataMode();
-  if (dataMode === 'production') {
-    return (
-      process.env.EXPO_PUBLIC_WEATHER_API_PRODUCTION ||
-      'https://weatherapi-sbwb.onrender.com'
-    );
-  }
-  return (
-    process.env.EXPO_PUBLIC_WEATHER_API_DEVELOPMENT || 'http://localhost:5000'
-  );
-}
-
-async function getAuthToken(): Promise<string | null> {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const userInfo = localStorage.getItem('userInfo');
-      if (userInfo) return JSON.parse(userInfo).token || null;
-    } else {
-      const AsyncStorage =
-        require('@react-native-async-storage/async-storage').default;
-      const userInfo = await AsyncStorage.getItem('userInfo');
-      if (userInfo) return JSON.parse(userInfo).token || null;
-    }
-    return null;
-  } catch (error) {
-    console.error('[NotificationsAPI] Error getting auth token:', error);
-    return null;
-  }
-}
-
-async function authedRequest(
-  path: string,
-  method: 'GET' | 'POST' | 'DELETE' = 'GET',
-  body?: unknown
-): Promise<any> {
-  const token = await getAuthToken();
-  if (!token) {
-    throw new Error('Authentication required. Please log in again.');
-  }
-
-  const response = await fetch(`${getApiBaseUrl()}/api/notifications${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error('Session expired. Please log in again.');
-    }
-    let detail = `${response.status} ${response.statusText}`;
-    try {
-      const data = await response.json();
-      if (data?.error || data?.message) detail = data.error || data.message;
-    } catch {
-      /* ignore parse errors */
-    }
-    throw new Error(detail);
-  }
-
-  if (response.status === 204) return null;
-  return response.json();
+function toItem(row: Record<string, any>): NotificationItem {
+  return {
+    id: row.id,
+    type: row.type,
+    level: row.level,
+    title: row.title,
+    message: row.message ?? '',
+    meta: row.meta ?? null,
+    createdAt: row.created_at,
+  };
 }
 
 /** Fetch all notifications for the current user (newest first). */
 export async function fetchNotifications(): Promise<NotificationItem[]> {
-  const data = await authedRequest('/', 'GET');
-  return Array.isArray(data?.notifications) ? data.notifications : [];
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(toItem);
 }
 
-/** Fetch just the unread (= total) count. */
+/** Fetch the unread (= total) count. */
 export async function fetchNotificationCount(): Promise<number> {
-  const data = await authedRequest('/count', 'GET');
-  return typeof data?.count === 'number' ? data.count : 0;
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true });
+  if (error) throw new Error(error.message);
+  return count ?? 0;
 }
 
-/** Mark one notification as read (hard delete on the server). */
+/** Mark one notification as read (hard delete). */
 export async function dismissNotification(id: string): Promise<void> {
-  await authedRequest(`/${id}`, 'DELETE');
+  const { error } = await supabase.from('notifications').delete().eq('id', id);
+  if (error) throw new Error(error.message);
 }
 
-/** Mark all notifications as read (clear) for the current user. */
+/** Clear all notifications for the current user. */
 export async function clearNotifications(): Promise<void> {
-  await authedRequest('/clear', 'DELETE');
+  const uid = await getCurrentUserId();
+  if (!uid) return;
+  const { error } = await supabase
+    .from('notifications')
+    .delete()
+    .eq('auth_id', uid);
+  if (error) throw new Error(error.message);
 }
 
-/** Register an Expo push token for this device. */
+/**
+ * Subscribe to live notification changes for the current user. Calls `onChange` on any
+ * insert/delete. Returns an unsubscribe function.
+ */
+export function subscribeNotifications(onChange: () => void): () => void {
+  const channel = supabase
+    .channel('notifications-center')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'notifications' },
+      () => onChange()
+    )
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+// ---- Expo push token registration (stored on profiles.expo_push_tokens) ----
+
 export async function registerPushToken(token: string): Promise<void> {
-  await authedRequest('/push-token', 'POST', { token });
+  const uid = await getCurrentUserId();
+  if (!uid) return;
+  const { data } = await supabase
+    .from('profiles')
+    .select('expo_push_tokens')
+    .eq('auth_id', uid)
+    .single();
+  const tokens = new Set<string>(data?.expo_push_tokens ?? []);
+  tokens.add(token);
+  await supabase
+    .from('profiles')
+    .update({ expo_push_tokens: [...tokens] })
+    .eq('auth_id', uid);
 }
 
-/** Remove an Expo push token (e.g. on logout). */
 export async function unregisterPushToken(token: string): Promise<void> {
-  await authedRequest('/push-token', 'DELETE', { token });
+  const uid = await getCurrentUserId();
+  if (!uid) return;
+  const { data } = await supabase
+    .from('profiles')
+    .select('expo_push_tokens')
+    .eq('auth_id', uid)
+    .single();
+  const tokens = (data?.expo_push_tokens ?? []).filter(
+    (t: string) => t !== token
+  );
+  await supabase
+    .from('profiles')
+    .update({ expo_push_tokens: tokens })
+    .eq('auth_id', uid);
 }
