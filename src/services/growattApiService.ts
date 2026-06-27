@@ -62,11 +62,18 @@ const API_CONFIG = {
 };
 
 /**
- * Get current environment config
+ * Get current environment config. The Java service URL is overridable via env
+ * (EXPO_PUBLIC_JAVA_API in production, EXPO_PUBLIC_GROWATT_API in development) so the
+ * deployed Render URL isn't hardcoded.
  */
 function getApiConfig() {
   const mode = getDataMode();
-  return mode === 'production' ? API_CONFIG.production : API_CONFIG.development;
+  const base = mode === 'production' ? API_CONFIG.production : API_CONFIG.development;
+  const override =
+    mode === 'production'
+      ? process.env.EXPO_PUBLIC_JAVA_API
+      : process.env.EXPO_PUBLIC_GROWATT_API?.replace('/api', '');
+  return override ? { ...base, baseUrl: override } : base;
 }
 
 /**
