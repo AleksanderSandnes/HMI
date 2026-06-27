@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Pressable,
-  ScrollView,
   StyleSheet,
   LayoutChangeEvent,
   ActivityIndicator,
@@ -16,7 +15,6 @@ import Svg, {
   LinearGradient as SvgGradient,
   Stop,
   Line,
-  Rect,
   Circle,
   Text as SvgText,
   G,
@@ -41,17 +39,7 @@ interface PremiumLineChartProps {
   loading?: boolean;
   height?: number;
   emptyText?: string;
-  /**
-   * When true, the plot grows to give every point a minimum width and becomes
-   * horizontally scrollable (used by the weekly view, which has too many points
-   * to read when squeezed into one screen). The Y axis stays fixed.
-   */
-  scrollable?: boolean;
 }
-
-// Minimum horizontal space per point when scrolling, so a dense series (e.g. a
-// full week of samples) stays legible instead of being crammed into the screen.
-const MIN_SLOT = 64;
 
 interface Pt {
   x: number;
@@ -90,7 +78,6 @@ function fmt(v: number, range: number): string {
 const styles = StyleSheet.create({
   wrap: { width: '100%', flex: 1, minHeight: 220 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  yAxis: { position: 'absolute', left: 0, top: 0 },
   empty: { color: premiumTheme.text.muted, fontSize: 14, fontWeight: '600' },
   tooltip: {
     position: 'absolute',
@@ -136,7 +123,6 @@ export default function PremiumLineChart({
   loading = false,
   height = 340,
   emptyText = 'No data for this period',
-  scrollable = false,
 }: PremiumLineChartProps) {
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
@@ -184,13 +170,7 @@ export default function PremiumLineChart({
     return <View style={[styles.wrap, { height }]} onLayout={onLayout} />;
   }
 
-  // When scrollable, widen the canvas so each point gets at least MIN_SLOT px;
-  // the chart then overflows the viewport (`width`) and scrolls horizontally.
-  const naturalW = PAD.left + PAD.right + Math.max(1, n - 1) * MIN_SLOT;
-  const isScroll = scrollable && naturalW > width;
-  const chartW = isScroll ? naturalW : width;
-
-  const innerW = Math.max(10, chartW - PAD.left - PAD.right);
+  const innerW = Math.max(10, width - PAD.left - PAD.right);
   const innerH = Math.max(10, height - PAD.top - PAD.bottom);
 
   const rawMin = Math.min(...allValues);
@@ -241,14 +221,18 @@ export default function PremiumLineChart({
   let tipTop = 0;
   if (active !== null) {
     const cx = xFor(active);
-    tipLeft = Math.min(Math.max(cx - 60, 4), chartW - 132);
+    tipLeft = Math.min(Math.max(cx - 60, 4), width - 132);
     const topVal = Math.min(...cleanSeries.map((s) => yFor(s.data[active] ?? 0)));
     tipTop = Math.max(topVal - 18 - cleanSeries.length * 18, 2);
   }
 
-  const plot = (
-    <>
-      <Svg width={chartW} height={height}>
+  return (
+    <View
+      style={[styles.wrap, { height }]}
+      onLayout={onLayout}
+      {...(Platform.OS !== 'web' ? panResponder.panHandlers : {})}
+    >
+      <Svg width={width} height={height}>
         <Defs>
           {cleanSeries.map((s, si) => (
             <SvgGradient
@@ -266,8 +250,7 @@ export default function PremiumLineChart({
           ))}
         </Defs>
 
-        {/* Gridlines (Y labels are drawn inline here when the chart fits; when
-            scrolling they live in the fixed gutter overlay instead). */}
+        {/* Gridlines + Y labels */}
         {grids.map((g, i) => (
           <G key={`grid-${i}`}>
             <Line
@@ -278,19 +261,17 @@ export default function PremiumLineChart({
               stroke="rgba(255,255,255,0.07)"
               strokeWidth={1}
             />
-            {!isScroll && (
-              <SvgText
-                x={PAD.left - 10}
-                y={g.y + 4}
-                fill={premiumTheme.text.muted}
-                fontSize={11.5}
-                fontWeight="600"
-                fontFamily={CHART_FONT}
-                textAnchor="end"
-              >
-                {fmt(g.value, range)}
-              </SvgText>
-            )}
+            <SvgText
+              x={PAD.left - 10}
+              y={g.y + 4}
+              fill={premiumTheme.text.muted}
+              fontSize={11.5}
+              fontWeight="600"
+              fontFamily={CHART_FONT}
+              textAnchor="end"
+            >
+              {fmt(g.value, range)}
+            </SvgText>
           </G>
         ))}
 
@@ -430,75 +411,6 @@ export default function PremiumLineChart({
           ))}
         </View>
       )}
-    </>
-  );
-
-  // Fits the viewport: render in place. On native the wrapper's PanResponder
-  // drives the scrub tooltip (the parent vertical ScrollView still scrolls).
-  if (!isScroll) {
-    return (
-      <View
-        style={[styles.wrap, { height }]}
-        onLayout={onLayout}
-        {...(Platform.OS !== 'web' ? panResponder.panHandlers : {})}
-      >
-        {plot}
-      </View>
-    );
-  }
-
-  // Too many points to fit: scroll the plot horizontally and pin the Y axis.
-  // The wrapper's PanResponder is intentionally not attached here so the
-  // horizontal ScrollView owns the gesture on native.
-  return (
-    <View style={[styles.wrap, { height }]} onLayout={onLayout}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator
-        style={{ height }}
-        contentContainerStyle={{ width: chartW, height }}
-      >
-        {plot}
-      </ScrollView>
-
-      {/* Fixed Y-axis gutter — sits above the scrolling plot. Its gradient
-          fill fades the scrolled line/area out behind the value labels. */}
-      <Svg
-        width={PAD.left + 8}
-        height={height}
-        style={styles.yAxis}
-        pointerEvents="none"
-      >
-        <Defs>
-          <SvgGradient id="yGutter" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor={premiumTheme.bg.base} stopOpacity={0} />
-            <Stop offset="0.18" stopColor={premiumTheme.bg.base} stopOpacity={1} />
-            <Stop offset="0.72" stopColor={premiumTheme.bg.base} stopOpacity={1} />
-            <Stop offset="1" stopColor={premiumTheme.bg.base} stopOpacity={0} />
-          </SvgGradient>
-        </Defs>
-        <Rect
-          x={0}
-          y={0}
-          width={PAD.left + 8}
-          height={height}
-          fill="url(#yGutter)"
-        />
-        {grids.map((g, i) => (
-          <SvgText
-            key={`yl-${i}`}
-            x={PAD.left - 10}
-            y={g.y + 4}
-            fill={premiumTheme.text.muted}
-            fontSize={11.5}
-            fontWeight="600"
-            fontFamily={CHART_FONT}
-            textAnchor="end"
-          >
-            {fmt(g.value, range)}
-          </SvgText>
-        ))}
-      </Svg>
     </View>
   );
 }

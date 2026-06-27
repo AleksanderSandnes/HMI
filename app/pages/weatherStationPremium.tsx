@@ -415,7 +415,6 @@ export default function WeatherStationPremium(): React.ReactElement {
         unit={meta.unit === 'UV' ? '' : meta.unit}
         height={chartHeight}
         emptyText="No data for this period"
-        scrollable={timespan === 'weekly'}
       />
     </GlassCard>
   );
