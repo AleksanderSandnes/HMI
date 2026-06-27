@@ -20,8 +20,8 @@ public class TotalDataInvResponse implements GrowattResponse {
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public class Obj {
-		
+	public static class Obj {
+
 		private String epvToday;
 		private String epvTotal;
 		private String pac;

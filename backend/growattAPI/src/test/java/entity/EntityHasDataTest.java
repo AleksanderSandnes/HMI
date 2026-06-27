@@ -27,32 +27,26 @@ class EntityHasDataTest {
 
 	@Test
 	void dayResponse_hasData_trueWhenAnyIntervalPositive() {
-		DayResponse holder = new DayResponse();
-		DayResponse.Obj obj = holder.new Obj(withProduction());
-		assertTrue(new DayResponse(1L, obj).hasData());
+		assertTrue(new DayResponse(1L, new DayResponse.Obj(withProduction())).hasData());
 	}
 
 	@Test
 	void dayResponse_hasData_falseWhenAllNullOrZero() {
-		DayResponse holder = new DayResponse();
-		DayResponse.Obj obj = holder.new Obj(noProduction());
-		assertFalse(new DayResponse(1L, obj).hasData());
+		assertFalse(new DayResponse(1L, new DayResponse.Obj(noProduction())).hasData());
 	}
 
 	@Test
 	void dayResponse_hasData_falseWhenObjOrListNull() {
 		assertFalse(new DayResponse(1L, null).hasData());
-		DayResponse holder = new DayResponse();
-		assertFalse(new DayResponse(1L, holder.new Obj(null)).hasData());
+		assertFalse(new DayResponse(1L, new DayResponse.Obj(null)).hasData());
 	}
 
 	// ---- MonthResponse (energy per day) ----
 
 	@Test
 	void monthResponse_hasData_reflectsEnergyPresence() {
-		MonthResponse holder = new MonthResponse();
-		assertTrue(new MonthResponse(1L, holder.new Obj(withProduction())).hasData());
-		assertFalse(new MonthResponse(1L, holder.new Obj(noProduction())).hasData());
+		assertTrue(new MonthResponse(1L, new MonthResponse.Obj(withProduction())).hasData());
+		assertFalse(new MonthResponse(1L, new MonthResponse.Obj(noProduction())).hasData());
 		assertFalse(new MonthResponse(1L, null).hasData());
 	}
 
@@ -60,9 +54,8 @@ class EntityHasDataTest {
 
 	@Test
 	void yearResponse_hasData_reflectsEnergyPresence() {
-		YearResponse holder = new YearResponse();
-		assertTrue(new YearResponse(1L, holder.new Obj(withProduction())).hasData());
-		assertFalse(new YearResponse(1L, holder.new Obj(noProduction())).hasData());
+		assertTrue(new YearResponse(1L, new YearResponse.Obj(withProduction())).hasData());
+		assertFalse(new YearResponse(1L, new YearResponse.Obj(noProduction())).hasData());
 		assertFalse(new YearResponse(1L, null).hasData());
 	}
 
@@ -81,15 +74,13 @@ class EntityHasDataTest {
 
 	@Test
 	void totalDataResponse_hasData_trueOnlyWhenObjPresent() {
-		TotalDataResponse holder = new TotalDataResponse();
-		assertTrue(new TotalDataResponse(1L, holder.new Obj()).hasData());
+		assertTrue(new TotalDataResponse(1L, new TotalDataResponse.Obj()).hasData());
 		assertFalse(new TotalDataResponse(1L, null).hasData());
 	}
 
 	@Test
 	void totalDataInvResponse_hasData_trueOnlyWhenObjPresent() {
-		TotalDataInvResponse holder = new TotalDataInvResponse();
-		assertTrue(new TotalDataInvResponse(1L, holder.new Obj()).hasData());
+		assertTrue(new TotalDataInvResponse(1L, new TotalDataInvResponse.Obj()).hasData());
 		assertFalse(new TotalDataInvResponse(1L, null).hasData());
 	}
 }

@@ -10,12 +10,14 @@ import org.springframework.stereotype.Component;
 import controller.GrowattWebClient;
 import entity.DayResponse;
 import entity.EnergyRequest;
+import entity.IntegrationHealth;
 import entity.LoginRequest;
 import entity.Notification;
 import entity.UserSettings;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import repository.IntegrationHealthRepository;
 import repository.NotificationRepository;
 import repository.UserSettingsRepository;
 
@@ -45,6 +47,7 @@ public class SolarBackfillJob {
 	private final GrowattDataService growattDataService;
 	private final UserSettingsRepository userSettingsRepository;
 	private final NotificationRepository notificationRepository;
+	private final IntegrationHealthRepository integrationHealthRepository;
 
 	/** Fire daily at 00:01 (second minute hour day month weekday). */
 	@Scheduled(cron = "0 1 0 * * *")
@@ -104,11 +107,23 @@ public class SolarBackfillJob {
 					: String.format("Synced solar data for %s — no production recorded (plant %s).", dayDate, plantId);
 
 			saveNotification(user, "success", "Solar data synced", message);
+			recordHealth(user, "ok", null);
 			log.info("[SolarCron] Backfilled solar for user {} ({} kWh).", user.getAuthId(), kwh);
 		} catch (Exception e) {
 			log.error("[SolarCron] Backfill failed for user {}: {}", user.getAuthId(), e.getMessage());
 			saveNotification(user, "error", "Solar sync failed",
 					"Could not sync solar data for " + dayDate + ": " + e.getMessage());
+			recordHealth(user, "error", e.getMessage());
+		}
+	}
+
+	/** Append a growatt health row (best-effort) so the outage-monitor can detect outages. */
+	private void recordHealth(UserSettings user, String status, String detail) {
+		try {
+			integrationHealthRepository.save(
+					new IntegrationHealth(user.getAuthId(), "growatt", status, detail));
+		} catch (Exception e) {
+			log.warn("[SolarCron] Failed to record health for user {}: {}", user.getAuthId(), e.getMessage());
 		}
 	}
 

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
@@ -25,9 +26,10 @@ public class TotalDataResponse implements GrowattResponse {
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	@Getter
+	@Setter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public class Obj {
+	public static class Obj {
 		
 		@JsonProperty("eRadiant") 
 	    private String eRadiant;

@@ -24,8 +24,8 @@ public class YearResponse implements GrowattResponse {
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public class Obj {
-		
+	public static class Obj {
+
 		private List<Double> energy;
 
 	}

@@ -1,5 +1,8 @@
 package controller;
 
+import java.time.Duration;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.client.reactive.ClientHttpConnector;
@@ -10,8 +13,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import entity.DayResponse;
@@ -21,185 +25,243 @@ import entity.MonthResponse;
 import entity.TotalDataInvResponse;
 import entity.TotalDataResponse;
 import entity.YearResponse;
+import entity.growatt.GwChartResponse;
+import entity.growatt.GwDevicesResponse;
 import io.micrometer.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.ProxyProvider;
-import org.springframework.http.HttpHeaders;
+import reactor.util.retry.Retry;
 
+/**
+ * Stateful client for {@code server.growatt.com}, updated to the Growatt <b>v2.0.0</b> web
+ * API (the old {@code /indexbC/*} endpoints our app used were deprecated, which is the most
+ * likely cause of the recurring multi-day live-data outages). The new endpoints are:
+ * <ul>
+ *   <li>{@code /energy/compare/getDevicesDayChart}   (params {@code pac})</li>
+ *   <li>{@code /energy/compare/getDevicesMonthChart} (params {@code energy,autoEnergy})</li>
+ *   <li>{@code /energy/compare/getDevicesYearChart}  (params {@code energy,autoEnergy})</li>
+ *   <li>{@code /panel/getDevicesByPlantList}         (cumulative totals)</li>
+ * </ul>
+ * Each chart request sends a {@code jsonData=[{"type":"plant","sn":<plantId>,"params":...}]}
+ * form field. Responses are parsed into raw {@link GwChartResponse}/{@link GwDevicesResponse}
+ * shapes and then mapped into our existing public DTOs, so the controller, cache, and
+ * frontend contracts are unchanged.
+ *
+ * <p>IP-block hardening (none of this exists upstream): browser-like request headers, a small
+ * retry-with-backoff for transient upstream failures, and lenient JSON parsing. The existing
+ * {@code PROXY_URL}/{@code PROXY_PORT} constructor remains the escalation lever if Growatt
+ * starts blocking the server's egress IP.</p>
+ */
 @Slf4j
 @Component
 public class GrowattWebClient {
-	
+
 	public static final String ONE_PLANT_ID = "onePlantId";
 
-	public static final String SELECTED_USER_ID = "selectedUserId";
+	/** A real browser User-Agent — plain HTTP-client UAs are an easy bot-block signal. */
+	private static final String USER_AGENT =
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+			+ "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
-	private MultiValueMap<String, String> cookieJar = new LinkedMultiValueMap<>();
-	
-	private WebClient client;
-	
-	/**
-	 * Constructor without a proxy
-	 */
+	private final MultiValueMap<String, String> cookieJar = new LinkedMultiValueMap<>();
+
+	private final WebClient client;
+
+	private final ObjectMapper objectMapper = new ObjectMapper()
+			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+	/** Constructor without a proxy. */
 	public GrowattWebClient() {
-		this(HttpClient
-			.create()
-			.followRedirect(true));
+		this(HttpClient.create().followRedirect(true));
 	}
-	
-	/**
-	 * Constructor when behind a proxy
-	 * 
-	 * @param proxyURL
-	 * @param proxyPort
-	 */
+
+	/** Constructor when behind a proxy. */
 	public GrowattWebClient(String proxyURL, int proxyPort) {
-		this(HttpClient
-			.create()
-			.followRedirect(true)
-			.proxy(proxy-> proxy.type(ProxyProvider.Proxy.HTTP).host(proxyURL).port(proxyPort)));
+		this(HttpClient.create()
+				.followRedirect(true)
+				.proxy(proxy -> proxy.type(ProxyProvider.Proxy.HTTP).host(proxyURL).port(proxyPort)));
 	}
-	
+
 	private GrowattWebClient(HttpClient httpClient) {
 		ClientHttpConnector clientHttpConnector = new ReactorClientHttpConnector(httpClient);
-		  
 		client = WebClient.builder()
-			.baseUrl("http://server.growatt.com")
-			.clientConnector(clientHttpConnector)
-			.build();
+				.baseUrl("https://server.growatt.com")
+				.clientConnector(clientHttpConnector)
+				.defaultHeader(HttpHeaders.USER_AGENT, USER_AGENT)
+				.defaultHeader(HttpHeaders.REFERER, "https://server.growatt.com/index")
+				.defaultHeader(HttpHeaders.ACCEPT, "application/json, text/javascript, */*; q=0.01")
+				.defaultHeader("X-Requested-With", "XMLHttpRequest")
+				.build();
 	}
 
-	/** 
-	 * Get the internal plant id. Needed for following requests.
-	 * @return
-	 */
+	/** Internal plant id, set as a cookie during login; needed for the chart requests. */
 	public String getPlantId() {
-		return getCookie(ONE_PLANT_ID);
-	}
-	
-	private String getCookie(String cookie) {
-		return cookieJar.getFirst(cookie);
-	}
-		
-	private void writeCookies(MultiValueMap<String, String> myCookies, MultiValueMap<String, String> cookies) {
-		cookies.addAll(myCookies);
+		return cookieJar.getFirst(ONE_PLANT_ID);
 	}
 
-	private Mono<String> readCookies(MultiValueMap<String, String> myCookies, ClientResponse response) {
+	private void writeCookies(MultiValueMap<String, String> cookies) {
+		cookies.addAll(cookieJar);
+	}
+
+	private Mono<String> readCookies(ClientResponse response) {
 		MultiValueMap<String, ResponseCookie> cookies = response.cookies();
 		for (var key : cookies.keySet()) {
-			myCookies.add(key, cookies.getFirst(key).getValue());
-			log.debug(key + " : " + cookies.getFirst(key).getValue());
+			cookieJar.add(key, cookies.getFirst(key).getValue());
+			log.debug("{} : {}", key, cookies.getFirst(key).getValue());
 		}
 		return response.bodyToMono(String.class);
 	}
 
-	/**
-	 * Login into server.growatt.com. Initialize all needed cookies for the following requests.
-	 * 
-	 * @param loginRequest
-	 * @return
-	 */
+	/** Log into server.growatt.com and capture the session cookies (incl. the plant id). */
 	public String login(LoginRequest loginRequest) {
 		LinkedMultiValueMap<String, String> loginData = new LinkedMultiValueMap<>();
 		loginData.add("account", loginRequest.getAccount());
 		loginData.add("passwordCrc", loginRequest.getPasswordCrc());
-		
-		String login = client
-			.post()
-			.uri("/login")
-			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-			.body(BodyInserters.fromFormData(loginData))
-			.exchangeToMono(response -> readCookies(cookieJar, response))
-			.block();
-		
-		/*
-		var plantListTitle = client
-			.get()
-			.uri("/index/getPlantListTitle")
-			.cookies(cookies -> writeCookies(cookieJar, cookies))
-			.exchangeToMono(response -> readCookies(cookieJar, response))
-			.block();
-		*/
-		
-		return login;
-	}
-	
-	/**
-	 * Retrieve generic informations and about the power production.
-	 *
-	 * <p>This is a cumulative "as of now" snapshot and is <b>not</b> tied to a specific date.
-	 * The {@code date} is intentionally not forwarded to Growatt: sending one (e.g. a future
-	 * date relative to Growatt's server) makes the endpoint return {@code 400 Bad Request}.</p>
-	 */
-	public TotalDataResponse getTotalData(EnergyRequest energyRequest) {
-		return (TotalDataResponse) request("/indexbC/getTotalData", energyRequest.getPlantId(), null, TotalDataResponse.class);
+
+		return client.post()
+				.uri("/login")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.body(BodyInserters.fromFormData(loginData))
+				.exchangeToMono(this::readCookies)
+				.block();
 	}
 
-	/**
-	 * Retrieve the power production for a specific day. The date as part of the EnergyRequest must have the format yyyy-mm-dd, e.g. 2023-05-31.
-	 * The response contains 288 values for each five minute intervall of the day.
-	 */
-	public DayResponse getInvEnergyDayChart(EnergyRequest energyRequest) {
-		return (DayResponse) request("/indexbC/inv/getInvEnergyDayChart", energyRequest.getPlantId(), energyRequest.getDate(), DayResponse.class);
-	}
-	
-	/**
-	 * Retrieve the power production for a specific month. The date as part of the EnergyRequest must have the format yyyy-mm, e.g. 2023-05.
-	 * The response contains one value for each day of the month.
-	 */
-	public MonthResponse getInvEnergyMonthChart(EnergyRequest energyRequest) {
-		return (MonthResponse) request("/indexbC/inv/getInvEnergyMonthChart", energyRequest.getPlantId(), energyRequest.getDate(), MonthResponse.class);
-	}
-	
-	/**
-	 * Retrieve the power production for a specific year. The date as part of the EnergyRequest must have the format yyyy, e.g. 2023.
-	 * The response contains one value for each month of the month.
-	 */
-	public YearResponse getInvEnergyYearChart(EnergyRequest energyRequest) {
-		return (YearResponse) request("/indexbC/inv/getInvEnergyYearChart", energyRequest.getPlantId(), energyRequest.getDate(), YearResponse.class);
-	}
-	
-	/**
-	 * Retrieve some data about the power production for a specificc plant.
-	 *
-	 * <p>Like {@link #getTotalData}, this is a cumulative snapshot that is not tied to a date,
-	 * so the {@code date} is intentionally not forwarded to Growatt.</p>
-	 */
-	public TotalDataInvResponse getInvTotalData(EnergyRequest energyRequest) {
-		return (TotalDataInvResponse) request("/indexbC/inv/getInvTotalData", energyRequest.getPlantId(), null, TotalDataInvResponse.class);
+	// ---- Cumulative "as of now" snapshots (from the plant's device list) -----------------
+
+	public TotalDataResponse getTotalData(EnergyRequest request) {
+		GwDevicesResponse.Data d = devicesByPlant(request.getPlantId());
+		if (d == null) {
+			return new TotalDataResponse(null, null);
+		}
+		TotalDataResponse.Obj obj = new TotalDataResponse.Obj();
+		obj.setEToday(d.getEToday());
+		obj.setEMonth(d.getEMonth());
+		obj.setETotal(d.getETotal());
+		obj.setPac(d.getPac());
+		obj.setNominalPower(d.getNominalPower());
+		obj.setPlantId(d.getPlantId());
+		return new TotalDataResponse(1L, obj);
 	}
 
-	private Object request(String uri, String plantId, String date, Class<?> clazz) {
+	public TotalDataInvResponse getInvTotalData(EnergyRequest request) {
+		GwDevicesResponse.Data d = devicesByPlant(request.getPlantId());
+		if (d == null) {
+			return new TotalDataInvResponse(null, null);
+		}
+		TotalDataInvResponse.Obj obj = new TotalDataInvResponse.Obj(
+				str(d.getEToday()), str(d.getETotal()), str(d.getPac()));
+		return new TotalDataInvResponse(1L, obj);
+	}
+
+	private GwDevicesResponse.Data devicesByPlant(String plantId) {
+		LinkedMultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+		body.add("currPage", "1");
+		body.add("plantId", plantId);
+		GwDevicesResponse devices = postForm("/panel/getDevicesByPlantList", body, GwDevicesResponse.class);
+		return devices != null ? devices.firstDevice() : null;
+	}
+
+	// ---- Date-specific charts ------------------------------------------------------------
+
+	/** Day chart (5-minute power values). Date as {@code yyyy-MM-dd}; only the last ~3 months. */
+	public DayResponse getInvEnergyDayChart(EnergyRequest request) {
+		GwChartResponse.Datas datas = chart("/energy/compare/getDevicesDayChart",
+				request.getPlantId(), request.getDate(), null, "pac");
+		if (datas == null) {
+			return new DayResponse(null, null);
+		}
+		return new DayResponse(1L, new DayResponse.Obj(datas.getPac()));
+	}
+
+	/** Month chart (per-day energy totals). Date as {@code yyyy-MM}. */
+	public MonthResponse getInvEnergyMonthChart(EnergyRequest request) {
+		GwChartResponse.Datas datas = chart("/energy/compare/getDevicesMonthChart",
+				request.getPlantId(), request.getDate(), null, "energy,autoEnergy");
+		if (datas == null) {
+			return new MonthResponse(null, null);
+		}
+		return new MonthResponse(1L, new MonthResponse.Obj(datas.getEnergy()));
+	}
+
+	/** Year chart (per-month energy totals). Date as {@code yyyy}. */
+	public YearResponse getInvEnergyYearChart(EnergyRequest request) {
+		Integer year = parseYear(request.getDate());
+		GwChartResponse.Datas datas = chart("/energy/compare/getDevicesYearChart",
+				request.getPlantId(), null, year, "energy,autoEnergy");
+		if (datas == null) {
+			return new YearResponse(null, null);
+		}
+		return new YearResponse(1L, new YearResponse.Obj(datas.getEnergy()));
+	}
+
+	private GwChartResponse.Datas chart(String uri, String plantId, String date, Integer year, String params) {
+		GwChartResponse response = postForm(uri, createBody(plantId, date, year, params), GwChartResponse.class);
+		return response != null ? response.firstDatas() : null;
+	}
+
+	/** Build the v2.0.0 form body: plantId (+ optional date/year) + the jsonData descriptor. */
+	static LinkedMultiValueMap<String, String> createBody(String plantId, String date, Integer year, String params) {
 		LinkedMultiValueMap<String, String> data = new LinkedMultiValueMap<>();
-		if (StringUtils.isNotEmpty(plantId))
-			data.add("plantId", plantId);
-		if (StringUtils.isNotEmpty(date))
+		data.add("plantId", plantId);
+		if (StringUtils.isNotEmpty(date)) {
 			data.add("date", date);
-		
-		String infos = client
-			.post()
-			.uri(uri)
-			.cookies(cookies -> writeCookies(cookieJar, cookies))
-			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-			.body(BodyInserters.fromFormData(data))
-            .retrieve()
-            .bodyToMono(String.class)
-            .block();
-		
+		}
+		if (year != null) {
+			data.add("year", String.valueOf(year));
+		}
+		if (params != null) {
+			data.add("jsonData",
+					"[{\"type\":\"plant\",\"sn\":\"%s\",\"params\":\"%s\"}]".formatted(plantId, params));
+		}
+		return data;
+	}
+
+	// ---- Transport ------------------------------------------------------------------------
+
+	private <T> T postForm(String uri, MultiValueMap<String, String> form, Class<T> clazz) {
+		String body = client.post()
+				.uri(uri)
+				.cookies(this::writeCookies)
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.body(BodyInserters.fromFormData(form))
+				.retrieve()
+				.bodyToMono(String.class)
+				// Small backoff retry for transient upstream hiccups (not for 4xx).
+				.retryWhen(Retry.backoff(2, Duration.ofMillis(500)).filter(this::isTransient))
+				.block();
+		return parse(uri, body, clazz);
+	}
+
+	private boolean isTransient(Throwable t) {
+		if (t instanceof WebClientResponseException e) {
+			return e.getStatusCode().is5xxServerError();
+		}
+		return true; // connection resets / timeouts
+	}
+
+	private <T> T parse(String uri, String body, Class<T> clazz) {
 		try {
-			if (StringUtils.isNotBlank(infos)) {
-				ObjectMapper om = new ObjectMapper();
-				return om.readValue(infos, clazz);
-			} else 
-				log.error("POST to {} returned 'null'", uri);
-		} catch (JsonProcessingException e) {
+			if (StringUtils.isNotBlank(body)) {
+				return objectMapper.readValue(body, clazz);
+			}
+			log.error("POST to {} returned an empty body", uri);
+		} catch (Exception e) {
 			log.error("Error parsing JSON response from {}: {}", uri, e.getMessage());
 		}
-		
 		return null;
 	}
-	
+
+	private static Integer parseYear(String date) {
+		try {
+			return date != null ? Integer.valueOf(date.trim().substring(0, 4)) : null;
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	private static String str(Double value) {
+		return value != null ? String.valueOf(value) : null;
+	}
 }

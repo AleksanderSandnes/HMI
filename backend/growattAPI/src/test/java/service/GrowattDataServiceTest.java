@@ -99,8 +99,7 @@ class GrowattDataServiceTest {
 
 	@Test
 	void extractDayEnergy_returnsValueForRequestedDay() {
-		MonthResponse holder = new MonthResponse();
-		MonthResponse.Obj obj = holder.new Obj(Arrays.asList(1.0, 2.0, 3.0));
+		MonthResponse.Obj obj = new MonthResponse.Obj(Arrays.asList(1.0, 2.0, 3.0));
 		MonthResponse month = new MonthResponse(1L, obj);
 		assertEquals(1.0, service.extractDayEnergy(month, 1));
 		assertEquals(3.0, service.extractDayEnergy(month, 3));
@@ -108,8 +107,7 @@ class GrowattDataServiceTest {
 
 	@Test
 	void extractDayEnergy_returnsZeroForOutOfRangeOrNull() {
-		MonthResponse holder = new MonthResponse();
-		MonthResponse.Obj obj = holder.new Obj(Arrays.asList(1.0, null, 3.0));
+		MonthResponse.Obj obj = new MonthResponse.Obj(Arrays.asList(1.0, null, 3.0));
 		MonthResponse month = new MonthResponse(1L, obj);
 		assertEquals(0.0, service.extractDayEnergy(month, 2)); // null entry
 		assertEquals(0.0, service.extractDayEnergy(month, 99)); // out of range

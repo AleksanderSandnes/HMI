@@ -3,12 +3,15 @@ package controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
+import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Properties;
+
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.platform.commons.util.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import entity.DayResponse;
 import entity.EnergyRequest;
@@ -18,63 +21,82 @@ import entity.TotalDataInvResponse;
 import entity.TotalDataResponse;
 import entity.YearResponse;
 
-import org.junit.jupiter.api.Disabled;
-
 /**
- * Integration test exercising the live Growatt API. It requires real credentials in
- * {@code src/test/resources/application.properties} (growatt.account / growatt.password /
- * proxy.url / proxy.port) and outbound network access. It is {@link Disabled} so it never
- * breaks the normal {@code mvn test} build; remove the annotation locally to run it.
+ * Live integration test verifying the <b>Growatt v2.0.0</b> endpoint migration end-to-end:
+ * one login + one of each chart/total call against the real API, asserting the new responses
+ * map cleanly into our unchanged DTOs.
+ *
+ * <p><b>Run deliberately and sparingly</b> (hitting the live API repeatedly risks an IP
+ * block). It is gated by the {@code GROWATT_LIVE_TEST=true} environment variable, so the
+ * normal {@code mvn test} build skips it. Credentials are read from the git-ignored
+ * {@code src/test/resources/application.properties} (keys: {@code growatt.account},
+ * {@code growatt.password}, optional {@code proxy.url} / {@code proxy.port}).</p>
+ *
+ * <pre>GROWATT_LIVE_TEST=true mvn -q test -Dtest=GrowattWebClientTest</pre>
  */
-@Disabled("Integration test: requires real Growatt credentials and src/test/resources/application.properties. Enable locally to run against the live Growatt API.")
-@ExtendWith(SpringExtension.class)
-@TestPropertySource("classpath:application.properties") 
+@EnabledIfEnvironmentVariable(named = "GROWATT_LIVE_TEST", matches = "true")
 class GrowattWebClientTest {
-	
-	@Value("${growatt.account}")
-	private String account;
-	
-	@Value("${growatt.password}")
-	private String password;
-	
-	@Value("${proxy.url}")
-	private String proxyUrl;
-	
-	@Value("${proxy.port}")
-	private String proxyPort;
-	
-	// enable after setting account/password in src/test/resources/application.properties
-	@Test
-	void testGrowattWebClient() {
-		
-		assertFalse(StringUtils.isBlank(account)); // define an user name in the application.properties
-		assertFalse(StringUtils.isBlank(password)); // define a password in the application.properties
-		
-		GrowattWebClient client = StringUtils.isBlank(proxyUrl) ? new GrowattWebClient() : new GrowattWebClient(proxyUrl, Integer.valueOf(proxyPort));
-		
-		String login = client.login(new LoginRequest(account, password));
-		assertEquals("{\"result\":1}", login);
-		assertNotNull(client.getPlantId());
-		
-		TotalDataResponse totalData = client.getTotalData(new EnergyRequest(client.getPlantId()));
-		assertEquals(1, totalData.getResult());
-		assertEquals(account, totalData.getObj().getAccountName());
-		assertEquals(client.getPlantId(), totalData.getObj().getPlantId());
-		
-		TotalDataInvResponse totalDataInv = client.getInvTotalData(new EnergyRequest(client.getPlantId()));
-		assertEquals(1, totalDataInv.getResult());
-		
-		DayResponse day = client.getInvEnergyDayChart(new EnergyRequest(client.getPlantId(), "2023-05-31"));
-		assertEquals(1, day.getResult());
-		assertEquals(24*12, day.getObj().getPac().size());
-		
-		MonthResponse month = client.getInvEnergyMonthChart(new EnergyRequest(client.getPlantId(), "2023-05"));
-		assertEquals(1, month.getResult());
-		assertEquals(31, month.getObj().getEnergy().size());
-		
-		YearResponse year = client.getInvEnergyYearChart(new EnergyRequest(client.getPlantId(), "2023"));
-		assertEquals(1, year.getResult());
-		assertEquals(12, year.getObj().getEnergy().size());
+
+	private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	private static final DateTimeFormatter MONTH = DateTimeFormatter.ofPattern("yyyy-MM");
+
+	private static Properties loadCredentials() throws Exception {
+		Properties p = new Properties();
+		try (InputStream in = GrowattWebClientTest.class.getResourceAsStream("/application.properties")) {
+			assertNotNull(in, "Create src/test/resources/application.properties with growatt.account/password");
+			p.load(in);
+		}
+		return p;
 	}
 
+	@Test
+	void verifiesV2Endpoints() throws Exception {
+		Properties creds = loadCredentials();
+		String account = creds.getProperty("growatt.account", "").trim();
+		String password = creds.getProperty("growatt.password", "").trim();
+		String proxyUrl = creds.getProperty("proxy.url", "").trim();
+		assumeTrue(!account.isBlank() && !password.isBlank(),
+				"growatt.account/password not set in application.properties — skipping");
+
+		GrowattWebClient client = proxyUrl.isBlank()
+				? new GrowattWebClient()
+				: new GrowattWebClient(proxyUrl, Integer.parseInt(creds.getProperty("proxy.port").trim()));
+
+		// 1) Login (body unchanged across v2.0.0).
+		String login = client.login(new LoginRequest(account, password));
+		assertEquals("{\"result\":1}", login == null ? null : login.trim());
+		String plantId = client.getPlantId();
+		assertNotNull(plantId, "No plant id captured from login cookies");
+
+		// 2) Cumulative totals (now sourced from /panel/getDevicesByPlantList).
+		TotalDataResponse total = client.getTotalData(new EnergyRequest(plantId));
+		assertEquals(1L, total.getResult());
+		assertNotNull(total.getObj());
+		assertNotNull(total.getObj().getEToday(), "eToday should be present");
+
+		TotalDataInvResponse inv = client.getInvTotalData(new EnergyRequest(plantId));
+		assertEquals(1L, inv.getResult());
+
+		// 3) Day chart for yesterday (within the new ~3-month window) -> 5-minute pac values.
+		String day = LocalDate.now().minusDays(1).format(DAY);
+		DayResponse dayChart = client.getInvEnergyDayChart(new EnergyRequest(plantId, day));
+		assertEquals(1L, dayChart.getResult());
+		assertNotNull(dayChart.getObj().getPac());
+		assertFalse(dayChart.getObj().getPac().isEmpty(), "day pac series should be non-empty");
+
+		// 4) Month chart (current month) -> per-day energy totals.
+		MonthResponse monthChart = client.getInvEnergyMonthChart(new EnergyRequest(plantId, LocalDate.now().format(MONTH)));
+		assertEquals(1L, monthChart.getResult());
+		assertFalse(monthChart.getObj().getEnergy().isEmpty(), "month energy series should be non-empty");
+
+		// 5) Year chart (current year) -> per-month energy totals.
+		YearResponse yearChart = client.getInvEnergyYearChart(new EnergyRequest(plantId, String.valueOf(LocalDate.now().getYear())));
+		assertEquals(1L, yearChart.getResult());
+		assertFalse(yearChart.getObj().getEnergy().isEmpty(), "year energy series should be non-empty");
+
+		System.out.printf(
+				"[GrowattV2] OK plant=%s pac=%d monthDays=%d yearMonths=%d%n",
+				plantId, dayChart.getObj().getPac().size(),
+				monthChart.getObj().getEnergy().size(), yearChart.getObj().getEnergy().size());
+	}
 }

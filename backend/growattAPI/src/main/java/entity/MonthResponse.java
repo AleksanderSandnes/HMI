@@ -26,8 +26,8 @@ public class MonthResponse implements GrowattResponse {
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public class Obj {
-		
+	public static class Obj {
+
 		/** Power production for each day of the month */
 		private List<Double> energy;
 

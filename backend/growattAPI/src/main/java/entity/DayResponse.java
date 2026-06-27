@@ -26,8 +26,8 @@ public class DayResponse implements GrowattResponse {
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public class Obj {
-		
+	public static class Obj {
+
 		/** Power production for each 5 minute interval of the day, in total 288 values */
 		private List<Double> pac;
 	}
