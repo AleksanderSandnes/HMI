@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.config.Customizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -25,10 +25,6 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    /** Supabase JWKS, e.g. https://<ref>.supabase.co/auth/v1/.well-known/jwks.json */
-    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
-    private String jwkSetUri;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -57,9 +53,10 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
-            // Validate Supabase JWTs (ES256) via the project JWKS.
+            // Validate Supabase JWTs via the project JWKS. The decoder (incl. the ES256
+            // algorithm) is auto-configured from spring.security.oauth2.resourceserver.jwt.*
             .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwkSetUri(jwkSetUri))
+                .jwt(Customizer.withDefaults())
             );
 
         return http.build();
