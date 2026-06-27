@@ -1,55 +1,59 @@
 package entity;
 
 import java.time.Instant;
-import java.util.UUID;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import lombok.AllArgsConstructor;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A cached Growatt chart response (day / month / year).
+ * A cached Growatt chart response (day / week / month / year), stored in Supabase Postgres.
  *
- * <p>Each response is stored as its raw JSON {@link #payload} so every range keeps its
- * native shape while still being searchable by {@link #plantId} and {@link #date}. The
- * {@link #id} is an auto-generated Mongo ObjectId; uniqueness and fast look-ups are
- * provided by a compound index on {@code (type, plantId, date)} instead.</p>
+ * <p>Each response is kept as its raw JSON {@link #payload} (a {@code jsonb} column) so every
+ * range keeps its native shape while remaining queryable by {@link #plantId} / {@link #date}.
+ * The logical key {@code (type, plantId, date)} is the table's composite primary key
+ * (see {@link SolarDataCacheId}); {@code repository.save(...)} therefore upserts by that key.</p>
  */
-@Document(collection = "growattData")
-@CompoundIndex(name = "type_plant_date_idx", def = "{'type': 1, 'plantId': 1, 'date': 1}", unique = true)
+@Entity
+@Table(name = "solar_data_cache")
+@IdClass(SolarDataCacheId.class)
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class SolarDataCache {
 
-	/** Unique id (UUID). */
+	/** Range discriminator: DAY, WEEK, MONTH, YEAR. */
 	@Id
-	private String id;
-
-	/** Range discriminator: DAY, MONTH, YEAR. */
 	private String type;
 
 	/** Id of the plant the data belongs to. */
+	@Id
+	@Column(name = "plant_id")
 	private String plantId;
 
 	/** Date of the data, e.g. 2023-06-19, 2023-06 or 2023 depending on the type. */
+	@Id
 	private String date;
 
-	/** Raw JSON of the original Growatt response. */
+	/** Raw JSON of the original Growatt response (jsonb). */
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(columnDefinition = "jsonb")
 	private String payload;
 
 	/** When this entry was written. */
+	@Column(name = "cached_at")
 	private Instant cachedAt;
 
-	/** Creates a new entry with a generated UUID id. */
+	/** Creates a new cache entry (keyed by type/plantId/date). */
 	public SolarDataCache(String type, String plantId, String date, String payload, Instant cachedAt) {
-		this.id = UUID.randomUUID().toString();
 		this.type = type;
 		this.plantId = plantId;
 		this.date = date;

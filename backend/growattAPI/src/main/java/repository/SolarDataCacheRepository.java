@@ -3,14 +3,16 @@ package repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import entity.SolarDataCache;
+import entity.SolarDataCacheId;
 
 /**
- * MongoDB repository for cached Growatt responses.
+ * Postgres (JPA) repository for cached Growatt responses. {@code save(...)} upserts by the
+ * composite key {@code (type, plantId, date)}.
  */
-public interface SolarDataCacheRepository extends MongoRepository<SolarDataCache, String> {
+public interface SolarDataCacheRepository extends JpaRepository<SolarDataCache, SolarDataCacheId> {
 
 	/** Look up a single cached entry by its logical key. */
 	Optional<SolarDataCache> findFirstByTypeAndPlantIdAndDate(String type, String plantId, String date);

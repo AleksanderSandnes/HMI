@@ -1,43 +1,38 @@
 package entity;
 
-import java.util.Date;
+import java.time.Instant;
+import java.util.UUID;
 
-import org.bson.types.ObjectId;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.mapping.Document;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * In-app notification written into the shared {@code notifications} collection.
+ * In-app notification row in the Supabase Postgres {@code notifications} table.
  *
- * <p>The same collection is read and written by the Node weatherAPI backend (Mongoose), so
- * the field names and types here must stay aligned with that model:
- * {@code userId} is stored as an {@link ObjectId} (matching the Mongoose ObjectId cast of
- * the authenticated user id), and {@code createdAt} is a {@link Date} the UI sorts by.</p>
+ * <p>Keyed by the Supabase auth user id ({@code auth_id}). Inserting a row is all the solar
+ * job needs to do: a database webhook on insert invokes the {@code send-push} Edge Function,
+ * which delivers the Expo push — so push is no longer sent from this service.</p>
  *
- * <p>"Mark as read" is a hard delete on the Node side, so every stored notification counts
- * as unread.</p>
+ * <p>"Mark as read" is a hard delete on the client side, so every stored row counts as unread.</p>
  */
-@Document(collection = "notifications")
-// No explicit index name: Spring Data derives the default name "userId_1_createdAt_-1",
-// which matches the index Mongoose auto-creates for the same keys in the Node backend.
-// Using a custom name here would clash (MongoDB error 85) since both backends share this
-// collection and MongoDB forbids two indexes with identical keys but different names.
-@CompoundIndex(def = "{'userId': 1, 'createdAt': -1}")
+@Entity
+@Table(name = "notifications")
 @Getter
 @Setter
 @NoArgsConstructor
 public class Notification {
 
 	@Id
-	private String id;
+	private UUID id;
 
-	/** Owner of the notification (Mongo ObjectId, matches the Node User _id). */
-	private ObjectId userId;
+	/** Owner of the notification (Supabase auth.users id). */
+	@Column(name = "auth_id")
+	private UUID authId;
 
 	/** Source: 'weather_sync', 'solar_sync' or 'system'. */
 	private String type;
@@ -49,15 +44,16 @@ public class Notification {
 
 	private String message;
 
-	/** Creation timestamp (the web center sorts newest-first by this). */
-	private Date createdAt;
+	@Column(name = "created_at")
+	private Instant createdAt;
 
-	public Notification(ObjectId userId, String type, String level, String title, String message) {
-		this.userId = userId;
+	public Notification(UUID authId, String type, String level, String title, String message) {
+		this.id = UUID.randomUUID();
+		this.authId = authId;
 		this.type = type;
 		this.level = level;
 		this.title = title;
 		this.message = message;
-		this.createdAt = new Date();
+		this.createdAt = Instant.now();
 	}
 }

@@ -1,11 +1,14 @@
 package repository;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import entity.Notification;
 
 /**
- * MongoDB repository for in-app notifications (shared with the Node weatherAPI backend).
+ * Postgres (JPA) repository for in-app notifications. Inserting a row triggers the
+ * notifications->send-push database webhook (Expo push delivery).
  */
-public interface NotificationRepository extends MongoRepository<Notification, String> {
+public interface NotificationRepository extends JpaRepository<Notification, UUID> {
 }
