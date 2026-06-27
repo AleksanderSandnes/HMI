@@ -5,6 +5,7 @@
  */
 
 import { getDataMode } from './dataConfig';
+import { getAccessToken } from './supabaseClient';
 import {
   buildAggregatedLabels,
   calculateMetrics,
@@ -69,84 +70,17 @@ function getApiConfig() {
 }
 
 /**
- * Get user's Growatt credentials from backend
+ * JSON headers carrying the live Supabase access token. The Java service authenticates
+ * every data route with this JWT and performs the Growatt login itself (server-side, from
+ * Vault), so the client no longer sends Growatt credentials or logs in.
  */
-async function getGrowattCredentials(): Promise<{
-  account: string | null;
-  password: string | null;
-  plantId: string | null;
-}> {
-  try {
-    const token = await getAuthToken();
-
-    if (!token) {
-      console.warn('[GrowattAPI] No auth token available - user not logged in');
-      return { account: null, password: null, plantId: null };
-    }
-
-    // Get the backend URL based on current mode
-    const mode = getDataMode();
-    const backendUrl =
-      mode === 'production'
-        ? 'https://weatherapi-sbwb.onrender.com'
-        : 'http://localhost:5000';
-
-    // Fetch user settings from MongoDB via backend API
-    const response = await fetch(`${backendUrl}/api/settings/credentials`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      console.error(
-        '[GrowattAPI] Failed to fetch credentials:',
-        response.status
-      );
-      return { account: null, password: null, plantId: null };
-    }
-
-    const data = await response.json();
-    return {
-      account: data.credentials?.account || null,
-      password: data.credentials?.password || null,
-      plantId: data.credentials?.plantId || null,
-    };
-  } catch (error) {
-    console.error('[GrowattAPI] Error getting credentials:', error);
-    return { account: null, password: null, plantId: null };
-  }
-}
-
-/**
- * Get authentication token from storage
- */
-async function getAuthToken(): Promise<string | null> {
-  try {
-    if (typeof localStorage !== 'undefined') {
-      // Web: Use localStorage
-      const userInfo = localStorage.getItem('userInfo');
-      if (userInfo) {
-        const user = JSON.parse(userInfo);
-        return user.token || null;
-      }
-    } else {
-      // React Native: Use AsyncStorage
-      const AsyncStorage =
-        require('@react-native-async-storage/async-storage').default;
-      const userInfo = await AsyncStorage.getItem('userInfo');
-      if (userInfo) {
-        const user = JSON.parse(userInfo);
-        return user.token || null;
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error('[GrowattAPI] Error getting auth token:', error);
-    return null;
-  }
+async function authHeaders(): Promise<Record<string, string>> {
+  const token = await getAccessToken();
+  return {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
 /**
@@ -161,10 +95,7 @@ async function fetchTotalGeneration(
       `${config.baseUrl}${config.endpoints.totalData}`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
+        headers: await authHeaders(),
         body: JSON.stringify({ date }),
       }
     );
@@ -223,10 +154,7 @@ async function fetchAggregatedSolarData(
   try {
     const chartResponse = await fetch(`${config.baseUrl}${endpoint}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
+      headers: await authHeaders(),
       body: JSON.stringify({ date: requestDate }),
     });
 
@@ -314,45 +242,8 @@ export async function fetchSolarData(
   console.log(`[GrowattAPI] Using API: ${config.baseUrl}`);
 
   try {
-    // Get user credentials
-    const credentials = await getGrowattCredentials();
-
-    if (!credentials.account || !credentials.password) {
-      throw new Error(
-        'Growatt credentials not found. Please configure your account in Settings > API Credentials.'
-      );
-    }
-
-    console.log(`[GrowattAPI] Got credentials for: ${credentials.account}`);
-
-    // Step 1: Login to Growatt API
-    console.log('[GrowattAPI] Logging in to Growatt API...');
-    const loginResponse = await fetch(
-      `${config.baseUrl}${config.endpoints.login}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          account: credentials.account,
-          password: credentials.password, // Plain password - Java API will hash it
-        }),
-      }
-    );
-
-    if (!loginResponse.ok) {
-      const errorData = await loginResponse.text();
-      console.error(
-        '[GrowattAPI] Login failed:',
-        loginResponse.status,
-        errorData
-      );
-      throw new Error(`Growatt login failed: ${loginResponse.status}`);
-    }
-
-    console.log('[GrowattAPI] ✅ Login successful');
+    // The Java service authenticates the Supabase JWT and logs into Growatt
+    // server-side (Vault creds), so no client-side login is needed.
 
     // For aggregated time ranges (week/month/year) use the dedicated chart
     // endpoints, which return discrete energy (kWh) totals per bucket rather than
@@ -375,10 +266,7 @@ export async function fetchSolarData(
         `${config.baseUrl}${config.endpoints.dayChart}`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
+          headers: await authHeaders(),
           body: JSON.stringify({
             date: date, // YYYY-MM-DD format
           }),
@@ -421,10 +309,7 @@ export async function fetchSolarData(
         `${config.baseUrl}${config.endpoints.totalData}`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
+          headers: await authHeaders(),
           body: JSON.stringify(totalDataRequest),
         }
       );
