@@ -1,39 +1,10 @@
 services:
-  - type: web
-    name: weatherAPI
-    runtime: node
-    plan: free
-    rootDir: backend/weatherAPI
-    buildCommand: npm install
-    startCommand: npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: '5000'
-      - key: DB_USERNAME
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: ENCRYPTION_KEY
-        sync: false
-      - key: FRONTEND_URL
-        value: https://hmi-git-main-apsandnes-projects.vercel.app
-      - key: WEATHER_API_KEY
-        sync: false
-    healthCheckPath: /api/health
-    autoDeploy: true
-    branch: main
-    buildFilter:
-      paths:
-        - backend/weatherAPI/**
-
+  # Growatt solar API (Java / Spring Boot). The Node weatherAPI has been retired —
+  # auth, weather, settings and notifications are served by Supabase directly.
   - type: web
     name: hmi-java-api
     runtime: docker
-    plan: free
+    plan: starter
     rootDir: backend/growattAPI
     dockerfilePath: Dockerfile
     envVars:
@@ -42,9 +13,20 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: production
       - key: FRONTEND_URL
-        value: https://hmi-git-main-apsandnes-projects.vercel.app
-      - key: BACKEND_URL
-        value: https://hmi-backend.onrender.com
+        value: https://hmi-seven.vercel.app
+      # Supabase Postgres (Supavisor session-mode pooler). URL + username are not secret;
+      # the DB password is set in the Render dashboard (sync:false).
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://aws-0-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require
+      - key: SPRING_DATASOURCE_USERNAME
+        value: postgres.xdttfrknoazcqcelieck
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      # Optional outbound proxy if Growatt IP-blocks this host (leave unset normally).
+      - key: PROXY_URL
+        sync: false
+      - key: PROXY_PORT
+        sync: false
     healthCheckPath: /actuator/health
     autoDeploy: true
     branch: main

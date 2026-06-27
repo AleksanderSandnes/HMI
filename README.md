@@ -22,32 +22,36 @@ A personal home-energy dashboard that brings **solar production** and **local we
 
 ## 🏗️ Architecture
 
-HMI is a monorepo with three deployable services backed by a shared MongoDB database.
+HMI runs on **Supabase** as its platform, with one dedicated integration service (the Java
+Growatt API) for the part Supabase can't host.
 
 ```
-┌──────────────────┐      ┌──────────────────────┐      ┌──────────────────────┐
-│   Frontend       │      │   Weather API        │      │   Growatt API        │
-│   Expo + RN web  │◄────►│   Node.js / Express  │      │   Java / Spring Boot │
-│   (Vercel)       │      │   (Render)           │      │   (Render, Docker)   │
-│                  │      │                      │      │                      │
-│ • Solar charts   │      │ • Auth (JWT)         │      │ • Growatt login      │
-│ • Weather views  │      │ • User & settings    │      │ • Day/Week/Month/    │
-│ • Notifications  │      │ • Weather.com PWS    │      │   Year charts        │
-│ • Settings       │      │ • Notifications/push │      │ • Total & inverter   │
-└──────────────────┘      │ • Backfill cron      │      │ • Backfill job       │
-        │                 └──────────┬───────────┘      └──────────┬───────────┘
-        │                            │                             │
-        └────────────► Growatt API ◄─┘                             │
-                                     ▼                             ▼
-                            ┌────────────────────────────────────────┐
-                            │            MongoDB (Atlas)             │
-                            │  users · settings · notifications ·    │
-                            │  cached weather · cached solar data    │
-                            └────────────────────────────────────────┘
+┌──────────────────┐        ┌──────────────────────────────────────────┐
+│   Frontend       │───────►│   Supabase                               │
+│   Expo + RN web  │        │   • Auth (GoTrue, ES256 JWT)             │
+│   (Vercel)       │◄──────►│   • Postgres + RLS (users/settings/      │
+│                  │        │     notifications/weather/solar cache)   │
+│ • Solar charts   │        │   • Realtime (notification center)       │
+│ • Weather views  │        │   • Edge Functions: weather-current /    │
+│ • Notifications  │        │     weather-history / weather-backfill / │
+│ • Settings       │        │     send-push / outage-monitor           │
+└──────┬───────────┘        │   • pg_cron · Vault (secrets)            │
+       │                    └──────────────────────────────────────────┘
+       │  Supabase JWT                         ▲ reads/writes Postgres
+       ▼                                       │
+┌──────────────────────┐                       │
+│   Growatt API        │───────────────────────┘
+│   Java / Spring Boot │
+│   (Render, Docker)   │──► server.growatt.com  (server-side login from Vault)
+│ • Day/Week/Month/Yr  │
+│ • Total & inverter   │
+│ • Solar backfill job │
+└──────────────────────┘
 ```
 
-- The **frontend** talks to the Weather API for auth, user data, weather, and notifications, and directly to the Growatt API for solar charts.
-- Both backends share a single MongoDB database (`HMI` in production, `hmi-dev` locally), so the `notifications` collection and cache indexes are coordinated between them.
+- The **frontend** talks to **Supabase** for auth, settings, weather, and notifications, and to the **Growatt API** (with its Supabase JWT) for solar charts.
+- The **Growatt API** is the one component kept on Render: it needs egress-IP/proxy control because Growatt IP-blocks. It authenticates the Supabase JWT, logs into Growatt **server-side** using the user's Vault-stored credentials, and reads/writes the same Supabase Postgres (solar cache, notifications).
+- The retired **Node weatherAPI** and **MongoDB** have been replaced by Supabase. Weather.com fetches run in Edge Functions; historical reads come straight from Postgres via PostgREST.
 
 ---
 
