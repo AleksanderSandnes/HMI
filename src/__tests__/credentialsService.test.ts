@@ -1,3 +1,4 @@
+/* eslint-disable import/first -- jest.mock must precede the import it mocks */
 /**
  * credentialsService is now a thin shim over Supabase: Growatt login happens server-side
  * from Vault, so the frontend no longer stores credentials locally. These tests mock the
