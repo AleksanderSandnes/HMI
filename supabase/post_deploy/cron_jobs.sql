@@ -25,7 +25,7 @@ declare
 begin
   select decrypted_secret into key from vault.decrypted_secrets where name = 'edge_service_role_key';
   select net.http_post(
-    url     := 'https://<PROJECT_REF>.supabase.co/functions/v1/' || fn,
+    url     := 'https://xdttfrknoazcqcelieck.supabase.co/functions/v1/' || fn,
     headers := jsonb_build_object(
                  'Content-Type', 'application/json',
                  'Authorization', 'Bearer ' || key),
