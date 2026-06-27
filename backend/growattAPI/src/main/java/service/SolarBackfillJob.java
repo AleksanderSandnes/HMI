@@ -7,11 +7,9 @@ import java.util.List;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import controller.GrowattWebClient;
 import entity.DayResponse;
 import entity.EnergyRequest;
 import entity.IntegrationHealth;
-import entity.LoginRequest;
 import entity.Notification;
 import entity.UserSettings;
 import io.micrometer.common.util.StringUtils;
@@ -43,7 +41,7 @@ public class SolarBackfillJob {
 	private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
-	private final GrowattWebClient growattWebClient;
+	private final GrowattSessionService sessionService;
 	private final GrowattDataService growattDataService;
 	private final UserSettingsRepository userSettingsRepository;
 	private final NotificationRepository notificationRepository;
@@ -80,26 +78,15 @@ public class SolarBackfillJob {
 		String dayDate = yesterday.format(DAY_FMT);
 
 		try {
-			String password = userSettingsRepository.findGrowattPassword(user.getGrowattPasswordSecretId());
-			if (StringUtils.isBlank(password)) {
-				throw new IllegalStateException("No Growatt password in Vault for this user");
-			}
-
-			growattWebClient.login(new LoginRequest(user.getGrowattEmail(), password));
-
-			String plantId = StringUtils.isNotBlank(user.getGrowattPlantId())
-					? user.getGrowattPlantId()
-					: growattWebClient.getPlantId();
-			if (StringUtils.isBlank(plantId)) {
-				throw new IllegalStateException("No plant id available after Growatt login");
-			}
+			GrowattSession session = sessionService.loginFor(user.getAuthId());
+			String plantId = session.plantId();
 
 			// Day (force-persist yesterday) + the other ranges (self-persist when completed).
-			DayResponse day = growattDataService.getDayChart(new EnergyRequest(plantId, dayDate));
+			DayResponse day = growattDataService.getDayChart(session.client(), new EnergyRequest(plantId, dayDate));
 			growattDataService.backfillDayChart(plantId, dayDate, day);
-			growattDataService.getWeekChart(new EnergyRequest(plantId, dayDate));
-			growattDataService.getMonthChart(new EnergyRequest(plantId, yesterday.format(MONTH_FMT)));
-			growattDataService.getYearChart(new EnergyRequest(plantId, String.valueOf(yesterday.getYear())));
+			growattDataService.getWeekChart(session.client(), new EnergyRequest(plantId, dayDate));
+			growattDataService.getMonthChart(session.client(), new EnergyRequest(plantId, yesterday.format(MONTH_FMT)));
+			growattDataService.getYearChart(session.client(), new EnergyRequest(plantId, String.valueOf(yesterday.getYear())));
 
 			double kwh = dayEnergyKwh(day);
 			String message = kwh > 0

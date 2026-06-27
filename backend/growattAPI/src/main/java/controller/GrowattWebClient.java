@@ -7,7 +7,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -55,7 +54,6 @@ import reactor.util.retry.Retry;
  * starts blocking the server's egress IP.</p>
  */
 @Slf4j
-@Component
 public class GrowattWebClient {
 
 	public static final String ONE_PLANT_ID = "onePlantId";

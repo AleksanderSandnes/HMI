@@ -25,7 +25,7 @@ class GrowattDataServiceTest {
 	private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
-	private final GrowattDataService service = new GrowattDataService(null, null);
+	private final GrowattDataService service = new GrowattDataService(null);
 
 	// ---------------- isCurrentPeriod ----------------
 

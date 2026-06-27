@@ -65,18 +65,17 @@ public class GrowattDataService {
 	private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
-	private final GrowattWebClient client;
 	private final SolarDataCacheRepository repository;
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Value("${growatt.cache.enabled:true}")
 	private boolean cacheEnabled;
 
-	public DayResponse getDayChart(EnergyRequest request) {
+	public DayResponse getDayChart(GrowattWebClient client, EnergyRequest request) {
 		return getOrFetch(CacheType.DAY, request, DayResponse.class, client::getInvEnergyDayChart);
 	}
 
-	public MonthResponse getMonthChart(EnergyRequest request) {
+	public MonthResponse getMonthChart(GrowattWebClient client, EnergyRequest request) {
 		return getOrFetch(CacheType.MONTH, request, MonthResponse.class, client::getInvEnergyMonthChart);
 	}
 
@@ -94,12 +93,12 @@ public class GrowattDataService {
 	 * first request and served from MongoDB afterwards without re-assembling. A week that still
 	 * includes today is treated as the current, incomplete period and is never cached.</p>
 	 */
-	public WeekResponse getWeekChart(EnergyRequest request) {
-		return getOrFetch(CacheType.WEEK, request, WeekResponse.class, this::assembleWeekChart);
+	public WeekResponse getWeekChart(GrowattWebClient client, EnergyRequest request) {
+		return getOrFetch(CacheType.WEEK, request, WeekResponse.class, r -> assembleWeekChart(client, r));
 	}
 
 	/** Assemble the weekly view live from the daily totals of the covering month chart(s). */
-	private WeekResponse assembleWeekChart(EnergyRequest request) {
+	private WeekResponse assembleWeekChart(GrowattWebClient client, EnergyRequest request) {
 		LocalDate end;
 		try {
 			end = LocalDate.parse(request.getDate(), DAY_FMT);
@@ -118,7 +117,7 @@ public class GrowattDataService {
 			MonthResponse month = monthsCache.computeIfAbsent(ym, key -> {
 				EnergyRequest monthRequest = new EnergyRequest(request.getPlantId(), key.format(MONTH_FMT));
 				try {
-					return getMonthChart(monthRequest);
+					return getMonthChart(client, monthRequest);
 				} catch (Exception ex) {
 					log.warn("[Week] month fetch failed for {} ({})", key, ex.getMessage());
 					return null;
@@ -146,7 +145,7 @@ public class GrowattDataService {
 		return 0.0;
 	}
 
-	public YearResponse getYearChart(EnergyRequest request) {
+	public YearResponse getYearChart(GrowattWebClient client, EnergyRequest request) {
 		return getOrFetch(CacheType.YEAR, request, YearResponse.class, client::getInvEnergyYearChart);
 	}
 
