@@ -2,7 +2,7 @@ services:
   # Growatt solar API (Java / Spring Boot). The Node weatherAPI has been retired —
   # auth, weather, settings and notifications are served by Supabase directly.
   - type: web
-    name: hmi-java-api
+    name: growattAPI
     runtime: docker
     plan: starter
     rootDir: backend/growattAPI
