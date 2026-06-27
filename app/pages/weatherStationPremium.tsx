@@ -177,6 +177,11 @@ export default function WeatherStationPremium(): React.ReactElement {
   const isWide = width >= 1600;
   const contentMaxWidth = width >= 2200 ? 1920 : width >= 1600 ? 1680 : 1480;
 
+  const isLandscape = width > height;
+  // On shorter screens (e.g. a tablet in landscape) tighten the layout so the
+  // chart and the data-type controls fit without the page having to scroll.
+  const shortLandscape = isLandscape && height < 900;
+
   // On desktop the whole dashboard should fit within the viewport without
   // scrolling. Size the chart from the available height, leaving room for the
   // header, KPI tiles, chart chrome and the summary strip.
@@ -289,6 +294,7 @@ export default function WeatherStationPremium(): React.ReactElement {
       value={num(currentTemp)}
       unit="°C"
       sublabel={feelsLike != null ? `Feels like ${num(feelsLike)}°C` : 'Now'}
+      compact={shortLandscape}
     />,
     <StatTile
       key="wind"
@@ -298,6 +304,7 @@ export default function WeatherStationPremium(): React.ReactElement {
       value={num(currentWindSpeed)}
       unit="km/h"
       sublabel="Sustained"
+      compact={shortLandscape}
     />,
     <StatTile
       key="gust"
@@ -307,6 +314,7 @@ export default function WeatherStationPremium(): React.ReactElement {
       value={num(currentWindGust)}
       unit="km/h"
       sublabel="Peak"
+      compact={shortLandscape}
     />,
     <StatTile
       key="humidity"
@@ -316,16 +324,20 @@ export default function WeatherStationPremium(): React.ReactElement {
       value={num(currentHumidity, 0)}
       unit="%"
       sublabel="Relative"
+      compact={shortLandscape}
     />,
   ];
 
   const TileGrid = (
-    <View style={styles.tileGrid}>
-      {tiles.map((tile, i) => (
-        <View key={i} style={styles.tileGridItem}>
-          {tile}
-        </View>
-      ))}
+    <View style={{ gap: premiumTheme.space.md }}>
+      <View style={styles.tileGridRow}>
+        <View style={styles.tileGridCell}>{tiles[0]}</View>
+        <View style={styles.tileGridCell}>{tiles[1]}</View>
+      </View>
+      <View style={styles.tileGridRow}>
+        <View style={styles.tileGridCell}>{tiles[2]}</View>
+        <View style={styles.tileGridCell}>{tiles[3]}</View>
+      </View>
     </View>
   );
 
@@ -341,8 +353,17 @@ export default function WeatherStationPremium(): React.ReactElement {
   );
 
   const ChartCard = (
-    <GlassCard strong elevated style={styles.chartCard}>
-      <View style={styles.chartHeader}>
+    <GlassCard
+      strong
+      elevated
+      style={[styles.chartCard, shortLandscape && styles.chartCardCompact]}
+    >
+      <View
+        style={[
+          styles.chartHeader,
+          shortLandscape && styles.chartHeaderCompact,
+        ]}
+      >
         <View style={{ flex: 1 }}>
           <Text style={styles.chartTitle}>Weather Analytics</Text>
           <Text style={styles.chartSub}>
@@ -398,48 +419,68 @@ export default function WeatherStationPremium(): React.ReactElement {
     </GlassCard>
   );
 
+  const typeChips = DATA_TYPES.map((t) => {
+    const activeType = t.key === dataType;
+    return (
+      <Pressable
+        key={t.key}
+        style={[
+          styles.typeChip,
+          activeType && styles.typeChipActive,
+          !isMobile && styles.typeChipGrid,
+        ]}
+        onPress={() => setDataType(t.key)}
+        accessibilityRole="button"
+        accessibilityState={{ selected: activeType }}
+      >
+        {activeType ? (
+          <LinearGradient
+            colors={t.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.typeIcon}
+          >
+            <FontAwesome5 name={t.icon} size={13} color="#0a1124" solid />
+          </LinearGradient>
+        ) : (
+          <View style={[styles.typeIcon, styles.typeIconIdle]}>
+            <FontAwesome5
+              name={t.icon}
+              size={13}
+              color={premiumTheme.text.secondary}
+              solid
+            />
+          </View>
+        )}
+        <Text
+          style={[styles.typeLabel, activeType && { color: t.accent }]}
+          numberOfLines={1}
+        >
+          {t.label}
+        </Text>
+      </Pressable>
+    );
+  });
+
   const DataTypeGrid = (
-    <GlassCard strong style={styles.controlsCard}>
+    <GlassCard
+      strong
+      style={[styles.controlsCard, shortLandscape && styles.controlsCardCompact]}
+    >
       <Text style={styles.controlsLabel}>Data type</Text>
-      <View style={styles.typeGrid}>
-        {DATA_TYPES.map((t) => {
-          const activeType = t.key === dataType;
-          return (
-            <Pressable
-              key={t.key}
-              style={[styles.typeBtn, activeType && styles.typeBtnActive]}
-              onPress={() => setDataType(t.key)}
-              accessibilityRole="button"
-              accessibilityState={{ selected: activeType }}
-            >
-              {activeType ? (
-                <LinearGradient
-                  colors={t.gradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.typeIcon}
-                >
-                  <FontAwesome5 name={t.icon} size={15} color="#0a1124" solid />
-                </LinearGradient>
-              ) : (
-                <View style={[styles.typeIcon, styles.typeIconIdle]}>
-                  <FontAwesome5
-                    name={t.icon}
-                    size={15}
-                    color={premiumTheme.text.secondary}
-                    solid
-                  />
-                </View>
-              )}
-              <Text
-                style={[styles.typeLabel, activeType && { color: t.accent }]}
-              >
-                {t.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      {/* Phone: a compact horizontal scroll. Web/wide: wrap so every data type
+          is visible at once without horizontal scrolling. */}
+      {isMobile ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.typeRow}
+        >
+          {typeChips}
+        </ScrollView>
+      ) : (
+        <View style={styles.typeWrap}>{typeChips}</View>
+      )}
     </GlassCard>
   );
 
@@ -449,7 +490,10 @@ export default function WeatherStationPremium(): React.ReactElement {
         selectedDate={selectedISO}
         onDateSelect={handleDateChange}
       />
-      <GlassCard strong style={styles.controlsCard}>
+      <GlassCard
+        strong
+        style={[styles.controlsCard, shortLandscape && styles.controlsCardCompact]}
+      >
         <Text style={styles.controlsLabel}>Time range</Text>
         <SegmentedControl
           value={timespan}
@@ -490,8 +534,11 @@ export default function WeatherStationPremium(): React.ReactElement {
         contentContainerStyle={[
           styles.scroll,
           {
+            gap: shortLandscape
+              ? premiumTheme.space.md
+              : premiumTheme.space.lg,
             paddingTop: (Platform.OS === 'web' ? 28 : 14) + insets.top,
-            paddingBottom: 36 + insets.bottom,
+            paddingBottom: (shortLandscape ? 18 : 36) + insets.bottom,
             paddingLeft:
               (isMobile ? 16 : isTablet ? 24 : isWide ? 48 : 32) + insets.left,
             paddingRight:
@@ -656,15 +703,12 @@ const styles = StyleSheet.create({
   },
 
   tileRow: { flexDirection: 'row', gap: premiumTheme.space.md },
-  tileGrid: {
+  tileGridRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: premiumTheme.space.md,
   },
-  tileGridItem: {
-    flexGrow: 1,
-    flexBasis: '46%',
-    minWidth: 150,
+  tileGridCell: {
+    flex: 1,
     flexDirection: 'row',
   },
 
@@ -675,12 +719,14 @@ const styles = StyleSheet.create({
   },
 
   chartCard: { padding: 22 },
+  chartCardCompact: { padding: 16 },
   chartHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 16,
   },
+  chartHeaderCompact: { marginBottom: 10 },
   chartTitle: {
     fontSize: 19,
     fontWeight: '800',
@@ -765,6 +811,7 @@ const styles = StyleSheet.create({
   },
 
   controlsCard: { padding: 18 },
+  controlsCardCompact: { padding: 13 },
   controlsLabel: {
     fontSize: 12,
     fontWeight: '700',
@@ -774,30 +821,44 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  typeGrid: {
+  typeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 2,
+    paddingRight: 4,
+  },
+  typeWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
+    paddingVertical: 2,
   },
-  typeBtn: {
+  // Web/wide: equal-width cells, 3 per row -> a clean, symmetric 3x2 grid for the
+  // six data types (instead of a ragged content-width wrap).
+  typeChipGrid: {
     flexGrow: 1,
-    flexBasis: '28%',
+    flexBasis: '30%',
+    justifyContent: 'center',
+  },
+  typeChip: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    borderRadius: premiumTheme.radius.md,
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 999,
     backgroundColor: premiumTheme.glass.fill,
     borderWidth: 1,
     borderColor: premiumTheme.glass.border,
-    gap: 9,
   },
-  typeBtnActive: {
+  typeChipActive: {
     backgroundColor: premiumTheme.glass.fillStrong,
     borderColor: premiumTheme.glass.borderStrong,
   },
   typeIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 26,
+    height: 26,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -54,7 +54,7 @@ export default function GrowattPremium(): React.ReactElement {
 
   const { currentTemp, neighborhood } = useCurrentWeatherData();
 
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isMobile = width <= 768;
   const isTablet = width > 768 && width <= 1024;
@@ -63,6 +63,18 @@ export default function GrowattPremium(): React.ReactElement {
   // dimensions so the layout fills the screen instead of leaving huge gutters.
   const isWide = width >= 1600;
   const contentMaxWidth = width >= 2200 ? 1920 : width >= 1600 ? 1680 : 1480;
+
+  const isLandscape = width > height;
+  // On shorter screens (e.g. a tablet in landscape) tighten the layout and
+  // shrink the chart so its bottom fits without the user having to scroll.
+  const shortLandscape = isLandscape && height < 900;
+
+  const baseChartHeight = isMobile ? 280 : isTablet ? 340 : isWide ? 440 : 380;
+  const fitChartHeight =
+    height - insets.top - insets.bottom - (isDesktop ? 300 : 280);
+  const chartHeight = shortLandscape
+    ? Math.max(220, Math.min(baseChartHeight, fitChartHeight))
+    : baseChartHeight;
 
   const fetchMain = async () => {
     setIsLoading(true);
@@ -151,6 +163,7 @@ export default function GrowattPremium(): React.ReactElement {
       sublabel={genDelta != null ? comparisonLabel(timespan) : pLabel}
       delta={genDelta}
       loading={isLoading}
+      compact={shortLandscape}
     />,
     <StatTile
       key="rev"
@@ -162,6 +175,7 @@ export default function GrowattPremium(): React.ReactElement {
       sublabel={revDelta != null ? comparisonLabel(timespan) : pLabel}
       delta={revDelta}
       loading={isLoading}
+      compact={shortLandscape}
     />,
     <StatTile
       key="co2"
@@ -172,6 +186,7 @@ export default function GrowattPremium(): React.ReactElement {
       unit={co2.unit}
       sublabel="vs grid electricity"
       loading={isLoading}
+      compact={shortLandscape}
     />,
     <StatTile
       key="peak"
@@ -182,22 +197,35 @@ export default function GrowattPremium(): React.ReactElement {
       unit={peak?.unit}
       sublabel={peak ? peakSublabel(timespan, peak.label) : 'No data'}
       loading={isLoading}
+      compact={shortLandscape}
     />,
   ];
 
   const TileGrid = (
-    <View style={styles.tileGrid}>
-      {tiles.map((tile, i) => (
-        <View key={i} style={styles.tileGridItem}>
-          {tile}
-        </View>
-      ))}
+    <View style={{ gap: premiumTheme.space.md }}>
+      <View style={styles.tileGridRow}>
+        <View style={styles.tileGridCell}>{tiles[0]}</View>
+        <View style={styles.tileGridCell}>{tiles[1]}</View>
+      </View>
+      <View style={styles.tileGridRow}>
+        <View style={styles.tileGridCell}>{tiles[2]}</View>
+        <View style={styles.tileGridCell}>{tiles[3]}</View>
+      </View>
     </View>
   );
 
   const ChartCard = (
-    <GlassCard strong elevated style={styles.chartCard}>
-      <View style={styles.chartHeader}>
+    <GlassCard
+      strong
+      elevated
+      style={[styles.chartCard, shortLandscape && styles.chartCardCompact]}
+    >
+      <View
+        style={[
+          styles.chartHeader,
+          shortLandscape && styles.chartHeaderCompact,
+        ]}
+      >
         <View style={{ flex: 1 }}>
           <Text style={styles.chartTitle}>Power Generation</Text>
           <Text style={styles.chartSub}>{chartSubtitle(timespan, pickerDate)}</Text>
@@ -224,7 +252,7 @@ export default function GrowattPremium(): React.ReactElement {
         data={data}
         timespan={timespan}
         loading={isLoading}
-        height={isMobile ? 280 : isTablet ? 340 : isWide ? 440 : 380}
+        height={chartHeight}
       />
     </GlassCard>
   );
@@ -275,8 +303,11 @@ export default function GrowattPremium(): React.ReactElement {
         contentContainerStyle={[
           styles.scroll,
           {
+            gap: shortLandscape
+              ? premiumTheme.space.md
+              : premiumTheme.space.lg,
             paddingTop: (Platform.OS === 'web' ? 28 : 14) + insets.top,
-            paddingBottom: 36 + insets.bottom,
+            paddingBottom: (shortLandscape ? 18 : 36) + insets.bottom,
             paddingLeft:
               (isMobile ? 16 : isTablet ? 24 : isWide ? 48 : 32) + insets.left,
             paddingRight:
@@ -413,15 +444,12 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4 },
 
   tileRow: { flexDirection: 'row', gap: premiumTheme.space.md },
-  tileGrid: {
+  tileGridRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: premiumTheme.space.md,
   },
-  tileGridItem: {
-    flexGrow: 1,
-    flexBasis: '46%',
-    minWidth: 150,
+  tileGridCell: {
+    flex: 1,
     flexDirection: 'row',
   },
 
@@ -432,12 +460,14 @@ const styles = StyleSheet.create({
   },
 
   chartCard: { padding: 22 },
+  chartCardCompact: { padding: 16 },
   chartHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 18,
   },
+  chartHeaderCompact: { marginBottom: 10 },
   chartTitle: {
     fontSize: 19,
     fontWeight: '800',

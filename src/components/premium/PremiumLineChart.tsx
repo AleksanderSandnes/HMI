@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   LayoutChangeEvent,
   ActivityIndicator,
+  PanResponder,
   Platform,
 } from 'react-native';
 import Svg, {
@@ -126,6 +127,22 @@ export default function PremiumLineChart({
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
 
+  // Native scrub: the PanResponder is created once (before any early return)
+  // and delegates to a ref holding the latest hit-testing closure.
+  const scrubRef = useRef<(x: number) => void>(() => {});
+  const panRef = useRef<ReturnType<typeof PanResponder.create> | null>(null);
+  if (!panRef.current) {
+    panRef.current = PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > Math.abs(g.dy),
+      onPanResponderTerminationRequest: (_e, g) =>
+        Math.abs(g.dy) >= Math.abs(g.dx),
+      onPanResponderGrant: (e) => scrubRef.current(e.nativeEvent.locationX),
+      onPanResponderMove: (e) => scrubRef.current(e.nativeEvent.locationX),
+    });
+  }
+  const panResponder = panRef.current;
+
   const onLayout = (e: LayoutChangeEvent) =>
     setWidth(e.nativeEvent.layout.width);
 
@@ -178,6 +195,15 @@ export default function PremiumLineChart({
   const yFor = (v: number) =>
     PAD.top + innerH - ((v - yMin) / range) * innerH;
 
+  // Map a horizontal touch position to the nearest data index (native taps).
+  const indexFromX = (x: number) => {
+    const i = Math.round(((x - PAD.left) / innerW) * (n - 1));
+    return Math.max(0, Math.min(n - 1, i));
+  };
+
+  // Keep the scrub closure current for the PanResponder created above.
+  scrubRef.current = (x: number) => setActive(indexFromX(x));
+
   // Gridlines
   const gridCount = 4;
   const grids = Array.from({ length: gridCount + 1 }, (_, i) => {
@@ -202,15 +228,9 @@ export default function PremiumLineChart({
 
   return (
     <View
-      style={[
-        styles.wrap,
-        { height },
-        // On native, keep the whole chart non-interactive so touches pass
-        // through to the parent ScrollView (the SVG view and any touch overlay
-        // otherwise capture the gesture and block vertical scrolling).
-        Platform.OS !== 'web' && { pointerEvents: 'none' },
-      ]}
+      style={[styles.wrap, { height }]}
       onLayout={onLayout}
+      {...(Platform.OS !== 'web' ? panResponder.panHandlers : {})}
     >
       <Svg width={width} height={height}>
         <Defs>
@@ -370,6 +390,9 @@ export default function PremiumLineChart({
           })}
         </Pressable>
       )}
+
+      {/* Native touch handling is provided by the wrapper's PanResponder
+          (scrub to move the tooltip); no per-point overlay is needed. */}
 
       {active !== null && (
         <View style={[styles.tooltip, { left: tipLeft, top: tipTop }]} pointerEvents="none">
