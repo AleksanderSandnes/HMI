@@ -14,18 +14,35 @@ export const SUPABASE_URL =
 export const SUPABASE_ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
+export const RENDER_JAVA_API = "https://growattapi.onrender.com";
+export const LOCAL_JAVA_API = "http://localhost:8080";
+
 /**
- * Resolved Java Growatt service base URL (no trailing /api).
+ * Resolve the Java Growatt service base URL (no trailing /api).
  *
- * In development with NEXT_PUBLIC_JAVA_API unset this is http://localhost:8080, so the
- * local Java service must be running (`cd backend/growattAPI && mvn spring-boot:run`) or
- * every /api/growatt/* call fails and Solar/Dashboard show no data. Set NEXT_PUBLIC_JAVA_API
- * to https://growattapi.onrender.com to use the deployed backend instead.
+ * `localhost:8080` is only correct for a local `next dev` session running the
+ * Java service alongside it — so it's used ONLY when this is a local dev build
+ * AND the data mode isn't production. Any deployed build (every Vercel build runs
+ * `next build`, so NODE_ENV="production") falls back to the Render service rather
+ * than baking in localhost, which the browser can never reach. An explicit
+ * NEXT_PUBLIC_JAVA_API always wins.
  */
-export const JAVA_API_BASE_URL =
-  DATA_MODE === "production"
-    ? process.env.NEXT_PUBLIC_JAVA_API || "https://growattapi.onrender.com"
-    : process.env.NEXT_PUBLIC_JAVA_API || "http://localhost:8080";
+export function resolveJavaApiBaseUrl(opts: {
+  override?: string;
+  dataMode: DataMode;
+  nodeEnv?: string;
+}): string {
+  if (opts.override) return opts.override;
+  const isLocalDevBuild = opts.nodeEnv !== "production";
+  const useLocal = isLocalDevBuild && opts.dataMode !== "production";
+  return useLocal ? LOCAL_JAVA_API : RENDER_JAVA_API;
+}
+
+export const JAVA_API_BASE_URL = resolveJavaApiBaseUrl({
+  override: process.env.NEXT_PUBLIC_JAVA_API,
+  dataMode: DATA_MODE,
+  nodeEnv: process.env.NODE_ENV,
+});
 
 export function coreEnv(): CoreEnv {
   return { dataMode: DATA_MODE, javaApiBaseUrl: JAVA_API_BASE_URL };
