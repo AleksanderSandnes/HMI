@@ -105,3 +105,55 @@ export function buildWeatherSeries(
 
   return { labels, series, ticks };
 }
+
+export interface WeatherDailyBands {
+  /** Abbreviated weekday label per day (e.g. "Mon"), oldest → newest. */
+  labels: string[];
+  /** Daily minimum of the primary metric. */
+  min: number[];
+  /** Daily maximum of the primary metric. */
+  max: number[];
+  /** Daily mean of the primary metric. */
+  avg: number[];
+}
+
+/**
+ * Collapse weekly observations into up to 7 daily points (min / max / avg of the
+ * primary metric) for the phone weekly view — a min–max band + average line —
+ * instead of the dense ~3-hourly series the tablet/web shows. Uses the same
+ * primary extractor as {@link buildWeatherSeries} so the values agree.
+ */
+export function buildWeatherDailyBands(
+  observations: Obs[],
+  dataType: string
+): WeatherDailyBands {
+  const extract = (EXTRACTORS[dataType] ?? EXTRACTORS.temperature)[0];
+  if (!observations?.length) return { labels: [], min: [], max: [], avg: [] };
+
+  // Group readings by calendar day, preserving chronological order.
+  const byDay = new Map<string, { date: Date; values: number[] }>();
+  for (const it of observations) {
+    const d = new Date(it.obsTimeLocal || it.date);
+    if (isNaN(d.getTime())) continue;
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    let bucket = byDay.get(key);
+    if (!bucket) {
+      bucket = { date: d, values: [] };
+      byDay.set(key, bucket);
+    }
+    bucket.values.push(extract(it));
+  }
+
+  const days = Array.from(byDay.values())
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .slice(-7);
+
+  return {
+    labels: days.map((day) => WEEKDAY_ABBR[day.date.getDay()]),
+    min: days.map((day) => Math.min(...day.values)),
+    max: days.map((day) => Math.max(...day.values)),
+    avg: days.map(
+      (day) => day.values.reduce((s, v) => s + v, 0) / day.values.length
+    ),
+  };
+}
