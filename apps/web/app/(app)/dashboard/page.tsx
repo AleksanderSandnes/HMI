@@ -16,10 +16,8 @@ import {
 } from "lucide-react";
 import { formatPeak, getPeakOutput, toISO, type SolarData } from "@hmi/core";
 import { useCore } from "@/lib/hooks/useCore";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { StatTile } from "@/components/ui/StatTile";
 import { WindDial } from "@/components/ui/WindDial";
-import { SolarChart } from "@/components/charts/SolarChart";
 import { PageHeader } from "@/components/PageHeader";
 
 interface CurrentMetric {
@@ -136,7 +134,7 @@ export default function DashboardPage() {
     ) : null;
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col gap-3">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3">
       <PageHeader
         title="Home Production"
         subtitle={
@@ -164,21 +162,6 @@ export default function DashboardPage() {
         <StatTile compact icon={SunMedium} gradient="revenue" label="Peak today" value={peak ? formatPeak(peak.value) : "—"} unit="W" sublabel={peak ? `at ${peak.label}` : "No data"} loading={solarLoading} />
         <StatTile compact icon={Mountain} gradient="solar" label="Lifetime" value={show(lifetime, 1)} unit="kWh" sublabel="Total" loading={solarLoading} />
       </div>
-      <GlassCard strong className="flex min-h-0 flex-1 flex-col p-3.5">
-        <p className="mb-0.5 px-1 text-[10px] font-bold uppercase tracking-[0.4px] text-text-muted">
-          Today&apos;s production
-        </p>
-        <div className="min-h-[90px] flex-1">
-          <SolarChart
-            data={solar?.chartData ?? { labels: [], datasets: [{ data: [] }] }}
-            timespan="hourly"
-            loading={solarLoading}
-            heightClass="h-full"
-            showAxes={false}
-          />
-        </div>
-      </GlassCard>
-
       {/* Weather */}
       <SectionLabel
         icon={CloudRain}
