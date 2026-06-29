@@ -197,7 +197,7 @@ export default function DashboardPage() {
           ) : null
         }
       />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid auto-rows-[168px] grid-cols-2 gap-3 md:grid-cols-4">
         <DualStat
           icon={Zap}
           gradient="solar"
@@ -260,7 +260,7 @@ export default function DashboardPage() {
           ) : null
         }
       />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid auto-rows-[168px] grid-cols-2 gap-3 md:grid-cols-4">
         <WindDial degrees={obs?.winddir} speed={m.windSpeed} gust={m.windGust} unit="km/h" />
         <DualStat icon={Thermometer} gradient="solar" label="Temperature" aLabel="Now" aValue={show(m.temp)} aUnit="°C" bLabel="Wk avg" bValue={show(wkAvg.temp)} bUnit="°C" loading={wxLoading} />
         <DualStat icon={Droplets} gradient="co2" label="Humidity" aLabel="Now" aValue={show(obs?.humidity)} aUnit="%" bLabel="Wk avg" bValue={show(wkAvg.humidity)} bUnit="%" loading={wxLoading} />

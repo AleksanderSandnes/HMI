@@ -24,16 +24,16 @@ function Module({
 }) {
   return (
     <div className="min-w-0 flex-1">
-      <p className="text-[9px] font-bold uppercase tracking-[0.3px] text-text-muted">
+      <p className="text-[11px] font-bold uppercase tracking-[0.3px] text-text-muted">
         {label}
       </p>
       {loading ? (
-        <Skeleton className="mt-1.5 h-5 w-12" />
+        <Skeleton className="mt-2 h-7 w-16" />
       ) : (
-        <p className="mt-0.5 truncate text-[19px] font-extrabold leading-tight tracking-[-0.4px] text-text-primary">
+        <p className="mt-1 truncate text-[27px] font-extrabold leading-tight tracking-[-0.5px] text-text-primary">
           {value}
           {unit ? (
-            <span className="ml-0.5 text-[10px] font-bold text-text-muted">{unit}</span>
+            <span className="ml-1 text-[12px] font-bold text-text-muted">{unit}</span>
           ) : null}
         </p>
       )}
@@ -43,7 +43,8 @@ function Module({
 
 /**
  * Info tile with two data modules side by side, split by a clear divider — e.g.
- * "Today | This week" or "Now | Weekly avg".
+ * "Today | This week" or "Now | Weekly avg". Fills its grid cell height so rows
+ * line up.
  */
 export function DualStat({
   icon: Icon,
@@ -69,21 +70,21 @@ export function DualStat({
   loading?: boolean;
 }) {
   return (
-    <GlassCard strong className="min-w-0 flex-1 p-3.5">
-      <div className="mb-3 flex items-center gap-2">
+    <GlassCard strong className="flex h-full min-w-0 flex-1 flex-col justify-center gap-3.5 p-4">
+      <div className="flex items-center gap-2">
         <div
-          className="flex h-7 w-7 items-center justify-center rounded-[9px]"
+          className="flex h-8 w-8 items-center justify-center rounded-[10px]"
           style={{ backgroundImage: GRADIENTS[gradient] }}
         >
-          <Icon size={14} className="text-[#0a1124]" />
+          <Icon size={16} className="text-[#0a1124]" />
         </div>
-        <span className="text-[10.5px] font-bold uppercase tracking-[0.3px] text-text-muted">
+        <span className="text-[12px] font-bold uppercase tracking-[0.3px] text-text-muted">
           {label}
         </span>
       </div>
       <div className="flex items-stretch">
         <Module label={aLabel} value={aValue} unit={aUnit} loading={loading} />
-        <div className="mx-3 w-px self-stretch bg-glass-border" />
+        <div className="mx-3.5 w-px self-stretch bg-glass-border" />
         <Module label={bLabel} value={bValue} unit={bUnit} loading={loading} />
       </div>
     </GlassCard>
