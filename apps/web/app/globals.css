@@ -93,3 +93,18 @@ body {
   backdrop-filter: blur(26px);
   -webkit-backdrop-filter: blur(26px);
 }
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-fade-in-up {
+  animation: fade-in-up 1s ease-out both;
+}
