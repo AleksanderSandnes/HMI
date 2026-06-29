@@ -4,6 +4,7 @@
     "slug": "HMI",
     "scheme": "hmi",
     "version": "1.0.0",
+    "newArchEnabled": true,
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
