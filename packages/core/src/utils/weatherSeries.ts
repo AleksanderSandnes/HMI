@@ -28,6 +28,17 @@ const EXTRACTORS: Record<string, ((it: Obs) => number)[]> = {
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+const COMPASS = [
+  'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+  'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW',
+];
+
+/** Wind direction in degrees → 16-point compass label (e.g. 213 → "SSW"). */
+export function windCompass(deg: number | null | undefined): string | null {
+  if (deg == null || isNaN(Number(deg))) return null;
+  return COMPASS[Math.round((Number(deg) % 360) / 22.5) % 16];
+}
+
 export interface WeatherSeriesResult {
   labels: string[];
   series: number[][];

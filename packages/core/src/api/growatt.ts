@@ -67,6 +67,7 @@ export function createGrowattApi(ctx: CoreApiContext) {
           model: o.deviceModel ?? undefined,
           plantName: o.plantName ?? undefined,
           lastUpdate: o.lastUpdateTime ?? undefined,
+          capacity: num(o.nominalPower),
           deviceCount: num(o.deviceNum),
           onlineCount: num(o.onlineNum),
         };

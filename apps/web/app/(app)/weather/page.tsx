@@ -11,7 +11,7 @@ import {
   Wind,
   type LucideIcon,
 } from "lucide-react";
-import { buildWeatherSeries, toISO } from "@hmi/core";
+import { buildWeatherSeries, toISO, windCompass } from "@hmi/core";
 import { useCore } from "@/lib/hooks/useCore";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { StatTile } from "@/components/ui/StatTile";
@@ -160,6 +160,7 @@ export default function WeatherPage() {
   const obs = current?.observations?.[0];
   const curTemp = obs?.metric?.temp;
   const curWind = obs?.metric?.windSpeed;
+  const curWindDir = windCompass(obs?.winddir);
   const curHumidity = obs?.humidity;
 
   return (
@@ -186,7 +187,7 @@ export default function WeatherPage() {
           label="Wind"
           value={curWind != null ? `${Math.round(curWind)}` : "—"}
           unit="km/h"
-          sublabel="Now"
+          sublabel={curWindDir ? `From ${curWindDir}` : "Now"}
         />
         <StatTile
           icon={CloudRain}

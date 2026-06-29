@@ -32,6 +32,8 @@ export interface SolarDeviceInfo {
   plantName?: string;
   /** Last device data update timestamp (plant local). */
   lastUpdate?: string;
+  /** Rated PV system capacity in watts (nominalPower), e.g. 12000. */
+  capacity?: number;
   /** Total number of devices on the plant. */
   deviceCount?: number;
   /** Number of devices currently online. */

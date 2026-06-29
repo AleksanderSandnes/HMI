@@ -21,6 +21,7 @@ import {
   formatPeak,
   getPeakOutput,
   toISO,
+  windCompass,
   type SolarData,
 } from "@hmi/core";
 import { useCore } from "@/lib/hooks/useCore";
@@ -29,17 +30,6 @@ import { StatTile } from "@/components/ui/StatTile";
 import { SolarChart } from "@/components/charts/SolarChart";
 import { PageHeader } from "@/components/PageHeader";
 import { WeatherChip } from "@/components/WeatherChip";
-
-const COMPASS = [
-  "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-  "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
-];
-
-/** Degrees → 16-point compass label. */
-function windCompass(deg: number | null | undefined): string | null {
-  if (deg == null || isNaN(Number(deg))) return null;
-  return COMPASS[Math.round(((Number(deg) % 360) / 22.5)) % 16];
-}
 
 interface CurrentMetric {
   temp?: number;
@@ -106,6 +96,12 @@ export default function DashboardPage() {
   const lifetime = solar?.metrics.totalGeneration ?? null;
   const co2 = todayGen != null ? formatCO2(todayGen * CO2_PER_KWH) : null;
   const device = solar?.device;
+  const capacityKw = device?.capacity ? round(device.capacity / 1000, 1) : null;
+  // Live inverter utilisation: current AC power vs rated PV capacity.
+  const utilisation =
+    device?.capacity && currentPower > 0
+      ? Math.round((currentPower / device.capacity) * 100)
+      : null;
 
   const obs = weatherData?.observations?.[0];
   const m = obs?.metric ?? {};
@@ -128,9 +124,9 @@ export default function DashboardPage() {
             <h2 className="text-[19px] font-extrabold text-text-primary">
               Solar
             </h2>
-            {device?.plantName ? (
+            {device?.plantName || device?.model ? (
               <span className="text-[13px] font-semibold text-text-muted">
-                · {device.plantName}
+                · {[device?.plantName, device?.model].filter(Boolean).join(" · ")}
               </span>
             ) : null}
           </div>
@@ -171,7 +167,15 @@ export default function DashboardPage() {
             label="Current power"
             value={show(currentPower)}
             unit="W"
-            sublabel={device?.lastUpdate ? `as of ${device.lastUpdate.split(" ")[1] ?? ""}` : "Now"}
+            sublabel={
+              utilisation != null && capacityKw != null
+                ? `${utilisation}% of ${capacityKw} kW`
+                : capacityKw != null
+                  ? `${capacityKw} kW system`
+                  : device?.lastUpdate
+                    ? `as of ${device.lastUpdate.split(" ")[1] ?? ""}`
+                    : "Now"
+            }
             loading={solarLoading}
           />
           <StatTile
