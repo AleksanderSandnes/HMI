@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "./GlassCard";
@@ -10,6 +11,9 @@ const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
+
+const POPOVER_W = 300;
+const POPOVER_H = 360;
 
 /** Parse a `yyyy-mm-dd` string into a local Date (no UTC/TZ shift). */
 function parseYMD(s: string): Date {
@@ -33,7 +37,9 @@ const sameDay = (a: Date, b: Date) =>
 /**
  * Date selector (web port of mobile ui/DateSelector). Prev/next day steppers
  * plus a click-to-open custom glass calendar popover (replaces the browser's
- * native date picker, which clashed with the glass design system).
+ * native date picker). The popover is rendered in a portal with fixed
+ * positioning so it escapes the GlassCard's `overflow-hidden` clip and stays
+ * fully visible (flipping above the trigger when there's no room below).
  */
 export function DateSelector({
   selectedDate,
@@ -45,41 +51,55 @@ export function DateSelector({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  // Whether to open the popover above the trigger (when there's no room below).
-  const [openUp, setOpenUp] = useState(false);
-  // Which month the grid is showing; seeded from the selected date.
+  // Fixed viewport coords + flip direction, computed from the trigger on open.
+  const [pos, setPos] = useState<{ left: number; top: number; up: boolean } | null>(null);
   const [viewDate, setViewDate] = useState(() => parseYMD(selectedDate));
   const rootRef = useRef<HTMLDivElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
 
   const selected = useMemo(() => parseYMD(selectedDate), [selectedDate]);
   const today = useMemo(() => new Date(), []);
 
-  // Toggle the popover; when opening, jump the grid to the selected month and
-  // decide whether to open upward (so it stays visible near the page bottom).
-  const toggleOpen = () => {
-    if (!open) {
-      setViewDate(parseYMD(selectedDate));
-      const rect = rootRef.current?.getBoundingClientRect();
-      // The popover is ~360px tall; open upward when there isn't room below.
-      setOpenUp(!!rect && window.innerHeight - rect.bottom < 380);
-    }
-    setOpen((o) => !o);
+  const close = () => setOpen(false);
+
+  const openPopover = () => {
+    const rect = rootRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const half = POPOVER_W / 2;
+    const margin = 8;
+    const left = Math.min(
+      Math.max(rect.left + rect.width / 2, half + margin),
+      window.innerWidth - half - margin
+    );
+    const up = window.innerHeight - rect.bottom < POPOVER_H;
+    const top = up ? rect.top - 10 : rect.bottom + 10;
+    setViewDate(parseYMD(selectedDate));
+    setPos({ left, top, up });
+    setOpen(true);
   };
 
-  // Dismiss on outside click / Escape.
+  const toggleOpen = () => (open ? close() : openPopover());
+
+  // Dismiss on outside click / Escape; reposition-safe by closing on scroll/resize.
   useEffect(() => {
     if (!open) return;
     const onPointer = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (!rootRef.current?.contains(t) && !popRef.current?.contains(t)) close();
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") close();
     };
+    const onMove = () => close();
     document.addEventListener("mousedown", onPointer);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onMove, true);
+    window.addEventListener("resize", onMove);
     return () => {
       document.removeEventListener("mousedown", onPointer);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onMove, true);
+      window.removeEventListener("resize", onMove);
     };
   }, [open]);
 
@@ -95,7 +115,7 @@ export function DateSelector({
 
   const pickDay = (d: Date) => {
     onDateSelect(toYMD(d));
-    setOpen(false);
+    close();
   };
 
   const pretty = selected.toLocaleDateString("en-US", {
@@ -117,52 +137,20 @@ export function DateSelector({
     });
   }, [viewDate]);
 
-  return (
-    <GlassCard strong className="relative p-[18px]">
-      <p className="mb-3.5 text-xs font-bold uppercase tracking-[0.5px] text-text-muted">
-        Date
-      </p>
-      <div ref={rootRef} className="relative flex items-center gap-2">
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => shift(-1)}
-          aria-label="Previous day"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong disabled:opacity-50"
-        >
-          <ChevronLeft size={18} />
-        </button>
-
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={toggleOpen}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          className="flex flex-1 items-center justify-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-3 py-2.5 text-sm font-bold text-text-primary transition hover:bg-glass-fill-strong disabled:opacity-50"
-        >
-          <CalendarDays size={14} className="text-text-secondary" />
-          {pretty}
-        </button>
-
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => shift(1)}
-          aria-label="Next day"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong disabled:opacity-50"
-        >
-          <ChevronRight size={18} />
-        </button>
-
-        {open && (
+  const popover =
+    open && pos && typeof document !== "undefined"
+      ? createPortal(
           <div
+            ref={popRef}
             role="dialog"
             aria-label="Choose date"
-            className={cn(
-              "absolute left-1/2 z-50 w-[300px] -translate-x-1/2 rounded-[var(--radius-lg)] border border-glass-border-strong bg-[rgba(10,17,36,0.96)] p-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl",
-              openUp ? "bottom-[calc(100%+10px)]" : "top-[calc(100%+10px)]"
-            )}
+            style={{
+              position: "fixed",
+              left: pos.left,
+              top: pos.top,
+              transform: pos.up ? "translate(-50%, -100%)" : "translate(-50%, 0)",
+            }}
+            className="z-[100] w-[300px] rounded-[var(--radius-lg)] border border-glass-border-strong bg-[rgba(10,17,36,0.98)] p-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl"
           >
             {/* Month header */}
             <div className="mb-3 flex items-center justify-between">
@@ -227,9 +215,50 @@ export function DateSelector({
                 );
               })}
             </div>
-          </div>
-        )}
+          </div>,
+          document.body
+        )
+      : null;
+
+  return (
+    <GlassCard strong className="p-[18px]">
+      <p className="mb-3.5 text-xs font-bold uppercase tracking-[0.5px] text-text-muted">
+        Date
+      </p>
+      <div ref={rootRef} className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => shift(-1)}
+          aria-label="Previous day"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong disabled:opacity-50"
+        >
+          <ChevronLeft size={18} />
+        </button>
+
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={toggleOpen}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          className="flex flex-1 items-center justify-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-3 py-2.5 text-sm font-bold text-text-primary transition hover:bg-glass-fill-strong disabled:opacity-50"
+        >
+          <CalendarDays size={14} className="text-text-secondary" />
+          {pretty}
+        </button>
+
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => shift(1)}
+          aria-label="Next day"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong disabled:opacity-50"
+        >
+          <ChevronRight size={18} />
+        </button>
       </div>
+      {popover}
     </GlassCard>
   );
 }

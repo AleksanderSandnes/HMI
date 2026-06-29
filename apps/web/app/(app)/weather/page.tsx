@@ -12,10 +12,9 @@ import {
   Wind,
   type LucideIcon,
 } from "lucide-react";
-import { buildWeatherSeries, toISO, windCompass } from "@hmi/core";
+import { buildWeatherSeries, toISO } from "@hmi/core";
 import { useCore } from "@/lib/hooks/useCore";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { StatTile } from "@/components/ui/StatTile";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { DateSelector } from "@/components/ui/DateSelector";
 import { WeatherChart, type LineSeries } from "@/components/charts/WeatherChart";
@@ -113,14 +112,6 @@ const TIME_OPTIONS = [
   { label: "Weekly", value: "weekly" },
 ];
 
-function stat(arr: number[], kind: "max" | "min" | "avg"): number | null {
-  const vals = arr.filter((v) => v != null && !isNaN(v));
-  if (!vals.length) return null;
-  if (kind === "max") return Math.max(...vals);
-  if (kind === "min") return Math.min(...vals);
-  return vals.reduce((s, v) => s + v, 0) / vals.length;
-}
-
 export default function WeatherPage() {
   const { weather } = useCore();
 
@@ -145,12 +136,6 @@ export default function WeatherPage() {
     },
   });
 
-  const { data: current } = useQuery({
-    queryKey: ["weather-current"],
-    queryFn: () => weather.getCurrentWeatherData(),
-    staleTime: 60_000,
-  });
-
   const { labels, series, ticks } = useMemo(
     () => buildWeatherSeries(observations ?? [], dataType, timespan),
     [observations, dataType, timespan]
@@ -162,17 +147,6 @@ export default function WeatherPage() {
     label: meta.series[i]?.label ?? `Series ${i + 1}`,
   }));
 
-  const primary = series[0] ?? [];
-  const high = stat(primary, "max");
-  const low = stat(primary, "min");
-  const avg = stat(primary, "avg");
-
-  const obs = current?.observations?.[0];
-  const curTemp = obs?.metric?.temp;
-  const curWind = obs?.metric?.windSpeed;
-  const curWindDir = windCompass(obs?.winddir);
-  const curHumidity = obs?.humidity;
-
   return (
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-5">
       <PageHeader
@@ -180,46 +154,6 @@ export default function WeatherPage() {
         subtitle="Local conditions &amp; history"
         right={<WeatherChip />}
       />
-
-      {/* Current conditions */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatTile
-          icon={Thermometer}
-          gradient="solar"
-          label="Temperature"
-          value={curTemp != null ? `${Math.round(curTemp)}` : "—"}
-          unit="°C"
-          sublabel="Now"
-        />
-        <StatTile
-          icon={Wind}
-          gradient="energy"
-          label="Wind"
-          value={curWind != null ? `${Math.round(curWind)}` : "—"}
-          unit="km/h"
-          sublabel={curWindDir ? `From ${curWindDir}` : "Now"}
-        />
-        <StatTile
-          icon={CloudRain}
-          gradient="co2"
-          label="Humidity"
-          value={curHumidity != null ? `${Math.round(curHumidity)}` : "—"}
-          unit="%"
-          sublabel="Now"
-        />
-        <StatTile
-          icon={Gauge}
-          gradient="revenue"
-          label={`${meta.title} ${timespan === "weekly" ? "high" : "peak"}`}
-          value={high != null ? `${Math.round(high * 10) / 10}` : "—"}
-          unit={meta.unit}
-          sublabel={
-            low != null && avg != null
-              ? `low ${Math.round(low * 10) / 10} · avg ${Math.round(avg * 10) / 10}`
-              : "No data"
-          }
-        />
-      </div>
 
       {/* Chart card */}
       <GlassCard strong elevated className="p-[22px]">
