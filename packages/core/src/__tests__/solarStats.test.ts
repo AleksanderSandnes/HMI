@@ -6,10 +6,20 @@ import {
   formatNum,
   formatPeak,
   getPeakOutput,
+  peakUnit,
   percentDelta,
   periodLabel,
   previousPeriodDate,
 } from "../utils/solarStats";
+
+describe("peakUnit", () => {
+  it("matches formatPeak's k-scaling", () => {
+    expect(peakUnit(137, "W")).toBe("W");
+    expect(peakUnit(10900, "W")).toBe("kW");
+    expect(peakUnit(540, "kWh")).toBe("kWh");
+    expect(peakUnit(1500, "kWh")).toBe("MWh");
+  });
+});
 
 describe("formatNum", () => {
   it("formats thousands and millions", () => {

@@ -75,6 +75,17 @@ export function formatPeak(v: number): string {
   return v.toFixed(v < 10 ? 1 : 0);
 }
 
+/**
+ * The unit that matches {@link formatPeak} after its k-scaling, so a 10 900 W
+ * peak reads "10.9 kW" (not "10.9 W") and a 1 500 kWh total reads "1.5 MWh".
+ */
+export function peakUnit(value: number, unit: string): string {
+  if (value < 1000) return unit;
+  if (unit === 'W') return 'kW';
+  if (unit === 'kWh') return 'MWh';
+  return unit;
+}
+
 const DAY_NAMES: Record<string, string> = {
   Mon: 'Monday',
   Tue: 'Tuesday',

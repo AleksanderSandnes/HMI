@@ -18,6 +18,7 @@ import {
   buildWeatherSeries,
   formatPeak,
   getPeakOutput,
+  peakUnit,
   toISO,
   type SolarData,
 } from "@hmi/core";
@@ -219,7 +220,7 @@ export default function DashboardPage() {
           aUnit="W"
           bLabel="Peak today"
           bValue={peak ? formatPeak(peak.value) : "—"}
-          bUnit="W"
+          bUnit={peak ? peakUnit(peak.value, "W") : "W"}
           loading={solarLoading}
         />
         <DualStat

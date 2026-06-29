@@ -6,6 +6,7 @@ import {
   chartSubtitle,
   formatPeak,
   getPeakOutput,
+  peakUnit,
   toISO,
   type SolarData,
 } from "@hmi/core";
@@ -46,11 +47,16 @@ export default function SolarPage() {
   // Publish generation/peak to the top nav widget while this page is mounted.
   const generation = metrics.todayGeneration.toFixed(1);
   const peakValue = peak ? formatPeak(peak.value) : "—";
-  const peakUnit = peak ? peak.unit : "W";
+  const peakUnitStr = peak ? peakUnit(peak.value, peak.unit) : "W";
   useEffect(() => {
-    setSolarStats({ generation, genUnit: "kWh", peak: peakValue, peakUnit });
+    setSolarStats({
+      generation,
+      genUnit: "kWh",
+      peak: peakValue,
+      peakUnit: peakUnitStr,
+    });
     return () => setSolarStats(null);
-  }, [generation, peakValue, peakUnit, setSolarStats]);
+  }, [generation, peakValue, peakUnitStr, setSolarStats]);
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[1480px] flex-col gap-4">
