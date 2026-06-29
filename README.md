@@ -16,7 +16,26 @@ A personal home-energy dashboard that brings **solar production** and **local we
 - **🗝️ Encrypted credential storage** — users supply their own Growatt and Weather.com credentials; the weather API key is encrypted at rest.
 - **🔔 Notifications** — an in-app notification centre (web) and Expo push notifications (mobile/tablet), backed by daily background jobs.
 - **🚀 Smart caching** — historical solar and weather data is cached in MongoDB so repeated views don't re-hit the upstream APIs.
-- **📱 Responsive UI** — a single Expo codebase serving web, iOS, and Android from the same components.
+- **📱 Responsive UI** — a Next.js web app and an Expo iOS/Android app sharing business logic.
+
+---
+
+## 🗂️ Monorepo
+
+A Turborepo + npm-workspaces monorepo (laid out like the Catalyst project):
+
+```
+apps/
+  web/     Next.js 16 (App Router) web app — Vercel
+  mobile/  Expo / React Native iOS + Android app — EAS
+packages/
+  core/    @hmi/core — platform-agnostic shared logic (types, chart math,
+           validation, framework-agnostic API clients) bundled into each app
+backend/growattAPI/   Java Growatt service (Render)   ·   supabase/   (unchanged)
+```
+
+`@hmi/core` is a compile-time library (not a server): the `api/*` modules are
+client-side helpers that call Supabase + the Java Growatt service.
 
 ---
 
@@ -28,9 +47,9 @@ Growatt API) for the part Supabase can't host.
 ```
 ┌──────────────────┐        ┌──────────────────────────────────────────┐
 │   Frontend       │───────►│   Supabase                               │
-│   Expo + RN web  │        │   • Auth (GoTrue, ES256 JWT)             │
-│   (Vercel)       │◄──────►│   • Postgres + RLS (users/settings/      │
-│                  │        │     notifications/weather/solar cache)   │
+│   Next.js web    │        │   • Auth (GoTrue, ES256 JWT)             │
+│   (Vercel) +     │◄──────►│   • Postgres + RLS (users/settings/      │
+│   Expo mobile    │        │     notifications/weather/solar cache)   │
 │ • Solar charts   │        │   • Realtime (notification center)       │
 │ • Weather views  │        │   • Edge Functions: weather-current /    │
 │ • Notifications  │        │     weather-history / weather-backfill / │
