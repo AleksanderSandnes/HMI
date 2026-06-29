@@ -136,7 +136,7 @@ export default function DashboardPage() {
     ) : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4">
+    <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col gap-3">
       <PageHeader
         title="Home Production"
         subtitle={
@@ -158,23 +158,25 @@ export default function DashboardPage() {
           ) : null
         }
       />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid shrink-0 grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile compact icon={Zap} gradient="solar" label="Today" value={show(todayGen, 1)} unit="kWh" sublabel="Generated" loading={solarLoading} />
         <StatTile compact icon={TrendingUp} gradient="energy" label="Current" value={show(currentPower)} unit="W" sublabel={utilisation != null ? `${utilisation}% of capacity` : "Now"} loading={solarLoading} />
         <StatTile compact icon={SunMedium} gradient="revenue" label="Peak today" value={peak ? formatPeak(peak.value) : "—"} unit="W" sublabel={peak ? `at ${peak.label}` : "No data"} loading={solarLoading} />
         <StatTile compact icon={Mountain} gradient="solar" label="Lifetime" value={show(lifetime, 1)} unit="kWh" sublabel="Total" loading={solarLoading} />
       </div>
-      <GlassCard strong className="p-3.5">
+      <GlassCard strong className="flex min-h-0 flex-1 flex-col p-3.5">
         <p className="mb-0.5 px-1 text-[10px] font-bold uppercase tracking-[0.4px] text-text-muted">
           Today&apos;s production
         </p>
-        <SolarChart
-          data={solar?.chartData ?? { labels: [], datasets: [{ data: [] }] }}
-          timespan="hourly"
-          loading={solarLoading}
-          height={150}
-          showAxes={false}
-        />
+        <div className="min-h-[90px] flex-1">
+          <SolarChart
+            data={solar?.chartData ?? { labels: [], datasets: [{ data: [] }] }}
+            timespan="hourly"
+            loading={solarLoading}
+            heightClass="h-full"
+            showAxes={false}
+          />
+        </div>
       </GlassCard>
 
       {/* Weather */}
@@ -189,7 +191,7 @@ export default function DashboardPage() {
           ) : null
         }
       />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid shrink-0 grid-cols-2 gap-3 md:grid-cols-4">
         <WindDial degrees={obs?.winddir} speed={m.windSpeed} gust={m.windGust} unit="km/h" />
         <StatTile compact icon={Thermometer} gradient="solar" label="Temperature" value={show(m.temp)} unit="°C" sublabel={`Feels ${show(feelsLike)}°`} loading={wxLoading} />
         <StatTile compact icon={Droplets} gradient="co2" label="Humidity" value={show(obs?.humidity)} unit="%" sublabel={m.dewpt != null ? `dew pt ${show(m.dewpt)}°` : undefined} loading={wxLoading} />

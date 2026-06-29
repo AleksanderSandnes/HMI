@@ -30,9 +30,9 @@ export function WindDial({
   return (
     <GlassCard
       strong
-      className="flex min-w-[150px] flex-1 items-center gap-3.5 p-[18px]"
+      className="flex min-w-0 flex-1 items-center gap-3 p-3.5"
     >
-      <div className="relative h-[92px] w-[92px] shrink-0">
+      <div className="relative h-[74px] w-[74px] shrink-0">
         <svg viewBox="0 0 100 100" className="h-full w-full">
           <defs>
             <linearGradient id="wind-arrow" x1="0" y1="0" x2="0" y2="1">
@@ -80,14 +80,14 @@ export function WindDial({
       </div>
 
       <div className="min-w-0">
-        <p className="text-xs font-bold uppercase tracking-[0.5px] text-text-muted">
+        <p className="text-[10.5px] font-bold uppercase tracking-[0.4px] text-text-muted">
           Wind
         </p>
-        <p className="mt-0.5 text-[26px] font-extrabold leading-none text-text-primary">
+        <p className="mt-0.5 text-[21px] font-extrabold leading-none text-text-primary">
           {spd != null ? Math.round(spd) : "—"}
-          <span className="ml-1 text-[13px] font-bold text-text-muted">{unit}</span>
+          <span className="ml-1 text-[11px] font-bold text-text-muted">{unit}</span>
         </p>
-        <p className="mt-1.5 text-[12px] font-semibold text-text-secondary">
+        <p className="mt-1 truncate text-[10.5px] font-semibold text-text-secondary">
           {dir ? `from ${dir}` : "Direction n/a"}
           {gst != null ? ` · gust ${Math.round(gst)}` : ""}
         </p>
