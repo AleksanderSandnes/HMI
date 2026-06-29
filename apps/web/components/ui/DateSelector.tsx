@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "./GlassCard";
 
@@ -279,9 +279,13 @@ export function DateSelector({
               <button
                 type="button"
                 onClick={zoomOut}
-                className="flex-1 rounded-[var(--radius-sm)] py-1 text-sm font-extrabold text-text-primary transition hover:bg-glass-fill"
+                title="Switch to month / year view"
+                className="flex flex-1 items-center justify-center gap-1 rounded-[var(--radius-sm)] py-1 text-sm font-extrabold text-text-primary transition hover:bg-glass-fill"
               >
                 {headerLabel}
+                {view !== "year" ? (
+                  <ChevronDown size={13} className="text-text-muted" />
+                ) : null}
               </button>
               <button
                 type="button"
@@ -299,17 +303,14 @@ export function DateSelector({
       : null;
 
   return (
-    <GlassCard strong className="p-[18px]">
-      <p className="mb-3.5 text-xs font-bold uppercase tracking-[0.5px] text-text-muted">
-        Date
-      </p>
-      <div ref={rootRef} className="flex items-center gap-2">
+    <GlassCard strong className="flex justify-center p-2.5">
+      <div ref={rootRef} className="flex items-center gap-1.5">
         <button
           type="button"
           disabled={disabled}
           onClick={() => shift(-1)}
           aria-label="Previous day"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong disabled:opacity-50"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong disabled:opacity-50"
         >
           <ChevronLeft size={18} />
         </button>
@@ -320,7 +321,7 @@ export function DateSelector({
           onClick={toggleOpen}
           aria-haspopup="dialog"
           aria-expanded={open}
-          className="flex flex-1 items-center justify-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-3 py-2.5 text-sm font-bold text-text-primary transition hover:bg-glass-fill-strong disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-4 py-2 text-sm font-bold text-text-primary transition hover:bg-glass-fill-strong disabled:opacity-50"
         >
           <CalendarDays size={14} className="text-text-secondary" />
           {pretty}
@@ -331,7 +332,7 @@ export function DateSelector({
           disabled={disabled}
           onClick={() => shift(1)}
           aria-label="Next day"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong disabled:opacity-50"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong disabled:opacity-50"
         >
           <ChevronRight size={18} />
         </button>
