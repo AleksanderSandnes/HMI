@@ -303,7 +303,7 @@ export function DateSelector({
       : null;
 
   return (
-    <GlassCard strong className="flex justify-center p-2.5">
+    <GlassCard strong className="flex w-fit items-center p-1.5">
       <div ref={rootRef} className="flex items-center gap-1.5">
         <button
           type="button"

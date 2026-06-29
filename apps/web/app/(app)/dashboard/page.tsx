@@ -21,7 +21,6 @@ import { StatTile } from "@/components/ui/StatTile";
 import { WindDial } from "@/components/ui/WindDial";
 import { SolarChart } from "@/components/charts/SolarChart";
 import { PageHeader } from "@/components/PageHeader";
-import { WeatherChip } from "@/components/WeatherChip";
 
 interface CurrentMetric {
   temp?: number;
@@ -144,12 +143,7 @@ export default function DashboardPage() {
           [device?.plantName, device?.model].filter(Boolean).join(" · ") ||
           "Solar & weather overview"
         }
-        right={
-          <div className="flex items-center gap-2.5">
-            {statusBadge}
-            <WeatherChip />
-          </div>
-        }
+        right={statusBadge}
       />
 
       {/* Solar */}

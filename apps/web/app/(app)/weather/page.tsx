@@ -19,7 +19,6 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { DateSelector } from "@/components/ui/DateSelector";
 import { WeatherChart, type LineSeries } from "@/components/charts/WeatherChart";
 import { PageHeader } from "@/components/PageHeader";
-import { WeatherChip } from "@/components/WeatherChip";
 import { cn } from "@/lib/utils";
 
 interface MetricMeta {
@@ -152,7 +151,6 @@ export default function WeatherPage() {
       <PageHeader
         title="Weather Station"
         subtitle="Local conditions &amp; history"
-        right={<WeatherChip />}
       />
 
       {/* Chart card — fills the remaining viewport so nothing scrolls off-screen. */}
@@ -182,15 +180,22 @@ export default function WeatherPage() {
           })}
         </div>
 
-        <div className="mb-[18px] flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-[18px] flex shrink-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <h2 className="text-[19px] font-extrabold text-text-primary">
             {meta.title}
           </h2>
-          <div className="w-full sm:w-auto sm:min-w-[220px]">
-            <SegmentedControl
-              value={timespan}
-              onChange={setTimespan}
-              options={TIME_OPTIONS}
+          <div className="flex w-full flex-col items-center gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end lg:w-auto">
+            <div className="w-full sm:w-auto sm:min-w-[200px]">
+              <SegmentedControl
+                value={timespan}
+                onChange={setTimespan}
+                options={TIME_OPTIONS}
+              />
+            </div>
+            <DateSelector
+              selectedDate={pickerDate}
+              onDateSelect={setPickerDate}
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -203,14 +208,6 @@ export default function WeatherPage() {
             unit={meta.unit}
             loading={isLoading}
             heightClass="h-full"
-          />
-        </div>
-
-        <div className="mt-4 shrink-0">
-          <DateSelector
-            selectedDate={pickerDate}
-            onDateSelect={setPickerDate}
-            disabled={isLoading}
           />
         </div>
       </GlassCard>

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sun } from "lucide-react";
 import {
   chartSubtitle,
   formatPeak,
@@ -57,7 +56,7 @@ function HeaderStat({
 }
 
 export default function SolarPage() {
-  const { growatt, weather } = useCore();
+  const { growatt } = useCore();
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -70,20 +69,9 @@ export default function SolarPage() {
     queryFn: () => growatt.fetchSolarData(timespan as never, pickerDate, false),
   });
 
-  // Shared with the other headers (same query key) — temp + place for the widget.
-  const { data: wx } = useQuery({
-    queryKey: ["weather-current"],
-    queryFn: () => weather.getCurrentWeatherData(),
-    staleTime: 60_000,
-  });
-
   const metrics = solar?.metrics ?? ZERO;
   const chartData = solar?.chartData ?? { labels: [], datasets: [{ data: [] }] };
   const peak = getPeakOutput(chartData, timespan);
-
-  const wobs = wx?.observations?.[0];
-  const temp = wobs?.metric?.temp;
-  const place = wobs?.neighborhood;
 
   const headerWidget = (
     <GlassCard className="flex items-center gap-3.5 rounded-[var(--radius-md)] px-4 py-2">
@@ -100,13 +88,6 @@ export default function SolarPage() {
         unit={peak ? peak.unit : "W"}
         loading={isLoading}
       />
-      <span className="h-7 w-px bg-glass-border" />
-      <div className="flex items-center gap-1.5">
-        <Sun size={14} className="text-solar-light" />
-        <span className="whitespace-nowrap text-[13px] font-bold text-text-secondary">
-          {temp != null ? `${Math.round(temp)}° · ${place || "Sandnes"}` : "—"}
-        </span>
-      </div>
     </GlassCard>
   );
 
@@ -119,7 +100,7 @@ export default function SolarPage() {
       />
 
       <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[22px]">
-        <div className="mb-[18px] flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-[18px] flex shrink-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-[19px] font-extrabold text-text-primary">
               Power Generation
@@ -128,8 +109,15 @@ export default function SolarPage() {
               {chartSubtitle(timespan, pickerDate)}
             </p>
           </div>
-          <div className="w-full sm:w-auto sm:min-w-[320px]">
-            <SegmentedControl value={timespan} onChange={setTimespan} />
+          <div className="flex w-full flex-col items-center gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end lg:w-auto">
+            <div className="w-full sm:w-auto sm:min-w-[300px]">
+              <SegmentedControl value={timespan} onChange={setTimespan} />
+            </div>
+            <DateSelector
+              selectedDate={pickerDate}
+              onDateSelect={setPickerDate}
+              disabled={isLoading}
+            />
           </div>
         </div>
 
@@ -139,14 +127,6 @@ export default function SolarPage() {
             timespan={timespan}
             loading={isLoading}
             heightClass="h-full"
-          />
-        </div>
-
-        <div className="mt-4 shrink-0">
-          <DateSelector
-            selectedDate={pickerDate}
-            onDateSelect={setPickerDate}
-            disabled={isLoading}
           />
         </div>
       </GlassCard>

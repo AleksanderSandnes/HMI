@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCore } from "@/lib/hooks/useCore";
+import { WeatherChip } from "@/components/WeatherChip";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -43,21 +44,24 @@ export function AppNav() {
           page title (left) and Sign out aligns with the content's right edge. */}
       <header className="sticky top-0 z-30 hidden border-b border-glass-border bg-[rgba(8,12,24,0.92)] px-5 backdrop-blur-xl md:block md:px-8">
         <div className="mx-auto flex w-full max-w-[1480px] items-center justify-between py-2.5">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2.5"
-          aria-label="HMI home"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/icon.png"
-            alt=""
-            className="h-8 w-8 rounded-[8px] shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
-          />
-          <span className="text-lg font-extrabold tracking-tight text-text-primary">
-            HMI
-          </span>
-        </Link>
+        <div className="flex items-center gap-3.5">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2.5"
+            aria-label="HMI home"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/icon.png"
+              alt=""
+              className="h-8 w-8 rounded-[8px] shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
+            />
+            <span className="text-lg font-extrabold tracking-tight text-text-primary">
+              HMI
+            </span>
+          </Link>
+          <WeatherChip />
+        </div>
 
         <nav className="flex items-center gap-1">
           {NAV.map(({ href, label, icon: Icon }) => {
