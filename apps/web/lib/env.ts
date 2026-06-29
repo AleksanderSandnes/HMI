@@ -14,7 +14,14 @@ export const SUPABASE_URL =
 export const SUPABASE_ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-/** Resolved Java Growatt service base URL (no trailing /api). */
+/**
+ * Resolved Java Growatt service base URL (no trailing /api).
+ *
+ * In development with NEXT_PUBLIC_JAVA_API unset this is http://localhost:8080, so the
+ * local Java service must be running (`cd backend/growattAPI && mvn spring-boot:run`) or
+ * every /api/growatt/* call fails and Solar/Dashboard show no data. Set NEXT_PUBLIC_JAVA_API
+ * to https://growattapi.onrender.com to use the deployed backend instead.
+ */
 export const JAVA_API_BASE_URL =
   DATA_MODE === "production"
     ? process.env.NEXT_PUBLIC_JAVA_API || "https://growattapi.onrender.com"
