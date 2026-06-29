@@ -25,7 +25,7 @@ import {
 import { useCore } from "@/lib/hooks/useCore";
 import { DualStat } from "@/components/ui/DualStat";
 import { WindDial } from "@/components/ui/WindDial";
-import { BaroDial } from "@/components/ui/BaroDial";
+import { DualBaro } from "@/components/ui/DualBaro";
 import { PageHeader } from "@/components/PageHeader";
 
 interface CurrentMetric {
@@ -266,7 +266,7 @@ export default function DashboardPage() {
         <WindDial degrees={obs?.winddir} speed={m.windSpeed} gust={m.windGust} unit="km/h" />
         <DualStat icon={Thermometer} gradient="solar" label="Temperature" aLabel="Now" aValue={show(m.temp)} aUnit="°C" bLabel="Week average" bValue={show(wkAvg.temp)} bUnit="°C" loading={wxLoading} />
         <DualStat icon={Droplets} gradient="co2" label="Humidity" aLabel="Now" aValue={show(obs?.humidity)} aUnit="%" bLabel="Week average" bValue={show(wkAvg.humidity)} bUnit="%" loading={wxLoading} />
-        <BaroDial value={m.pressure} avg={wkAvg.pressure} unit="hPa" />
+        <DualBaro icon={Gauge} gradient="revenue" label="Pressure" now={m.pressure} avg={wkAvg.pressure} unit="hPa" loading={wxLoading} />
         <DualStat icon={SunMedium} gradient="solar" label="Solar radiation" aLabel="Now" aValue={show(obs?.solarRadiation)} aUnit="W/m²" bLabel="Week average" bValue={show(wkAvg.solar)} bUnit="W/m²" loading={wxLoading} />
         <DualStat icon={Sun} gradient="revenue" label="UV index" aLabel="Now" aValue={show(obs?.uv)} bLabel="Week average" bValue={show(wkAvg.uv)} loading={wxLoading} />
         <DualStat icon={CloudRain} gradient="energy" label="Precipitation" aLabel="Rate" aValue={show(m.precipRate, 1)} aUnit="mm/h" bLabel="Today" bValue={show(m.precipTotal, 1)} bUnit="mm" loading={wxLoading} />
