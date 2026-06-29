@@ -102,8 +102,21 @@ public class TotalDataResponse implements GrowattResponse {
 	    
 	    /** Installation date */
 	    private String gridDate;
-	    
+
 	    /** Operation Days */
 	    private Long runDay;
+
+	    // ---- Device/plant metadata surfaced from getDevicesByPlantList (v2) ----
+	    /** Run status of the (first) device: "1" == online/normal. */
+	    private String status;
+
+	    /** Inverter model, e.g. "MID 12KTL3-XL". */
+	    private String deviceModel;
+
+	    /** Plant display name, e.g. "Hovedtak". */
+	    private String plantName;
+
+	    /** Timestamp of the last device data update (yyyy-MM-dd HH:mm:ss, plant local). */
+	    private String lastUpdateTime;
 	}
 }

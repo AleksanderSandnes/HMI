@@ -12,6 +12,7 @@ const DEFAULT_OPTIONS: Option[] = [
   { label: "Weekly", value: "weekly" },
   { label: "Monthly", value: "monthly" },
   { label: "Yearly", value: "yearly" },
+  { label: "5-Year", value: "total" },
 ];
 
 /** iOS-style segmented control with a solar-gradient pill (web port). */

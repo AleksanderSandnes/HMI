@@ -41,6 +41,7 @@ describe("previousPeriodDate", () => {
     expect(previousPeriodDate("weekly", "2026-06-10")).toBe("2026-06-03");
     expect(previousPeriodDate("monthly", "2026-06-10")).toBe("2026-05-10");
     expect(previousPeriodDate("yearly", "2026-06-10")).toBe("2025-06-10");
+    expect(previousPeriodDate("total", "2026-06-10")).toBe("2021-06-10");
   });
 });
 
@@ -48,7 +49,9 @@ describe("labels", () => {
   it("maps period + comparison labels", () => {
     expect(periodLabel("hourly")).toBe("Today");
     expect(periodLabel("yearly")).toBe("This year");
+    expect(periodLabel("total")).toBe("Last 5 years");
     expect(comparisonLabel("weekly")).toBe("vs last week");
+    expect(comparisonLabel("total")).toBe("vs prior 5 years");
   });
 });
 

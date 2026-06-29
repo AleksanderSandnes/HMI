@@ -36,6 +36,16 @@ describe("buildAggregatedLabels", () => {
   it("monthly returns day numbers", () => {
     expect(buildAggregatedLabels("monthly", 3)).toEqual(["1", "2", "3"]);
   });
+  it("total returns consecutive years ending on the current year", () => {
+    const end = new Date().getFullYear();
+    expect(buildAggregatedLabels("total", 5)).toEqual([
+      `${end - 4}`,
+      `${end - 3}`,
+      `${end - 2}`,
+      `${end - 1}`,
+      `${end}`,
+    ]);
+  });
 });
 
 describe("calculateMetrics", () => {

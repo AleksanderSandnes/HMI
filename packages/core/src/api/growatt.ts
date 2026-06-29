@@ -2,7 +2,7 @@
 // src/services/growattApiService.ts. The Java service performs the Growatt login
 // itself (Vault creds) and derives the plant id; the client only sends its
 // Supabase token + the requested date.
-import type { SolarData, SolarTimespan } from '../types/solar';
+import type { SolarData, SolarDeviceInfo, SolarTimespan } from '../types/solar';
 import {
   buildAggregatedLabels,
   calculateMetrics,
@@ -18,9 +18,17 @@ const ENDPOINTS = {
   weekChart: '/api/growatt/weekChart',
   monthChart: '/api/growatt/monthChart',
   yearChart: '/api/growatt/yearChart',
+  totalChart: '/api/growatt/totalChart',
   totalData: '/api/growatt/totalData',
   health: '/api/growatt/health',
 } as const;
+
+interface TotalSnapshot {
+  totalGeneration?: number;
+  todayGeneration?: number;
+  monthGeneration?: number;
+  device?: SolarDeviceInfo;
+}
 
 export function createGrowattApi(ctx: CoreApiContext) {
   const baseUrl = ctx.env.javaApiBaseUrl;
@@ -35,28 +43,46 @@ export function createGrowattApi(ctx: CoreApiContext) {
     };
   }
 
-  /** Lifetime total generation (eTotal) for the "Total" metric column. */
-  async function fetchTotalGeneration(date: string): Promise<number | undefined> {
+  /**
+   * Fetch the cumulative "as of now" snapshot (totalData): lifetime/today/month generation
+   * plus the device/plant status the v2 getDevicesByPlantList endpoint returns. Used by both
+   * the hourly and aggregated paths. Returns an empty object on any failure.
+   */
+  async function fetchTotalSnapshot(date: string): Promise<TotalSnapshot> {
     try {
       const response = await fetch(`${baseUrl}${ENDPOINTS.totalData}`, {
         method: 'POST',
         headers: await authHeaders(),
         body: JSON.stringify({ date }),
       });
-      if (!response.ok) return undefined;
+      if (!response.ok) return {};
       const totalData = await response.json();
       if (totalData && totalData.result === 1 && totalData.obj) {
-        return (
-          totalData.obj.eTotal ||
-          totalData.obj.totalPower ||
-          totalData.obj.totalGeneration ||
-          undefined
-        );
+        const o = totalData.obj;
+        const num = (v: unknown) =>
+          v == null || isNaN(Number(v)) ? undefined : Number(v);
+        const device: SolarDeviceInfo = {
+          status: o.status ?? undefined,
+          online: o.status != null ? o.status === '1' : undefined,
+          model: o.deviceModel ?? undefined,
+          plantName: o.plantName ?? undefined,
+          lastUpdate: o.lastUpdateTime ?? undefined,
+          deviceCount: num(o.deviceNum),
+          onlineCount: num(o.onlineNum),
+        };
+        const hasDevice = Object.values(device).some((v) => v !== undefined);
+        return {
+          totalGeneration:
+            o.eTotal || o.totalPower || o.totalGeneration || undefined,
+          todayGeneration: o.eToday || o.todayGeneration || undefined,
+          monthGeneration: o.eMonth || o.monthGeneration || undefined,
+          device: hasDevice ? device : undefined,
+        };
       }
     } catch (error) {
-      console.warn('[GrowattAPI] Error fetching total data for metrics:', error);
+      console.warn('[GrowattAPI] Error fetching total snapshot:', error);
     }
-    return undefined;
+    return {};
   }
 
   /** Assemble aggregated solar data for the week/month/year ranges. */
@@ -74,6 +100,9 @@ export function createGrowattApi(ctx: CoreApiContext) {
     } else if (timespan === 'monthly') {
       endpoint = ENDPOINTS.monthChart;
       requestDate = date.slice(0, 7); // yyyy-MM
+    } else if (timespan === 'total') {
+      endpoint = ENDPOINTS.totalChart;
+      requestDate = date.slice(0, 4); // yyyy (most recent year of the 5-year window)
     } else {
       endpoint = ENDPOINTS.yearChart;
       requestDate = date.slice(0, 4); // yyyy
@@ -99,9 +128,9 @@ export function createGrowattApi(ctx: CoreApiContext) {
       console.warn(`[GrowattAPI] ${timespan} chart request error:`, error);
     }
 
-    const totalGenerationFromApi = await fetchTotalGeneration(requestDate);
+    const snapshot = await fetchTotalSnapshot(requestDate);
     const periodTotal = energyValues.reduce((sum, value) => sum + value, 0);
-    const finalTotal = totalGenerationFromApi ?? periodTotal;
+    const finalTotal = snapshot.totalGeneration ?? periodTotal;
     const hasData = energyValues.some((value) => value > 0);
     const labels = buildAggregatedLabels(timespan, energyValues.length, dayLabels);
 
@@ -125,6 +154,7 @@ export function createGrowattApi(ctx: CoreApiContext) {
         todayRevenue: periodTotal,
         totalRevenue: finalTotal,
       },
+      device: snapshot.device,
     };
   }
 
@@ -134,7 +164,12 @@ export function createGrowattApi(ctx: CoreApiContext) {
     date: string,
     isMobile: boolean = false
   ): Promise<SolarData> {
-    if (timespan === 'weekly' || timespan === 'monthly' || timespan === 'yearly') {
+    if (
+      timespan === 'weekly' ||
+      timespan === 'monthly' ||
+      timespan === 'yearly' ||
+      timespan === 'total'
+    ) {
       return fetchAggregatedSolarData(timespan, date, isMobile);
     }
 
@@ -156,32 +191,7 @@ export function createGrowattApi(ctx: CoreApiContext) {
       console.warn('[GrowattAPI] Day chart request error:', error);
     }
 
-    let totalGenerationFromApi: number | undefined;
-    let todayGenerationFromApi: number | undefined;
-    let monthGenerationFromApi: number | undefined;
-    try {
-      const totalDataResponse = await fetch(`${baseUrl}${ENDPOINTS.totalData}`, {
-        method: 'POST',
-        headers: await authHeaders(),
-        body: JSON.stringify({ date }),
-      });
-      if (totalDataResponse.ok) {
-        const totalData = await totalDataResponse.json();
-        if (totalData && totalData.result === 1 && totalData.obj) {
-          totalGenerationFromApi =
-            totalData.obj.eTotal ||
-            totalData.obj.totalPower ||
-            totalData.obj.totalGeneration ||
-            undefined;
-          todayGenerationFromApi =
-            totalData.obj.eToday || totalData.obj.todayGeneration || undefined;
-          monthGenerationFromApi =
-            totalData.obj.eMonth || totalData.obj.monthGeneration || undefined;
-        }
-      }
-    } catch (error) {
-      console.warn('[GrowattAPI] Error fetching total data:', error);
-    }
+    const snapshot = await fetchTotalSnapshot(date);
 
     const cleanPowerValues = cleanPowerData(powerValues);
     const labels = generateTimeLabels();
@@ -189,9 +199,9 @@ export function createGrowattApi(ctx: CoreApiContext) {
       cleanPowerValues,
       timespan,
       1,
-      totalGenerationFromApi,
-      todayGenerationFromApi,
-      monthGenerationFromApi
+      snapshot.totalGeneration,
+      snapshot.todayGeneration,
+      snapshot.monthGeneration
     );
 
     const optimizedChart = optimizeChartData(
@@ -209,6 +219,7 @@ export function createGrowattApi(ctx: CoreApiContext) {
         ],
       },
       metrics,
+      device: snapshot.device,
     };
   }
 

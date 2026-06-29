@@ -31,28 +31,27 @@ export function previousPeriodDate(timespan: string, dateStr: string): string {
     case 'yearly':
       d.setFullYear(d.getFullYear() - 1);
       break;
+    case 'total':
+      d.setFullYear(d.getFullYear() - 5);
+      break;
   }
   return toISO(d);
 }
 
 export function periodLabel(timespan: string): string {
-  return timespan === 'hourly'
-    ? 'Today'
-    : timespan === 'weekly'
-      ? 'This week'
-      : timespan === 'monthly'
-        ? 'This month'
-        : 'This year';
+  if (timespan === 'hourly') return 'Today';
+  if (timespan === 'weekly') return 'This week';
+  if (timespan === 'monthly') return 'This month';
+  if (timespan === 'total') return 'Last 5 years';
+  return 'This year';
 }
 
 export function comparisonLabel(timespan: string): string {
-  return timespan === 'hourly'
-    ? 'vs yesterday'
-    : timespan === 'weekly'
-      ? 'vs last week'
-      : timespan === 'monthly'
-        ? 'vs last month'
-        : 'vs last year';
+  if (timespan === 'hourly') return 'vs yesterday';
+  if (timespan === 'weekly') return 'vs last week';
+  if (timespan === 'monthly') return 'vs last month';
+  if (timespan === 'total') return 'vs prior 5 years';
+  return 'vs last year';
 }
 
 export function chartSubtitle(timespan: string, dateStr: string): string {
@@ -62,6 +61,7 @@ export function chartSubtitle(timespan: string, dateStr: string): string {
     return `Power output · ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
   if (timespan === 'weekly') return `7-day output from ${month} ${d.getDate()}`;
   if (timespan === 'monthly') return `Daily output · ${month} ${d.getFullYear()}`;
+  if (timespan === 'total') return `Yearly output · last 5 years`;
   return `Monthly output · ${d.getFullYear()}`;
 }
 
@@ -106,6 +106,7 @@ export function peakSublabel(timespan: string, label: string): string {
   if (timespan === 'hourly') return `at ${label}`;
   if (timespan === 'weekly') return `on ${DAY_NAMES[label] ?? label}`;
   if (timespan === 'monthly') return `on day ${label}`;
+  if (timespan === 'total') return `in ${label}`;
   return `in ${MONTH_NAMES[label] ?? label}`;
 }
 

@@ -206,6 +206,12 @@ export function buildAggregatedLabels(
     return Array.from({ length: count }, (_, i) => MONTH_LABELS[i] ?? `${i + 1}`);
   }
 
+  if (timespan === 'total') {
+    // One label per year, ending on the current year (e.g. 2022..2026).
+    const endYear = new Date().getFullYear();
+    return Array.from({ length: count }, (_, i) => `${endYear - (count - 1) + i}`);
+  }
+
   // monthly -> day of month
   return Array.from({ length: count }, (_, i) => `${i + 1}`);
 }

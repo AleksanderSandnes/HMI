@@ -150,6 +150,15 @@ public class GrowattDataService {
 	}
 
 	/**
+	 * Five-year chart (one energy total per year). Always fetched live and never cached: the
+	 * window always includes the current, still-incomplete year, so the most recent value
+	 * keeps changing.
+	 */
+	public YearResponse getTotalChart(GrowattWebClient client, EnergyRequest request) {
+		return client.getInvEnergyTotalChart(request);
+	}
+
+	/**
 	 * Force-persist a freshly fetched DAY chart for a past date, bypassing the
 	 * {@link #shouldPersist} "skip yesterday" rule. This is the explicit backfill hook the
 	 * daily solar job uses to save yesterday's day chart (which the cache path deliberately
