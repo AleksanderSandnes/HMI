@@ -75,7 +75,9 @@ export function SolarChart({
   const peakIndex = values.indexOf(max);
   const peakLabel = labels[peakIndex] ?? "";
 
-  const gapPct = values.length > 24 ? 34 : values.length > 12 ? 42 : 50;
+  // NB: recharts collapses bars to zero width at exactly barCategoryGap="50%",
+  // so keep this strictly below 50 (few-bar views previously rendered no bars).
+  const gapPct = values.length > 24 ? 34 : values.length > 12 ? 42 : 46;
 
   const tooltip = (
     <Tooltip
