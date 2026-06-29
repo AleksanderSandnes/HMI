@@ -8,9 +8,9 @@ interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Frosted-glass surface — the building block of the premium dashboard.
+ * Frosted-glass surface — the building block of the dashboard.
  * Translucent fill + hairline border, backdrop blur, optional glow.
- * (Web port of mobile premium/GlassCard.tsx.)
+ * (Web port of mobile ui/GlassCard.tsx.)
  */
 export function GlassCard({
   strong = false,

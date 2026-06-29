@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Eye, EyeOff, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface PremiumFieldProps
+interface FieldProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
   label: string;
   icon?: LucideIcon;
@@ -15,10 +15,10 @@ interface PremiumFieldProps
 }
 
 /**
- * Premium labeled text input (web port of mobile premium/PremiumField.tsx).
+ * Labeled text input (web port of mobile ui/Field.tsx).
  * Glass fill, hairline border, focus glow, optional leading icon + password toggle.
  */
-export function PremiumField({
+export function Field({
   label,
   icon: Icon,
   secure = false,
@@ -28,7 +28,7 @@ export function PremiumField({
   onFocus,
   onBlur,
   ...inputProps
-}: PremiumFieldProps) {
+}: FieldProps) {
   const [focused, setFocused] = useState(false);
   const [reveal, setReveal] = useState(false);
 
@@ -92,4 +92,4 @@ export function PremiumField({
   );
 }
 
-export default PremiumField;
+export default Field;

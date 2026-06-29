@@ -8,8 +8,8 @@ import { ArrowRight, Lock, Mail, Zap } from "lucide-react";
 import { loginSchema } from "@hmi/core";
 import { useCore } from "@/lib/hooks/useCore";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { PremiumField } from "@/components/ui/PremiumField";
-import { PremiumButton } from "@/components/ui/PremiumButton";
+import { Field } from "@/components/ui/Field";
+import { Button } from "@/components/ui/Button";
 import { StatusBanner } from "@/components/ui/StatusBanner";
 
 function LoginForm() {
@@ -65,7 +65,7 @@ function LoginForm() {
           isSubmitting,
         }) => (
           <form onSubmit={handleSubmit} noValidate>
-            <PremiumField
+            <Field
               label="EMAIL ADDRESS"
               icon={Mail}
               name="email"
@@ -78,7 +78,7 @@ function LoginForm() {
               error={touched.email ? errors.email : undefined}
               disabled={isSubmitting}
             />
-            <PremiumField
+            <Field
               label="PASSWORD"
               icon={Lock}
               secure
@@ -91,7 +91,7 @@ function LoginForm() {
               error={touched.password ? errors.password : undefined}
               disabled={isSubmitting}
             />
-            <PremiumButton
+            <Button
               type="submit"
               label="Sign In"
               icon={ArrowRight}

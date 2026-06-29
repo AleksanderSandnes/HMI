@@ -24,7 +24,7 @@ const CONFIG: Record<
   },
 };
 
-/** Inline status banner (web port of mobile settings/premium/StatusBanner.tsx). */
+/** Inline status banner (web port of mobile settings/cards/StatusBanner.tsx). */
 export function StatusBanner({ kind, message }: { kind: Kind; message: string }) {
   const { className, icon: Icon } = CONFIG[kind];
   return (

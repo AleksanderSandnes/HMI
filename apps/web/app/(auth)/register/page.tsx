@@ -21,8 +21,8 @@ import {
 import { registerAccountSchema } from "@hmi/core";
 import { useCore } from "@/lib/hooks/useCore";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { PremiumField } from "@/components/ui/PremiumField";
-import { PremiumButton } from "@/components/ui/PremiumButton";
+import { Field } from "@/components/ui/Field";
+import { Button } from "@/components/ui/Button";
 import { StatusBanner } from "@/components/ui/StatusBanner";
 import { cn } from "@/lib/utils";
 
@@ -193,7 +193,7 @@ export default function RegisterPage() {
 
       {step === 0 ? (
         <div>
-          <PremiumField
+          <Field
             label="EMAIL ADDRESS"
             icon={Mail}
             inputMode="email"
@@ -203,7 +203,7 @@ export default function RegisterPage() {
             error={accountErrors.email}
             disabled={saving}
           />
-          <PremiumField
+          <Field
             label="USERNAME"
             icon={User}
             placeholder="Choose a username"
@@ -212,7 +212,7 @@ export default function RegisterPage() {
             error={accountErrors.username}
             disabled={saving}
           />
-          <PremiumField
+          <Field
             label="PASSWORD"
             icon={Lock}
             secure
@@ -222,7 +222,7 @@ export default function RegisterPage() {
             error={accountErrors.password}
             disabled={saving}
           />
-          <PremiumField
+          <Field
             label="CONFIRM PASSWORD"
             icon={Lock}
             secure
@@ -232,7 +232,7 @@ export default function RegisterPage() {
             error={accountErrors.confirmPassword}
             disabled={saving}
           />
-          <PremiumButton
+          <Button
             label="Create account"
             icon={ArrowRight}
             onClick={handleCreateAccount}
@@ -244,7 +244,7 @@ export default function RegisterPage() {
 
       {step === 1 ? (
         <div>
-          <PremiumField
+          <Field
             label="ACCOUNT (EMAIL)"
             icon={Mail}
             inputMode="email"
@@ -253,7 +253,7 @@ export default function RegisterPage() {
             onChange={setField(setGrowatt, "email")}
             disabled={saving}
           />
-          <PremiumField
+          <Field
             label="PASSWORD"
             icon={Key}
             secure
@@ -266,7 +266,7 @@ export default function RegisterPage() {
             Optional — you can add or change this anytime in Settings.
           </p>
           <div className="flex gap-3">
-            <PremiumButton
+            <Button
               label="Skip"
               variant="ghost"
               onClick={() => {
@@ -274,7 +274,7 @@ export default function RegisterPage() {
                 setStep(2);
               }}
             />
-            <PremiumButton
+            <Button
               label="Continue"
               icon={ArrowRight}
               gradient="energy"
@@ -287,7 +287,7 @@ export default function RegisterPage() {
 
       {step === 2 ? (
         <div>
-          <PremiumField
+          <Field
             label="WEATHER STATION ID"
             icon={MapPin}
             placeholder="e.g. ISANDN24"
@@ -296,7 +296,7 @@ export default function RegisterPage() {
             onChange={setField(setWeather, "stationId")}
             disabled={saving}
           />
-          <PremiumField
+          <Field
             label="API KEY"
             icon={Key}
             secure
@@ -310,7 +310,7 @@ export default function RegisterPage() {
             Optional — you can add or change this anytime in Settings.
           </p>
           <div className="flex gap-3">
-            <PremiumButton
+            <Button
               label="Back"
               variant="ghost"
               icon={ArrowLeft}
@@ -319,7 +319,7 @@ export default function RegisterPage() {
                 setStep(1);
               }}
             />
-            <PremiumButton
+            <Button
               label="Finish"
               icon={Check}
               onClick={handleFinish}

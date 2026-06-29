@@ -13,7 +13,7 @@ const GRADIENTS: Record<Gradient, string> = {
   revenue: "linear-gradient(135deg, #fde68a 0%, #facc15 50%, #eab308 100%)",
 };
 
-interface PremiumButtonProps
+interface ButtonProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "type"> {
   label: string;
   icon?: LucideIcon;
@@ -25,12 +25,12 @@ interface PremiumButtonProps
 }
 
 /**
- * Premium action button (web port of mobile premium/PremiumButton.tsx).
+ * Action button (web port of mobile ui/Button.tsx).
  * - primary: solar (or chosen) gradient fill
  * - ghost: translucent glass
  * - danger: red-tinted glass
  */
-export function PremiumButton({
+export function Button({
   label,
   icon: Icon,
   variant = "primary",
@@ -40,7 +40,7 @@ export function PremiumButton({
   type = "button",
   className,
   ...rest
-}: PremiumButtonProps) {
+}: ButtonProps) {
   const isDisabled = disabled || loading;
   const isPrimary = variant === "primary";
 
@@ -73,4 +73,4 @@ export function PremiumButton({
   );
 }
 
-export default PremiumButton;
+export default Button;

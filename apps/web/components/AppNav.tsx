@@ -21,7 +21,7 @@ const NAV = [
 
 /**
  * Responsive app navigation: a left sidebar rail on desktop, a bottom tab bar on
- * mobile (parity with the RN PremiumTabBar + desktop rail).
+ * mobile (parity with the RN tab bar + desktop rail).
  */
 export function AppNav() {
   const pathname = usePathname();
