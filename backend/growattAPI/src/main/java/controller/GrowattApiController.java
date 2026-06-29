@@ -97,6 +97,14 @@ public class GrowattApiController {
 		return ResponseEntity.ok(growattDataService.getYearChart(session.client(), request));
 	}
 
+	/** Five-year overview: one energy total per year (v2 getDevicesTotalChart). */
+	@PostMapping("/totalChart")
+	public ResponseEntity<YearResponse> getTotalChart(@Valid @RequestBody EnergyRequest request,
+			@AuthenticationPrincipal Jwt jwt) {
+		GrowattSession session = login(jwt, request);
+		return ResponseEntity.ok(growattDataService.getTotalChart(session.client(), request));
+	}
+
 	/**
 	 * Log into Growatt for the authenticated user and force the request's plant id to the
 	 * one resolved from their settings/login (so a client can never query another plant).

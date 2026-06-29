@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_DATA_MODE": "production",
+    "NEXT_PUBLIC_JAVA_API": "https://growattapi.onrender.com"
+  }
+}

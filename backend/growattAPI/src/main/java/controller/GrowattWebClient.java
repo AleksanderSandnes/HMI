@@ -129,7 +129,17 @@ public class GrowattWebClient {
 	// ---- Cumulative "as of now" snapshots (from the plant's device list) -----------------
 
 	public TotalDataResponse getTotalData(EnergyRequest request) {
-		GwDevicesResponse.Data d = devicesByPlant(request.getPlantId());
+		return mapTotals(devicesResponse(request.getPlantId()));
+	}
+
+	/**
+	 * Map a {@code getDevicesByPlantList} response into our cumulative-totals DTO. Surfaces
+	 * the production figures plus the device/plant metadata the dashboard uses (status,
+	 * model, plant name, last update, device/online counts). Static + null-safe so it can
+	 * be unit-tested against a captured JSON fixture without hitting the live API.
+	 */
+	static TotalDataResponse mapTotals(GwDevicesResponse devices) {
+		GwDevicesResponse.Data d = devices != null ? devices.firstDevice() : null;
 		if (d == null) {
 			return new TotalDataResponse(null, null);
 		}
@@ -140,6 +150,13 @@ public class GrowattWebClient {
 		obj.setPac(d.getPac());
 		obj.setNominalPower(d.getNominalPower());
 		obj.setPlantId(d.getPlantId());
+		// Device/plant metadata (v2 getDevicesByPlantList; CO2/revenue/PR are not returned here).
+		obj.setStatus(d.getStatus());
+		obj.setDeviceModel(d.getDeviceModel());
+		obj.setPlantName(d.getPlantName());
+		obj.setLastUpdateTime(d.getLastUpdateTime());
+		obj.setDeviceNum(devices.deviceCount());
+		obj.setOnlineNum(devices.onlineCount());
 		return new TotalDataResponse(1L, obj);
 	}
 
@@ -154,11 +171,15 @@ public class GrowattWebClient {
 	}
 
 	private GwDevicesResponse.Data devicesByPlant(String plantId) {
+		GwDevicesResponse devices = devicesResponse(plantId);
+		return devices != null ? devices.firstDevice() : null;
+	}
+
+	private GwDevicesResponse devicesResponse(String plantId) {
 		LinkedMultiValueMap<String, String> body = new LinkedMultiValueMap<>();
 		body.add("currPage", "1");
 		body.add("plantId", plantId);
-		GwDevicesResponse devices = postForm("/panel/getDevicesByPlantList", body, GwDevicesResponse.class);
-		return devices != null ? devices.firstDevice() : null;
+		return postForm("/panel/getDevicesByPlantList", body, GwDevicesResponse.class);
 	}
 
 	// ---- Date-specific charts ------------------------------------------------------------
@@ -187,6 +208,25 @@ public class GrowattWebClient {
 	public YearResponse getInvEnergyYearChart(EnergyRequest request) {
 		Integer year = parseYear(request.getDate());
 		GwChartResponse.Datas datas = chart("/energy/compare/getDevicesYearChart",
+				request.getPlantId(), null, year, "energy,autoEnergy");
+		if (datas == null) {
+			return new YearResponse(null, null);
+		}
+		return new YearResponse(1L, new YearResponse.Obj(datas.getEnergy()));
+	}
+
+	/**
+	 * Total chart (per-year energy totals for the last ~5 years), via the v2
+	 * {@code /energy/compare/getDevicesTotalChart} endpoint. Date as {@code yyyy} (the most
+	 * recent year of the window); a blank/unparseable date falls back to the current year.
+	 * Reuses {@link YearResponse} (one energy value per year).
+	 */
+	public YearResponse getInvEnergyTotalChart(EnergyRequest request) {
+		Integer year = parseYear(request.getDate());
+		if (year == null) {
+			year = java.time.Year.now().getValue();
+		}
+		GwChartResponse.Datas datas = chart("/energy/compare/getDevicesTotalChart",
 				request.getPlantId(), null, year, "energy,autoEnergy");
 		if (datas == null) {
 			return new YearResponse(null, null);

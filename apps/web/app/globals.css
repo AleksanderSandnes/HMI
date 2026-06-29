@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+/*
+ * HMI premium theme — sleek dark + glassmorphism with vibrant solar gradients.
+ * Ported from mobile src/theme/premiumTheme.ts so colour/gradient/radius decisions
+ * carry over verbatim. Web gets real backdrop blur (native used opaque fills).
+ */
+@theme {
+  /* Backgrounds */
+  --color-bg-base: #070b16;
+  --color-bg-grad-1: #0a1124;
+  --color-bg-grad-2: #080d1b;
+  --color-bg-grad-3: #06080f;
+
+  /* Glass surfaces (web: translucent white fills + backdrop blur) */
+  --color-glass-fill: rgba(255, 255, 255, 0.045);
+  --color-glass-fill-strong: rgba(255, 255, 255, 0.075);
+  --color-glass-fill-subtle: rgba(255, 255, 255, 0.025);
+  --color-glass-border: rgba(255, 255, 255, 0.09);
+  --color-glass-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Text */
+  --color-text-primary: #f6f8fc;
+  --color-text-secondary: #aeb8cc;
+  --color-text-muted: #71809a;
+  --color-text-inverse: #0a1124;
+
+  /* Solar gold */
+  --color-solar: #f59e0b;
+  --color-solar-light: #fbbf24;
+  --color-solar-soft: rgba(245, 158, 11, 0.14);
+
+  /* Energy teal/green */
+  --color-energy: #10b981;
+  --color-energy-light: #34d399;
+  --color-energy-soft: rgba(45, 212, 191, 0.14);
+
+  /* Accent violet/indigo */
+  --color-accent: #6366f1;
+  --color-accent-light: #818cf8;
+  --color-accent-soft: rgba(129, 140, 248, 0.14);
+
+  /* Revenue gold-lime */
+  --color-revenue: #eab308;
+  --color-revenue-light: #facc15;
+  --color-revenue-soft: rgba(234, 179, 8, 0.14);
+
+  /* Status */
+  --color-positive: #34d399;
+  --color-negative: #fb7185;
+
+  /* Radii (px → rem-ish, kept as px to match RN tokens) */
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 30px;
+  --radius-pill: 999px;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-base);
+  /* Vertical page gradient + ambient solar/energy/violet glow blobs. */
+  background-image:
+    radial-gradient(60% 50% at 18% 0%, rgba(245, 158, 11, 0.2) 0%, transparent 60%),
+    radial-gradient(50% 45% at 92% 12%, rgba(45, 212, 191, 0.16) 0%, transparent 60%),
+    radial-gradient(60% 60% at 50% 100%, rgba(139, 92, 246, 0.16) 0%, transparent 65%),
+    linear-gradient(180deg, var(--color-bg-grad-1) 0%, var(--color-bg-grad-2) 55%, var(--color-bg-grad-3) 100%);
+  background-attachment: fixed;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Reusable glass surface helper (parity with mobile GlassCard). */
+@utility glass {
+  background-color: var(--color-glass-fill);
+  border: 1px solid var(--color-glass-border);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+@utility glass-strong {
+  background-color: var(--color-glass-fill-strong);
+  border: 1px solid var(--color-glass-border-strong);
+  backdrop-filter: blur(26px);
+  -webkit-backdrop-filter: blur(26px);
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-fade-in-up {
+  animation: fade-in-up 1s ease-out both;
+}
