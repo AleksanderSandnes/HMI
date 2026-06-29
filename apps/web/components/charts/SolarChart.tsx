@@ -93,28 +93,33 @@ export function SolarChart({
     />
   );
 
-  const axes = !showAxes ? null : (
-    <>
-      <CartesianGrid vertical={false} stroke={GRID_STROKE} strokeWidth={1} />
-      <XAxis
-        dataKey="label"
-        tick={AXIS_TICK}
-        tickLine={false}
-        axisLine={false}
-        interval="preserveStartEnd"
-        minTickGap={28}
-      />
-      <YAxis
-        tick={AXIS_TICK}
-        tickLine={false}
-        axisLine={false}
-        width={46}
-        tickCount={5}
-        domain={[0, yMax]}
-        tickFormatter={(v: number) => formatNum(v)}
-      />
-    </>
-  );
+  // Recharts identifies axis children by component type via React.Children, which
+  // does NOT look inside a Fragment — but it does flatten arrays. So return an
+  // array (not a <>fragment</>) or the axes silently never render.
+  const axes = !showAxes
+    ? null
+    : [
+        <CartesianGrid key="grid" vertical={false} stroke={GRID_STROKE} strokeWidth={1} />,
+        <XAxis
+          key="x"
+          dataKey="label"
+          tick={AXIS_TICK}
+          tickLine={false}
+          axisLine={false}
+          interval="preserveStartEnd"
+          minTickGap={28}
+        />,
+        <YAxis
+          key="y"
+          tick={AXIS_TICK}
+          tickLine={false}
+          axisLine={false}
+          width={46}
+          tickCount={5}
+          domain={[0, yMax]}
+          tickFormatter={(v: number) => formatNum(v)}
+        />,
+      ];
 
   return (
     <ResponsiveContainer width="100%" height={height}>
