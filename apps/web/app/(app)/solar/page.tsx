@@ -111,7 +111,7 @@ export default function SolarPage() {
           </span>
         </div>
       </div>
-      <SolarChart data={chartData} timespan={timespan} loading={isLoading} height={380} />
+      <SolarChart data={chartData} timespan={timespan} loading={isLoading} height={340} />
     </GlassCard>
   );
 

@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { KeyRound, Mail, MapPin, SunMedium, User } from "lucide-react";
+import {
+  CloudSun,
+  KeyRound,
+  type LucideIcon,
+  Mail,
+  MapPin,
+  ShieldCheck,
+  SunMedium,
+  User,
+} from "lucide-react";
 import type { ApiSettingsResponse, UserProfile } from "@hmi/core";
 import { useCore } from "@/lib/hooks/useCore";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -13,18 +22,35 @@ import { StatusBanner } from "@/components/ui/StatusBanner";
 type Core = ReturnType<typeof useCore>;
 type Banner = { kind: "success" | "error"; message: string } | null;
 
+const SECTION_GRADIENTS: Record<string, string> = {
+  accent: "linear-gradient(135deg,#a78bfa,#818cf8,#6366f1)",
+  revenue: "linear-gradient(135deg,#fde68a,#facc15,#eab308)",
+  energy: "linear-gradient(135deg,#5eead4,#2dd4bf,#10b981)",
+  solar: "linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)",
+};
+
 function Section({
   title,
+  icon: Icon,
+  gradient,
   children,
 }: {
   title: string;
+  icon: LucideIcon;
+  gradient: keyof typeof SECTION_GRADIENTS;
   children: React.ReactNode;
 }) {
   return (
     <GlassCard strong className="p-5">
-      <h2 className="mb-3.5 text-base font-extrabold text-text-primary">
-        {title}
-      </h2>
+      <div className="mb-4 flex items-center gap-2.5">
+        <span
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)]"
+          style={{ backgroundImage: SECTION_GRADIENTS[gradient] }}
+        >
+          <Icon size={16} className="text-text-inverse" />
+        </span>
+        <h2 className="text-base font-extrabold text-text-primary">{title}</h2>
+      </div>
       {children}
     </GlassCard>
   );
@@ -64,17 +90,17 @@ export default function SettingsPage() {
           so everything fits one viewport without scrolling. */}
       <div className="grid items-start gap-4 lg:grid-cols-2">
         <div className="flex flex-col gap-4">
-          <Section title="Account">
+          <Section title="Account" icon={User} gradient="accent">
             <AccountForm key={profile?.id ?? "loading"} profile={profile} account={account} />
           </Section>
 
-          <Section title="Password">
+          <Section title="Password" icon={ShieldCheck} gradient="revenue">
             <PasswordForm account={account} />
           </Section>
         </div>
 
         <div className="flex flex-col gap-4">
-          <Section title="Growatt solar">
+          <Section title="Growatt solar" icon={SunMedium} gradient="energy">
             <GrowattForm
               key={api?.growatt?.email ?? "g"}
               initialEmail={api?.growatt?.email ?? ""}
@@ -84,7 +110,7 @@ export default function SettingsPage() {
             />
           </Section>
 
-          <Section title="Weather.com station">
+          <Section title="Weather.com station" icon={CloudSun} gradient="solar">
             <WeatherForm
               key={api?.weather?.stationId ?? "w"}
               initialStationId={api?.weather?.stationId ?? ""}

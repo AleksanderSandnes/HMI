@@ -87,9 +87,13 @@ export function buildWeatherSeries(
       return '';
     }
     const time = (it.obsTimeLocal || '').split(' ')[1] || '';
-    const [hour, minute] = time.split(':');
-    if (hour == null) return '';
-    return `${hour}:${minute ?? '00'}`;
+    const [hh, mm] = time.split(':');
+    if (hh == null || hh === '') return '';
+    // Round to the nearest hour so the :59 PWS readings read as clean hours
+    // (00:59 -> 01:00, 23:59 -> 00:00).
+    let h = Number(hh);
+    if (Number(mm) >= 30) h = (h + 1) % 24;
+    return `${String(h).padStart(2, '0')}:00`;
   });
 
   const series = extractors.map((fn) => data.map(fn));

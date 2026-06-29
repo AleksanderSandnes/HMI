@@ -22,6 +22,8 @@ interface SolarChartProps {
   timespan: string;
   loading?: boolean;
   height?: number;
+  /** Hide grid + axes for a clean sparkline (e.g. the Dashboard mini chart). */
+  showAxes?: boolean;
 }
 
 /**
@@ -34,6 +36,7 @@ export function SolarChart({
   timespan,
   loading = false,
   height = 320,
+  showAxes = true,
 }: SolarChartProps) {
   const values = data?.datasets?.[0]?.data ?? [];
   const labels = data?.labels ?? [];
@@ -90,7 +93,7 @@ export function SolarChart({
     />
   );
 
-  const axes = (
+  const axes = !showAxes ? null : (
     <>
       <CartesianGrid vertical={false} stroke={GRID_STROKE} strokeWidth={1} />
       <XAxis

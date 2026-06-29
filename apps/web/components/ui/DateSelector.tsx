@@ -45,6 +45,8 @@ export function DateSelector({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  // Whether to open the popover above the trigger (when there's no room below).
+  const [openUp, setOpenUp] = useState(false);
   // Which month the grid is showing; seeded from the selected date.
   const [viewDate, setViewDate] = useState(() => parseYMD(selectedDate));
   const rootRef = useRef<HTMLDivElement>(null);
@@ -52,9 +54,15 @@ export function DateSelector({
   const selected = useMemo(() => parseYMD(selectedDate), [selectedDate]);
   const today = useMemo(() => new Date(), []);
 
-  // Toggle the popover; when opening, jump the grid to the selected month.
+  // Toggle the popover; when opening, jump the grid to the selected month and
+  // decide whether to open upward (so it stays visible near the page bottom).
   const toggleOpen = () => {
-    if (!open) setViewDate(parseYMD(selectedDate));
+    if (!open) {
+      setViewDate(parseYMD(selectedDate));
+      const rect = rootRef.current?.getBoundingClientRect();
+      // The popover is ~360px tall; open upward when there isn't room below.
+      setOpenUp(!!rect && window.innerHeight - rect.bottom < 380);
+    }
     setOpen((o) => !o);
   };
 
@@ -151,7 +159,10 @@ export function DateSelector({
           <div
             role="dialog"
             aria-label="Choose date"
-            className="absolute left-1/2 top-[calc(100%+10px)] z-50 w-[300px] -translate-x-1/2 rounded-[var(--radius-lg)] border border-glass-border-strong bg-[rgba(10,17,36,0.96)] p-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+            className={cn(
+              "absolute left-1/2 z-50 w-[300px] -translate-x-1/2 rounded-[var(--radius-lg)] border border-glass-border-strong bg-[rgba(10,17,36,0.96)] p-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl",
+              openUp ? "bottom-[calc(100%+10px)]" : "top-[calc(100%+10px)]"
+            )}
           >
             {/* Month header */}
             <div className="mb-3 flex items-center justify-between">

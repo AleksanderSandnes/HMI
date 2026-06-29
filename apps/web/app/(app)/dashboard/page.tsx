@@ -209,6 +209,7 @@ export default function DashboardPage() {
               timespan="hourly"
               loading={solarLoading}
               height={150}
+              showAxes={false}
             />
           </div>
           <StatTile

@@ -38,8 +38,11 @@ export function AppNav() {
 
   return (
     <>
-      {/* Desktop / web top bar */}
-      <header className="glass sticky top-0 z-30 hidden items-center justify-between border-b border-glass-border px-6 py-2.5 md:flex">
+      {/* Desktop / web top bar. Inner content is constrained to the same
+          max-width + padding as the page content so the brand aligns with the
+          page title (left) and Sign out aligns with the content's right edge. */}
+      <header className="glass sticky top-0 z-30 hidden border-b border-glass-border px-5 md:block md:px-8">
+        <div className="mx-auto flex w-full max-w-[1480px] items-center justify-between py-2.5">
         <Link
           href="/dashboard"
           className="flex items-center gap-2.5"
@@ -83,6 +86,7 @@ export function AppNav() {
             Sign out
           </button>
         </nav>
+        </div>
       </header>
 
       {/* Mobile bottom tab bar */}
