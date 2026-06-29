@@ -81,10 +81,10 @@ export function SolarChart({
 
   const tooltip = (
     <Tooltip
-      // Area uses a thin crosshair line; bars need a translucent fill, otherwise
-      // Recharts paints its default opaque light-grey rectangle over the whole
-      // hovered category band (a giant grey block on few-bar views).
-      cursor={isArea ? CURSOR : { fill: "rgba(255,255,255,0.06)" }}
+      // Area uses a thin crosshair line; bars use no cursor background at all
+      // (the tooltip still triggers on hover) — Recharts' default would paint an
+      // opaque grey rectangle over the whole category band.
+      cursor={isArea ? CURSOR : false}
       content={({ active, payload }) => {
         if (!active || !payload?.length) return null;
         const p = payload[0];
