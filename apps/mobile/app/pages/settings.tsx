@@ -14,16 +14,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
 
-import GlassCard from '../../src/components/premium/GlassCard';
-import PremiumButton from '../../src/components/premium/PremiumButton';
-import AccountCard from '../../src/components/settings/premium/AccountCard';
-import GrowattCredentialsCard from '../../src/components/settings/premium/GrowattCredentialsCard';
-import WeatherCredentialsCard from '../../src/components/settings/premium/WeatherCredentialsCard';
-import { premiumTheme } from '../../src/theme/premiumTheme';
+import GlassCard from '../../src/components/ui/GlassCard';
+import Button from '../../src/components/ui/Button';
+import AccountCard from '../../src/components/settings/cards/AccountCard';
+import GrowattCredentialsCard from '../../src/components/settings/cards/GrowattCredentialsCard';
+import WeatherCredentialsCard from '../../src/components/settings/cards/WeatherCredentialsCard';
+import { theme } from '../../src/theme/theme';
 import { logoutAction } from '../../src/redux/authSlice';
 import { subscribeSettings } from '../../src/services/settingsApiService';
 
-export default function SettingsPremium(): React.ReactElement {
+export default function SettingsScreen(): React.ReactElement {
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -76,10 +76,10 @@ export default function SettingsPremium(): React.ReactElement {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <LinearGradient colors={premiumTheme.bg.gradient} style={StyleSheet.absoluteFill} />
-      <Blob color={premiumTheme.bg.glowSolar} top={-120} right={-100} size={360} />
-      <Blob color={premiumTheme.bg.glowEnergy} bottom={-140} left={-120} size={380} />
-      <Blob color={premiumTheme.bg.glowViolet} top={240} left={width * 0.45} size={300} />
+      <LinearGradient colors={theme.bg.gradient} style={StyleSheet.absoluteFill} />
+      <Blob color={theme.bg.glowSolar} top={-120} right={-100} size={360} />
+      <Blob color={theme.bg.glowEnergy} bottom={-140} left={-120} size={380} />
+      <Blob color={theme.bg.glowViolet} top={240} left={width * 0.45} size={300} />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -108,7 +108,7 @@ export default function SettingsPremium(): React.ReactElement {
                   You will be returned to the login screen.
                 </Text>
               </View>
-              <PremiumButton
+              <Button
                 label="Logout"
                 icon="sign-out-alt"
                 variant="danger"
@@ -160,7 +160,7 @@ function Blob({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: premiumTheme.bg.base },
+  root: { flex: 1, backgroundColor: theme.bg.base },
   scroll: {
     paddingBottom: 48,
   },
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 720,
     alignSelf: 'center',
-    gap: premiumTheme.space.lg,
+    gap: theme.space.lg,
   },
 
   header: {
@@ -181,13 +181,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: -0.8,
   },
   titleWide: { fontSize: 38, letterSpacing: -1 },
   subtitle: {
     fontSize: 14.5,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 4,
     fontWeight: '500',
   },
@@ -203,11 +203,11 @@ const styles = StyleSheet.create({
   logoutTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
   },
   logoutSub: {
     fontSize: 13,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 3,
     fontWeight: '500',
   },

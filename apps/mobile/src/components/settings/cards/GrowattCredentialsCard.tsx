@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import SettingsSection from './SettingsSection';
 import StatusBanner from './StatusBanner';
 import SyncBadge, { SyncStatus } from './SyncBadge';
-import PremiumField from '../../premium/PremiumField';
-import PremiumButton from '../../premium/PremiumButton';
-import { premiumTheme } from '../../../theme/premiumTheme';
+import Field from '../../ui/Field';
+import Button from '../../ui/Button';
+import { theme } from '../../../theme/theme';
 import {
   saveGrowattApiSettings,
   getApiSettings,
@@ -79,7 +79,7 @@ export default function GrowattCredentialsCard({
   return (
     <SettingsSection
       icon="solar-panel"
-      gradient={premiumTheme.energy.gradient}
+      gradient={theme.energy.gradient}
       title="Growatt API"
       subtitle="Credentials for solar data access"
       headerRight={<SyncBadge status={syncStatus} />}
@@ -87,7 +87,7 @@ export default function GrowattCredentialsCard({
       {error ? <StatusBanner kind="error" message={error} /> : null}
       {success ? <StatusBanner kind="success" message={success} /> : null}
 
-      <PremiumField
+      <Field
         label="ACCOUNT (EMAIL)"
         icon="envelope"
         value={account}
@@ -97,7 +97,7 @@ export default function GrowattCredentialsCard({
         keyboardType="email-address"
         editable={!loading}
       />
-      <PremiumField
+      <Field
         label="PASSWORD"
         icon="key"
         secure
@@ -108,7 +108,7 @@ export default function GrowattCredentialsCard({
         editable={!loading}
       />
 
-      <PremiumButton
+      <Button
         label={hasCredentials ? 'Update Credentials' : 'Save Credentials'}
         icon="check"
         onPress={handleSave}

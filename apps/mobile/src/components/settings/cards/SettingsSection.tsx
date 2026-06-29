@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
-import GlassCard from '../../premium/GlassCard';
-import { premiumTheme, type GradientColors } from '../../../theme/premiumTheme';
+import GlassCard from '../../ui/GlassCard';
+import { theme, type GradientColors } from '../../../theme/theme';
 
 interface SettingsSectionProps {
   icon: React.ComponentProps<typeof FontAwesome5>['name'];
@@ -16,7 +16,7 @@ interface SettingsSectionProps {
 }
 
 /**
- * Premium settings card with a gradient icon header.
+ * Settings card with a gradient icon header.
  * Used by all sections of the redesigned settings page.
  */
 export default function SettingsSection({
@@ -36,7 +36,7 @@ export default function SettingsSection({
           end={{ x: 1, y: 1 }}
           style={styles.icon}
         >
-          <FontAwesome5 name={icon} size={16} color={premiumTheme.text.inverse} solid />
+          <FontAwesome5 name={icon} size={16} color={theme.text.inverse} solid />
         </LinearGradient>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{title}</Text>
@@ -62,12 +62,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 13,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 2,
     fontWeight: '500',
   },

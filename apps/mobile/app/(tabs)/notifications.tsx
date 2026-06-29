@@ -15,8 +15,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-import GlassCard from '../../src/components/premium/GlassCard';
-import { premiumTheme } from '../../src/theme/premiumTheme';
+import GlassCard from '../../src/components/ui/GlassCard';
+import { theme } from '../../src/theme/theme';
 import { useNotifications } from '../../src/context/NotificationsContext';
 import {
   NotificationItem,
@@ -30,28 +30,28 @@ const LEVEL_STYLES: Record<
   { gradient: readonly string[]; soft: string; ring: string; tint: string }
 > = {
   success: {
-    gradient: premiumTheme.energy.gradient,
-    soft: premiumTheme.energy.soft,
+    gradient: theme.energy.gradient,
+    soft: theme.energy.soft,
     ring: 'rgba(45, 212, 191, 0.35)',
-    tint: premiumTheme.energy.light,
+    tint: theme.energy.light,
   },
   error: {
     gradient: ['#fda4af', '#fb7185', '#f43f5e'] as const,
     soft: 'rgba(251, 113, 133, 0.12)',
     ring: 'rgba(251, 113, 133, 0.4)',
-    tint: premiumTheme.negative,
+    tint: theme.negative,
   },
   warning: {
-    gradient: premiumTheme.solar.gradient,
-    soft: premiumTheme.solar.soft,
+    gradient: theme.solar.gradient,
+    soft: theme.solar.soft,
     ring: 'rgba(245, 158, 11, 0.4)',
-    tint: premiumTheme.solar.light,
+    tint: theme.solar.light,
   },
   info: {
-    gradient: premiumTheme.accent.gradient,
-    soft: premiumTheme.accent.soft,
+    gradient: theme.accent.gradient,
+    soft: theme.accent.soft,
     ring: 'rgba(129, 140, 248, 0.4)',
-    tint: premiumTheme.accent.light,
+    tint: theme.accent.light,
   },
 };
 
@@ -100,9 +100,9 @@ export default function NotificationsCenter(): React.ReactElement {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <LinearGradient colors={premiumTheme.bg.gradient} style={StyleSheet.absoluteFill} />
-      <Blob color={premiumTheme.bg.glowViolet} top={-120} right={-100} size={360} />
-      <Blob color={premiumTheme.bg.glowEnergy} bottom={-140} left={-120} size={380} />
+      <LinearGradient colors={theme.bg.gradient} style={StyleSheet.absoluteFill} />
+      <Blob color={theme.bg.glowViolet} top={-120} right={-100} size={360} />
+      <Blob color={theme.bg.glowEnergy} bottom={-140} left={-120} size={380} />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -120,7 +120,7 @@ export default function NotificationsCenter(): React.ReactElement {
           <RefreshControl
             refreshing={loading && hasItems}
             onRefresh={onRefresh}
-            tintColor={premiumTheme.text.muted}
+            tintColor={theme.text.muted}
           />
         }
       >
@@ -153,7 +153,7 @@ export default function NotificationsCenter(): React.ReactElement {
                 accessibilityRole="button"
                 accessibilityLabel="Mark all as read"
               >
-                <FontAwesome5 name="check-double" size={13} color={premiumTheme.text.secondary} solid />
+                <FontAwesome5 name="check-double" size={13} color={theme.text.secondary} solid />
                 <Text style={styles.clearBtnText}>Mark all read</Text>
               </Pressable>
             )}
@@ -161,7 +161,7 @@ export default function NotificationsCenter(): React.ReactElement {
 
           {error && (
             <GlassCard style={styles.errorCard}>
-              <FontAwesome5 name="exclamation-circle" size={14} color={premiumTheme.negative} solid />
+              <FontAwesome5 name="exclamation-circle" size={14} color={theme.negative} solid />
               <Text style={styles.errorText}>{error}</Text>
             </GlassCard>
           )}
@@ -169,7 +169,7 @@ export default function NotificationsCenter(): React.ReactElement {
           {/* Body */}
           {!hasItems && loading ? (
             <GlassCard strong style={styles.loadingCard}>
-              <ActivityIndicator color={premiumTheme.solar.light} />
+              <ActivityIndicator color={theme.solar.light} />
               <Text style={styles.loadingText}>Loading notifications…</Text>
             </GlassCard>
           ) : !hasItems ? (
@@ -208,7 +208,7 @@ function NotificationCard({
           <FontAwesome5
             name={iconFor(item.type, item.level)}
             size={17}
-            color={premiumTheme.text.inverse}
+            color={theme.text.inverse}
             solid
           />
         </LinearGradient>
@@ -247,12 +247,12 @@ function EmptyState() {
   return (
     <GlassCard strong style={styles.emptyCard}>
       <LinearGradient
-        colors={premiumTheme.accent.gradient}
+        colors={theme.accent.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.emptyIcon}
       >
-        <FontAwesome5 name="bell-slash" size={26} color={premiumTheme.text.inverse} solid />
+        <FontAwesome5 name="bell-slash" size={26} color={theme.text.inverse} solid />
       </LinearGradient>
       <Text style={styles.emptyTitle}>You're all caught up</Text>
       <Text style={styles.emptyText}>
@@ -302,7 +302,7 @@ function Blob({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: premiumTheme.bg.base },
+  root: { flex: 1, backgroundColor: theme.bg.base },
   scroll: {
     paddingBottom: 48,
   },
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 720,
     alignSelf: 'center',
-    gap: premiumTheme.space.md,
+    gap: theme.space.md,
   },
 
   header: {
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: -0.8,
   },
   titleWide: { fontSize: 38, letterSpacing: -1 },
@@ -333,8 +333,8 @@ const styles = StyleSheet.create({
     minWidth: 26,
     height: 26,
     paddingHorizontal: 9,
-    borderRadius: premiumTheme.radius.pill,
-    backgroundColor: premiumTheme.negative,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.negative,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14.5,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 4,
     fontWeight: '500',
   },
@@ -357,15 +357,15 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 9,
-    borderRadius: premiumTheme.radius.pill,
+    borderRadius: theme.radius.pill,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
-    backgroundColor: premiumTheme.glass.fill,
+    borderColor: theme.glass.border,
+    backgroundColor: theme.glass.fill,
     marginTop: 6,
   },
-  clearBtnHover: { borderColor: premiumTheme.glass.borderStrong },
+  clearBtnHover: { borderColor: theme.glass.borderStrong },
   clearBtnText: {
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(251, 113, 133, 0.3)',
   },
   errorText: {
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
     fontSize: 13.5,
     fontWeight: '600',
     flex: 1,
@@ -407,18 +407,18 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15.5,
     fontWeight: '700',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: -0.2,
   },
   cardTime: {
     fontSize: 12,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     fontWeight: '600',
     marginTop: 1,
   },
   cardMessage: {
     fontSize: 13.5,
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
     fontWeight: '500',
     lineHeight: 20,
   },
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   loadingText: {
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -460,13 +460,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: -0.3,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     fontWeight: '500',
     textAlign: 'center',
     lineHeight: 21,

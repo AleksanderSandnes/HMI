@@ -13,7 +13,7 @@ import { FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { premiumTheme, glassBlur, glow } from '../../theme/premiumTheme';
+import { theme, glassBlur, glow } from '../../theme/theme';
 import { logoutAction } from '../../redux/authSlice';
 import { useNotifications } from '../../context/NotificationsContext';
 import { unregisterPushOnLogout } from '../../services/pushNotifications';
@@ -26,8 +26,8 @@ export function navWidth(width: number): number {
   return width <= 1024 ? SIDEBAR_WIDTH_RAIL : SIDEBAR_WIDTH_FULL;
 }
 
-const ACTIVE = premiumTheme.solar.light;
-const INACTIVE = premiumTheme.text.muted;
+const ACTIVE = theme.solar.light;
+const INACTIVE = theme.text.muted;
 
 /** Small red unread-count bubble shown on the Notifications nav item (web). */
 function UnreadBadge({
@@ -45,7 +45,7 @@ function UnreadBadge({
   );
 }
 
-export default function PremiumTabBar({
+export default function TabBar({
   state,
   descriptors,
   navigation,
@@ -180,7 +180,7 @@ export default function PremiumTabBar({
       {/* Brand */}
       <View style={[styles.brand, !full && styles.brandRail]}>
         <LinearGradient
-          colors={premiumTheme.solar.gradient}
+          colors={theme.solar.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.brandMark}
@@ -254,7 +254,7 @@ export default function PremiumTabBar({
             accessibilityLabel="Sign out"
           >
             <View style={styles.navIcon}>
-              <FontAwesome5 name="sign-out-alt" size={18} color={premiumTheme.negative} solid />
+              <FontAwesome5 name="sign-out-alt" size={18} color={theme.negative} solid />
             </View>
             <Text style={styles.logoutLabel}>Sign out</Text>
           </Pressable>
@@ -265,7 +265,7 @@ export default function PremiumTabBar({
             accessibilityRole="button"
             accessibilityLabel="Sign out"
           >
-            <FontAwesome5 name="sign-out-alt" size={18} color={premiumTheme.negative} solid />
+            <FontAwesome5 name="sign-out-alt" size={18} color={theme.negative} solid />
             <Text style={styles.railLogoutLabel}>Sign out</Text>
           </Pressable>
         )}
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     left: 0,
     backgroundColor: 'rgba(8, 12, 22, 0.72)',
     borderRightWidth: 1,
-    borderRightColor: premiumTheme.glass.border,
+    borderRightColor: theme.glass.border,
     paddingVertical: 22,
     paddingHorizontal: 14,
     zIndex: 20,
@@ -304,13 +304,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandName: {
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     fontSize: 17,
     fontWeight: '800',
     letterSpacing: -0.3,
   },
   brandTag: {
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     fontSize: 11.5,
     fontWeight: '600',
     marginTop: 1,
@@ -325,12 +325,12 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: premiumTheme.radius.md,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: 'transparent',
   },
   navItemActive: {
-    backgroundColor: premiumTheme.solar.soft,
+    backgroundColor: theme.solar.soft,
     borderColor: 'rgba(245, 158, 11, 0.35)',
   },
   navIcon: { width: 24, alignItems: 'center' },
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     height: 18,
     paddingHorizontal: 5,
     borderRadius: 9,
-    backgroundColor: premiumTheme.negative,
+    backgroundColor: theme.negative,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -358,14 +358,14 @@ const styles = StyleSheet.create({
   railItem: {
     width: 62,
     paddingVertical: 12,
-    borderRadius: premiumTheme.radius.md,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: 'transparent',
     alignItems: 'center',
     gap: 5,
   },
   railItemActive: {
-    backgroundColor: premiumTheme.solar.soft,
+    backgroundColor: theme.solar.soft,
     borderColor: 'rgba(245, 158, 11, 0.35)',
   },
   railLabel: { fontSize: 10.5, fontWeight: '700' },
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   /* sign-out footer */
   footer: {
     borderTopWidth: 1,
-    borderTopColor: premiumTheme.glass.border,
+    borderTopColor: theme.glass.border,
     paddingTop: 14,
     marginTop: 8,
   },
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: premiumTheme.radius.md,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: 'rgba(251, 113, 133, 0.28)',
     backgroundColor: 'rgba(251, 113, 133, 0.08)',
@@ -391,12 +391,12 @@ const styles = StyleSheet.create({
   logoutLabel: {
     fontSize: 14.5,
     fontWeight: '700',
-    color: premiumTheme.negative,
+    color: theme.negative,
   },
   logoutRail: {
     width: 62,
     paddingVertical: 12,
-    borderRadius: premiumTheme.radius.md,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: 'rgba(251, 113, 133, 0.28)',
     backgroundColor: 'rgba(251, 113, 133, 0.08)',
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   railLogoutLabel: {
     fontSize: 10.5,
     fontWeight: '700',
-    color: premiumTheme.negative,
+    color: theme.negative,
   },
 
   /* mobile bottom bar */
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
         ? 'rgba(8, 12, 22, 0.82)'
         : 'rgba(8, 12, 22, 0.98)',
     borderTopWidth: 1,
-    borderTopColor: premiumTheme.glass.border,
+    borderTopColor: theme.glass.border,
     paddingTop: 12,
     paddingHorizontal: 8,
   },

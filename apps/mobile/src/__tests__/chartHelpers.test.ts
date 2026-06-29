@@ -2,9 +2,9 @@ import {
   formatNum,
   roundedBarPath,
   smoothPath,
-} from '../utils/premiumChartHelpers';
+} from '../utils/chartHelpers';
 
-describe('premiumChartHelpers', () => {
+describe('chartHelpers', () => {
   it('formats chart numbers with the existing suffix rules', () => {
     expect(formatNum(1_200_000)).toBe('1.2M');
     expect(formatNum(1500)).toBe('1.5k');

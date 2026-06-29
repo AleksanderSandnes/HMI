@@ -20,11 +20,11 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { loginUser } from '../../src/services/api/api';
 import { loginUserAction } from '../../src/redux/authSlice';
 import AuthBackground from '../../src/components/auth/AuthBackground';
-import GlassCard from '../../src/components/premium/GlassCard';
-import PremiumField from '../../src/components/premium/PremiumField';
-import PremiumButton from '../../src/components/premium/PremiumButton';
-import StatusBanner from '../../src/components/settings/premium/StatusBanner';
-import { premiumTheme } from '../../src/theme/premiumTheme';
+import GlassCard from '../../src/components/ui/GlassCard';
+import Field from '../../src/components/ui/Field';
+import Button from '../../src/components/ui/Button';
+import StatusBanner from '../../src/components/settings/cards/StatusBanner';
+import { theme } from '../../src/theme/theme';
 
 const validationSchema = Yup.object().shape({
   email: Yup.string().required('Email is required').email().label('Email'),
@@ -74,7 +74,7 @@ const Login = () => {
           >
             <View style={styles.brand}>
               <LinearGradient
-                colors={premiumTheme.solar.gradient}
+                colors={theme.solar.gradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.brandIcon}
@@ -82,7 +82,7 @@ const Login = () => {
                 <FontAwesome5
                   name="bolt"
                   size={20}
-                  color={premiumTheme.text.inverse}
+                  color={theme.text.inverse}
                   solid
                 />
               </LinearGradient>
@@ -126,7 +126,7 @@ const Login = () => {
                 touched,
               }) => (
                 <View>
-                  <PremiumField
+                  <Field
                     label="EMAIL ADDRESS"
                     icon="envelope"
                     value={values.email}
@@ -142,7 +142,7 @@ const Login = () => {
                     <Text style={styles.fieldError}>{errors.email}</Text>
                   ) : null}
 
-                  <PremiumField
+                  <Field
                     label="PASSWORD"
                     icon="lock"
                     secure
@@ -156,7 +156,7 @@ const Login = () => {
                     <Text style={styles.fieldError}>{errors.password}</Text>
                   ) : null}
 
-                  <PremiumButton
+                  <Button
                     label="Sign In"
                     icon="arrow-right"
                     onPress={handleSubmit}
@@ -205,18 +205,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: -0.6,
   },
   subtitle: {
     fontSize: 14,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 6,
     fontWeight: '500',
     textAlign: 'center',
   },
   fieldError: {
-    color: premiumTheme.negative,
+    color: theme.negative,
     fontSize: 12,
     fontWeight: '600',
     marginTop: -8,
@@ -231,15 +231,15 @@ const styles = StyleSheet.create({
     marginTop: 24,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: premiumTheme.glass.border,
+    borderTopColor: theme.glass.border,
   },
   footerText: {
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     fontSize: 14,
     fontWeight: '500',
   },
   link: {
-    color: premiumTheme.solar.light,
+    color: theme.solar.light,
     fontSize: 14,
     fontWeight: '800',
     marginLeft: 5,

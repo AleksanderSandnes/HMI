@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import SettingsSection from './SettingsSection';
 import StatusBanner from './StatusBanner';
 import SyncBadge, { SyncStatus } from './SyncBadge';
-import PremiumField from '../../premium/PremiumField';
-import PremiumButton from '../../premium/PremiumButton';
-import { premiumTheme } from '../../../theme/premiumTheme';
+import Field from '../../ui/Field';
+import Button from '../../ui/Button';
+import { theme } from '../../../theme/theme';
 import {
   saveWeatherApiSettings,
   getApiSettings,
@@ -79,7 +79,7 @@ export default function WeatherCredentialsCard({
   return (
     <SettingsSection
       icon="cloud-sun"
-      gradient={premiumTheme.solar.gradient}
+      gradient={theme.solar.gradient}
       title="Weather.com API"
       subtitle="Station ID and API key"
       headerRight={<SyncBadge status={syncStatus} />}
@@ -87,7 +87,7 @@ export default function WeatherCredentialsCard({
       {error ? <StatusBanner kind="error" message={error} /> : null}
       {success ? <StatusBanner kind="success" message={success} /> : null}
 
-      <PremiumField
+      <Field
         label="WEATHER STATION ID"
         icon="map-marker-alt"
         value={stationId}
@@ -97,7 +97,7 @@ export default function WeatherCredentialsCard({
         hint="Find your local station ID at weather.com/weather/map"
         editable={!loading}
       />
-      <PremiumField
+      <Field
         label="API KEY"
         icon="key"
         secure
@@ -109,12 +109,12 @@ export default function WeatherCredentialsCard({
         editable={!loading}
       />
 
-      <PremiumButton
+      <Button
         label={hasCredentials ? 'Update Credentials' : 'Save Credentials'}
         icon="check"
         onPress={handleSave}
         loading={loading}
-        gradient={premiumTheme.solar.gradient}
+        gradient={theme.solar.gradient}
       />
     </SettingsSection>
   );

@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { premiumTheme } from '../../theme/premiumTheme';
+import { theme } from '../../theme/theme';
 
 interface SegmentedControlProps {
   value: string;
@@ -26,31 +26,31 @@ const styles = StyleSheet.create({
   track: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: premiumTheme.radius.pill,
+    borderRadius: theme.radius.pill,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
+    borderColor: theme.glass.border,
     padding: 4,
     gap: 4,
   },
   segment: {
     flex: 1,
-    borderRadius: premiumTheme.radius.pill,
+    borderRadius: theme.radius.pill,
     paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   activeFill: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: premiumTheme.radius.pill,
+    borderRadius: theme.radius.pill,
   },
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     letterSpacing: 0.2,
   },
   labelActive: {
-    color: premiumTheme.text.inverse,
+    color: theme.text.inverse,
     fontWeight: '800',
   },
 });
@@ -80,7 +80,7 @@ export default function SegmentedControl({
           >
             {active && (
               <LinearGradient
-                colors={premiumTheme.solar.gradient}
+                colors={theme.solar.gradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.activeFill}

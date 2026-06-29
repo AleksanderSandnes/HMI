@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { premiumTheme } from '../../../theme/premiumTheme';
+import { theme } from '../../../theme/theme';
 
 type Kind = 'success' | 'error' | 'info';
 
@@ -10,18 +10,18 @@ const CONFIG: Record<
   { color: string; bg: string; icon: React.ComponentProps<typeof FontAwesome5>['name'] }
 > = {
   success: {
-    color: premiumTheme.positive,
+    color: theme.positive,
     bg: 'rgba(52, 211, 153, 0.12)',
     icon: 'check-circle',
   },
   error: {
-    color: premiumTheme.negative,
+    color: theme.negative,
     bg: 'rgba(251, 113, 133, 0.12)',
     icon: 'exclamation-circle',
   },
   info: {
-    color: premiumTheme.solar.light,
-    bg: premiumTheme.solar.soft,
+    color: theme.solar.light,
+    bg: theme.solar.soft,
     icon: 'info-circle',
   },
 };
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 9,
     borderWidth: 1,
-    borderRadius: premiumTheme.radius.sm,
+    borderRadius: theme.radius.sm,
     paddingHorizontal: 13,
     paddingVertical: 10,
     marginBottom: 14,

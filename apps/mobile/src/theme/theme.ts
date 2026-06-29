@@ -1,5 +1,5 @@
 /**
- * Premium Theme — sleek dark + glassmorphism with vibrant solar gradients.
+ * Theme — sleek dark + glassmorphism with vibrant solar gradients.
  * Used exclusively by the redesigned Growatt experience.
  */
 import { Platform } from 'react-native';
@@ -10,7 +10,7 @@ import { Platform } from 'react-native';
  */
 export type GradientColors = readonly [string, string, ...string[]];
 
-export const premiumTheme = {
+export const theme = {
   bg: {
     base: '#070b16',
     // Vertical page gradient
@@ -110,4 +110,4 @@ export const glow = (color = 'rgba(0,0,0,0.45)', radius = 30, y = 18) =>
         elevation: 12,
       };
 
-export default premiumTheme;
+export default theme;

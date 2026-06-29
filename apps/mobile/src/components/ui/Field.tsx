@@ -9,7 +9,7 @@ import {
   TextInputProps,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { premiumTheme } from '../../theme/premiumTheme';
+import { theme } from '../../theme/theme';
 
 /**
  * Web-only fixes: removes the default focus outline and prevents Chrome's
@@ -20,11 +20,11 @@ import { premiumTheme } from '../../theme/premiumTheme';
 const WEB_INPUT_FIX = {
   outlineStyle: 'none',
   transition: 'background-color 100000s ease-in-out 0s',
-  WebkitTextFillColor: premiumTheme.text.primary,
-  caretColor: premiumTheme.text.primary,
+  WebkitTextFillColor: theme.text.primary,
+  caretColor: theme.text.primary,
 } as object;
 
-interface PremiumFieldProps extends Omit<TextInputProps, 'style'> {
+interface FieldProps extends Omit<TextInputProps, 'style'> {
   label: string;
   icon?: React.ComponentProps<typeof FontAwesome5>['name'];
   /** Renders a password field with a show/hide toggle. */
@@ -34,17 +34,17 @@ interface PremiumFieldProps extends Omit<TextInputProps, 'style'> {
 }
 
 /**
- * Premium labeled text input — glass fill, hairline border, focus glow,
+ * Labeled text input — glass fill, hairline border, focus glow,
  * optional leading icon and password visibility toggle.
  */
-export default function PremiumField({
+export default function Field({
   label,
   icon,
   secure = false,
   hint,
   onFocusClearMask,
   ...inputProps
-}: PremiumFieldProps) {
+}: FieldProps) {
   const [focused, setFocused] = useState(false);
   const [reveal, setReveal] = useState(false);
 
@@ -56,7 +56,7 @@ export default function PremiumField({
           <FontAwesome5
             name={icon}
             size={14}
-            color={focused ? premiumTheme.solar.light : premiumTheme.text.muted}
+            color={focused ? theme.solar.light : theme.text.muted}
             solid
             style={styles.leadingIcon}
           />
@@ -64,7 +64,7 @@ export default function PremiumField({
         <TextInput
           {...inputProps}
           secureTextEntry={secure && !reveal}
-          placeholderTextColor={premiumTheme.text.muted}
+          placeholderTextColor={theme.text.muted}
           onFocus={(e) => {
             setFocused(true);
             onFocusClearMask?.();
@@ -90,7 +90,7 @@ export default function PremiumField({
             <FontAwesome5
               name={reveal ? 'eye-slash' : 'eye'}
               size={14}
-              color={premiumTheme.text.secondary}
+              color={theme.text.secondary}
               solid
             />
           </Pressable>
@@ -106,35 +106,35 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12.5,
     fontWeight: '700',
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
     letterSpacing: 0.3,
     marginBottom: 8,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: premiumTheme.glass.fillSubtle,
+    backgroundColor: theme.glass.fillSubtle,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
-    borderRadius: premiumTheme.radius.md,
+    borderColor: theme.glass.border,
+    borderRadius: theme.radius.md,
     paddingHorizontal: 14,
   },
   inputRowFocused: {
-    borderColor: premiumTheme.solar.main,
-    backgroundColor: premiumTheme.glass.fill,
+    borderColor: theme.solar.main,
+    backgroundColor: theme.glass.fill,
   },
   leadingIcon: { marginRight: 10 },
   input: {
     flex: 1,
     paddingVertical: Platform.OS === 'web' ? 13 : 12,
     fontSize: 15,
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     fontWeight: '600',
   },
   revealBtn: { paddingLeft: 10, paddingVertical: 6 },
   hint: {
     fontSize: 11.5,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 6,
     fontWeight: '500',
   },

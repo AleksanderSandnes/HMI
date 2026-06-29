@@ -13,14 +13,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-import GlassCard from '../../src/components/premium/GlassCard';
-import StatTile from '../../src/components/premium/StatTile';
-import SegmentedControl from '../../src/components/premium/SegmentedControl';
-import PremiumDateSelector from '../../src/components/premium/PremiumDateSelector';
-import PremiumLineChart, {
+import GlassCard from '../../src/components/ui/GlassCard';
+import StatTile from '../../src/components/ui/StatTile';
+import SegmentedControl from '../../src/components/ui/SegmentedControl';
+import DateSelector from '../../src/components/ui/DateSelector';
+import WeatherChart, {
   LineSeries,
-} from '../../src/components/premium/PremiumLineChart';
-import { premiumTheme, type GradientColors } from '../../src/theme/premiumTheme';
+} from '../../src/components/ui/WeatherChart';
+import { theme, type GradientColors } from '../../src/theme/theme';
 
 import useCurrentWeatherData from '../../src/hooks/useCurrentWeatherData';
 import { useDatePicker } from '../../src/hooks/useDatePicker';
@@ -168,7 +168,7 @@ interface SeriesStats {
 
 /* ---------- page ---------- */
 
-export default function WeatherStationPremium(): React.ReactElement {
+export default function WeatherScreen(): React.ReactElement {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isMobile = width <= 768;
@@ -277,7 +277,7 @@ export default function WeatherStationPremium(): React.ReactElement {
   const LocationChip = (
     <GlassCard style={styles.chip}>
       <View style={styles.chipIcon}>
-        <FontAwesome5 name="cloud-sun" size={13} color={premiumTheme.solar.light} solid />
+        <FontAwesome5 name="cloud-sun" size={13} color={theme.solar.light} solid />
       </View>
       <Text style={styles.chipText}>
         {neighborhood ? `${neighborhood}, ${countryName || ''}`.replace(/, $/, '') : 'Loading…'}
@@ -319,7 +319,7 @@ export default function WeatherStationPremium(): React.ReactElement {
     <StatTile
       key="humidity"
       icon="tint"
-      gradient={premiumTheme.energy.gradient}
+      gradient={theme.energy.gradient}
       label="Humidity"
       value={num(currentHumidity, 0)}
       unit="%"
@@ -329,7 +329,7 @@ export default function WeatherStationPremium(): React.ReactElement {
   ];
 
   const TileGrid = (
-    <View style={{ gap: premiumTheme.space.md }}>
+    <View style={{ gap: theme.space.md }}>
       <View style={styles.tileGridRow}>
         <View style={styles.tileGridCell}>{tiles[0]}</View>
         <View style={styles.tileGridCell}>{tiles[1]}</View>
@@ -376,7 +376,7 @@ export default function WeatherStationPremium(): React.ReactElement {
             <FontAwesome5
               name="calendar-day"
               size={12}
-              color={premiumTheme.text.secondary}
+              color={theme.text.secondary}
               solid
             />
             <Text style={styles.datePillText}>{dateLabel}</Text>
@@ -396,7 +396,7 @@ export default function WeatherStationPremium(): React.ReactElement {
           <SummaryCell
             label="Average"
             value={`${num(stats.avg)}${statsUnit ? ' ' + statsUnit : ''}`}
-            color={premiumTheme.text.primary}
+            color={theme.text.primary}
             compact={isMobile}
           />
           <View style={styles.summaryDivider} />
@@ -404,12 +404,12 @@ export default function WeatherStationPremium(): React.ReactElement {
             label="Low"
             value={`${num(stats.low)}${statsUnit ? ' ' + statsUnit : ''}`}
             sub={stats.lowLabel}
-            color={premiumTheme.text.secondary}
+            color={theme.text.secondary}
             compact={isMobile}
           />
         </View>
       )}
-      <PremiumLineChart
+      <WeatherChart
         labels={labels}
         series={series}
         unit={meta.unit === 'UV' ? '' : meta.unit}
@@ -447,7 +447,7 @@ export default function WeatherStationPremium(): React.ReactElement {
             <FontAwesome5
               name={t.icon}
               size={13}
-              color={premiumTheme.text.secondary}
+              color={theme.text.secondary}
               solid
             />
           </View>
@@ -485,8 +485,8 @@ export default function WeatherStationPremium(): React.ReactElement {
   );
 
   const Controls = (
-    <View style={{ gap: premiumTheme.space.md }}>
-      <PremiumDateSelector
+    <View style={{ gap: theme.space.md }}>
+      <DateSelector
         selectedDate={selectedISO}
         onDateSelect={handleDateChange}
       />
@@ -524,10 +524,10 @@ export default function WeatherStationPremium(): React.ReactElement {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <LinearGradient colors={premiumTheme.bg.gradient} style={StyleSheet.absoluteFill} />
-      <Blob color={premiumTheme.bg.glowEnergy} top={-120} right={-100} size={360} />
-      <Blob color={premiumTheme.bg.glowViolet} bottom={-140} left={-120} size={380} />
-      <Blob color={premiumTheme.bg.glowSolar} top={220} left={width * 0.4} size={300} />
+      <LinearGradient colors={theme.bg.gradient} style={StyleSheet.absoluteFill} />
+      <Blob color={theme.bg.glowEnergy} top={-120} right={-100} size={360} />
+      <Blob color={theme.bg.glowViolet} bottom={-140} left={-120} size={380} />
+      <Blob color={theme.bg.glowSolar} top={220} left={width * 0.4} size={300} />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -535,8 +535,8 @@ export default function WeatherStationPremium(): React.ReactElement {
           styles.scroll,
           {
             gap: shortLandscape
-              ? premiumTheme.space.md
-              : premiumTheme.space.lg,
+              ? theme.space.md
+              : theme.space.lg,
             paddingTop: (Platform.OS === 'web' ? 28 : 14) + insets.top,
             paddingBottom: (shortLandscape ? 18 : 36) + insets.bottom,
             paddingLeft:
@@ -651,9 +651,9 @@ function Blob({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: premiumTheme.bg.base },
+  root: { flex: 1, backgroundColor: theme.bg.base },
   scroll: {
-    gap: premiumTheme.space.lg,
+    gap: theme.space.lg,
     width: '100%',
     alignSelf: 'center',
   },
@@ -667,13 +667,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: -0.8,
   },
   titleWide: { fontSize: 38, letterSpacing: -1 },
   subtitle: {
     fontSize: 14.5,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 4,
     fontWeight: '500',
   },
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 9,
-    borderRadius: premiumTheme.radius.pill,
+    borderRadius: theme.radius.pill,
   },
   chipIcon: {
     width: 16,
@@ -696,16 +696,16 @@ const styles = StyleSheet.create({
     transform: [{ translateY: Platform.OS === 'web' ? 1.5 : 0 }],
   },
   chipText: {
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
     fontSize: 13,
     lineHeight: 16,
     fontWeight: '700',
   },
 
-  tileRow: { flexDirection: 'row', gap: premiumTheme.space.md },
+  tileRow: { flexDirection: 'row', gap: theme.space.md },
   tileGridRow: {
     flexDirection: 'row',
-    gap: premiumTheme.space.md,
+    gap: theme.space.md,
   },
   tileGridCell: {
     flex: 1,
@@ -714,7 +714,7 @@ const styles = StyleSheet.create({
 
   mainRow: {
     flexDirection: 'row',
-    gap: premiumTheme.space.lg,
+    gap: theme.space.lg,
     alignItems: 'flex-start',
   },
 
@@ -730,11 +730,11 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 19,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
   },
   chartSub: {
     fontSize: 13,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 3,
     fontWeight: '500',
   },
@@ -749,15 +749,15 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 12.5,
     fontWeight: '600',
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
   },
   summaryStrip: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    backgroundColor: premiumTheme.glass.fillSubtle,
+    backgroundColor: theme.glass.fillSubtle,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
-    borderRadius: premiumTheme.radius.md,
+    borderColor: theme.glass.border,
+    borderRadius: theme.radius.md,
     paddingVertical: 11,
     paddingHorizontal: 6,
     marginTop: 14,
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
@@ -785,12 +785,12 @@ const styles = StyleSheet.create({
   summaryValueCompact: { fontSize: 16 },
   summarySub: {
     fontSize: 11,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     fontWeight: '600',
   },
   summaryDivider: {
     width: 1,
-    backgroundColor: premiumTheme.glass.border,
+    backgroundColor: theme.glass.border,
     marginVertical: 4,
   },
   datePill: {
@@ -799,15 +799,15 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: premiumTheme.radius.pill,
-    backgroundColor: premiumTheme.glass.fillStrong,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.glass.fillStrong,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
+    borderColor: theme.glass.border,
   },
   datePillText: {
     fontSize: 12.5,
     fontWeight: '700',
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
   },
 
   controlsCard: { padding: 18 },
@@ -815,7 +815,7 @@ const styles = StyleSheet.create({
   controlsLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     marginBottom: 14,
@@ -847,13 +847,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 999,
-    backgroundColor: premiumTheme.glass.fill,
+    backgroundColor: theme.glass.fill,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
+    borderColor: theme.glass.border,
   },
   typeChipActive: {
-    backgroundColor: premiumTheme.glass.fillStrong,
-    borderColor: premiumTheme.glass.borderStrong,
+    backgroundColor: theme.glass.fillStrong,
+    borderColor: theme.glass.borderStrong,
   },
   typeIcon: {
     width: 26,
@@ -865,11 +865,11 @@ const styles = StyleSheet.create({
   typeIconIdle: {
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
+    borderColor: theme.glass.border,
   },
   typeLabel: {
     fontSize: 12.5,
     fontWeight: '700',
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
   },
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Modal,
+  Modal as RNModal,
   View,
   Text,
   Pressable,
@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { premiumTheme, glassBlur, glow, type GradientColors } from '../../theme/premiumTheme';
+import { theme, glassBlur, glow, type GradientColors } from '../../theme/theme';
 
-interface PremiumModalProps {
+interface ModalProps {
   visible: boolean;
   onClose: () => void;
   icon: React.ComponentProps<typeof FontAwesome5>['name'];
@@ -27,7 +27,7 @@ interface PremiumModalProps {
  * Fancy centered popup with a glass card, gradient icon header and
  * a dimmed backdrop. Used for editing account/profile/password.
  */
-export default function PremiumModal({
+export default function Modal({
   visible,
   onClose,
   icon,
@@ -35,12 +35,12 @@ export default function PremiumModal({
   title,
   subtitle,
   children,
-}: PremiumModalProps) {
+}: ModalProps) {
   const { width } = useWindowDimensions();
   const isMobile = width <= 768;
 
   return (
-    <Modal
+    <RNModal
       visible={visible}
       transparent
       animationType="fade"
@@ -64,14 +64,14 @@ export default function PremiumModal({
               end={{ x: 1, y: 1 }}
               style={styles.icon}
             >
-              <FontAwesome5 name={icon} size={16} color={premiumTheme.text.inverse} solid />
+              <FontAwesome5 name={icon} size={16} color={theme.text.inverse} solid />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={styles.title}>{title}</Text>
               {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
             </View>
             <Pressable onPress={onClose} hitSlop={10} style={styles.closeBtn}>
-              <FontAwesome5 name="times" size={16} color={premiumTheme.text.muted} solid />
+              <FontAwesome5 name="times" size={16} color={theme.text.muted} solid />
             </Pressable>
           </View>
 
@@ -85,7 +85,7 @@ export default function PremiumModal({
           </ScrollView>
         </Pressable>
       </Pressable>
-    </Modal>
+    </RNModal>
   );
 }
 
@@ -100,9 +100,9 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: 'rgba(14, 20, 35, 0.96)',
-    borderRadius: premiumTheme.radius.lg,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.borderStrong,
+    borderColor: theme.glass.borderStrong,
     padding: 22,
     maxHeight: '88%',
   },
@@ -117,12 +117,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 13,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 2,
     fontWeight: '500',
   },
@@ -132,8 +132,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: premiumTheme.glass.fill,
+    backgroundColor: theme.glass.fill,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
+    borderColor: theme.glass.border,
   },
 });

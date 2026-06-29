@@ -10,10 +10,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
 import GlassCard from './GlassCard';
-import PremiumCalendar from './PremiumCalendar';
-import { premiumTheme, glassBlur } from '../../theme/premiumTheme';
+import Calendar from './Calendar';
+import { theme, glassBlur } from '../../theme/theme';
 
-interface PremiumDateSelectorProps {
+interface DateSelectorProps {
   selectedDate: string;
   onDateSelect: (date: string) => void;
   disabled?: boolean;
@@ -47,11 +47,11 @@ const styles = StyleSheet.create({
   relative: {
     fontSize: 16,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
   },
   absolute: {
     fontSize: 12.5,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 2,
   },
   overlay: {
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: 19,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
   },
   closeBtn: {
     width: 34,
@@ -83,14 +83,14 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: premiumTheme.glass.fillStrong,
+    backgroundColor: theme.glass.fillStrong,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
+    borderColor: theme.glass.border,
   },
   sectionLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     marginBottom: 12,
@@ -105,24 +105,24 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexBasis: '40%',
     paddingVertical: 13,
-    borderRadius: premiumTheme.radius.md,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
-    backgroundColor: premiumTheme.glass.fill,
+    backgroundColor: theme.glass.fill,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
+    borderColor: theme.glass.border,
   },
   quickBtnActive: {
-    backgroundColor: premiumTheme.solar.soft,
-    borderColor: premiumTheme.solar.main,
+    backgroundColor: theme.solar.soft,
+    borderColor: theme.solar.main,
   },
   quickText: {
     fontSize: 14,
     fontWeight: '700',
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
   },
-  quickTextActive: { color: premiumTheme.solar.light },
+  quickTextActive: { color: theme.solar.light },
   customBtn: {
-    borderRadius: premiumTheme.radius.md,
+    borderRadius: theme.radius.md,
     overflow: 'hidden',
   },
   customInner: {
@@ -135,15 +135,15 @@ const styles = StyleSheet.create({
   customText: {
     fontSize: 15,
     fontWeight: '800',
-    color: premiumTheme.text.inverse,
+    color: theme.text.inverse,
   },
 });
 
-export default function PremiumDateSelector({
+export default function DateSelector({
   selectedDate,
   onDateSelect,
   disabled = false,
-}: PremiumDateSelectorProps) {
+}: DateSelectorProps) {
   const { width } = useWindowDimensions();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -191,7 +191,7 @@ export default function PremiumDateSelector({
           disabled={disabled}
         >
           <LinearGradient
-            colors={premiumTheme.accent.gradient}
+            colors={theme.accent.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.iconWrap}
@@ -205,7 +205,7 @@ export default function PremiumDateSelector({
           <FontAwesome5
             name="chevron-down"
             size={14}
-            color={premiumTheme.text.muted}
+            color={theme.text.muted}
           />
         </Pressable>
       </GlassCard>
@@ -227,7 +227,7 @@ export default function PremiumDateSelector({
                 <FontAwesome5
                   name="times"
                   size={15}
-                  color={premiumTheme.text.secondary}
+                  color={theme.text.secondary}
                 />
               </Pressable>
             </View>
@@ -259,7 +259,7 @@ export default function PremiumDateSelector({
               }}
             >
               <LinearGradient
-                colors={premiumTheme.solar.gradient}
+                colors={theme.solar.gradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.customInner}
@@ -272,7 +272,7 @@ export default function PremiumDateSelector({
         </View>
       </Modal>
 
-      <PremiumCalendar
+      <Calendar
         visible={pickerOpen}
         value={selectedDate}
         onClose={() => setPickerOpen(false)}

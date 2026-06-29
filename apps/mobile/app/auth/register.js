@@ -19,11 +19,11 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { registerUser } from '../../src/services/api/api';
 import { loginUserAction } from '../../src/redux/authSlice';
 import AuthBackground from '../../src/components/auth/AuthBackground';
-import GlassCard from '../../src/components/premium/GlassCard';
-import PremiumField from '../../src/components/premium/PremiumField';
-import PremiumButton from '../../src/components/premium/PremiumButton';
-import StatusBanner from '../../src/components/settings/premium/StatusBanner';
-import { premiumTheme } from '../../src/theme/premiumTheme';
+import GlassCard from '../../src/components/ui/GlassCard';
+import Field from '../../src/components/ui/Field';
+import Button from '../../src/components/ui/Button';
+import StatusBanner from '../../src/components/settings/cards/StatusBanner';
+import { theme } from '../../src/theme/theme';
 import {
   saveGrowattApiSettings,
   saveWeatherApiSettings,
@@ -207,7 +207,7 @@ const Register = () => {
     if (step === 0) {
       return {
         icon: 'user-plus',
-        gradient: premiumTheme.accent.gradient,
+        gradient: theme.accent.gradient,
         title: 'Create account',
         subtitle: 'Join your energy monitoring dashboard',
       };
@@ -215,14 +215,14 @@ const Register = () => {
     if (step === 1) {
       return {
         icon: 'solar-panel',
-        gradient: premiumTheme.energy.gradient,
+        gradient: theme.energy.gradient,
         title: 'Connect Growatt',
         subtitle: 'Optional — add your solar credentials',
       };
     }
     return {
       icon: 'cloud-sun',
-      gradient: premiumTheme.solar.gradient,
+      gradient: theme.solar.gradient,
       title: 'Connect Weather.com',
       subtitle: 'Optional — add your weather station',
     };
@@ -267,7 +267,7 @@ const Register = () => {
                 <FontAwesome5
                   name={header.icon}
                   size={20}
-                  color={premiumTheme.text.inverse}
+                  color={theme.text.inverse}
                   solid
                 />
               </LinearGradient>
@@ -288,7 +288,7 @@ const Register = () => {
 
             {step === 0 ? (
               <View>
-                <PremiumField
+                <Field
                   label="EMAIL ADDRESS"
                   icon="envelope"
                   value={account.email}
@@ -301,7 +301,7 @@ const Register = () => {
                 />
                 <FieldError message={accountErrors.email} />
 
-                <PremiumField
+                <Field
                   label="USERNAME"
                   icon="user"
                   value={account.username}
@@ -313,7 +313,7 @@ const Register = () => {
                 />
                 <FieldError message={accountErrors.username} />
 
-                <PremiumField
+                <Field
                   label="PASSWORD"
                   icon="lock"
                   secure
@@ -324,7 +324,7 @@ const Register = () => {
                 />
                 <FieldError message={accountErrors.password} />
 
-                <PremiumField
+                <Field
                   label="CONFIRM PASSWORD"
                   icon="lock"
                   secure
@@ -335,7 +335,7 @@ const Register = () => {
                 />
                 <FieldError message={accountErrors.confirmPassword} />
 
-                <PremiumButton
+                <Button
                   label="Create account"
                   icon="arrow-right"
                   onPress={handleCreateAccount}
@@ -347,7 +347,7 @@ const Register = () => {
 
             {step === 1 ? (
               <View>
-                <PremiumField
+                <Field
                   label="ACCOUNT (EMAIL)"
                   icon="envelope"
                   value={growatt.email}
@@ -357,7 +357,7 @@ const Register = () => {
                   keyboardType="email-address"
                   editable={!saving}
                 />
-                <PremiumField
+                <Field
                   label="PASSWORD"
                   icon="key"
                   secure
@@ -372,7 +372,7 @@ const Register = () => {
                 </Text>
 
                 <View style={styles.buttonRow}>
-                  <PremiumButton
+                  <Button
                     label="Skip"
                     variant="ghost"
                     onPress={() => {
@@ -381,12 +381,12 @@ const Register = () => {
                     }}
                     style={styles.rowBtn}
                   />
-                  <PremiumButton
+                  <Button
                     label="Continue"
                     icon="arrow-right"
                     onPress={handleSaveGrowatt}
                     loading={saving}
-                    gradient={premiumTheme.energy.gradient}
+                    gradient={theme.energy.gradient}
                     style={styles.rowBtn}
                   />
                 </View>
@@ -395,7 +395,7 @@ const Register = () => {
 
             {step === 2 ? (
               <View>
-                <PremiumField
+                <Field
                   label="WEATHER STATION ID"
                   icon="map-marker-alt"
                   value={weather.stationId}
@@ -405,7 +405,7 @@ const Register = () => {
                   hint="Find your local station ID at weather.com/weather/map"
                   editable={!saving}
                 />
-                <PremiumField
+                <Field
                   label="API KEY"
                   icon="key"
                   secure
@@ -421,7 +421,7 @@ const Register = () => {
                 </Text>
 
                 <View style={styles.buttonRow}>
-                  <PremiumButton
+                  <Button
                     label="Back"
                     variant="ghost"
                     icon="arrow-left"
@@ -431,7 +431,7 @@ const Register = () => {
                     }}
                     style={styles.rowBtn}
                   />
-                  <PremiumButton
+                  <Button
                     label="Finish"
                     icon="check"
                     onPress={handleFinish}
@@ -487,7 +487,7 @@ function StepIndicator({ step }) {
                   <FontAwesome5
                     name="check"
                     size={10}
-                    color={premiumTheme.text.inverse}
+                    color={theme.text.inverse}
                     solid
                   />
                 ) : (
@@ -541,40 +541,40 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: premiumTheme.glass.fill,
+    backgroundColor: theme.glass.fill,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.borderStrong,
+    borderColor: theme.glass.borderStrong,
   },
   stepDotActive: {
-    backgroundColor: premiumTheme.solar.soft,
-    borderColor: premiumTheme.solar.main,
+    backgroundColor: theme.solar.soft,
+    borderColor: theme.solar.main,
   },
   stepDotDone: {
-    backgroundColor: premiumTheme.solar.main,
-    borderColor: premiumTheme.solar.main,
+    backgroundColor: theme.solar.main,
+    borderColor: theme.solar.main,
   },
   stepNum: {
     fontSize: 12,
     fontWeight: '800',
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
   },
-  stepNumActive: { color: premiumTheme.solar.light },
+  stepNumActive: { color: theme.solar.light },
   stepLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 6,
   },
-  stepLabelActive: { color: premiumTheme.text.secondary },
+  stepLabelActive: { color: theme.text.secondary },
   stepBar: {
     flex: 1,
     height: 2,
     maxWidth: 40,
     marginTop: -16,
-    backgroundColor: premiumTheme.glass.borderStrong,
+    backgroundColor: theme.glass.borderStrong,
     borderRadius: 2,
   },
-  stepBarDone: { backgroundColor: premiumTheme.solar.main },
+  stepBarDone: { backgroundColor: theme.solar.main },
 
   brand: { alignItems: 'center', marginBottom: 22 },
   brandIcon: {
@@ -588,19 +588,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 25,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: -0.6,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 6,
     fontWeight: '500',
     textAlign: 'center',
   },
   fieldError: {
-    color: premiumTheme.negative,
+    color: theme.negative,
     fontSize: 12,
     fontWeight: '600',
     marginTop: -8,
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
   },
   optionalNote: {
     fontSize: 12.5,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     fontWeight: '500',
     textAlign: 'center',
     marginTop: 2,
@@ -626,15 +626,15 @@ const styles = StyleSheet.create({
     marginTop: 24,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: premiumTheme.glass.border,
+    borderTopColor: theme.glass.border,
   },
   footerText: {
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     fontSize: 14,
     fontWeight: '500',
   },
   link: {
-    color: premiumTheme.solar.light,
+    color: theme.solar.light,
     fontSize: 14,
     fontWeight: '800',
     marginLeft: 5,

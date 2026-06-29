@@ -4,10 +4,10 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
 import SettingsSection from './SettingsSection';
 import StatusBanner from './StatusBanner';
-import PremiumField from '../../premium/PremiumField';
-import PremiumButton from '../../premium/PremiumButton';
-import PremiumModal from '../../premium/PremiumModal';
-import { premiumTheme } from '../../../theme/premiumTheme';
+import Field from '../../ui/Field';
+import Button from '../../ui/Button';
+import Modal from '../../ui/Modal';
+import { theme } from '../../../theme/theme';
 import {
   getUserProfile,
   updateUserProfile,
@@ -146,7 +146,7 @@ export default function AccountCard({
   return (
     <SettingsSection
       icon="user"
-      gradient={premiumTheme.energy.gradient}
+      gradient={theme.energy.gradient}
       title="Account"
       subtitle="Your profile and password"
     >
@@ -160,10 +160,10 @@ export default function AccountCard({
 
       <View style={styles.actions}>
         <View style={{ flex: 1 }}>
-          <PremiumButton label="Edit profile" icon="pen" variant="ghost" onPress={openProfile} />
+          <Button label="Edit profile" icon="pen" variant="ghost" onPress={openProfile} />
         </View>
         <View style={{ flex: 1 }}>
-          <PremiumButton
+          <Button
             label="Change password"
             icon="key"
             variant="ghost"
@@ -173,16 +173,16 @@ export default function AccountCard({
       </View>
 
       {/* Edit profile modal */}
-      <PremiumModal
+      <Modal
         visible={profileOpen}
         onClose={() => setProfileOpen(false)}
         icon="user-edit"
-        gradient={premiumTheme.energy.gradient}
+        gradient={theme.energy.gradient}
         title="Edit profile"
         subtitle="Update your username and email"
       >
         {pError ? <StatusBanner kind="error" message={pError} /> : null}
-        <PremiumField
+        <Field
           label="USERNAME"
           icon="user"
           value={pUsername}
@@ -191,7 +191,7 @@ export default function AccountCard({
           autoCapitalize="none"
           editable={!pLoading}
         />
-        <PremiumField
+        <Field
           label="EMAIL"
           icon="envelope"
           value={pEmail}
@@ -203,29 +203,29 @@ export default function AccountCard({
         />
         <View style={styles.modalActions}>
           <View style={{ flex: 1 }}>
-            <PremiumButton
+            <Button
               label="Cancel"
               variant="ghost"
               onPress={() => setProfileOpen(false)}
             />
           </View>
           <View style={{ flex: 1 }}>
-            <PremiumButton label="Save" icon="check" onPress={saveProfile} loading={pLoading} />
+            <Button label="Save" icon="check" onPress={saveProfile} loading={pLoading} />
           </View>
         </View>
-      </PremiumModal>
+      </Modal>
 
       {/* Change password modal */}
-      <PremiumModal
+      <Modal
         visible={passwordOpen}
         onClose={() => setPasswordOpen(false)}
         icon="shield-alt"
-        gradient={premiumTheme.accent.gradient}
+        gradient={theme.accent.gradient}
         title="Change password"
         subtitle="Choose a new account password"
       >
         {pwError ? <StatusBanner kind="error" message={pwError} /> : null}
-        <PremiumField
+        <Field
           label="CURRENT PASSWORD"
           icon="key"
           secure
@@ -235,7 +235,7 @@ export default function AccountCard({
           autoCapitalize="none"
           editable={!pwLoading}
         />
-        <PremiumField
+        <Field
           label="NEW PASSWORD"
           icon="lock"
           secure
@@ -245,7 +245,7 @@ export default function AccountCard({
           autoCapitalize="none"
           editable={!pwLoading}
         />
-        <PremiumField
+        <Field
           label="CONFIRM NEW PASSWORD"
           icon="lock"
           secure
@@ -257,23 +257,23 @@ export default function AccountCard({
         />
         <View style={styles.modalActions}>
           <View style={{ flex: 1 }}>
-            <PremiumButton
+            <Button
               label="Cancel"
               variant="ghost"
               onPress={() => setPasswordOpen(false)}
             />
           </View>
           <View style={{ flex: 1 }}>
-            <PremiumButton
+            <Button
               label="Update"
               icon="check"
-              gradient={premiumTheme.accent.gradient}
+              gradient={theme.accent.gradient}
               onPress={savePassword}
               loading={pwLoading}
             />
           </View>
         </View>
-      </PremiumModal>
+      </Modal>
     </SettingsSection>
   );
 }
@@ -292,7 +292,7 @@ function InfoRow({
   return (
     <View style={[styles.row, !last && styles.rowDivider]}>
       <View style={styles.rowIcon}>
-        <FontAwesome5 name={icon} size={13} color={premiumTheme.text.muted} solid />
+        <FontAwesome5 name={icon} size={13} color={theme.text.muted} solid />
       </View>
       <Text style={styles.rowLabel}>{label}</Text>
       <Text style={styles.rowValue} numberOfLines={1}>
@@ -312,19 +312,19 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: premiumTheme.glass.border,
+    borderBottomColor: theme.glass.border,
   },
   rowIcon: { width: 18, alignItems: 'center' },
   rowLabel: {
     fontSize: 13.5,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     fontWeight: '600',
     width: 92,
   },
   rowValue: {
     flex: 1,
     fontSize: 14.5,
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     fontWeight: '700',
     textAlign: 'right',
   },

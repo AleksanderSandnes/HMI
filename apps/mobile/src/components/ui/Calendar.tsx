@@ -3,9 +3,9 @@ import { View, Text, Pressable, StyleSheet, Modal, useWindowDimensions } from 'r
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
 import GlassCard from './GlassCard';
-import { premiumTheme, glassBlur } from '../../theme/premiumTheme';
+import { theme, glassBlur } from '../../theme/theme';
 
-interface PremiumCalendarProps {
+interface CalendarProps {
   visible: boolean;
   /** Selected date as an ISO `YYYY-MM-DD` string. */
   value: string;
@@ -32,13 +32,13 @@ const startOfDay = (d: Date) => {
   return n;
 };
 
-export default function PremiumCalendar({
+export default function Calendar({
   visible,
   value,
   onSelect,
   onClose,
   disableFuture = true,
-}: PremiumCalendarProps) {
+}: CalendarProps) {
   const { width } = useWindowDimensions();
   const selected = startOfDay(new Date(value));
   const [viewMonth, setViewMonth] = useState(
@@ -102,7 +102,7 @@ export default function PremiumCalendar({
                 <FontAwesome5
                   name="chevron-left"
                   size={14}
-                  color={premiumTheme.text.secondary}
+                  color={theme.text.secondary}
                 />
               </Pressable>
               <Text style={styles.monthTitle}>
@@ -116,7 +116,7 @@ export default function PremiumCalendar({
                 <FontAwesome5
                   name="chevron-right"
                   size={14}
-                  color={premiumTheme.text.secondary}
+                  color={theme.text.secondary}
                 />
               </Pressable>
             </View>
@@ -151,7 +151,7 @@ export default function PremiumCalendar({
                     >
                       {isSelected ? (
                         <LinearGradient
-                          colors={premiumTheme.solar.gradient}
+                          colors={theme.solar.gradient}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
                           style={styles.daySelected}
@@ -215,20 +215,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: premiumTheme.glass.fillStrong,
+    backgroundColor: theme.glass.fillStrong,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
+    borderColor: theme.glass.border,
   },
   monthTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
   },
   weekRow: { flexDirection: 'row', marginBottom: 6 },
   weekday: {
     fontSize: 11,
     fontWeight: '700',
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     letterSpacing: 0.3,
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dayPressed: { backgroundColor: premiumTheme.glass.fillStrong },
+  dayPressed: { backgroundColor: theme.glass.fillStrong },
   dayToday: {
     borderWidth: 1,
     borderColor: 'rgba(245, 158, 11, 0.45)',
@@ -265,9 +265,9 @@ const styles = StyleSheet.create({
   dayText: {
     fontSize: 14,
     fontWeight: '600',
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
   },
-  dayTextToday: { color: premiumTheme.solar.light, fontWeight: '800' },
+  dayTextToday: { color: theme.solar.light, fontWeight: '800' },
   dayTextDisabled: { color: 'rgba(255, 255, 255, 0.22)' },
   footer: {
     flexDirection: 'row',
@@ -277,29 +277,29 @@ const styles = StyleSheet.create({
   todayBtn: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: premiumTheme.radius.md,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
-    backgroundColor: premiumTheme.solar.soft,
+    backgroundColor: theme.solar.soft,
     borderWidth: 1,
-    borderColor: premiumTheme.solar.main,
+    borderColor: theme.solar.main,
   },
   todayText: {
     fontSize: 14,
     fontWeight: '800',
-    color: premiumTheme.solar.light,
+    color: theme.solar.light,
   },
   closeBtn: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: premiumTheme.radius.md,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
-    backgroundColor: premiumTheme.glass.fill,
+    backgroundColor: theme.glass.fill,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
+    borderColor: theme.glass.border,
   },
   closeText: {
     fontSize: 14,
     fontWeight: '700',
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
   },
 });

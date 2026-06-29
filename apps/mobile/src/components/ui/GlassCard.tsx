@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { premiumTheme, glassBlur, glow } from '../../theme/premiumTheme';
+import { theme, glassBlur, glow } from '../../theme/theme';
 
 interface GlassCardProps {
   children: React.ReactNode;
@@ -15,20 +15,20 @@ interface GlassCardProps {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: premiumTheme.radius.lg,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
-    backgroundColor: premiumTheme.glass.fill,
+    borderColor: theme.glass.border,
+    backgroundColor: theme.glass.fill,
     overflow: 'hidden',
   },
   strong: {
-    backgroundColor: premiumTheme.glass.fillStrong,
-    borderColor: premiumTheme.glass.borderStrong,
+    backgroundColor: theme.glass.fillStrong,
+    borderColor: theme.glass.borderStrong,
   },
 });
 
 /**
- * Frosted-glass surface — the building block of the premium dashboard.
+ * Frosted-glass surface — the building block of the dashboard.
  * Translucent fill + hairline border, web backdrop blur, optional glow.
  */
 export default function GlassCard({

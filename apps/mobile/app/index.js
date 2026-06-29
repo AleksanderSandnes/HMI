@@ -10,7 +10,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { solarTheme } from '../src/theme/solarTheme';
-import { premiumTheme } from '../src/theme/premiumTheme';
+import { theme } from '../src/theme/theme';
 import { useResponsive } from '../src/utils/responsive';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ANIMATION_DURATION, SPACING } from '../src/constants';
@@ -96,7 +96,7 @@ const Home = () => {
         activeOpacity={0.85}
       >
         <LinearGradient
-          colors={premiumTheme.solar.gradient}
+          colors={theme.solar.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={dynamicStyles.pad}
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     },
   },
   primaryButtonText: {
-    color: premiumTheme.text.inverse,
+    color: theme.text.inverse,
     fontSize: 18,
     fontWeight: '800',
     textAlign: 'center',

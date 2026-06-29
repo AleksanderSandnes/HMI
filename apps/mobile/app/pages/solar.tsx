@@ -12,15 +12,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-import GlassCard from '../../src/components/premium/GlassCard';
-import StatTile from '../../src/components/premium/StatTile';
-import SegmentedControl from '../../src/components/premium/SegmentedControl';
-import PremiumDateSelector from '../../src/components/premium/PremiumDateSelector';
-import PremiumChart from '../../src/components/premium/PremiumChart';
+import GlassCard from '../../src/components/ui/GlassCard';
+import StatTile from '../../src/components/ui/StatTile';
+import SegmentedControl from '../../src/components/ui/SegmentedControl';
+import DateSelector from '../../src/components/ui/DateSelector';
+import SolarChart from '../../src/components/ui/SolarChart';
 
 import { fetchSolarData as fetchSolarDataFromService } from '../../src/services/dataService';
 import useCurrentWeatherData from '../../src/hooks/useCurrentWeatherData';
-import { premiumTheme } from '../../src/theme/premiumTheme';
+import { theme } from '../../src/theme/theme';
 import {
   CO2_PER_KWH,
   chartSubtitle,
@@ -33,9 +33,9 @@ import {
   previousPeriodDate,
   toISO,
   type ChartData,
-} from '../../src/utils/growattPremiumHelpers';
+} from '../../src/utils/solarStats';
 
-export default function GrowattPremium(): React.ReactElement {
+export default function SolarScreen(): React.ReactElement {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
@@ -142,7 +142,7 @@ export default function GrowattPremium(): React.ReactElement {
   const WeatherChip = (
     <GlassCard style={styles.chip}>
       <View style={styles.chipIcon}>
-        <FontAwesome5 name="sun" size={13} color={premiumTheme.solar.light} solid />
+        <FontAwesome5 name="sun" size={13} color={theme.solar.light} solid />
       </View>
       <Text style={styles.chipText}>
         {currentTemp != null
@@ -156,7 +156,7 @@ export default function GrowattPremium(): React.ReactElement {
     <StatTile
       key="gen"
       icon="bolt"
-      gradient={premiumTheme.energy.gradient}
+      gradient={theme.energy.gradient}
       label="Generation"
       value={metrics.todayGeneration.toFixed(1)}
       unit="kWh"
@@ -168,7 +168,7 @@ export default function GrowattPremium(): React.ReactElement {
     <StatTile
       key="rev"
       icon="coins"
-      gradient={premiumTheme.revenue.gradient}
+      gradient={theme.revenue.gradient}
       label="Revenue"
       value={metrics.todayRevenue.toFixed(0)}
       unit="kr"
@@ -191,7 +191,7 @@ export default function GrowattPremium(): React.ReactElement {
     <StatTile
       key="peak"
       icon="mountain"
-      gradient={premiumTheme.solar.gradient}
+      gradient={theme.solar.gradient}
       label="Peak output"
       value={peak ? formatPeak(peak.value) : '—'}
       unit={peak?.unit}
@@ -202,7 +202,7 @@ export default function GrowattPremium(): React.ReactElement {
   ];
 
   const TileGrid = (
-    <View style={{ gap: premiumTheme.space.md }}>
+    <View style={{ gap: theme.space.md }}>
       <View style={styles.tileGridRow}>
         <View style={styles.tileGridCell}>{tiles[0]}</View>
         <View style={styles.tileGridCell}>{tiles[1]}</View>
@@ -235,7 +235,7 @@ export default function GrowattPremium(): React.ReactElement {
             <FontAwesome5
               name="calendar-day"
               size={12}
-              color={premiumTheme.text.secondary}
+              color={theme.text.secondary}
               solid
             />
             <Text style={styles.datePillText}>
@@ -248,7 +248,7 @@ export default function GrowattPremium(): React.ReactElement {
           </View>
         )}
       </View>
-      <PremiumChart
+      <SolarChart
         data={data}
         timespan={timespan}
         loading={isLoading}
@@ -258,12 +258,12 @@ export default function GrowattPremium(): React.ReactElement {
   );
 
   const Controls = (
-    <View style={{ gap: premiumTheme.space.md }}>
+    <View style={{ gap: theme.space.md }}>
       <GlassCard strong style={styles.controlsCard}>
         <Text style={styles.controlsLabel}>Time range</Text>
         <SegmentedControl value={timespan} onChange={setTimespan} />
       </GlassCard>
-      <PremiumDateSelector
+      <DateSelector
         selectedDate={pickerDate}
         onDateSelect={setPickerDate}
         disabled={isLoading}
@@ -291,12 +291,12 @@ export default function GrowattPremium(): React.ReactElement {
     <View style={styles.root}>
       <StatusBar style="light" />
       <LinearGradient
-        colors={premiumTheme.bg.gradient}
+        colors={theme.bg.gradient}
         style={StyleSheet.absoluteFill}
       />
-      <Blob color={premiumTheme.bg.glowSolar} top={-120} right={-100} size={360} />
-      <Blob color={premiumTheme.bg.glowEnergy} bottom={-140} left={-120} size={380} />
-      <Blob color={premiumTheme.bg.glowViolet} top={220} left={width * 0.4} size={300} />
+      <Blob color={theme.bg.glowSolar} top={-120} right={-100} size={360} />
+      <Blob color={theme.bg.glowEnergy} bottom={-140} left={-120} size={380} />
+      <Blob color={theme.bg.glowViolet} top={220} left={width * 0.4} size={300} />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -304,8 +304,8 @@ export default function GrowattPremium(): React.ReactElement {
           styles.scroll,
           {
             gap: shortLandscape
-              ? premiumTheme.space.md
-              : premiumTheme.space.lg,
+              ? theme.space.md
+              : theme.space.lg,
             paddingTop: (Platform.OS === 'web' ? 28 : 14) + insets.top,
             paddingBottom: (shortLandscape ? 18 : 36) + insets.bottom,
             paddingLeft:
@@ -389,9 +389,9 @@ function Blob({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: premiumTheme.bg.base },
+  root: { flex: 1, backgroundColor: theme.bg.base },
   scroll: {
-    gap: premiumTheme.space.lg,
+    gap: theme.space.lg,
     width: '100%',
     alignSelf: 'center',
   },
@@ -408,13 +408,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: -0.8,
   },
   titleWide: { fontSize: 38, letterSpacing: -1 },
   subtitle: {
     fontSize: 14.5,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 4,
     fontWeight: '500',
   },
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 9,
-    borderRadius: premiumTheme.radius.pill,
+    borderRadius: theme.radius.pill,
   },
   chipIcon: {
     width: 16,
@@ -436,17 +436,17 @@ const styles = StyleSheet.create({
     transform: [{ translateY: Platform.OS === 'web' ? 1.5 : 0 }],
   },
   chipText: {
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
     fontSize: 13,
     lineHeight: 16,
     fontWeight: '700',
   },
   dot: { width: 8, height: 8, borderRadius: 4 },
 
-  tileRow: { flexDirection: 'row', gap: premiumTheme.space.md },
+  tileRow: { flexDirection: 'row', gap: theme.space.md },
   tileGridRow: {
     flexDirection: 'row',
-    gap: premiumTheme.space.md,
+    gap: theme.space.md,
   },
   tileGridCell: {
     flex: 1,
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
 
   mainRow: {
     flexDirection: 'row',
-    gap: premiumTheme.space.lg,
+    gap: theme.space.lg,
     alignItems: 'flex-start',
   },
 
@@ -471,11 +471,11 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 19,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
   },
   chartSub: {
     fontSize: 13,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 3,
     fontWeight: '500',
   },
@@ -485,13 +485,13 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 9,
-    borderRadius: premiumTheme.radius.pill,
-    backgroundColor: premiumTheme.glass.fill,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.glass.fill,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.border,
+    borderColor: theme.glass.border,
   },
   datePillText: {
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
   controlsLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     marginBottom: 14,

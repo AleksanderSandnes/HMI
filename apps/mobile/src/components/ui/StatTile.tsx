@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
 import GlassCard from './GlassCard';
-import { premiumTheme, type GradientColors } from '../../theme/premiumTheme';
+import { theme, type GradientColors } from '../../theme/theme';
 
 interface StatTileProps {
   icon: React.ComponentProps<typeof FontAwesome5>['name'];
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 9,
     paddingVertical: 4,
-    borderRadius: premiumTheme.radius.pill,
+    borderRadius: theme.radius.pill,
   },
   deltaText: {
     fontSize: 12,
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12.5,
     fontWeight: '600',
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     letterSpacing: 0.3,
     textTransform: 'uppercase',
   },
@@ -69,17 +69,17 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 26,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: -0.5,
   },
   unit: {
     fontSize: 14,
     fontWeight: '600',
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
   },
   sublabel: {
     fontSize: 12,
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     marginTop: 6,
   },
 });
@@ -98,7 +98,7 @@ export default function StatTile({
 }: StatTileProps) {
   const hasDelta = delta !== null && delta !== undefined && isFinite(delta);
   const positive = (delta ?? 0) >= 0;
-  const deltaColor = positive ? premiumTheme.positive : premiumTheme.negative;
+  const deltaColor = positive ? theme.positive : theme.negative;
 
   return (
     <GlassCard

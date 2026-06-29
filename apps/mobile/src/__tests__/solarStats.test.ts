@@ -10,9 +10,9 @@ import {
   previousPeriodDate,
   toISO,
   type ChartData,
-} from '../utils/growattPremiumHelpers';
+} from '../utils/solarStats';
 
-describe('growattPremiumHelpers', () => {
+describe('solarStats', () => {
   it('formats dates as ISO calendar dates', () => {
     expect(toISO(new Date('2024-06-15T12:34:56.000Z'))).toBe('2024-06-15');
   });

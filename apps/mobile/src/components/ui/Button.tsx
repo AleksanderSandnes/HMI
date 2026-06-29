@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { premiumTheme, type GradientColors } from '../../theme/premiumTheme';
+import { theme, type GradientColors } from '../../theme/theme';
 
 type Variant = 'primary' | 'ghost' | 'danger';
 
-interface PremiumButtonProps {
+interface ButtonProps {
   label: string;
   onPress: () => void;
   variant?: Variant;
@@ -26,12 +26,12 @@ interface PremiumButtonProps {
 }
 
 /**
- * Premium action button.
+ * Action button.
  * - primary: solar gradient fill
  * - ghost: translucent glass
  * - danger: red-tinted glass (used for destructive actions like Logout)
  */
-export default function PremiumButton({
+export default function Button({
   label,
   onPress,
   variant = 'primary',
@@ -40,14 +40,14 @@ export default function PremiumButton({
   disabled = false,
   gradient,
   style,
-}: PremiumButtonProps) {
+}: ButtonProps) {
   const isDisabled = disabled || loading;
   const content = (
     <View style={styles.inner}>
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'primary' ? premiumTheme.text.inverse : premiumTheme.text.primary}
+          color={variant === 'primary' ? theme.text.inverse : theme.text.primary}
         />
       ) : (
         <>
@@ -57,10 +57,10 @@ export default function PremiumButton({
               size={14}
               color={
                 variant === 'primary'
-                  ? premiumTheme.text.inverse
+                  ? theme.text.inverse
                   : variant === 'danger'
-                  ? premiumTheme.negative
-                  : premiumTheme.text.primary
+                  ? theme.negative
+                  : theme.text.primary
               }
               solid
             />
@@ -91,7 +91,7 @@ export default function PremiumButton({
         accessibilityRole="button"
       >
         <LinearGradient
-          colors={gradient ?? premiumTheme.solar.gradient}
+          colors={gradient ?? theme.solar.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.fill}
@@ -123,7 +123,7 @@ export default function PremiumButton({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: premiumTheme.radius.md,
+    borderRadius: theme.radius.md,
     overflow: 'hidden',
   },
   fill: {
@@ -134,9 +134,9 @@ const styles = StyleSheet.create({
   },
   inner: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
   ghost: {
-    backgroundColor: premiumTheme.glass.fill,
+    backgroundColor: theme.glass.fill,
     borderWidth: 1,
-    borderColor: premiumTheme.glass.borderStrong,
+    borderColor: theme.glass.borderStrong,
   },
   danger: {
     backgroundColor: 'rgba(251, 113, 133, 0.10)',
@@ -147,11 +147,11 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: '800',
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     letterSpacing: 0.2,
     flexShrink: 1,
     textAlign: 'center',
   },
-  labelPrimary: { color: premiumTheme.text.inverse },
-  labelDanger: { color: premiumTheme.negative },
+  labelPrimary: { color: theme.text.inverse },
+  labelDanger: { color: theme.negative },
 });

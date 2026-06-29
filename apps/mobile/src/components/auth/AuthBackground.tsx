@@ -7,10 +7,10 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
-import { premiumTheme } from '../../theme/premiumTheme';
+import { theme } from '../../theme/theme';
 
 /**
- * Shared premium backdrop for the login / register screens.
+ * Shared backdrop for the login / register screens.
  * Mirrors the dashboard look: deep gradient base with soft, blurred ambient
  * glow blobs. Children are rendered above the background layers.
  */
@@ -25,18 +25,18 @@ export default function AuthBackground({
     <View style={styles.root}>
       <StatusBar style="light" />
       <LinearGradient
-        colors={premiumTheme.bg.gradient}
+        colors={theme.bg.gradient}
         style={StyleSheet.absoluteFill}
       />
-      <Blob color={premiumTheme.bg.glowSolar} top={-140} right={-120} size={420} />
+      <Blob color={theme.bg.glowSolar} top={-140} right={-120} size={420} />
       <Blob
-        color={premiumTheme.bg.glowEnergy}
+        color={theme.bg.glowEnergy}
         bottom={-160}
         left={-140}
         size={440}
       />
       <Blob
-        color={premiumTheme.bg.glowViolet}
+        color={theme.bg.glowViolet}
         top={height * 0.32}
         left={width * 0.42}
         size={320}
@@ -86,5 +86,5 @@ function Blob({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: premiumTheme.bg.base },
+  root: { flex: 1, backgroundColor: theme.bg.base },
 });

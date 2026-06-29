@@ -19,7 +19,7 @@ import Svg, {
   Text as SvgText,
   G,
 } from 'react-native-svg';
-import { premiumTheme } from '../../theme/premiumTheme';
+import { theme } from '../../theme/theme';
 
 const CHART_FONT = Platform.select({
   web: "'Inter', -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
@@ -32,7 +32,7 @@ export interface LineSeries {
   label: string;
 }
 
-interface PremiumLineChartProps {
+interface WeatherChartProps {
   labels: string[];
   series: LineSeries[];
   unit?: string;
@@ -78,19 +78,19 @@ function fmt(v: number, range: number): string {
 const styles = StyleSheet.create({
   wrap: { width: '100%', flex: 1, minHeight: 220 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  empty: { color: premiumTheme.text.muted, fontSize: 14, fontWeight: '600' },
+  empty: { color: theme.text.muted, fontSize: 14, fontWeight: '600' },
   tooltip: {
     position: 'absolute',
     backgroundColor: 'rgba(10, 17, 36, 0.94)',
     borderWidth: 1,
-    borderColor: premiumTheme.glass.borderStrong,
+    borderColor: theme.glass.borderStrong,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 9,
     minWidth: 120,
   },
   tooltipLabel: {
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     fontSize: 11,
     fontWeight: '700',
     marginBottom: 6,
@@ -104,26 +104,26 @@ const styles = StyleSheet.create({
   },
   tooltipDot: { width: 8, height: 8, borderRadius: 4 },
   tooltipName: {
-    color: premiumTheme.text.secondary,
+    color: theme.text.secondary,
     fontSize: 11.5,
     fontWeight: '600',
     flex: 1,
   },
   tooltipValue: {
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     fontSize: 12.5,
     fontWeight: '800',
   },
 });
 
-export default function PremiumLineChart({
+export default function WeatherChart({
   labels,
   series,
   unit = '',
   loading = false,
   height = 340,
   emptyText = 'No data for this period',
-}: PremiumLineChartProps) {
+}: WeatherChartProps) {
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
 
@@ -153,7 +153,7 @@ export default function PremiumLineChart({
   if (loading) {
     return (
       <View style={[styles.wrap, styles.center, { height }]} onLayout={onLayout}>
-        <ActivityIndicator color={premiumTheme.solar.light} size="large" />
+        <ActivityIndicator color={theme.solar.light} size="large" />
       </View>
     );
   }
@@ -264,7 +264,7 @@ export default function PremiumLineChart({
             <SvgText
               x={PAD.left - 10}
               y={g.y + 4}
-              fill={premiumTheme.text.muted}
+              fill={theme.text.muted}
               fontSize={11.5}
               fontWeight="600"
               fontFamily={CHART_FONT}
@@ -282,7 +282,7 @@ export default function PremiumLineChart({
               key={`xl-${i}`}
               x={xFor(i)}
               y={height - 10}
-              fill={premiumTheme.text.muted}
+              fill={theme.text.muted}
               fontSize={11.5}
               fontWeight="600"
               fontFamily={CHART_FONT}

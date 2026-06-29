@@ -1,14 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { premiumTheme } from '../../../theme/premiumTheme';
+import { theme } from '../../../theme/theme';
 
 export type SyncStatus = 'synced' | 'pending' | 'error' | null;
 
 const MAP = {
-  synced: { color: premiumTheme.positive, icon: 'check-circle', label: 'Synced' },
-  pending: { color: premiumTheme.solar.light, icon: 'clock', label: 'Pending' },
-  error: { color: premiumTheme.negative, icon: 'exclamation-triangle', label: 'Sync failed' },
+  synced: { color: theme.positive, icon: 'check-circle', label: 'Synced' },
+  pending: { color: theme.solar.light, icon: 'clock', label: 'Pending' },
+  error: { color: theme.negative, icon: 'exclamation-triangle', label: 'Sync failed' },
 } as const;
 
 export default function SyncBadge({ status }: { status: SyncStatus }) {
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderRadius: premiumTheme.radius.pill,
+    borderRadius: theme.radius.pill,
     paddingHorizontal: 11,
     paddingVertical: 6,
   },

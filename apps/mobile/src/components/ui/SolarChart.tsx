@@ -19,13 +19,13 @@ import Svg, {
   Text as SvgText,
   G,
 } from 'react-native-svg';
-import { premiumTheme } from '../../theme/premiumTheme';
+import { theme } from '../../theme/theme';
 import {
   formatNum,
   roundedBarPath,
   smoothPath,
   type ChartPoint as Pt,
-} from '../../utils/premiumChartHelpers';
+} from '../../utils/chartHelpers';
 
 /**
  * Match the app's UI font. react-native-svg <Text> otherwise falls back to the
@@ -41,7 +41,7 @@ export interface ChartData {
   datasets: { data: number[] }[];
 }
 
-interface PremiumChartProps {
+interface SolarChartProps {
   data: ChartData;
   timespan: string; // 'hourly' | 'weekly' | 'monthly' | 'yearly'
   loading?: boolean;
@@ -53,36 +53,36 @@ const PAD = { top: 22, right: 16, bottom: 30, left: 46 };
 const styles = StyleSheet.create({
   wrap: { width: '100%', flex: 1, minHeight: 220 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  empty: { color: premiumTheme.text.muted, fontSize: 14, fontWeight: '600' },
+  empty: { color: theme.text.muted, fontSize: 14, fontWeight: '600' },
   tooltip: {
     position: 'absolute',
     backgroundColor: 'rgba(10, 17, 36, 0.92)',
     borderWidth: 1,
-    borderColor: premiumTheme.glass.borderStrong,
+    borderColor: theme.glass.borderStrong,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
     alignItems: 'center',
   },
   tooltipValue: {
-    color: premiumTheme.text.primary,
+    color: theme.text.primary,
     fontSize: 15,
     fontWeight: '800',
   },
   tooltipLabel: {
-    color: premiumTheme.text.muted,
+    color: theme.text.muted,
     fontSize: 11,
     fontWeight: '600',
     marginTop: 1,
   },
 });
 
-export default function PremiumChart({
+export default function SolarChart({
   data,
   timespan,
   loading = false,
   height = 320,
-}: PremiumChartProps) {
+}: SolarChartProps) {
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
 
@@ -110,12 +110,12 @@ export default function PremiumChart({
   const labels = data?.labels ?? [];
   const isArea = timespan === 'hourly';
   const unit = isArea ? 'W' : 'kWh';
-  const accent = isArea ? premiumTheme.energy : premiumTheme.solar;
+  const accent = isArea ? theme.energy : theme.solar;
 
   if (loading) {
     return (
       <View style={[styles.wrap, styles.center, { height }]} onLayout={onLayout}>
-        <ActivityIndicator color={premiumTheme.solar.light} size="large" />
+        <ActivityIndicator color={theme.solar.light} size="large" />
       </View>
     );
   }
@@ -193,16 +193,16 @@ export default function PremiumChart({
             <Stop offset="1" stopColor={accent.main} stopOpacity={0} />
           </SvgGradient>
           <SvgGradient id="lineStroke" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor={premiumTheme.energy.light} />
-            <Stop offset="1" stopColor={premiumTheme.accent.light} />
+            <Stop offset="0" stopColor={theme.energy.light} />
+            <Stop offset="1" stopColor={theme.accent.light} />
           </SvgGradient>
           <SvgGradient id="barPeak" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={premiumTheme.solar.light} />
-            <Stop offset="1" stopColor={premiumTheme.solar.main} />
+            <Stop offset="0" stopColor={theme.solar.light} />
+            <Stop offset="1" stopColor={theme.solar.main} />
           </SvgGradient>
           <SvgGradient id="barNormal" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={premiumTheme.accent.light} stopOpacity={0.95} />
-            <Stop offset="1" stopColor={premiumTheme.accent.main} stopOpacity={0.65} />
+            <Stop offset="0" stopColor={theme.accent.light} stopOpacity={0.95} />
+            <Stop offset="1" stopColor={theme.accent.main} stopOpacity={0.65} />
           </SvgGradient>
         </Defs>
 
@@ -220,7 +220,7 @@ export default function PremiumChart({
             <SvgText
               x={PAD.left - 10}
               y={g.y + 4}
-              fill={premiumTheme.text.muted}
+              fill={theme.text.muted}
               fontSize={12}
               fontWeight="600"
               fontFamily={CHART_FONT}
@@ -240,7 +240,7 @@ export default function PremiumChart({
                 isArea ? xFor(i) : PAD.left + (innerW / n) * (i + 0.5)
               }
               y={height - 10}
-              fill={premiumTheme.text.muted}
+              fill={theme.text.muted}
               fontSize={12}
               fontWeight="600"
               fontFamily={CHART_FONT}
@@ -349,7 +349,7 @@ function AreaSeries({
       <Path
         d={line}
         fill="none"
-        stroke={premiumTheme.energy.main}
+        stroke={theme.energy.main}
         strokeWidth={7}
         strokeOpacity={0.18}
         strokeLinecap="round"
@@ -363,15 +363,15 @@ function AreaSeries({
         strokeLinejoin="round"
       />
       {/* Peak marker */}
-      <Circle cx={px} cy={py} r={9} fill={premiumTheme.solar.main} opacity={0.18} />
-      <Circle cx={px} cy={py} r={4.5} fill={premiumTheme.solar.light} stroke="#0a1124" strokeWidth={2} />
+      <Circle cx={px} cy={py} r={9} fill={theme.solar.main} opacity={0.18} />
+      <Circle cx={px} cy={py} r={4.5} fill={theme.solar.light} stroke="#0a1124" strokeWidth={2} />
       {/* Active marker */}
       {active !== null && active !== peakIndex && (
         <Circle
           cx={xFor(active)}
           cy={yFor(values[active])}
           r={5}
-          fill={premiumTheme.energy.light}
+          fill={theme.energy.light}
           stroke="#0a1124"
           strokeWidth={2}
         />

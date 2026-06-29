@@ -1,6 +1,6 @@
 import React from 'react';
-import GrowattPremium from '../pages/growattPremium';
+import SolarScreen from '../pages/solar';
 
 export default function GrowattTab() {
-  return <GrowattPremium />;
+  return <SolarScreen />;
 }

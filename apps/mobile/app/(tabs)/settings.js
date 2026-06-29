@@ -1,5 +1,5 @@
-import SettingsPremium from '../pages/settingsPremium';
+import SettingsScreen from '../pages/settings';
 
 export default function Settings() {
-  return <SettingsPremium />;
+  return <SettingsScreen />;
 }
