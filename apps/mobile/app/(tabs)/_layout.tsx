@@ -1,80 +1,67 @@
-import React from 'react';
-import { FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Platform, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import TabBar, { navWidth } from '../../src/components/navigation/TabBar';
-import { theme } from '../../src/theme/theme';
-import { NotificationsProvider } from '../../src/context/NotificationsContext';
-import PushRegistrar from '../../src/components/PushRegistrar';
+import { Ionicons } from '@expo/vector-icons';
 
-function SolarPanelIcon({ color }: { color: string }) {
-  const { width } = useWindowDimensions();
-  const size = width <= 768 ? 22 : 20;
-  return <FontAwesome6 size={size} name="solar-panel" color={color} />;
-}
-
-function CloudSunIcon({ color }: { color: string }) {
-  const { width } = useWindowDimensions();
-  const size = width <= 768 ? 22 : 20;
-  return <FontAwesome5 size={size} name="cloud-sun" color={color} />;
-}
-
-function SettingsIcon({ color }: { color: string }) {
-  const { width } = useWindowDimensions();
-  const size = width <= 768 ? 22 : 20;
-  return <FontAwesome6 size={size} name="gear" color={color} />;
-}
-
-function NotificationsIcon({ color }: { color: string }) {
-  const { width } = useWindowDimensions();
-  const size = width <= 768 ? 22 : 20;
-  return <FontAwesome5 size={size} name="bell" color={color} solid />;
-}
-
-export default function TabLayout() {
-  const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  // When the sidebar is visible it occupies the base rail/full width plus any
-  // left safe-area inset (landscape notch); the scene must be padded to match.
-  const sidebar = navWidth(width);
-  const padLeft = sidebar > 0 ? sidebar + insets.left : 0;
-
+// Standard bottom tabs for now. Phase 5 rebuilds this as the responsive
+// bottom-bar (phone) / left-sidebar (tablet) navigation with nav-stats.
+export default function TabsLayout() {
   return (
-    <NotificationsProvider>
-      <PushRegistrar />
-      <Tabs
-        tabBar={(props) => <TabBar {...props} />}
-        screenOptions={{
-          headerShown: false,
-          sceneStyle: {
-            paddingLeft: padLeft,
-            backgroundColor: theme.bg.base,
-          },
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#f59e0b',
+        tabBarInactiveTintColor: '#71809a',
+        tabBarStyle: {
+          backgroundColor: '#0a1124',
+          borderTopColor: 'rgba(255,255,255,0.09)',
+        },
+        sceneStyle: { backgroundColor: '#070b16' },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Dashboard',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="grid-outline" color={color} size={size} />
+          ),
         }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{ title: 'Growatt', tabBarIcon: SolarPanelIcon }}
-        />
-        <Tabs.Screen
-          name="weatherStation"
-          options={{ title: 'Weather Station', tabBarIcon: CloudSunIcon }}
-        />
-        <Tabs.Screen
-          name="notifications"
-          options={{
-            title: 'Notifications',
-            tabBarIcon: NotificationsIcon,
-            // Notification center is web-only; native apps use push notifications.
-            href: Platform.OS === 'web' ? undefined : null,
-          }}
-        />
-        <Tabs.Screen
-          name="settings"
-          options={{ title: 'Settings', tabBarIcon: SettingsIcon }}
-        />
-      </Tabs>
-    </NotificationsProvider>
+      />
+      <Tabs.Screen
+        name="solar"
+        options={{
+          title: 'Solar',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="sunny-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="weather"
+        options={{
+          title: 'Weather',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="partly-sunny-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: 'Alerts',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="notifications-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-outline" color={color} size={size} />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }
