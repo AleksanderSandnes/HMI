@@ -104,15 +104,15 @@ export default function SolarPage() {
       : periodLabel(timespan);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-5">
+    <div className="mx-auto flex h-full w-full max-w-[1480px] flex-col gap-4">
       <PageHeader
         title="Solar Production"
         subtitle="Real-time photovoltaic intelligence"
         right={<WeatherChip />}
       />
 
-      <GlassCard strong elevated className="p-[22px]">
-        <div className="mb-[18px] flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[22px]">
+        <div className="mb-[18px] flex shrink-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h2 className="text-[19px] font-extrabold text-text-primary">
               Power Generation
@@ -144,14 +144,16 @@ export default function SolarPage() {
           </div>
         </div>
 
-        <SolarChart
-          data={chartData}
-          timespan={timespan}
-          loading={isLoading}
-          heightClass="h-[clamp(260px,46vh,560px)]"
-        />
+        <div className="min-h-[220px] flex-1">
+          <SolarChart
+            data={chartData}
+            timespan={timespan}
+            loading={isLoading}
+            heightClass="h-full"
+          />
+        </div>
 
-        <div className="mt-4">
+        <div className="mt-4 shrink-0">
           <DateSelector
             selectedDate={pickerDate}
             onDateSelect={setPickerDate}

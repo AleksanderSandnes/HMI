@@ -148,17 +148,17 @@ export default function WeatherPage() {
   }));
 
   return (
-    <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-5">
+    <div className="mx-auto flex h-full w-full max-w-[1480px] flex-col gap-4">
       <PageHeader
         title="Weather Station"
         subtitle="Local conditions &amp; history"
         right={<WeatherChip />}
       />
 
-      {/* Chart card */}
-      <GlassCard strong elevated className="p-[22px]">
+      {/* Chart card — fills the remaining viewport so nothing scrolls off-screen. */}
+      <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[22px]">
         {/* Metric type chips */}
-        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        <div className="mb-4 flex shrink-0 gap-2 overflow-x-auto pb-1">
           {METRICS.map((t) => {
             const active = t.key === dataType;
             const Icon = t.icon;
@@ -182,7 +182,7 @@ export default function WeatherPage() {
           })}
         </div>
 
-        <div className="mb-[18px] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-[18px] flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-[19px] font-extrabold text-text-primary">
             {meta.title}
           </h2>
@@ -195,16 +195,18 @@ export default function WeatherPage() {
           </div>
         </div>
 
-        <WeatherChart
-          labels={labels}
-          series={chartSeries}
-          ticks={ticks}
-          unit={meta.unit}
-          loading={isLoading}
-          heightClass="h-[clamp(260px,46vh,560px)]"
-        />
+        <div className="min-h-[220px] flex-1">
+          <WeatherChart
+            labels={labels}
+            series={chartSeries}
+            ticks={ticks}
+            unit={meta.unit}
+            loading={isLoading}
+            heightClass="h-full"
+          />
+        </div>
 
-        <div className="mt-4">
+        <div className="mt-4 shrink-0">
           <DateSelector
             selectedDate={pickerDate}
             onDateSelect={setPickerDate}
