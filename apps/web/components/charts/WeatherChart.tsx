@@ -26,6 +26,8 @@ interface WeatherChartProps {
   loading?: boolean;
   height?: number;
   emptyText?: string;
+  /** Explicit x-axis tick values (e.g. one per day for the weekly view). */
+  ticks?: string[];
 }
 
 /**
@@ -39,6 +41,7 @@ export function WeatherChart({
   loading = false,
   height = 340,
   emptyText = "No data for this period",
+  ticks,
 }: WeatherChartProps) {
   const clean = (series || []).filter((s) => s.data && s.data.length > 0);
   const n = clean[0]?.data.length ?? 0;
@@ -103,8 +106,12 @@ export function WeatherChart({
           tick={AXIS_TICK}
           tickLine={false}
           axisLine={false}
-          interval="preserveStartEnd"
-          minTickGap={32}
+          {...(ticks && ticks.length
+            ? // Weekly: render exactly the day-boundary labels, one per day,
+              // so none get thinned out by width-based tick selection.
+              { ticks, interval: 0 }
+            : // Hourly: let recharts thin ticks to fit the available width.
+              { interval: "preserveStartEnd" as const, minTickGap: 32 })}
         />
         <YAxis
           tick={AXIS_TICK}

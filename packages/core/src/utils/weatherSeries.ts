@@ -31,6 +31,13 @@ const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export interface WeatherSeriesResult {
   labels: string[];
   series: number[][];
+  /**
+   * The subset of `labels` that should be rendered as x-axis ticks. For weekly
+   * views this is one label per day boundary, so the chart can render every day
+   * (instead of relying on width-based tick thinning, which dropped most days).
+   * Undefined for hourly (the chart thins those itself).
+   */
+  ticks?: string[];
 }
 
 /**
@@ -54,12 +61,17 @@ export function buildWeatherSeries(
       })
     : observations;
 
-  const labels = data.map((it, index) => {
+  let lastDayKey = '';
+  const labels = data.map((it) => {
     if (isWeekly) {
       const d = new Date(it.obsTimeLocal || it.date);
-      const day = DAY_NAMES[d.getDay()];
-      if (d.getHours() === 0) return `${day} ${d.getMonth() + 1}/${d.getDate()}`;
-      if (index % 8 === 0) return day;
+      const dayKey = `${d.getMonth()}-${d.getDate()}`;
+      // First sample of each calendar day carries the day-boundary label; the
+      // rest are blank so the line stays smooth but the axis isn't crowded.
+      if (dayKey !== lastDayKey) {
+        lastDayKey = dayKey;
+        return `${DAY_NAMES[d.getDay()]} ${d.getMonth() + 1}/${d.getDate()}`;
+      }
       return '';
     }
     const time = (it.obsTimeLocal || '').split(' ')[1] || '';
@@ -69,5 +81,12 @@ export function buildWeatherSeries(
   });
 
   const series = extractors.map((fn) => data.map(fn));
-  return { labels, series };
+
+  // Weekly: hand the chart the exact day labels to tick on (deduped, blanks
+  // dropped) so all seven days render regardless of pixel width.
+  const ticks = isWeekly
+    ? Array.from(new Set(labels.filter((l) => l !== '')))
+    : undefined;
+
+  return { labels, series, ticks };
 }

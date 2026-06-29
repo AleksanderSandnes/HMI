@@ -141,7 +141,7 @@ export default function WeatherPage() {
     staleTime: 60_000,
   });
 
-  const { labels, series } = useMemo(
+  const { labels, series, ticks } = useMemo(
     () => buildWeatherSeries(observations ?? [], dataType, timespan),
     [observations, dataType, timespan]
   );
@@ -253,6 +253,7 @@ export default function WeatherPage() {
         <WeatherChart
           labels={labels}
           series={chartSeries}
+          ticks={ticks}
           unit={meta.unit}
           loading={isLoading}
           height={360}

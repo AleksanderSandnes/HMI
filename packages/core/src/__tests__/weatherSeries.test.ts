@@ -55,6 +55,31 @@ describe("buildWeatherSeries (weekly)", () => {
     // 2026-06-08 is a Monday
     expect(labels[0]).toBe("Mon 6/8");
   });
+
+  it("labels each calendar-day boundary even with irregular samples", () => {
+    // Real PWS data: no guaranteed midnight reading, different counts per day.
+    const week = [
+      // Mon 6/8 — first sample is 03:00 (no midnight), 3 samples
+      { obsTimeLocal: "2026-06-08 03:00:00", metric: { tempAvg: 1 } },
+      { obsTimeLocal: "2026-06-08 06:00:00", metric: { tempAvg: 2 } },
+      { obsTimeLocal: "2026-06-08 09:00:00", metric: { tempAvg: 3 } },
+      // Tue 6/9 — 2 samples (one at midnight)
+      { obsTimeLocal: "2026-06-09 00:00:00", metric: { tempAvg: 4 } },
+      { obsTimeLocal: "2026-06-09 12:00:00", metric: { tempAvg: 5 } },
+      // Wed 6/10 — first sample is 06:00, single sample
+      { obsTimeLocal: "2026-06-10 06:00:00", metric: { tempAvg: 6 } },
+    ];
+    const { labels, ticks } = buildWeatherSeries(week, "temperature", "weekly");
+    // Exactly one label at each day boundary; the rest blank.
+    expect(labels).toEqual(["Mon 6/8", "", "", "Tue 6/9", "", "Wed 6/10"]);
+    // ticks = one entry per day, in order, no blanks.
+    expect(ticks).toEqual(["Mon 6/8", "Tue 6/9", "Wed 6/10"]);
+  });
+
+  it("does not emit ticks for hourly views", () => {
+    const { ticks } = buildWeatherSeries(hourly, "temperature", "hourly");
+    expect(ticks).toBeUndefined();
+  });
 });
 
 describe("buildWeatherSeries (empty)", () => {
