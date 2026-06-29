@@ -2,15 +2,11 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Sun } from "lucide-react";
 import {
   chartSubtitle,
-  comparisonLabel,
   formatPeak,
   getPeakOutput,
-  peakSublabel,
-  percentDelta,
-  periodLabel,
-  previousPeriodDate,
   toISO,
   type SolarData,
 } from "@hmi/core";
@@ -20,7 +16,6 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { DateSelector } from "@/components/ui/DateSelector";
 import { SolarChart } from "@/components/charts/SolarChart";
 import { PageHeader } from "@/components/PageHeader";
-import { WeatherChip } from "@/components/WeatherChip";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 const ZERO = {
@@ -30,44 +25,39 @@ const ZERO = {
   totalRevenue: 0,
 };
 
-/** Compact right-aligned stat readout shown in the chart header. */
-function Readout({
+/** One compact stat inside the top-right header widget. */
+function HeaderStat({
   label,
   value,
   unit,
-  sub,
   loading,
 }: {
   label: string;
   value: string;
   unit?: string;
-  sub?: string;
   loading?: boolean;
 }) {
   return (
-    <div className="text-right">
-      <p className="text-[10px] font-bold uppercase tracking-[0.4px] text-text-muted">
+    <div className="text-center">
+      <p className="text-[9px] font-bold uppercase tracking-[0.4px] text-text-muted">
         {label}
       </p>
       {loading ? (
-        <Skeleton className="ml-auto mt-1.5 h-6 w-16" />
+        <Skeleton className="mx-auto mt-1 h-4 w-12" />
       ) : (
-        <p className="mt-0.5 text-[20px] font-extrabold leading-tight tracking-[-0.4px] text-text-primary">
+        <p className="whitespace-nowrap text-[15px] font-extrabold leading-tight text-text-primary">
           {value}
           {unit ? (
-            <span className="ml-1 text-[11px] font-bold text-text-muted">{unit}</span>
+            <span className="ml-0.5 text-[10px] font-bold text-text-muted">{unit}</span>
           ) : null}
         </p>
       )}
-      {sub && !loading ? (
-        <p className="mt-0.5 text-[10px] font-medium text-text-muted">{sub}</p>
-      ) : null}
     </div>
   );
 }
 
 export default function SolarPage() {
-  const { growatt } = useCore();
+  const { growatt, weather } = useCore();
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -80,39 +70,56 @@ export default function SolarPage() {
     queryFn: () => growatt.fetchSolarData(timespan as never, pickerDate, false),
   });
 
-  const { data: prev } = useQuery<SolarData>({
-    queryKey: ["solar-cmp", timespan, pickerDate],
-    queryFn: () =>
-      growatt.fetchSolarData(
-        timespan as never,
-        previousPeriodDate(timespan, pickerDate),
-        false
-      ),
-    enabled: !!solar,
+  // Shared with the other headers (same query key) — temp + place for the widget.
+  const { data: wx } = useQuery({
+    queryKey: ["weather-current"],
+    queryFn: () => weather.getCurrentWeatherData(),
+    staleTime: 60_000,
   });
 
   const metrics = solar?.metrics ?? ZERO;
   const chartData = solar?.chartData ?? { labels: [], datasets: [{ data: [] }] };
   const peak = getPeakOutput(chartData, timespan);
 
-  const genDelta = prev
-    ? percentDelta(metrics.todayGeneration, prev.metrics.todayGeneration)
-    : null;
-  const genSub =
-    genDelta != null
-      ? `${genDelta >= 0 ? "+" : ""}${genDelta.toFixed(0)}% ${comparisonLabel(timespan)}`
-      : periodLabel(timespan);
+  const wobs = wx?.observations?.[0];
+  const temp = wobs?.metric?.temp;
+  const place = wobs?.neighborhood;
+
+  const headerWidget = (
+    <GlassCard className="flex items-center gap-3.5 rounded-[var(--radius-md)] px-4 py-2">
+      <HeaderStat
+        label="Generation"
+        value={metrics.todayGeneration.toFixed(1)}
+        unit="kWh"
+        loading={isLoading}
+      />
+      <span className="h-7 w-px bg-glass-border" />
+      <HeaderStat
+        label="Peak"
+        value={peak ? formatPeak(peak.value) : "—"}
+        unit={peak ? peak.unit : "W"}
+        loading={isLoading}
+      />
+      <span className="h-7 w-px bg-glass-border" />
+      <div className="flex items-center gap-1.5">
+        <Sun size={14} className="text-solar-light" />
+        <span className="whitespace-nowrap text-[13px] font-bold text-text-secondary">
+          {temp != null ? `${Math.round(temp)}° · ${place || "Sandnes"}` : "—"}
+        </span>
+      </div>
+    </GlassCard>
+  );
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[1480px] flex-col gap-4">
       <PageHeader
         title="Solar Production"
         subtitle="Real-time photovoltaic intelligence"
-        right={<WeatherChip />}
+        right={headerWidget}
       />
 
       <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[22px]">
-        <div className="mb-[18px] flex shrink-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="mb-[18px] flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-[19px] font-extrabold text-text-primary">
               Power Generation
@@ -121,26 +128,8 @@ export default function SolarPage() {
               {chartSubtitle(timespan, pickerDate)}
             </p>
           </div>
-          <div className="flex flex-col items-stretch gap-3.5 lg:items-end">
-            <div className="flex items-start justify-end gap-7">
-              <Readout
-                label="Generation"
-                value={metrics.todayGeneration.toFixed(1)}
-                unit="kWh"
-                sub={genSub}
-                loading={isLoading}
-              />
-              <Readout
-                label="Peak output"
-                value={peak ? formatPeak(peak.value) : "—"}
-                unit={peak?.unit}
-                sub={peak ? peakSublabel(timespan, peak.label) : "No data"}
-                loading={isLoading}
-              />
-            </div>
-            <div className="w-full lg:w-auto lg:min-w-[320px]">
-              <SegmentedControl value={timespan} onChange={setTimespan} />
-            </div>
+          <div className="w-full sm:w-auto sm:min-w-[320px]">
+            <SegmentedControl value={timespan} onChange={setTimespan} />
           </div>
         </div>
 
