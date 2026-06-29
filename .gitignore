@@ -7,9 +7,28 @@
 # ==============================================
 # NODE.JS & NPM
 # ==============================================
-/node_modules
+node_modules/
 /backend/node_modules
 /backend/weatherAPI/node_modules
+
+# Monorepo temp backups (migration)
+.node_modules_old/
+.package-lock.json.old
+
+# ==============================================
+# MONOREPO / TURBO / NEXT.JS
+# ==============================================
+.turbo/
+apps/web/.next/
+apps/web/out/
+apps/web/next-env.d.ts
+**/dist/
+**/tsconfig.tsbuildinfo
+# Playwright
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/tests/visual/**/*-actual.png
+apps/web/tests/visual/**/*-diff.png
 
 # ==============================================
 # JAVA & MAVEN (GrowattAPI)

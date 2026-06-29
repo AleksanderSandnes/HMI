@@ -5,8 +5,6 @@
     "forceConsistentCasingInFileNames": true
   },
   "exclude": [
-    "backend",
-    "supabase",
     "node_modules"
   ]
 }
