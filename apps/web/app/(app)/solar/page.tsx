@@ -76,7 +76,7 @@ export default function SolarPage() {
               {chartSubtitle(timespan, pickerDate)}
             </p>
           </div>
-          <div className="w-full sm:w-auto sm:min-w-[300px]">
+          <div className="w-full sm:w-[460px]">
             <SegmentedControl value={timespan} onChange={setTimespan} />
           </div>
         </div>
