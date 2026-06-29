@@ -10,6 +10,8 @@ import {
   YAxis,
 } from "recharts";
 import { Loader2 } from "lucide-react";
+import { formatMetric as fmt } from "@hmi/core";
+import { AXIS_TICK, CURSOR, GRID_STROKE } from "./chartTheme";
 
 export interface LineSeries {
   data: number[];
@@ -24,17 +26,6 @@ interface WeatherChartProps {
   loading?: boolean;
   height?: number;
   emptyText?: string;
-}
-
-const AXIS_TICK = { fill: "#71809a", fontSize: 11.5, fontWeight: 600 };
-
-function fmt(v: number, range: number): string {
-  if (Math.abs(v) >= 1000) {
-    return range >= 100 ? `${Math.round(v)}` : `${(v / 1000).toFixed(1)}k`;
-  }
-  if (range >= 20) return `${Math.round(v)}`;
-  if (range >= 2) return `${Math.round(v * 10) / 10}`;
-  return `${Math.round(v * 100) / 100}`;
 }
 
 /**
@@ -106,7 +97,7 @@ export function WeatherChart({
             </linearGradient>
           ))}
         </defs>
-        <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.07)" />
+        <CartesianGrid vertical={false} stroke={GRID_STROKE} />
         <XAxis
           dataKey="label"
           tick={AXIS_TICK}
@@ -125,7 +116,7 @@ export function WeatherChart({
           tickFormatter={(v: number) => fmt(v, range)}
         />
         <Tooltip
-          cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
+          cursor={CURSOR}
           content={({ active, payload, label }) => {
             if (!active || !payload?.length) return null;
             return (

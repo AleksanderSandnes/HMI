@@ -18,6 +18,8 @@ import { StatTile } from "@/components/ui/StatTile";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { DateSelector } from "@/components/ui/DateSelector";
 import { WeatherChart, type LineSeries } from "@/components/charts/WeatherChart";
+import { PageHeader } from "@/components/PageHeader";
+import { WeatherChip } from "@/components/WeatherChip";
 import { cn } from "@/lib/utils";
 
 interface MetricMeta {
@@ -159,29 +161,14 @@ export default function WeatherPage() {
   const curTemp = obs?.metric?.temp;
   const curWind = obs?.metric?.windSpeed;
   const curHumidity = obs?.humidity;
-  const curNeighborhood = obs?.neighborhood;
 
   return (
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-5">
-      {/* Header */}
-      <div className="flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="text-center md:text-left">
-          <h1 className="text-[30px] font-extrabold tracking-[-0.8px] text-text-primary">
-            Weather Station
-          </h1>
-          <p className="mt-1 text-[14.5px] font-medium text-text-muted">
-            Local conditions &amp; history
-          </p>
-        </div>
-        <GlassCard className="flex items-center gap-2 rounded-[var(--radius-pill)] px-3.5 py-2">
-          <Sun size={13} className="text-solar-light" />
-          <span className="text-[13px] font-bold text-text-secondary">
-            {curTemp != null
-              ? `${Math.round(curTemp)}° · ${curNeighborhood || "Sandnes"}`
-              : "Loading…"}
-          </span>
-        </GlassCard>
-      </div>
+      <PageHeader
+        title="Weather Station"
+        subtitle="Local conditions &amp; history"
+        right={<WeatherChip />}
+      />
 
       {/* Current conditions */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

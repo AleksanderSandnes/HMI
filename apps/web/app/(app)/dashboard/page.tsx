@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Coins, Leaf, Mountain, Sun, Zap } from "lucide-react";
+import { CalendarDays, Coins, Leaf, Mountain, Zap } from "lucide-react";
 import {
   CO2_PER_KWH,
   chartSubtitle,
@@ -11,6 +11,7 @@ import {
   formatPeak,
   getPeakOutput,
   peakSublabel,
+  percentDelta,
   periodLabel,
   previousPeriodDate,
   toISO,
@@ -22,6 +23,8 @@ import { StatTile } from "@/components/ui/StatTile";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { DateSelector } from "@/components/ui/DateSelector";
 import { SolarChart } from "@/components/charts/SolarChart";
+import { PageHeader } from "@/components/PageHeader";
+import { WeatherChip } from "@/components/WeatherChip";
 
 const ZERO = {
   todayGeneration: 0,
@@ -30,12 +33,8 @@ const ZERO = {
   totalRevenue: 0,
 };
 
-function pctDelta(curr: number, prev: number): number | null {
-  return prev > 0 ? ((curr - prev) / prev) * 100 : null;
-}
-
 export default function DashboardPage() {
-  const { growatt, weather } = useCore();
+  const { growatt } = useCore();
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -59,12 +58,6 @@ export default function DashboardPage() {
     enabled: !!solar,
   });
 
-  const { data: weatherNow } = useQuery({
-    queryKey: ["weather-current"],
-    queryFn: () => weather.getCurrentWeatherData(),
-    staleTime: 60_000,
-  });
-
   const metrics = solar?.metrics ?? ZERO;
   const chartData = solar?.chartData ?? { labels: [], datasets: [{ data: [] }] };
   const peak = getPeakOutput(chartData, timespan);
@@ -72,15 +65,11 @@ export default function DashboardPage() {
   const pLabel = periodLabel(timespan);
 
   const genDelta = prev
-    ? pctDelta(metrics.todayGeneration, prev.metrics.todayGeneration)
+    ? percentDelta(metrics.todayGeneration, prev.metrics.todayGeneration)
     : null;
   const revDelta = prev
-    ? pctDelta(metrics.todayRevenue, prev.metrics.todayRevenue)
+    ? percentDelta(metrics.todayRevenue, prev.metrics.todayRevenue)
     : null;
-
-  const obs = weatherNow?.observations?.[0];
-  const currentTemp = obs?.metric?.temp;
-  const neighborhood = obs?.neighborhood;
 
   const prettyDate = new Date(pickerDate).toLocaleDateString("en-US", {
     month: "short",
@@ -128,25 +117,11 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-5">
-      {/* Header */}
-      <div className="flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="text-center md:text-left">
-          <h1 className="text-[30px] font-extrabold tracking-[-0.8px] text-text-primary">
-            Solar Production
-          </h1>
-          <p className="mt-1 text-[14.5px] font-medium text-text-muted">
-            Real-time photovoltaic intelligence
-          </p>
-        </div>
-        <GlassCard className="flex items-center gap-2 rounded-[var(--radius-pill)] px-3.5 py-2">
-          <Sun size={13} className="text-solar-light" />
-          <span className="text-[13px] font-bold text-text-secondary">
-            {currentTemp != null
-              ? `${Math.round(currentTemp)}° · ${neighborhood || "Sandnes"}`
-              : "Loading…"}
-          </span>
-        </GlassCard>
-      </div>
+      <PageHeader
+        title="Solar Production"
+        subtitle="Real-time photovoltaic intelligence"
+        right={<WeatherChip />}
+      />
 
       {/* Stat tiles */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

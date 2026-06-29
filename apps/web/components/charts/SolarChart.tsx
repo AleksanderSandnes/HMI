@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { Loader2 } from "lucide-react";
 import { formatNum, type SimpleChartData } from "@hmi/core";
+import { AXIS_TICK, CURSOR, GRID_STROKE } from "./chartTheme";
 
 interface SolarChartProps {
   data: SimpleChartData;
@@ -22,8 +23,6 @@ interface SolarChartProps {
   loading?: boolean;
   height?: number;
 }
-
-const AXIS_TICK = { fill: "#71809a", fontSize: 12, fontWeight: 600 };
 
 /**
  * Solar production chart (Recharts port of mobile ui/SolarChart.tsx).
@@ -73,7 +72,7 @@ export function SolarChart({
 
   const tooltip = (
     <Tooltip
-      cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
+      cursor={CURSOR}
       content={({ active, payload }) => {
         if (!active || !payload?.length) return null;
         const p = payload[0];
@@ -93,11 +92,7 @@ export function SolarChart({
 
   const axes = (
     <>
-      <CartesianGrid
-        vertical={false}
-        stroke="rgba(255,255,255,0.07)"
-        strokeWidth={1}
-      />
+      <CartesianGrid vertical={false} stroke={GRID_STROKE} strokeWidth={1} />
       <XAxis
         dataKey="label"
         tick={AXIS_TICK}
