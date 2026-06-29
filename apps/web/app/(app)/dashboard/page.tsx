@@ -148,6 +148,10 @@ export default function DashboardPage() {
   const lifetime = solar?.metrics.totalGeneration ?? null;
   const device = solar?.device;
   const capacityKw = device?.capacity ? round(device.capacity / 1000, 1) : null;
+  const utilisation =
+    device?.capacity && currentPower > 0
+      ? Math.round((currentPower / device.capacity) * 100)
+      : null;
 
   const obs = weatherData?.observations?.[0];
   const m = obs?.metric ?? {};
@@ -193,7 +197,7 @@ export default function DashboardPage() {
           ) : null
         }
       />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <DualStat
           icon={Zap}
           gradient="solar"
@@ -219,15 +223,27 @@ export default function DashboardPage() {
           loading={solarLoading}
         />
         <DualStat
+          icon={Gauge}
+          gradient="revenue"
+          label="Utilisation"
+          aLabel="Now"
+          aValue={utilisation != null ? `${utilisation}` : "—"}
+          aUnit="%"
+          bLabel="System"
+          bValue={capacityKw != null ? `${capacityKw}` : "—"}
+          bUnit="kW"
+          loading={solarLoading}
+        />
+        <DualStat
           icon={Mountain}
           gradient="solar"
           label="Lifetime"
           aLabel="Total"
           aValue={show(lifetime, 0)}
           aUnit="kWh"
-          bLabel="Capacity"
-          bValue={capacityKw != null ? `${capacityKw}` : "—"}
-          bUnit="kW"
+          bLabel="Today"
+          bValue={show(todayGen, 1)}
+          bUnit="kWh"
           loading={solarLoading}
         />
       </div>
