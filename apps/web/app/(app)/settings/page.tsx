@@ -21,8 +21,10 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <GlassCard strong className="p-6">
-      <h2 className="mb-4 text-lg font-extrabold text-text-primary">{title}</h2>
+    <GlassCard strong className="p-5">
+      <h2 className="mb-3.5 text-base font-extrabold text-text-primary">
+        {title}
+      </h2>
       {children}
     </GlassCard>
   );
@@ -48,7 +50,7 @@ export default function SettingsPage() {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-[720px] flex-col gap-5">
+    <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-5">
       <div>
         <h1 className="text-[30px] font-extrabold tracking-[-0.8px] text-text-primary">
           Settings
@@ -58,33 +60,41 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <Section title="Account">
-        <AccountForm key={profile?.id ?? "loading"} profile={profile} account={account} />
-      </Section>
+      {/* Two columns on desktop: account on the left, integrations on the right,
+          so everything fits one viewport without scrolling. */}
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <div className="flex flex-col gap-4">
+          <Section title="Account">
+            <AccountForm key={profile?.id ?? "loading"} profile={profile} account={account} />
+          </Section>
 
-      <Section title="Password">
-        <PasswordForm account={account} />
-      </Section>
+          <Section title="Password">
+            <PasswordForm account={account} />
+          </Section>
+        </div>
 
-      <Section title="Growatt solar">
-        <GrowattForm
-          key={api?.growatt?.email ?? "g"}
-          initialEmail={api?.growatt?.email ?? ""}
-          configured={!!api?.growatt?.hasPassword}
-          settings={settings}
-          onSaved={refetchApi}
-        />
-      </Section>
+        <div className="flex flex-col gap-4">
+          <Section title="Growatt solar">
+            <GrowattForm
+              key={api?.growatt?.email ?? "g"}
+              initialEmail={api?.growatt?.email ?? ""}
+              configured={!!api?.growatt?.hasPassword}
+              settings={settings}
+              onSaved={refetchApi}
+            />
+          </Section>
 
-      <Section title="Weather.com station">
-        <WeatherForm
-          key={api?.weather?.stationId ?? "w"}
-          initialStationId={api?.weather?.stationId ?? ""}
-          configured={!!api?.weather?.hasApiKey}
-          settings={settings}
-          onSaved={refetchApi}
-        />
-      </Section>
+          <Section title="Weather.com station">
+            <WeatherForm
+              key={api?.weather?.stationId ?? "w"}
+              initialStationId={api?.weather?.stationId ?? ""}
+              configured={!!api?.weather?.hasApiKey}
+              settings={settings}
+              onSaved={refetchApi}
+            />
+          </Section>
+        </div>
+      </div>
     </div>
   );
 }
