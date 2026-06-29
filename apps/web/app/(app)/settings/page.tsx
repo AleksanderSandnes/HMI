@@ -88,38 +88,35 @@ export default function SettingsPage() {
 
       {/* Two columns on desktop: account on the left, integrations on the right,
           so everything fits one viewport without scrolling. */}
+      {/* Row 1: integrations (Growatt + Weather) · Row 2: Account + Password. */}
       <div className="grid items-start gap-4 lg:grid-cols-2">
-        <div className="flex flex-col gap-4">
-          <Section title="Account" icon={User} gradient="accent">
-            <AccountForm key={profile?.id ?? "loading"} profile={profile} account={account} />
-          </Section>
+        <Section title="Growatt solar" icon={SunMedium} gradient="energy">
+          <GrowattForm
+            key={api?.growatt?.email ?? "g"}
+            initialEmail={api?.growatt?.email ?? ""}
+            configured={!!api?.growatt?.hasPassword}
+            settings={settings}
+            onSaved={refetchApi}
+          />
+        </Section>
 
-          <Section title="Password" icon={ShieldCheck} gradient="revenue">
-            <PasswordForm account={account} />
-          </Section>
-        </div>
+        <Section title="Weather.com station" icon={CloudSun} gradient="solar">
+          <WeatherForm
+            key={api?.weather?.stationId ?? "w"}
+            initialStationId={api?.weather?.stationId ?? ""}
+            configured={!!api?.weather?.hasApiKey}
+            settings={settings}
+            onSaved={refetchApi}
+          />
+        </Section>
 
-        <div className="flex flex-col gap-4">
-          <Section title="Growatt solar" icon={SunMedium} gradient="energy">
-            <GrowattForm
-              key={api?.growatt?.email ?? "g"}
-              initialEmail={api?.growatt?.email ?? ""}
-              configured={!!api?.growatt?.hasPassword}
-              settings={settings}
-              onSaved={refetchApi}
-            />
-          </Section>
+        <Section title="Account" icon={User} gradient="accent">
+          <AccountForm key={profile?.id ?? "loading"} profile={profile} account={account} />
+        </Section>
 
-          <Section title="Weather.com station" icon={CloudSun} gradient="solar">
-            <WeatherForm
-              key={api?.weather?.stationId ?? "w"}
-              initialStationId={api?.weather?.stationId ?? ""}
-              configured={!!api?.weather?.hasApiKey}
-              settings={settings}
-              onSaved={refetchApi}
-            />
-          </Section>
-        </div>
+        <Section title="Password" icon={ShieldCheck} gradient="revenue">
+          <PasswordForm account={account} />
+        </Section>
       </div>
     </div>
   );
