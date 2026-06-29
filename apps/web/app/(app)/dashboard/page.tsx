@@ -263,11 +263,11 @@ export default function DashboardPage() {
       />
       <div className="grid auto-rows-fr grid-cols-2 gap-3 md:min-h-0 md:flex-[2] md:grid-cols-4">
         <WindDial degrees={obs?.winddir} speed={m.windSpeed} gust={m.windGust} unit="km/h" />
-        <DualStat icon={Thermometer} gradient="solar" label="Temperature" aLabel="Now" aValue={show(m.temp)} aUnit="°C" bLabel="Wk avg" bValue={show(wkAvg.temp)} bUnit="°C" loading={wxLoading} />
-        <DualStat icon={Droplets} gradient="co2" label="Humidity" aLabel="Now" aValue={show(obs?.humidity)} aUnit="%" bLabel="Wk avg" bValue={show(wkAvg.humidity)} bUnit="%" loading={wxLoading} />
-        <DualStat icon={Gauge} gradient="revenue" label="Pressure" aLabel="Now" aValue={show(m.pressure, 1)} aUnit="hPa" bLabel="Wk avg" bValue={show(wkAvg.pressure, 1)} bUnit="hPa" loading={wxLoading} />
-        <DualStat icon={SunMedium} gradient="solar" label="Solar radiation" aLabel="Now" aValue={show(obs?.solarRadiation)} aUnit="W/m²" bLabel="Wk avg" bValue={show(wkAvg.solar)} bUnit="W/m²" loading={wxLoading} />
-        <DualStat icon={Sun} gradient="revenue" label="UV index" aLabel="Now" aValue={show(obs?.uv)} bLabel="Wk avg" bValue={show(wkAvg.uv)} loading={wxLoading} />
+        <DualStat icon={Thermometer} gradient="solar" label="Temperature" aLabel="Now" aValue={show(m.temp)} aUnit="°C" bLabel="Week average" bValue={show(wkAvg.temp)} bUnit="°C" loading={wxLoading} />
+        <DualStat icon={Droplets} gradient="co2" label="Humidity" aLabel="Now" aValue={show(obs?.humidity)} aUnit="%" bLabel="Week average" bValue={show(wkAvg.humidity)} bUnit="%" loading={wxLoading} />
+        <DualStat icon={Gauge} gradient="revenue" label="Pressure" aLabel="Now" aValue={show(m.pressure, 1)} aUnit="hPa" bLabel="Week average" bValue={show(wkAvg.pressure, 1)} bUnit="hPa" loading={wxLoading} />
+        <DualStat icon={SunMedium} gradient="solar" label="Solar radiation" aLabel="Now" aValue={show(obs?.solarRadiation)} aUnit="W/m²" bLabel="Week average" bValue={show(wkAvg.solar)} bUnit="W/m²" loading={wxLoading} />
+        <DualStat icon={Sun} gradient="revenue" label="UV index" aLabel="Now" aValue={show(obs?.uv)} bLabel="Week average" bValue={show(wkAvg.uv)} loading={wxLoading} />
         <DualStat icon={CloudRain} gradient="energy" label="Precipitation" aLabel="Rate" aValue={show(m.precipRate, 1)} aUnit="mm/h" bLabel="Today" bValue={show(m.precipTotal, 1)} bUnit="mm" loading={wxLoading} />
         <DualStat icon={Thermometer} gradient="accent" label="Feels like" aLabel="Now" aValue={show(feelsLike)} aUnit="°C" bLabel="Wind chill" bValue={show(m.windChill)} bUnit="°C" loading={wxLoading} />
       </div>
