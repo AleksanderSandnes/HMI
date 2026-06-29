@@ -4,7 +4,43 @@ import {
   calculateMetrics,
   cleanPowerData,
   generateTimeLabels,
+  optimizeChartData,
 } from "../utils/growattApiHelpers";
+
+describe("optimizeChartData", () => {
+  const labels = generateTimeLabels(); // 288 five-minute "HH:MM" labels
+
+  it("returns a No-Data placeholder when nothing exceeds the 5W threshold", () => {
+    const flat = new Array(288).fill(0);
+    expect(optimizeChartData(flat, labels, "hourly")).toEqual({
+      data: [0],
+      labels: ["No Data"],
+    });
+  });
+
+  it("treats sub-threshold noise (<=5W) as no data", () => {
+    const noise = new Array(288).fill(3);
+    expect(optimizeChartData(noise, labels, "hourly").labels).toEqual(["No Data"]);
+  });
+
+  it("trims leading/trailing zeros and samples once per hour with clean labels", () => {
+    // Meaningful generation from 06:00 (index 72) to 18:00 (index 216).
+    const power = new Array(288).fill(0);
+    for (let i = 72; i <= 216; i++) power[i] = 1000;
+
+    const { data, labels: outLabels } = optimizeChartData(power, labels, "hourly");
+
+    // Data and labels stay aligned, and the window is far smaller than 288.
+    expect(data).toHaveLength(outLabels.length);
+    expect(data.length).toBeLessThan(20);
+    // Hourly labels are rounded to clean "HH:00" hours.
+    expect(outLabels.every((l) => /^\d{2}:00$/.test(l))).toBe(true);
+    // The padded window starts ~30min before the first meaningful sample.
+    expect(outLabels[0]).toBe("06:00");
+    // Peak power is preserved within the sampled window.
+    expect(Math.max(...data)).toBe(1000);
+  });
+});
 
 describe("cleanPowerData", () => {
   it("coerces null/undefined/NaN to 0 and numbers through", () => {

@@ -21,11 +21,20 @@ describe("StatTile", () => {
     expect(screen.getByText("50%")).toBeInTheDocument();
   });
 
-  it("shows an em dash while loading", () => {
-    render(
+  it("hides the value and renders a skeleton while loading", () => {
+    const { container } = render(
       <StatTile icon={Zap} gradient="solar" label="Peak" value="9.9" loading />
     );
-    expect(screen.getByText("—")).toBeInTheDocument();
+    // The label still shows, but the value is replaced by a pulsing skeleton.
+    expect(screen.getByText("Peak")).toBeInTheDocument();
     expect(screen.queryByText("9.9")).not.toBeInTheDocument();
+    expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
+  });
+
+  it("omits the delta chip when delta is null", () => {
+    const { container } = render(
+      <StatTile icon={Zap} gradient="energy" label="Generation" value="12.3" delta={null} />
+    );
+    expect(container.textContent).not.toContain("%");
   });
 });

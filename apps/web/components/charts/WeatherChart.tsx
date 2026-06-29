@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { Loader2 } from "lucide-react";
 import { formatMetric as fmt } from "@hmi/core";
+import { weatherYDomain } from "@/lib/chart";
 import { AXIS_TICK, CURSOR, GRID_STROKE } from "./chartTheme";
 
 export interface LineSeries {
@@ -76,19 +77,7 @@ export function WeatherChart({
     );
   }
 
-  const rawMin = Math.min(...all);
-  const rawMax = Math.max(...all);
-  let yMin = rawMin;
-  let yMax = rawMax;
-  if (yMin === yMax) {
-    yMax = yMin + 1;
-    yMin = yMin - 1;
-  }
-  const span = yMax - yMin;
-  const padTop = span * 0.14;
-  yMax += padTop;
-  yMin = rawMin >= 0 ? 0 : yMin - padTop;
-  const range = yMax - yMin || 1;
+  const { min: yMin, max: yMax, range } = weatherYDomain(all);
 
   const rows = labels.map((label, i) => {
     const row: Record<string, number | string> = { label };

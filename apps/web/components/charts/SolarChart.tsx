@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { Loader2 } from "lucide-react";
 import { formatNum, type SimpleChartData } from "@hmi/core";
+import { barGapPercent } from "@/lib/chart";
 import { AXIS_TICK, CURSOR, GRID_STROKE } from "./chartTheme";
 
 interface SolarChartProps {
@@ -75,9 +76,7 @@ export function SolarChart({
   const peakIndex = values.indexOf(max);
   const peakLabel = labels[peakIndex] ?? "";
 
-  // NB: recharts collapses bars to zero width at exactly barCategoryGap="50%",
-  // so keep this strictly below 50 (few-bar views previously rendered no bars).
-  const gapPct = values.length > 24 ? 34 : values.length > 12 ? 42 : 46;
+  const gapPct = barGapPercent(values.length);
 
   const tooltip = (
     <Tooltip

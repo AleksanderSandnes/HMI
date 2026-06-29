@@ -1,6 +1,7 @@
 // Weather observation → chart-series transform (ported/consolidated from mobile
 // useHistoricalWeatherData). Pure: takes raw observations + metric + timespan and
 // returns x-axis labels + one number[] per series. No platform imports.
+import { WEEKDAY_ABBR } from '../constants';
 
 type Obs = Record<string, any>;
 
@@ -26,8 +27,6 @@ const EXTRACTORS: Record<string, ((it: Obs) => number)[]> = {
   solarRadiation: [(it) => n(it.solarRadiationHigh)],
   uvIndex: [(it) => n(it.uvHigh)],
 };
-
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const COMPASS = [
   'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
@@ -82,7 +81,7 @@ export function buildWeatherSeries(
       // rest are blank so the line stays smooth but the axis isn't crowded.
       if (dayKey !== lastDayKey) {
         lastDayKey = dayKey;
-        return `${DAY_NAMES[d.getDay()]} ${d.getMonth() + 1}/${d.getDate()}`;
+        return `${WEEKDAY_ABBR[d.getDay()]} ${d.getMonth() + 1}/${d.getDate()}`;
       }
       return '';
     }

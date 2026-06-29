@@ -1,5 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { buildWeatherSeries } from "../utils/weatherSeries";
+import { buildWeatherSeries, windCompass } from "../utils/weatherSeries";
+
+describe("windCompass", () => {
+  it("maps degrees to the 16-point compass", () => {
+    expect(windCompass(0)).toBe("N");
+    expect(windCompass(90)).toBe("E");
+    expect(windCompass(180)).toBe("S");
+    expect(windCompass(270)).toBe("W");
+    expect(windCompass(213)).toBe("SSW");
+  });
+
+  it("wraps angles >= 360 and rounds to the nearest point", () => {
+    expect(windCompass(360)).toBe("N");
+    expect(windCompass(348.75)).toBe("N"); // rounds up past NNW back to N
+    expect(windCompass(11)).toBe("N"); // < 11.25 → nearer N
+    expect(windCompass(12)).toBe("NNE"); // > 11.25 → nearer NNE
+  });
+
+  it("returns null for missing or non-numeric input", () => {
+    expect(windCompass(null)).toBeNull();
+    expect(windCompass(undefined)).toBeNull();
+    expect(windCompass(NaN)).toBeNull();
+  });
+});
 
 const hourly = [
   { obsTimeLocal: "2026-06-10 06:00:00", metric: { tempAvg: 10, dewptAvg: 5 } },

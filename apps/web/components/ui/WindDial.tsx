@@ -1,6 +1,7 @@
 "use client";
 
 import { windCompass } from "@hmi/core";
+import { toNum } from "@/lib/format";
 import { GlassCard } from "./GlassCard";
 
 /**
@@ -19,12 +20,9 @@ export function WindDial({
   gust?: number | null;
   unit?: string;
 }) {
-  const num = (v: number | null | undefined) =>
-    v == null || isNaN(Number(v)) ? null : Number(v);
-
-  const deg = num(degrees);
-  const spd = num(speed);
-  const gst = num(gust);
+  const deg = toNum(degrees);
+  const spd = toNum(speed);
+  const gst = toNum(gust);
   const dir = deg != null ? windCompass(deg) : null;
 
   return (

@@ -1,5 +1,6 @@
 // Pure Growatt chart-math helpers (ported verbatim from mobile src/utils/growattApiHelpers.ts).
 // No platform imports — safe for web (Next.js) and native (Expo).
+import { MONTH_ABBR, WEEKDAY_ABBR } from '../constants';
 import type { SolarMetrics } from '../types/solar';
 
 /**
@@ -36,8 +37,7 @@ export function generateTimeLabels(): string[] {
 export function optimizeChartData(
   powerValues: number[],
   labels: string[],
-  timespan: string,
-  isMobile: boolean = false
+  timespan: string
 ): { data: number[]; labels: string[] } {
   // Find the range of meaningful data (where power > 5W to avoid noise)
   const meaningfulThreshold = 5; // Watts
@@ -65,16 +65,8 @@ export function optimizeChartData(
   const rangedData = powerValues.slice(startIndex, endIndex + 1);
   const rangedLabels = labels.slice(startIndex, endIndex + 1);
 
-  // Determine optimal sampling based on timespan and device
-  let samplingInterval: number;
-
-  if (timespan === 'hourly') {
-    // For hourly view: Mobile shows every hour, Desktop shows every hour too
-    samplingInterval = isMobile ? 12 : 12; // Both show every hour (12 * 5min = 60min)
-  } else {
-    // For other timespans, use current logic
-    samplingInterval = 12; // Every hour
-  }
+  // Every timespan currently samples one point per hour (12 * 5min = 60min).
+  const samplingInterval = 12;
 
   // Sample the data at the determined interval
   const sampledData: number[] = [];
@@ -162,25 +154,6 @@ export function calculateMetrics(
 }
 
 /**
- * Weekday + month label sets for the aggregated bar charts.
- */
-const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTH_LABELS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-/**
  * Build x-axis labels for the aggregated (week/month/year) bar charts.
  * - weekly: weekday abbreviation for each calendar day (e.g. "Wed")
  * - monthly: day-of-month number (1..31)
@@ -196,14 +169,14 @@ export function buildAggregatedLabels(
       return dayLabels.map((d) => {
         const [year, month, day] = d.split('-').map(Number);
         const date = new Date(year, (month || 1) - 1, day || 1);
-        return WEEKDAY_LABELS[date.getDay()] ?? d;
+        return WEEKDAY_ABBR[date.getDay()] ?? d;
       });
     }
     return Array.from({ length: count }, (_, i) => `Day ${i + 1}`);
   }
 
   if (timespan === 'yearly') {
-    return Array.from({ length: count }, (_, i) => MONTH_LABELS[i] ?? `${i + 1}`);
+    return Array.from({ length: count }, (_, i) => MONTH_ABBR[i] ?? `${i + 1}`);
   }
 
   if (timespan === 'total') {

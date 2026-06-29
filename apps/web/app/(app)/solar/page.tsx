@@ -37,7 +37,7 @@ export default function SolarPage() {
 
   const { data: solar, isLoading } = useQuery<SolarData>({
     queryKey: ["solar", timespan, pickerDate],
-    queryFn: () => growatt.fetchSolarData(timespan as never, pickerDate, false),
+    queryFn: () => growatt.fetchSolarData(timespan as never, pickerDate),
   });
 
   const metrics = solar?.metrics ?? ZERO;

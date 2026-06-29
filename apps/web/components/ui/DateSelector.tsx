@@ -4,6 +4,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  buildMonthGrid,
+  nextZoomView,
+  parseYMD,
+  sameDay,
+  shiftYMD,
+  toYMD,
+  yearBlockStart,
+  type CalendarView as View,
+} from "@/lib/date";
 import { GlassCard } from "./GlassCard";
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -18,27 +28,6 @@ const MONTHS_SHORT = [
 
 const POPOVER_W = 300;
 const POPOVER_H = 360;
-
-type View = "day" | "month" | "year";
-
-/** Parse a `yyyy-mm-dd` string into a local Date (no UTC/TZ shift). */
-function parseYMD(s: string): Date {
-  const [y, m, d] = s.split("-").map(Number);
-  return new Date(y, (m || 1) - 1, d || 1);
-}
-
-/** Format a local Date back to `yyyy-mm-dd` (no UTC/TZ shift). */
-function toYMD(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-const sameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate();
 
 /**
  * Date selector (web port of mobile ui/DateSelector). Prev/next day steppers
@@ -109,11 +98,7 @@ export function DateSelector({
     };
   }, [open]);
 
-  const shift = (days: number) => {
-    const d = parseYMD(selectedDate);
-    d.setDate(d.getDate() + days);
-    onDateSelect(toYMD(d));
-  };
+  const shift = (days: number) => onDateSelect(shiftYMD(selectedDate, days));
 
   // Header stepper: month in day-view, year in month-view, 12 years in year-view.
   const step = (dir: number) => {
@@ -125,7 +110,7 @@ export function DateSelector({
   };
 
   // Clicking the header zooms out: day -> month -> year.
-  const zoomOut = () => setView((v) => (v === "day" ? "month" : v === "month" ? "year" : "day"));
+  const zoomOut = () => setView(nextZoomView);
 
   const pickDay = (d: Date) => {
     onDateSelect(toYMD(d));
@@ -139,18 +124,9 @@ export function DateSelector({
     year: "numeric",
   });
 
-  const monthGrid = useMemo(() => {
-    const first = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-    const start = new Date(first);
-    start.setDate(1 - first.getDay());
-    return Array.from({ length: 42 }, (_, i) => {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      return d;
-    });
-  }, [viewDate]);
+  const monthGrid = useMemo(() => buildMonthGrid(viewDate), [viewDate]);
 
-  const yearStart = Math.floor(viewDate.getFullYear() / 12) * 12;
+  const yearStart = yearBlockStart(viewDate.getFullYear());
   const years = Array.from({ length: 12 }, (_, i) => yearStart + i);
 
   const headerLabel =

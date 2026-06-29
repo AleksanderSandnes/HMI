@@ -65,12 +65,23 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
+        // Origin *patterns* (not setAllowedOrigins): every Vercel preview/branch
+        // deployment gets its own subdomain (e.g. hmi-git-test-…, hmi-<hash>-…),
+        // so a wildcard is the only maintainable way to cover them — and patterns
+        // are the only form Spring permits alongside allowCredentials(true).
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            // Production aliases.
+            "https://hmi-six.vercel.app",
             "https://hmi-seven.vercel.app",
+            // Any preview deployment under this project's Vercel scope (covers the
+            // test branch deploy and per-commit previews).
+            "https://hmi-*-aleksander-sandnes-projects.vercel.app",
+            "https://hmi-git-test-aleksander-sandnes-projects.vercel.app",
             "https://hmi-git-main-apsandnes-projects.vercel.app",
+            // Local dev: web (:3000) and Expo (:8081/:19006).
+            "http://localhost:3000",
             "http://localhost:8081",
-            "http://localhost:19006",
-            "http://localhost:3000"
+            "http://localhost:19006"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
