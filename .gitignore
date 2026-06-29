@@ -221,3 +221,4 @@ replay_pid*
 backend/weatherAPI/.env
 backend/weatherAPI/.env
 .env.production.template
+.env*
