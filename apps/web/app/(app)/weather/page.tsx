@@ -201,7 +201,7 @@ export default function WeatherPage() {
           ticks={ticks}
           unit={meta.unit}
           loading={isLoading}
-          height={360}
+          height={480}
         />
 
         <div className="mt-4">

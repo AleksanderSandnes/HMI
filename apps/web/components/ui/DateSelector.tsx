@@ -11,9 +11,15 @@ const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
+const MONTHS_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
 const POPOVER_W = 300;
 const POPOVER_H = 360;
+
+type View = "day" | "month" | "year";
 
 /** Parse a `yyyy-mm-dd` string into a local Date (no UTC/TZ shift). */
 function parseYMD(s: string): Date {
@@ -36,10 +42,10 @@ const sameDay = (a: Date, b: Date) =>
 
 /**
  * Date selector (web port of mobile ui/DateSelector). Prev/next day steppers
- * plus a click-to-open custom glass calendar popover (replaces the browser's
- * native date picker). The popover is rendered in a portal with fixed
- * positioning so it escapes the GlassCard's `overflow-hidden` clip and stays
- * fully visible (flipping above the trigger when there's no room below).
+ * plus a click-to-open custom glass calendar popover with day → month → year
+ * drill-down (click the header to zoom out), so jumping years back is a couple
+ * of clicks. Rendered in a portal (fixed position) so it escapes the
+ * GlassCard's overflow-hidden clip and flips above the trigger when needed.
  */
 export function DateSelector({
   selectedDate,
@@ -51,7 +57,7 @@ export function DateSelector({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  // Fixed viewport coords + flip direction, computed from the trigger on open.
+  const [view, setView] = useState<View>("day");
   const [pos, setPos] = useState<{ left: number; top: number; up: boolean } | null>(null);
   const [viewDate, setViewDate] = useState(() => parseYMD(selectedDate));
   const rootRef = useRef<HTMLDivElement>(null);
@@ -74,13 +80,13 @@ export function DateSelector({
     const up = window.innerHeight - rect.bottom < POPOVER_H;
     const top = up ? rect.top - 10 : rect.bottom + 10;
     setViewDate(parseYMD(selectedDate));
+    setView("day");
     setPos({ left, top, up });
     setOpen(true);
   };
 
   const toggleOpen = () => (open ? close() : openPopover());
 
-  // Dismiss on outside click / Escape; reposition-safe by closing on scroll/resize.
   useEffect(() => {
     if (!open) return;
     const onPointer = (e: MouseEvent) => {
@@ -109,9 +115,17 @@ export function DateSelector({
     onDateSelect(toYMD(d));
   };
 
-  const shiftMonth = (months: number) => {
-    setViewDate((v) => new Date(v.getFullYear(), v.getMonth() + months, 1));
+  // Header stepper: month in day-view, year in month-view, 12 years in year-view.
+  const step = (dir: number) => {
+    setViewDate((v) => {
+      if (view === "day") return new Date(v.getFullYear(), v.getMonth() + dir, 1);
+      if (view === "month") return new Date(v.getFullYear() + dir, v.getMonth(), 1);
+      return new Date(v.getFullYear() + dir * 12, v.getMonth(), 1);
+    });
   };
+
+  // Clicking the header zooms out: day -> month -> year.
+  const zoomOut = () => setView((v) => (v === "day" ? "month" : v === "month" ? "year" : "day"));
 
   const pickDay = (d: Date) => {
     onDateSelect(toYMD(d));
@@ -125,7 +139,6 @@ export function DateSelector({
     year: "numeric",
   });
 
-  // Build a 6-row grid starting on the Sunday on/before the 1st of the month.
   const monthGrid = useMemo(() => {
     const first = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
     const start = new Date(first);
@@ -136,6 +149,108 @@ export function DateSelector({
       return d;
     });
   }, [viewDate]);
+
+  const yearStart = Math.floor(viewDate.getFullYear() / 12) * 12;
+  const years = Array.from({ length: 12 }, (_, i) => yearStart + i);
+
+  const headerLabel =
+    view === "day"
+      ? `${MONTHS[viewDate.getMonth()]} ${viewDate.getFullYear()}`
+      : view === "month"
+        ? `${viewDate.getFullYear()}`
+        : `${yearStart} – ${yearStart + 11}`;
+
+  const body =
+    view === "day" ? (
+      <>
+        <div className="mb-1 grid grid-cols-7 gap-1">
+          {WEEKDAYS.map((w) => (
+            <span
+              key={w}
+              className="flex h-7 items-center justify-center text-[11px] font-bold uppercase text-text-muted"
+            >
+              {w}
+            </span>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {monthGrid.map((d, i) => {
+            const inMonth = d.getMonth() === viewDate.getMonth();
+            const isSelected = sameDay(d, selected);
+            const isToday = sameDay(d, today);
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => pickDay(d)}
+                aria-label={toYMD(d)}
+                aria-current={isSelected ? "date" : undefined}
+                className={cn(
+                  "flex h-9 items-center justify-center rounded-[var(--radius-sm)] text-[13px] font-bold transition",
+                  isSelected
+                    ? "bg-solar-light text-text-inverse"
+                    : inMonth
+                      ? "text-text-primary hover:bg-glass-fill-strong"
+                      : "text-text-muted/50 hover:bg-glass-fill",
+                  !isSelected && isToday && "ring-1 ring-solar-light/60"
+                )}
+              >
+                {d.getDate()}
+              </button>
+            );
+          })}
+        </div>
+      </>
+    ) : view === "month" ? (
+      <div className="grid grid-cols-3 gap-2">
+        {MONTHS_SHORT.map((mo, i) => {
+          const isSel =
+            i === selected.getMonth() && viewDate.getFullYear() === selected.getFullYear();
+          return (
+            <button
+              key={mo}
+              type="button"
+              onClick={() => {
+                setViewDate(new Date(viewDate.getFullYear(), i, 1));
+                setView("day");
+              }}
+              className={cn(
+                "flex h-11 items-center justify-center rounded-[var(--radius-md)] text-[13px] font-bold transition",
+                isSel
+                  ? "bg-solar-light text-text-inverse"
+                  : "text-text-primary hover:bg-glass-fill-strong"
+              )}
+            >
+              {mo}
+            </button>
+          );
+        })}
+      </div>
+    ) : (
+      <div className="grid grid-cols-3 gap-2">
+        {years.map((yr) => {
+          const isSel = yr === selected.getFullYear();
+          return (
+            <button
+              key={yr}
+              type="button"
+              onClick={() => {
+                setViewDate(new Date(yr, viewDate.getMonth(), 1));
+                setView("month");
+              }}
+              className={cn(
+                "flex h-11 items-center justify-center rounded-[var(--radius-md)] text-[13px] font-bold transition",
+                isSel
+                  ? "bg-solar-light text-text-inverse"
+                  : "text-text-primary hover:bg-glass-fill-strong"
+              )}
+            >
+              {yr}
+            </button>
+          );
+        })}
+      </div>
+    );
 
   const popover =
     open && pos && typeof document !== "undefined"
@@ -152,69 +267,32 @@ export function DateSelector({
             }}
             className="z-[100] w-[300px] rounded-[var(--radius-lg)] border border-glass-border-strong bg-[rgba(10,17,36,0.98)] p-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl"
           >
-            {/* Month header */}
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between gap-1">
               <button
                 type="button"
-                onClick={() => shiftMonth(-1)}
-                aria-label="Previous month"
+                onClick={() => step(-1)}
+                aria-label="Previous"
                 className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong"
               >
                 <ChevronLeft size={16} />
               </button>
-              <span className="text-sm font-extrabold text-text-primary">
-                {MONTHS[viewDate.getMonth()]} {viewDate.getFullYear()}
-              </span>
               <button
                 type="button"
-                onClick={() => shiftMonth(1)}
-                aria-label="Next month"
+                onClick={zoomOut}
+                className="flex-1 rounded-[var(--radius-sm)] py-1 text-sm font-extrabold text-text-primary transition hover:bg-glass-fill"
+              >
+                {headerLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => step(1)}
+                aria-label="Next"
                 className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong"
               >
                 <ChevronRight size={16} />
               </button>
             </div>
-
-            {/* Weekday header */}
-            <div className="mb-1 grid grid-cols-7 gap-1">
-              {WEEKDAYS.map((w) => (
-                <span
-                  key={w}
-                  className="flex h-7 items-center justify-center text-[11px] font-bold uppercase text-text-muted"
-                >
-                  {w}
-                </span>
-              ))}
-            </div>
-
-            {/* Day grid */}
-            <div className="grid grid-cols-7 gap-1">
-              {monthGrid.map((d, i) => {
-                const inMonth = d.getMonth() === viewDate.getMonth();
-                const isSelected = sameDay(d, selected);
-                const isToday = sameDay(d, today);
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => pickDay(d)}
-                    aria-label={toYMD(d)}
-                    aria-current={isSelected ? "date" : undefined}
-                    className={cn(
-                      "flex h-9 items-center justify-center rounded-[var(--radius-sm)] text-[13px] font-bold transition",
-                      isSelected
-                        ? "bg-solar-light text-text-inverse"
-                        : inMonth
-                          ? "text-text-primary hover:bg-glass-fill-strong"
-                          : "text-text-muted/50 hover:bg-glass-fill",
-                      !isSelected && isToday && "ring-1 ring-solar-light/60"
-                    )}
-                  >
-                    {d.getDate()}
-                  </button>
-                );
-              })}
-            </div>
+            {body}
           </div>,
           document.body
         )
