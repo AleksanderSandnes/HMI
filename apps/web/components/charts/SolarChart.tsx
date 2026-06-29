@@ -79,7 +79,10 @@ export function SolarChart({
 
   const tooltip = (
     <Tooltip
-      cursor={CURSOR}
+      // Area uses a thin crosshair line; bars need a translucent fill, otherwise
+      // Recharts paints its default opaque light-grey rectangle over the whole
+      // hovered category band (a giant grey block on few-bar views).
+      cursor={isArea ? CURSOR : { fill: "rgba(255,255,255,0.06)" }}
       content={({ active, payload }) => {
         if (!active || !payload?.length) return null;
         const p = payload[0];
@@ -208,7 +211,7 @@ export function SolarChart({
           </defs>
           {axes}
           {tooltip}
-          <Bar dataKey="value" radius={[6, 6, 0, 0]} isAnimationActive={false}>
+          <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={72} isAnimationActive={false}>
             {chartData.map((entry, i) => (
               <Cell
                 key={i}
