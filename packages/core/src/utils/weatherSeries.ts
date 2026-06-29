@@ -22,6 +22,7 @@ const EXTRACTORS: Record<string, ((it: Obs) => number)[]> = {
     (it) => n(m(it).precipRate ?? it.precipRate),
   ],
   pressure: [(it) => n(m(it).pressureMax ?? it.pressureMax ?? it.pressureHigh)],
+  humidity: [(it) => n(it.humidityAvg ?? it.humidityHigh ?? it.humidity)],
   solarRadiation: [(it) => n(it.solarRadiationHigh)],
   uvIndex: [(it) => n(it.uvHigh)],
 };

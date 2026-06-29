@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   CloudRain,
+  Droplets,
   Gauge,
   Sun,
   SunMedium,
@@ -68,6 +69,15 @@ const METRICS: MetricMeta[] = [
       { label: "Accum. total", color: "#38bdf8" },
       { label: "Rate", color: "#34d399" },
     ],
+  },
+  {
+    key: "humidity",
+    label: "Humidity",
+    icon: Droplets,
+    unit: "%",
+    title: "Humidity",
+    accent: "#22d3ee",
+    series: [{ label: "Humidity", color: "#22d3ee" }],
   },
   {
     key: "pressure",
