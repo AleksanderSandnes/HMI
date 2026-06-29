@@ -5,6 +5,7 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../env";
 /** Route prefixes that require an authenticated session. */
 const PROTECTED_PREFIXES = [
   "/dashboard",
+  "/solar",
   "/weather",
   "/notifications",
   "/settings",

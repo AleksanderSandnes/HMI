@@ -8,20 +8,22 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
+  Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCore } from "@/lib/hooks/useCore";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/solar", label: "Solar", icon: Sun },
   { href: "/weather", label: "Weather", icon: CloudSun },
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 /**
- * Responsive app navigation: a left sidebar rail on desktop, a bottom tab bar on
- * mobile (parity with the RN tab bar + desktop rail).
+ * Responsive app navigation: a horizontal top bar (brand + links + sign out) on
+ * desktop/web, and the bottom tab bar on mobile (parity with the RN tab bar).
  */
 export function AppNav() {
   const pathname = usePathname();
@@ -36,39 +38,52 @@ export function AppNav() {
 
   return (
     <>
-      {/* Desktop sidebar rail */}
-      <aside className="glass hidden w-60 shrink-0 flex-col gap-1 p-4 md:flex">
-        <div className="mb-6 px-3 py-2">
-          <span className="text-lg font-extrabold tracking-tight text-solar-light">
+      {/* Desktop / web top bar */}
+      <header className="glass sticky top-0 z-30 hidden items-center justify-between border-b border-glass-border px-6 py-2.5 md:flex">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2.5"
+          aria-label="HMI home"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icon.png"
+            alt=""
+            className="h-8 w-8 rounded-[8px] shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
+          />
+          <span className="text-lg font-extrabold tracking-tight text-text-primary">
             HMI
           </span>
-        </div>
-        {NAV.map(({ href, label, icon: Icon }) => {
-          const active = pathname.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-semibold transition",
-                active
-                  ? "bg-solar-soft text-solar-light"
-                  : "text-text-secondary hover:bg-glass-fill hover:text-text-primary"
-              )}
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          );
-        })}
-        <button
-          onClick={handleLogout}
-          className="mt-auto flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-semibold text-text-muted transition hover:bg-glass-fill hover:text-negative"
-        >
-          <LogOut size={18} />
-          Sign out
-        </button>
-      </aside>
+        </Link>
+
+        <nav className="flex items-center gap-1">
+          {NAV.map(({ href, label, icon: Icon }) => {
+            const active = pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "flex items-center gap-2 rounded-[var(--radius-md)] px-3.5 py-2 text-sm font-semibold transition",
+                  active
+                    ? "bg-solar-soft text-solar-light"
+                    : "text-text-secondary hover:bg-glass-fill hover:text-text-primary"
+                )}
+              >
+                <Icon size={17} />
+                {label}
+              </Link>
+            );
+          })}
+          <button
+            onClick={handleLogout}
+            className="ml-1 flex items-center gap-2 rounded-[var(--radius-md)] px-3.5 py-2 text-sm font-semibold text-text-muted transition hover:bg-glass-fill hover:text-negative"
+          >
+            <LogOut size={17} />
+            Sign out
+          </button>
+        </nav>
+      </header>
 
       {/* Mobile bottom tab bar */}
       <nav className="glass fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-glass-border px-2 py-2 md:hidden">
@@ -79,7 +94,7 @@ export function AppNav() {
               key={href}
               href={href}
               className={cn(
-                "flex flex-col items-center gap-1 rounded-[var(--radius-md)] px-3 py-1.5 text-[11px] font-semibold transition",
+                "flex flex-col items-center gap-1 rounded-[var(--radius-md)] px-2 py-1.5 text-[10px] font-semibold transition",
                 active ? "text-solar-light" : "text-text-muted"
               )}
             >
