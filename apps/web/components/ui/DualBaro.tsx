@@ -1,5 +1,6 @@
 "use client";
 
+import { clamp, round, toNum } from "@/lib/format";
 import { GlassCard } from "./GlassCard";
 import { Skeleton } from "./Skeleton";
 
@@ -30,7 +31,7 @@ const TICKS = Array.from({ length: 11 }, (_, i) => {
 
 function Gauge({ value }: { value: number | null }) {
   const frac =
-    value != null ? Math.max(0, Math.min(1, (value - P_MIN) / (P_MAX - P_MIN))) : null;
+    value != null ? clamp((value - P_MIN) / (P_MAX - P_MIN), 0, 1) : null;
   const ang = frac != null ? START + frac * SWEEP : null;
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full">
@@ -77,7 +78,7 @@ function Module({
   unit: string;
   loading?: boolean;
 }) {
-  const v = value == null || isNaN(Number(value)) ? null : Number(value);
+  const v = toNum(value);
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5">
       <p className="text-[11px] font-bold uppercase tracking-[0.3px] text-text-muted">
@@ -90,7 +91,7 @@ function Module({
         <Skeleton className="h-5 w-12" />
       ) : (
         <p className="text-[17px] font-extrabold leading-none text-text-primary">
-          {v != null ? Math.round(v * 10) / 10 : "—"}
+          {v != null ? round(v, 1) : "—"}
           <span className="ml-1 text-[10px] font-bold text-text-muted">{unit}</span>
         </p>
       )}

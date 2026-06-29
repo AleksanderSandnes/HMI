@@ -23,6 +23,7 @@ import {
   type SolarData,
 } from "@hmi/core";
 import { useCore } from "@/lib/hooks/useCore";
+import { average, lastPositive, round, show } from "@/lib/format";
 import { DualStat } from "@/components/ui/DualStat";
 import { WindDial } from "@/components/ui/WindDial";
 import { DualBaro } from "@/components/ui/DualBaro";
@@ -49,16 +50,6 @@ interface CurrentWeather {
     metric?: CurrentMetric;
   }>;
 }
-
-const round = (v: number | null | undefined, dp = 0) =>
-  v == null || isNaN(Number(v))
-    ? null
-    : Math.round(Number(v) * 10 ** dp) / 10 ** dp;
-
-const show = (v: number | null | undefined, dp = 0) => {
-  const r = round(v, dp);
-  return r == null ? "—" : `${r}`;
-};
 
 function SectionLabel({
   icon: Icon,
@@ -122,11 +113,8 @@ export default function DashboardPage() {
   // Weekly averages per metric, from the historical observations.
   const wkAvg = useMemo(() => {
     const obs = weekObs?.observations ?? [];
-    const avg = (key: string) => {
-      const { series } = buildWeatherSeries(obs, key, "weekly");
-      const vals = (series[0] ?? []).filter((v) => v != null && v !== 0 && !isNaN(v));
-      return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
-    };
+    const avg = (key: string) =>
+      average(buildWeatherSeries(obs, key, "weekly").series[0] ?? []);
     return {
       temp: avg("temperature"),
       humidity: avg("humidity"),
@@ -136,13 +124,10 @@ export default function DashboardPage() {
     };
   }, [weekObs]);
 
-  const currentPower = useMemo(() => {
-    const vals = solar?.chartData?.datasets?.[0]?.data ?? [];
-    for (let i = vals.length - 1; i >= 0; i--) {
-      if (vals[i] > 0) return vals[i];
-    }
-    return 0;
-  }, [solar]);
+  const currentPower = useMemo(
+    () => lastPositive(solar?.chartData?.datasets?.[0]?.data ?? []),
+    [solar]
+  );
 
   const peak = solar ? getPeakOutput(solar.chartData, "hourly") : null;
   const todayGen = solar?.metrics.todayGeneration ?? null;
