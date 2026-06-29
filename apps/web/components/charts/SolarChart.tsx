@@ -24,6 +24,8 @@ interface SolarChartProps {
   height?: number;
   /** Hide grid + axes for a clean sparkline (e.g. the Dashboard mini chart). */
   showAxes?: boolean;
+  /** Tailwind height class for a viewport-scaling chart; overrides `height`. */
+  heightClass?: string;
 }
 
 /**
@@ -37,29 +39,31 @@ export function SolarChart({
   loading = false,
   height = 320,
   showAxes = true,
+  heightClass,
 }: SolarChartProps) {
   const values = data?.datasets?.[0]?.data ?? [];
   const labels = data?.labels ?? [];
   const isArea = timespan === "hourly";
   const unit = isArea ? "W" : "kWh";
 
+  const sizer = (node: React.ReactNode) =>
+    heightClass ? (
+      <div className={heightClass}>{node}</div>
+    ) : (
+      <div style={{ height }}>{node}</div>
+    );
+
   if (loading) {
-    return (
-      <div
-        className="flex w-full items-center justify-center"
-        style={{ height }}
-      >
+    return sizer(
+      <div className="flex h-full w-full items-center justify-center">
         <Loader2 size={32} className="animate-spin text-solar-light" />
       </div>
     );
   }
 
   if (!values.length || values.every((v) => v === 0)) {
-    return (
-      <div
-        className="flex w-full items-center justify-center text-sm font-semibold text-text-muted"
-        style={{ height }}
-      >
+    return sizer(
+      <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-text-muted">
         No production data for this period
       </div>
     );
@@ -121,8 +125,8 @@ export function SolarChart({
         />,
       ];
 
-  return (
-    <ResponsiveContainer width="100%" height={height}>
+  const chart = (
+    <ResponsiveContainer width="100%" height={heightClass ? "100%" : height}>
       {isArea ? (
         <AreaChart
           data={chartData}
@@ -216,6 +220,8 @@ export function SolarChart({
       )}
     </ResponsiveContainer>
   );
+
+  return heightClass ? <div className={heightClass}>{chart}</div> : chart;
 }
 
 export default SolarChart;

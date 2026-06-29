@@ -6,7 +6,6 @@ import {
   CloudRain,
   Droplets,
   Gauge,
-  Leaf,
   type LucideIcon,
   Mountain,
   Sun,
@@ -15,18 +14,13 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
-import {
-  CO2_PER_KWH,
-  formatCO2,
-  formatPeak,
-  getPeakOutput,
-  toISO,
-  type SolarData,
-} from "@hmi/core";
+import { formatPeak, getPeakOutput, toISO, type SolarData } from "@hmi/core";
 import { useCore } from "@/lib/hooks/useCore";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { StatTile } from "@/components/ui/StatTile";
 import { WindDial } from "@/components/ui/WindDial";
 import { SolarChart } from "@/components/charts/SolarChart";
+import { PageHeader } from "@/components/PageHeader";
 import { WeatherChip } from "@/components/WeatherChip";
 
 interface CurrentMetric {
@@ -60,43 +54,6 @@ const show = (v: number | null | undefined, dp = 0) => {
   const r = round(v, dp);
   return r == null ? "—" : `${r}`;
 };
-
-/** Compact glass stat cell — denser than StatTile so everything fits one screen. */
-function Metric({
-  icon: Icon,
-  accent,
-  label,
-  value,
-  unit,
-  sub,
-}: {
-  icon: LucideIcon;
-  accent: string;
-  label: string;
-  value: string;
-  unit?: string;
-  sub?: string;
-}) {
-  return (
-    <GlassCard strong className="p-3.5">
-      <div className="flex items-center gap-1.5">
-        <Icon size={14} style={{ color: accent }} />
-        <span className="text-[10px] font-bold uppercase tracking-[0.4px] text-text-muted">
-          {label}
-        </span>
-      </div>
-      <p className="mt-1.5 text-[21px] font-extrabold leading-none text-text-primary">
-        {value}
-        {unit ? (
-          <span className="ml-1 text-[11px] font-bold text-text-muted">{unit}</span>
-        ) : null}
-      </p>
-      {sub ? (
-        <p className="mt-1 truncate text-[10.5px] font-medium text-text-muted">{sub}</p>
-      ) : null}
-    </GlassCard>
-  );
-}
 
 function SectionLabel({
   icon: Icon,
@@ -132,7 +89,7 @@ export default function DashboardPage() {
   });
 
   // Weather: live, focus-gated 60s polling (respects the WU ~1,500/day cap).
-  const { data: weatherData } = useQuery<CurrentWeather>({
+  const { data: weatherData, isLoading: weatherLoading } = useQuery<CurrentWeather>({
     queryKey: ["dashboard-weather"],
     queryFn: () => weather.getCurrentWeatherData(),
     refetchInterval: 60_000,
@@ -151,7 +108,6 @@ export default function DashboardPage() {
   const peak = solar ? getPeakOutput(solar.chartData, "hourly") : null;
   const todayGen = solar?.metrics.todayGeneration ?? null;
   const lifetime = solar?.metrics.totalGeneration ?? null;
-  const co2 = todayGen != null ? formatCO2(todayGen * CO2_PER_KWH) : null;
   const device = solar?.device;
   const capacityKw = device?.capacity ? round(device.capacity / 1000, 1) : null;
   const utilisation =
@@ -162,6 +118,7 @@ export default function DashboardPage() {
   const obs = weatherData?.observations?.[0];
   const m = obs?.metric ?? {};
   const feelsLike = m.heatIndex ?? m.windChill ?? m.temp;
+  const wxLoading = weatherLoading && !weatherData;
 
   const statusBadge =
     device?.online != null ? (
@@ -176,30 +133,24 @@ export default function DashboardPage() {
           className={`h-1.5 w-1.5 rounded-full ${device.online ? "bg-positive" : "bg-negative"}`}
         />
         {device.online ? "Online" : "Offline"}
-        {device.deviceCount && device.deviceCount > 1
-          ? ` · ${device.onlineCount ?? 0}/${device.deviceCount}`
-          : ""}
       </span>
     ) : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3">
-      {/* Compact header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-[26px] font-extrabold tracking-[-0.6px] text-text-primary">
-            Home Production
-          </h1>
-          <p className="text-[13px] font-medium text-text-muted">
-            {[device?.plantName, device?.model].filter(Boolean).join(" · ") ||
-              "Live solar & weather overview"}
-          </p>
-        </div>
-        <div className="flex items-center gap-2.5">
-          {statusBadge}
-          <WeatherChip />
-        </div>
-      </div>
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4">
+      <PageHeader
+        title="Home Production"
+        subtitle={
+          [device?.plantName, device?.model].filter(Boolean).join(" · ") ||
+          "Solar & weather overview"
+        }
+        right={
+          <div className="flex items-center gap-2.5">
+            {statusBadge}
+            <WeatherChip />
+          </div>
+        }
+      />
 
       {/* Solar */}
       <SectionLabel
@@ -214,47 +165,23 @@ export default function DashboardPage() {
         }
       />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Metric icon={Zap} accent="#fbbf24" label="Today" value={show(todayGen, 1)} unit="kWh" sub="Generated" />
-        <Metric
-          icon={TrendingUp}
-          accent="#34d399"
-          label="Current"
-          value={show(currentPower)}
-          unit="W"
-          sub={utilisation != null ? `${utilisation}% of capacity` : "Now"}
-        />
-        <Metric
-          icon={SunMedium}
-          accent="#facc15"
-          label="Peak today"
-          value={peak ? formatPeak(peak.value) : "—"}
-          unit="W"
-          sub={peak ? `at ${peak.label}` : "No data"}
-        />
-        <Metric icon={Mountain} accent="#fbbf24" label="Lifetime" value={show(lifetime, 1)} unit="kWh" sub="Total" />
+        <StatTile compact icon={Zap} gradient="solar" label="Today" value={show(todayGen, 1)} unit="kWh" sublabel="Generated" loading={solarLoading} />
+        <StatTile compact icon={TrendingUp} gradient="energy" label="Current" value={show(currentPower)} unit="W" sublabel={utilisation != null ? `${utilisation}% of capacity` : "Now"} loading={solarLoading} />
+        <StatTile compact icon={SunMedium} gradient="revenue" label="Peak today" value={peak ? formatPeak(peak.value) : "—"} unit="W" sublabel={peak ? `at ${peak.label}` : "No data"} loading={solarLoading} />
+        <StatTile compact icon={Mountain} gradient="solar" label="Lifetime" value={show(lifetime, 1)} unit="kWh" sublabel="Total" loading={solarLoading} />
       </div>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[2.4fr_1fr]">
-        <GlassCard strong className="p-3.5">
-          <p className="mb-0.5 px-1 text-[10px] font-bold uppercase tracking-[0.4px] text-text-muted">
-            Today&apos;s production
-          </p>
-          <SolarChart
-            data={solar?.chartData ?? { labels: [], datasets: [{ data: [] }] }}
-            timespan="hourly"
-            loading={solarLoading}
-            height={132}
-            showAxes={false}
-          />
-        </GlassCard>
-        <Metric
-          icon={Leaf}
-          accent="#4ade80"
-          label="CO₂ avoided"
-          value={co2 ? co2.value : "—"}
-          unit={co2 ? co2.unit : undefined}
-          sub="Estimate · today"
+      <GlassCard strong className="p-3.5">
+        <p className="mb-0.5 px-1 text-[10px] font-bold uppercase tracking-[0.4px] text-text-muted">
+          Today&apos;s production
+        </p>
+        <SolarChart
+          data={solar?.chartData ?? { labels: [], datasets: [{ data: [] }] }}
+          timespan="hourly"
+          loading={solarLoading}
+          height={150}
+          showAxes={false}
         />
-      </div>
+      </GlassCard>
 
       {/* Weather */}
       <SectionLabel
@@ -270,13 +197,13 @@ export default function DashboardPage() {
       />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <WindDial degrees={obs?.winddir} speed={m.windSpeed} gust={m.windGust} unit="km/h" />
-        <Metric icon={Thermometer} accent="#fbbf24" label="Temperature" value={show(m.temp)} unit="°C" sub={`Feels ${show(feelsLike)}°`} />
-        <Metric icon={Droplets} accent="#4ade80" label="Humidity" value={show(obs?.humidity)} unit="%" sub={m.dewpt != null ? `dew pt ${show(m.dewpt)}°` : "—"} />
-        <Metric icon={Gauge} accent="#facc15" label="Pressure" value={show(m.pressure, 1)} unit="hPa" sub="Sea level" />
-        <Metric icon={SunMedium} accent="#fbbf24" label="Solar radiation" value={show(obs?.solarRadiation)} unit="W/m²" sub="Irradiance" />
-        <Metric icon={Sun} accent="#facc15" label="UV index" value={show(obs?.uv)} sub="Now" />
-        <Metric icon={CloudRain} accent="#34d399" label="Precip rate" value={show(m.precipRate, 1)} unit="mm/h" sub={m.precipTotal != null ? `${show(m.precipTotal, 1)} mm today` : "—"} />
-        <Metric icon={Thermometer} accent="#4ade80" label="Feels like" value={show(feelsLike)} unit="°C" sub={m.windChill != null ? `chill ${show(m.windChill)}°` : "Apparent"} />
+        <StatTile compact icon={Thermometer} gradient="solar" label="Temperature" value={show(m.temp)} unit="°C" sublabel={`Feels ${show(feelsLike)}°`} loading={wxLoading} />
+        <StatTile compact icon={Droplets} gradient="co2" label="Humidity" value={show(obs?.humidity)} unit="%" sublabel={m.dewpt != null ? `dew pt ${show(m.dewpt)}°` : undefined} loading={wxLoading} />
+        <StatTile compact icon={Gauge} gradient="revenue" label="Pressure" value={show(m.pressure, 1)} unit="hPa" sublabel="Sea level" loading={wxLoading} />
+        <StatTile compact icon={SunMedium} gradient="solar" label="Solar radiation" value={show(obs?.solarRadiation)} unit="W/m²" sublabel="Irradiance" loading={wxLoading} />
+        <StatTile compact icon={Sun} gradient="revenue" label="UV index" value={show(obs?.uv)} sublabel="Now" loading={wxLoading} />
+        <StatTile compact icon={CloudRain} gradient="energy" label="Precip rate" value={show(m.precipRate, 1)} unit="mm/h" sublabel={m.precipTotal != null ? `${show(m.precipTotal, 1)} mm today` : undefined} loading={wxLoading} />
+        <StatTile compact icon={Thermometer} gradient="accent" label="Feels like" value={show(feelsLike)} unit="°C" sublabel={m.windChill != null ? `chill ${show(m.windChill)}°` : "Apparent"} loading={wxLoading} />
       </div>
     </div>
   );

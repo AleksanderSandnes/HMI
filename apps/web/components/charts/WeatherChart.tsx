@@ -28,6 +28,11 @@ interface WeatherChartProps {
   emptyText?: string;
   /** Explicit x-axis tick values (e.g. one per day for the weekly view). */
   ticks?: string[];
+  /**
+   * Tailwind height class (e.g. "h-[clamp(240px,46vh,520px)]") for a chart that
+   * scales with the viewport. Overrides the numeric `height` when set.
+   */
+  heightClass?: string;
 }
 
 /**
@@ -42,25 +47,30 @@ export function WeatherChart({
   height = 340,
   emptyText = "No data for this period",
   ticks,
+  heightClass,
 }: WeatherChartProps) {
   const clean = (series || []).filter((s) => s.data && s.data.length > 0);
   const n = clean[0]?.data.length ?? 0;
   const all = clean.flatMap((s) => s.data);
 
+  const sizer = (node: React.ReactNode) =>
+    heightClass ? (
+      <div className={heightClass}>{node}</div>
+    ) : (
+      <div style={{ height }}>{node}</div>
+    );
+
   if (loading) {
-    return (
-      <div className="flex w-full items-center justify-center" style={{ height }}>
+    return sizer(
+      <div className="flex h-full w-full items-center justify-center">
         <Loader2 size={32} className="animate-spin text-solar-light" />
       </div>
     );
   }
 
   if (!n || all.length === 0) {
-    return (
-      <div
-        className="flex w-full items-center justify-center text-sm font-semibold text-text-muted"
-        style={{ height }}
-      >
+    return sizer(
+      <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-text-muted">
         {emptyText}
       </div>
     );
@@ -88,8 +98,8 @@ export function WeatherChart({
     return row;
   });
 
-  return (
-    <ResponsiveContainer width="100%" height={height}>
+  const chart = (
+    <ResponsiveContainer width="100%" height={heightClass ? "100%" : height}>
       <AreaChart data={rows} margin={{ top: 22, right: 18, bottom: 6, left: 0 }}>
         <defs>
           {clean.map((s, si) => (
@@ -170,6 +180,8 @@ export function WeatherChart({
       </AreaChart>
     </ResponsiveContainer>
   );
+
+  return heightClass ? <div className={heightClass}>{chart}</div> : chart;
 }
 
 export default WeatherChart;
