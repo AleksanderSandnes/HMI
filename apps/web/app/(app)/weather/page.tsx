@@ -187,7 +187,7 @@ export default function WeatherPage() {
               );
             })}
           </div>
-          <div className="shrink-0">
+          <div className="w-[220px] shrink-0">
             <SegmentedControl
               value={timespan}
               onChange={setTimespan}
