@@ -151,54 +151,54 @@ export default function WeatherPage() {
       <PageHeader
         title="Weather Station"
         subtitle="Local conditions &amp; history"
+        right={
+          <DateSelector
+            selectedDate={pickerDate}
+            onDateSelect={setPickerDate}
+            disabled={isLoading}
+          />
+        }
       />
 
       {/* Chart card — fills the remaining viewport so nothing scrolls off-screen. */}
       <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[22px]">
-        {/* Metric type chips */}
-        <div className="mb-4 flex shrink-0 gap-2 overflow-x-auto pb-1">
-          {METRICS.map((t) => {
-            const active = t.key === dataType;
-            const Icon = t.icon;
-            return (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setDataType(t.key)}
-                className={cn(
-                  "flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] border px-3.5 py-2 text-[13px] font-bold transition",
-                  active
-                    ? "border-transparent bg-glass-fill-strong"
-                    : "border-glass-border bg-glass-fill text-text-muted hover:text-text-secondary"
-                )}
-                style={active ? { color: t.accent } : undefined}
-              >
-                <Icon size={14} />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mb-[18px] flex shrink-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <h2 className="text-[19px] font-extrabold text-text-primary">
-            {meta.title}
-          </h2>
-          <div className="flex w-full flex-col items-center gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end lg:w-auto">
-            <div className="w-full sm:w-auto sm:min-w-[200px]">
-              <SegmentedControl
-                value={timespan}
-                onChange={setTimespan}
-                options={TIME_OPTIONS}
-              />
-            </div>
-            <DateSelector
-              selectedDate={pickerDate}
-              onDateSelect={setPickerDate}
-              disabled={isLoading}
+        {/* Data-type chips (left) + timespan (right) on one row. */}
+        <div className="mb-4 flex shrink-0 items-center gap-3">
+          <div className="flex flex-1 gap-2 overflow-x-auto pb-1">
+            {METRICS.map((t) => {
+              const active = t.key === dataType;
+              const Icon = t.icon;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setDataType(t.key)}
+                  className={cn(
+                    "flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] border px-3.5 py-2 text-[13px] font-bold transition",
+                    active
+                      ? "border-transparent bg-glass-fill-strong"
+                      : "border-glass-border bg-glass-fill text-text-muted hover:text-text-secondary"
+                  )}
+                  style={active ? { color: t.accent } : undefined}
+                >
+                  <Icon size={14} />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="shrink-0">
+            <SegmentedControl
+              value={timespan}
+              onChange={setTimespan}
+              options={TIME_OPTIONS}
             />
           </div>
         </div>
+
+        <h2 className="mb-[14px] shrink-0 text-[19px] font-extrabold text-text-primary">
+          {meta.title}
+        </h2>
 
         <div className="min-h-[220px] flex-1">
           <WeatherChart

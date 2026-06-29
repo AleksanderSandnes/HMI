@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
   CloudSun,
@@ -12,7 +13,55 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCore } from "@/lib/hooks/useCore";
-import { WeatherChip } from "@/components/WeatherChip";
+import { useNavStats } from "@/lib/nav-stats";
+import { GlassCard } from "@/components/ui/GlassCard";
+
+/** Temp · location chip, plus the Solar page's generation/peak when present. */
+function NavWeatherWidget() {
+  const { weather } = useCore();
+  const { solarStats } = useNavStats();
+  const { data } = useQuery({
+    queryKey: ["weather-current"],
+    queryFn: () => weather.getCurrentWeatherData(),
+    staleTime: 60_000,
+  });
+  const obs = data?.observations?.[0];
+  const temp = obs?.metric?.temp;
+  const place = obs?.neighborhood;
+
+  return (
+    <GlassCard className="flex items-center gap-3 rounded-[var(--radius-pill)] px-3.5 py-1.5">
+      <span className="flex items-center gap-1.5">
+        <Sun size={13} className="text-solar-light" />
+        <span className="whitespace-nowrap text-[13px] font-bold text-text-secondary">
+          {temp != null ? `${Math.round(temp)}° · ${place || "Sandnes"}` : "—"}
+        </span>
+      </span>
+      {solarStats ? (
+        <>
+          <span className="h-5 w-px bg-glass-border" />
+          <NavStat label="Gen" value={solarStats.generation} unit={solarStats.genUnit} />
+          <span className="h-5 w-px bg-glass-border" />
+          <NavStat label="Peak" value={solarStats.peak} unit={solarStats.peakUnit} />
+        </>
+      ) : null}
+    </GlassCard>
+  );
+}
+
+function NavStat({ label, value, unit }: { label: string; value: string; unit: string }) {
+  return (
+    <span className="flex items-baseline gap-1 whitespace-nowrap">
+      <span className="text-[10px] font-bold uppercase tracking-[0.3px] text-text-muted">
+        {label}
+      </span>
+      <span className="text-[13px] font-extrabold text-text-primary">
+        {value}
+        <span className="ml-0.5 text-[9px] font-bold text-text-muted">{unit}</span>
+      </span>
+    </span>
+  );
+}
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -60,7 +109,7 @@ export function AppNav() {
               HMI
             </span>
           </Link>
-          <WeatherChip />
+          <NavWeatherWidget />
         </div>
 
         <nav className="flex items-center gap-1">
