@@ -89,8 +89,7 @@ export function createGrowattApi(ctx: CoreApiContext) {
   /** Assemble aggregated solar data for the week/month/year ranges. */
   async function fetchAggregatedSolarData(
     timespan: SolarTimespan,
-    date: string,
-    isMobile: boolean
+    date: string
   ): Promise<SolarData> {
     let endpoint: string;
     let requestDate: string;
@@ -162,8 +161,7 @@ export function createGrowattApi(ctx: CoreApiContext) {
   /** Fetch solar data from the Growatt API for a timespan + date. */
   async function fetchSolarData(
     timespan: SolarTimespan,
-    date: string,
-    isMobile: boolean = false
+    date: string
   ): Promise<SolarData> {
     if (
       timespan === 'weekly' ||
@@ -171,7 +169,7 @@ export function createGrowattApi(ctx: CoreApiContext) {
       timespan === 'yearly' ||
       timespan === 'total'
     ) {
-      return fetchAggregatedSolarData(timespan, date, isMobile);
+      return fetchAggregatedSolarData(timespan, date);
     }
 
     // Hourly view: 5-minute power samples (pac) + totals for metrics.
@@ -208,8 +206,7 @@ export function createGrowattApi(ctx: CoreApiContext) {
     const optimizedChart = optimizeChartData(
       cleanPowerValues,
       labels.slice(0, cleanPowerValues.length),
-      timespan,
-      isMobile
+      timespan
     );
 
     return {

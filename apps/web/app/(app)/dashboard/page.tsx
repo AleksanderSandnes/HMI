@@ -93,14 +93,14 @@ export default function DashboardPage() {
   // Solar today (load-once; no auto-refresh — Growatt IP-ban caution).
   const { data: solar, isLoading: solarLoading } = useQuery<SolarData>({
     queryKey: ["dashboard-solar", today],
-    queryFn: () => growatt.fetchSolarData("hourly", today, false),
+    queryFn: () => growatt.fetchSolarData("hourly", today),
     refetchOnWindowFocus: false,
     staleTime: Infinity,
   });
   // Solar this week (7-day total).
   const { data: solarWeek } = useQuery<SolarData>({
     queryKey: ["dashboard-solar-week", yesterday],
-    queryFn: () => growatt.fetchSolarData("weekly", yesterday, false),
+    queryFn: () => growatt.fetchSolarData("weekly", yesterday),
     refetchOnWindowFocus: false,
     staleTime: Infinity,
   });

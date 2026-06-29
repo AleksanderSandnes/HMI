@@ -26,6 +26,17 @@ export const SPACING = {
   xxl: 48,
 } as const;
 
+/** Abbreviated weekday names, indexed by `Date.getDay()` (0 = Sunday). */
+export const WEEKDAY_ABBR = [
+  'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat',
+] as const;
+
+/** Abbreviated month names, indexed by `Date.getMonth()` (0 = January). */
+export const MONTH_ABBR = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+] as const;
+
 /** Typography sizes per breakpoint (px). */
 export const TYPOGRAPHY = {
   mobile: {

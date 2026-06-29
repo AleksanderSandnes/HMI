@@ -1,16 +1,56 @@
 import { describe, expect, it } from "vitest";
 import {
+  chartSubtitle,
   comparisonLabel,
   formatCO2,
   formatMetric,
   formatNum,
   formatPeak,
   getPeakOutput,
+  peakSublabel,
   peakUnit,
   percentDelta,
   periodLabel,
   previousPeriodDate,
+  toISO,
 } from "../utils/solarStats";
+
+describe("toISO", () => {
+  it("formats a Date as a yyyy-MM-dd string", () => {
+    expect(toISO(new Date("2026-06-30T12:34:56Z"))).toBe("2026-06-30");
+  });
+});
+
+describe("chartSubtitle", () => {
+  // Noon-local so the date components are timezone-stable across CI runners.
+  const date = "2026-06-10T12:00:00";
+  it("describes each timespan", () => {
+    expect(chartSubtitle("hourly", date)).toBe("Power output · Jun 10");
+    expect(chartSubtitle("weekly", date)).toBe("7-day output from June 10");
+    expect(chartSubtitle("monthly", date)).toBe("Daily output · June 2026");
+    expect(chartSubtitle("total", date)).toBe("Yearly output · last 5 years");
+    expect(chartSubtitle("yearly", date)).toBe("Monthly output · 2026");
+  });
+});
+
+describe("peakSublabel", () => {
+  it("phrases the peak 'when' per timespan", () => {
+    expect(peakSublabel("hourly", "13:00")).toBe("at 13:00");
+    expect(peakSublabel("weekly", "Wed")).toBe("on Wednesday");
+    expect(peakSublabel("monthly", "12")).toBe("on day 12");
+    expect(peakSublabel("total", "2024")).toBe("in 2024");
+    expect(peakSublabel("yearly", "Jul")).toBe("in July");
+  });
+
+  it("falls back to the raw label for unknown day/month codes", () => {
+    expect(peakSublabel("weekly", "Xyz")).toBe("on Xyz");
+    expect(peakSublabel("yearly", "Xyz")).toBe("in Xyz");
+  });
+
+  it("returns 'No data' for an empty label", () => {
+    expect(peakSublabel("hourly", "")).toBe("No data");
+  });
+});
 
 describe("peakUnit", () => {
   it("matches formatPeak's k-scaling", () => {
