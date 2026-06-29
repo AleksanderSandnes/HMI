@@ -14,7 +14,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useCore } from "@/lib/hooks/useCore";
 import { useNavStats } from "@/lib/nav-stats";
-import { GlassCard } from "@/components/ui/GlassCard";
 
 /** Temp · location chip, plus the Solar page's generation/peak when present. */
 function NavWeatherWidget() {
@@ -30,7 +29,7 @@ function NavWeatherWidget() {
   const place = obs?.neighborhood;
 
   return (
-    <GlassCard className="flex items-center gap-3 rounded-[var(--radius-pill)] px-3.5 py-1.5">
+    <div className="flex items-center gap-3">
       <span className="flex items-center gap-1.5">
         <Sun size={13} className="text-solar-light" />
         <span className="whitespace-nowrap text-[13px] font-bold text-text-secondary">
@@ -45,7 +44,7 @@ function NavWeatherWidget() {
           <NavStat label="Peak" value={solarStats.peak} unit={solarStats.peakUnit} />
         </>
       ) : null}
-    </GlassCard>
+    </div>
   );
 }
 
