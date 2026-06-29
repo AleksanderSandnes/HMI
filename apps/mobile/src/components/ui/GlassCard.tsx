@@ -1,54 +1,69 @@
-import React from 'react';
-import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { theme, glassBlur, glow } from '../../theme/theme';
+import { View, StyleSheet, type ViewProps } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { cn } from '../../lib/cn';
 
-interface GlassCardProps {
-  children: React.ReactNode;
-  style?: StyleProp<ViewStyle>;
+interface GlassCardProps extends ViewProps {
   /** Stronger fill + border for primary surfaces. */
   strong?: boolean;
   /** Adds an elevated glow shadow. */
   elevated?: boolean;
-  /** Blur radius for the web backdrop filter. */
-  blur?: number;
+  /** Override the blur intensity (0–100). */
+  intensity?: number;
+  /** Layout/padding classes applied to the card (mirrors web GlassCard). */
+  className?: string;
 }
 
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.glass.border,
-    backgroundColor: theme.glass.fill,
-    overflow: 'hidden',
+const ELEVATED = StyleSheet.create({
+  shadow: {
+    shadowColor: '#020614',
+    shadowOpacity: 0.55,
+    shadowRadius: 30,
+    shadowOffset: { width: 0, height: 18 },
+    elevation: 12,
   },
-  strong: {
-    backgroundColor: theme.glass.fillStrong,
-    borderColor: theme.glass.borderStrong,
-  },
-});
+}).shadow;
 
 /**
- * Frosted-glass surface — the building block of the dashboard.
- * Translucent fill + hairline border, web backdrop blur, optional glow.
+ * Frosted-glass surface — the building block of every screen. Real backdrop blur
+ * via expo-blur (native + web), a translucent fill tint, a hairline border, and
+ * an optional glow. Mirrors apps/web/components/ui/GlassCard.tsx (which uses CSS
+ * backdrop-filter); here the blur is a separate absolute layer behind content.
  */
-export default function GlassCard({
-  children,
-  style,
+export function GlassCard({
   strong = false,
   elevated = false,
-  blur = 22,
+  intensity,
+  className,
+  children,
+  style,
+  ...rest
 }: GlassCardProps) {
   return (
     <View
-      style={[
-        styles.card,
-        strong && styles.strong,
-        glassBlur(blur),
-        elevated && glow(),
-        style,
-      ]}
+      style={[elevated && ELEVATED, style]}
+      className={cn(
+        'overflow-hidden rounded-lg border',
+        strong ? 'border-glass-border-strong' : 'border-glass-border',
+        className,
+      )}
+      {...rest}
     >
+      <BlurView
+        intensity={intensity ?? (strong ? 30 : 20)}
+        tint="dark"
+        experimentalBlurMethod="dimezisBlurView"
+        style={StyleSheet.absoluteFill}
+      />
+      <View
+        pointerEvents="none"
+        className={cn(
+          'absolute inset-0',
+          strong ? 'bg-glass-fill-strong' : 'bg-glass-fill',
+        )}
+      />
       {children}
     </View>
   );
 }
+
+export default GlassCard;

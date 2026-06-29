@@ -1,13 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome5 } from '@expo/vector-icons';
-import GlassCard from './GlassCard';
-import { theme, type GradientColors } from '../../theme/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { cn } from '../../lib/cn';
+import { GRADIENTS, type StatGradient } from '../../lib/gradients';
+import type { IconRender } from './types';
+import { GlassCard } from './GlassCard';
+import { Skeleton } from './Skeleton';
 
 interface StatTileProps {
-  icon: React.ComponentProps<typeof FontAwesome5>['name'];
-  gradient: GradientColors;
+  icon: IconRender;
+  gradient: StatGradient;
   label: string;
   value: string;
   unit?: string;
@@ -15,76 +17,17 @@ interface StatTileProps {
   /** Percentage change vs previous period. */
   delta?: number | null;
   loading?: boolean;
+  /** Denser tile for at-a-glance grids like the Dashboard. */
   compact?: boolean;
-  style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
-const styles = StyleSheet.create({
-  card: {
-    padding: 18,
-    flex: 1,
-    minWidth: 150,
-  },
-  cardCompact: {
-    padding: 14,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deltaPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: theme.radius.pill,
-  },
-  deltaText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  label: {
-    fontSize: 12.5,
-    fontWeight: '600',
-    color: theme.text.muted,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
-  valueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 5,
-    marginTop: 6,
-  },
-  value: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: theme.text.primary,
-    letterSpacing: -0.5,
-  },
-  unit: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.text.secondary,
-  },
-  sublabel: {
-    fontSize: 12,
-    color: theme.text.muted,
-    marginTop: 6,
-  },
-});
-
-export default function StatTile({
+/**
+ * The app's single metric tile (mirrors apps/web/components/ui/StatTile.tsx) —
+ * gradient icon chip + label + value (+ optional delta / sublabel). `compact`
+ * shrinks it for dense grids; `loading` renders a skeleton.
+ */
+export function StatTile({
   icon,
   gradient,
   label,
@@ -94,50 +37,110 @@ export default function StatTile({
   delta,
   loading = false,
   compact = false,
-  style,
+  className,
 }: StatTileProps) {
   const hasDelta = delta !== null && delta !== undefined && isFinite(delta);
   const positive = (delta ?? 0) >= 0;
-  const deltaColor = positive ? theme.positive : theme.negative;
+  const chip = compact ? 30 : 42;
 
   return (
     <GlassCard
       strong
-      style={[styles.card, compact && styles.cardCompact, style]}
+      className={cn('min-w-0 flex-1', compact ? 'p-3.5' : 'p-[18px]', className)}
     >
-      <View style={styles.row}>
+      <View
+        className={cn(
+          'flex-row items-center justify-between',
+          compact ? 'mb-2.5' : 'mb-3.5',
+        )}
+      >
         <LinearGradient
-          colors={gradient}
+          colors={GRADIENTS[gradient]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.iconWrap}
+          style={{
+            width: chip,
+            height: chip,
+            borderRadius: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         >
-          <FontAwesome5 name={icon} size={17} color="#0a1124" solid />
+          {icon({ color: '#0a1124', size: compact ? 15 : 17 })}
         </LinearGradient>
 
-        {hasDelta && (
+        {hasDelta ? (
           <View
-            style={[styles.deltaPill, { backgroundColor: deltaColor + '22' }]}
+            className={cn(
+              'flex-row items-center gap-1 rounded-pill px-2.5 py-1',
+              positive
+                ? 'bg-[rgba(52,211,153,0.13)]'
+                : 'bg-[rgba(251,113,133,0.13)]',
+            )}
           >
-            <FontAwesome5
+            <Ionicons
               name={positive ? 'arrow-up' : 'arrow-down'}
               size={9}
-              color={deltaColor}
-              solid
+              color={positive ? '#34d399' : '#fb7185'}
             />
-            <Text style={[styles.deltaText, { color: deltaColor }]}>
+            <Text
+              className={cn(
+                'text-xs font-extrabold',
+                positive ? 'text-positive' : 'text-negative',
+              )}
+            >
               {Math.abs(delta as number).toFixed(0)}%
             </Text>
           </View>
-        )}
+        ) : null}
       </View>
 
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.valueRow}>
-        <Text style={styles.value}>{loading ? '—' : value}</Text>
-        {unit ? <Text style={styles.unit}>{unit}</Text> : null}
-      </View>
-      {sublabel ? <Text style={styles.sublabel}>{sublabel}</Text> : null}
+      <Text
+        className={cn(
+          'font-semibold uppercase tracking-[0.3px] text-text-muted',
+          compact ? 'text-[10.5px]' : 'text-[12.5px]',
+        )}
+      >
+        {label}
+      </Text>
+
+      {loading ? (
+        <Skeleton className={cn('mt-2', compact ? 'h-6 w-20' : 'h-7 w-24')} />
+      ) : (
+        <View className="mt-1.5 flex-row items-baseline gap-1.5">
+          <Text
+            className={cn(
+              'font-extrabold tracking-[-0.5px] text-text-primary',
+              compact ? 'text-[21px]' : 'text-[26px]',
+            )}
+          >
+            {value}
+          </Text>
+          {unit ? (
+            <Text
+              className={cn(
+                'font-semibold text-text-secondary',
+                compact ? 'text-[11px]' : 'text-sm',
+              )}
+            >
+              {unit}
+            </Text>
+          ) : null}
+        </View>
+      )}
+
+      {sublabel && !loading ? (
+        <Text
+          className={cn(
+            'text-text-muted',
+            compact ? 'mt-1 text-[10.5px]' : 'mt-1.5 text-xs',
+          )}
+        >
+          {sublabel}
+        </Text>
+      ) : null}
     </GlassCard>
   );
 }
+
+export default StatTile;

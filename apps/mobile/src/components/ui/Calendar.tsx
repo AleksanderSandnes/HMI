@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Modal, useWindowDimensions } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  Modal as RNModal,
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+} from 'react-native';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome5 } from '@expo/vector-icons';
-import GlassCard from './GlassCard';
-import { theme, glassBlur } from '../../theme/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { cn } from '../../lib/cn';
+import { GRADIENTS } from '../../lib/gradients';
+import { GlassCard } from './GlassCard';
 
 interface CalendarProps {
   visible: boolean;
@@ -11,7 +20,7 @@ interface CalendarProps {
   value: string;
   onSelect: (iso: string) => void;
   onClose: () => void;
-  /** Disable dates after today (no production data exists yet). */
+  /** Disable dates after today (no future production data). */
   disableFuture?: boolean;
 }
 
@@ -23,7 +32,7 @@ const MONTHS = [
 
 const toISO = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-    d.getDate()
+    d.getDate(),
   ).padStart(2, '0')}`;
 
 const startOfDay = (d: Date) => {
@@ -32,7 +41,12 @@ const startOfDay = (d: Date) => {
   return n;
 };
 
-export default function Calendar({
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
+
+export function Calendar({
   visible,
   value,
   onSelect,
@@ -42,11 +56,11 @@ export default function Calendar({
   const { width } = useWindowDimensions();
   const selected = startOfDay(new Date(value));
   const [viewMonth, setViewMonth] = useState(
-    () => new Date(selected.getFullYear(), selected.getMonth(), 1)
+    () => new Date(selected.getFullYear(), selected.getMonth(), 1),
   );
 
-  // Keep the visible month in sync when the picker is reopened on a new date.
-  React.useEffect(() => {
+  // Keep the visible month in sync when reopened on a new date.
+  useEffect(() => {
     if (visible) {
       setViewMonth(new Date(selected.getFullYear(), selected.getMonth(), 1));
     }
@@ -54,7 +68,6 @@ export default function Calendar({
   }, [visible, value]);
 
   const today = startOfDay(new Date());
-
   const year = viewMonth.getFullYear();
   const month = viewMonth.getMonth();
   const firstWeekday = new Date(year, month, 1).getDay();
@@ -73,65 +86,69 @@ export default function Calendar({
     onClose();
   };
 
-  const isSameDay = (a: Date, b: Date) =>
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
-
   return (
-    <Modal
+    <RNModal
       visible={visible}
       transparent
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={[styles.overlay, glassBlur(6)]} onPress={onClose}>
-        <Pressable onPress={(e) => e.stopPropagation?.()}>
+      <Pressable
+        onPress={onClose}
+        className="flex-1 items-center justify-center p-5"
+      >
+        <BlurView
+          intensity={14}
+          tint="dark"
+          experimentalBlurMethod="dimezisBlurView"
+          style={StyleSheet.absoluteFill}
+        />
+        <View
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+          className="bg-[rgba(4,7,16,0.7)]"
+        />
+        <Pressable onPress={(e) => e.stopPropagation()}>
           <GlassCard
             strong
             elevated
-            style={[styles.sheet, { maxWidth: Math.min(380, width - 40) }]}
+            className="p-5"
+            style={{ width: Math.min(340, width - 40) }}
           >
             {/* Month navigation */}
-            <View style={styles.header}>
+            <View className="mb-4 flex-row items-center justify-between">
               <Pressable
-                style={styles.navBtn}
                 onPress={() => shiftMonth(-1)}
                 hitSlop={8}
+                className="h-9 w-9 items-center justify-center rounded-md border border-glass-border bg-glass-fill-strong"
               >
-                <FontAwesome5
-                  name="chevron-left"
-                  size={14}
-                  color={theme.text.secondary}
-                />
+                <Ionicons name="chevron-back" size={14} color="#aeb8cc" />
               </Pressable>
-              <Text style={styles.monthTitle}>
+              <Text className="text-base font-extrabold text-text-primary">
                 {MONTHS[month]} {year}
               </Text>
               <Pressable
-                style={styles.navBtn}
                 onPress={() => shiftMonth(1)}
                 hitSlop={8}
+                className="h-9 w-9 items-center justify-center rounded-md border border-glass-border bg-glass-fill-strong"
               >
-                <FontAwesome5
-                  name="chevron-right"
-                  size={14}
-                  color={theme.text.secondary}
-                />
+                <Ionicons name="chevron-forward" size={14} color="#aeb8cc" />
               </Pressable>
             </View>
 
             {/* Weekday labels */}
-            <View style={styles.weekRow}>
+            <View className="mb-1.5 flex-row">
               {WEEKDAYS.map((w) => (
                 <View key={w} style={styles.cell}>
-                  <Text style={styles.weekday}>{w}</Text>
+                  <Text className="text-[11px] font-bold tracking-[0.3px] text-text-muted">
+                    {w}
+                  </Text>
                 </View>
               ))}
             </View>
 
             {/* Day grid */}
-            <View style={styles.grid}>
+            <View className="flex-row flex-wrap">
               {cells.map((d, i) => {
                 if (!d) return <View key={`e-${i}`} style={styles.cell} />;
                 const isSelected = isSameDay(d, selected);
@@ -143,28 +160,34 @@ export default function Calendar({
                     <Pressable
                       disabled={isFuture}
                       onPress={() => pick(d)}
-                      style={({ pressed }) => [
-                        styles.day,
-                        isToday && !isSelected && styles.dayToday,
-                        pressed && !isSelected && styles.dayPressed,
-                      ]}
+                      className={cn(
+                        'h-[38px] w-[38px] items-center justify-center rounded-md',
+                        isToday &&
+                          !isSelected &&
+                          'border border-[rgba(245,158,11,0.45)]',
+                      )}
                     >
                       {isSelected ? (
                         <LinearGradient
-                          colors={theme.solar.gradient}
+                          colors={GRADIENTS.solar}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
                           style={styles.daySelected}
                         >
-                          <Text style={styles.daySelectedText}>{d.getDate()}</Text>
+                          <Text className="text-sm font-extrabold text-text-inverse">
+                            {d.getDate()}
+                          </Text>
                         </LinearGradient>
                       ) : (
                         <Text
-                          style={[
-                            styles.dayText,
-                            isFuture && styles.dayTextDisabled,
-                            isToday && styles.dayTextToday,
-                          ]}
+                          className={cn(
+                            'text-sm font-semibold',
+                            isFuture
+                              ? 'text-[rgba(255,255,255,0.22)]'
+                              : isToday
+                                ? 'font-extrabold text-solar-light'
+                                : 'text-text-secondary',
+                          )}
                         >
                           {d.getDate()}
                         </Text>
@@ -176,79 +199,37 @@ export default function Calendar({
             </View>
 
             {/* Footer */}
-            <View style={styles.footer}>
-              <Pressable style={styles.todayBtn} onPress={() => pick(today)}>
-                <Text style={styles.todayText}>Today</Text>
+            <View className="mt-4 flex-row gap-2.5">
+              <Pressable
+                onPress={() => pick(today)}
+                className="flex-1 items-center rounded-md border border-solar bg-solar-soft py-3"
+              >
+                <Text className="text-sm font-extrabold text-solar-light">
+                  Today
+                </Text>
               </Pressable>
-              <Pressable style={styles.closeBtn} onPress={onClose}>
-                <Text style={styles.closeText}>Close</Text>
+              <Pressable
+                onPress={onClose}
+                className="flex-1 items-center rounded-md border border-glass-border bg-glass-fill py-3"
+              >
+                <Text className="text-sm font-bold text-text-secondary">
+                  Close
+                </Text>
               </Pressable>
             </View>
           </GlassCard>
         </Pressable>
       </Pressable>
-    </Modal>
+    </RNModal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(4, 7, 16, 0.7)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  sheet: {
-    width: 340,
-    padding: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  navBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.glass.fillStrong,
-    borderWidth: 1,
-    borderColor: theme.glass.border,
-  },
-  monthTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: theme.text.primary,
-  },
-  weekRow: { flexDirection: 'row', marginBottom: 6 },
-  weekday: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: theme.text.muted,
-    letterSpacing: 0.3,
-  },
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cell: {
     width: `${100 / 7}%`,
     aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  day: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayPressed: { backgroundColor: theme.glass.fillStrong },
-  dayToday: {
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.45)',
   },
   daySelected: {
     width: 38,
@@ -257,49 +238,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  daySelectedText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#0a1124',
-  },
-  dayText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.text.secondary,
-  },
-  dayTextToday: { color: theme.solar.light, fontWeight: '800' },
-  dayTextDisabled: { color: 'rgba(255, 255, 255, 0.22)' },
-  footer: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 16,
-  },
-  todayBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: theme.radius.md,
-    alignItems: 'center',
-    backgroundColor: theme.solar.soft,
-    borderWidth: 1,
-    borderColor: theme.solar.main,
-  },
-  todayText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: theme.solar.light,
-  },
-  closeBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: theme.radius.md,
-    alignItems: 'center',
-    backgroundColor: theme.glass.fill,
-    borderWidth: 1,
-    borderColor: theme.glass.border,
-  },
-  closeText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: theme.text.secondary,
-  },
 });
+
+export default Calendar;

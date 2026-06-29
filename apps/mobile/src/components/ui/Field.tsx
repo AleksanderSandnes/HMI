@@ -1,141 +1,100 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   Pressable,
-  StyleSheet,
-  Platform,
-  TextInputProps,
+  type TextInputProps,
 } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
-import { theme } from '../../theme/theme';
-
-/**
- * Web-only fixes: removes the default focus outline and prevents Chrome's
- * autofill from painting a white background / dark text over the dark field.
- * The long background-color transition defers the autofill repaint
- * indefinitely, while WebkitTextFillColor keeps our light text visible.
- */
-const WEB_INPUT_FIX = {
-  outlineStyle: 'none',
-  transition: 'background-color 100000s ease-in-out 0s',
-  WebkitTextFillColor: theme.text.primary,
-  caretColor: theme.text.primary,
-} as object;
+import { Ionicons } from '@expo/vector-icons';
+import { cn } from '../../lib/cn';
+import type { IconRender } from './types';
 
 interface FieldProps extends Omit<TextInputProps, 'style'> {
   label: string;
-  icon?: React.ComponentProps<typeof FontAwesome5>['name'];
+  icon?: IconRender;
   /** Renders a password field with a show/hide toggle. */
   secure?: boolean;
   hint?: string;
-  onFocusClearMask?: () => void;
+  error?: string;
 }
 
 /**
- * Labeled text input — glass fill, hairline border, focus glow,
- * optional leading icon and password visibility toggle.
+ * Labeled text input (mirrors apps/web/components/ui/Field.tsx) — glass fill,
+ * hairline border, focus glow, optional leading icon and password toggle.
  */
-export default function Field({
+export function Field({
   label,
   icon,
   secure = false,
   hint,
-  onFocusClearMask,
+  error,
+  onFocus,
+  onBlur,
   ...inputProps
 }: FieldProps) {
   const [focused, setFocused] = useState(false);
   const [reveal, setReveal] = useState(false);
 
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputRow, focused && styles.inputRowFocused]}>
+    <View className="mb-4">
+      <Text className="mb-2 text-[12.5px] font-bold tracking-[0.3px] text-text-secondary">
+        {label}
+      </Text>
+      <View
+        className={cn(
+          'flex-row items-center rounded-md border px-3.5',
+          focused
+            ? 'border-solar bg-glass-fill'
+            : 'border-glass-border bg-glass-fill-subtle',
+        )}
+      >
         {icon ? (
-          <FontAwesome5
-            name={icon}
-            size={14}
-            color={focused ? theme.solar.light : theme.text.muted}
-            solid
-            style={styles.leadingIcon}
-          />
+          <View className="mr-2.5">
+            {icon({ color: focused ? '#fbbf24' : '#71809a', size: 14 })}
+          </View>
         ) : null}
         <TextInput
           {...inputProps}
           secureTextEntry={secure && !reveal}
-          placeholderTextColor={theme.text.muted}
+          placeholderTextColor="#71809a"
           onFocus={(e) => {
             setFocused(true);
-            onFocusClearMask?.();
-            inputProps.onFocus?.(e);
+            onFocus?.(e);
           }}
           onBlur={(e) => {
             setFocused(false);
-            inputProps.onBlur?.(e);
+            onBlur?.(e);
           }}
-          style={[
-            styles.input,
-            Platform.OS === 'web' ? WEB_INPUT_FIX : null,
-          ]}
+          className="flex-1 py-3 text-[15px] font-semibold text-text-primary"
         />
         {secure ? (
           <Pressable
             onPress={() => setReveal((r) => !r)}
             hitSlop={10}
-            style={styles.revealBtn}
             accessibilityRole="button"
             accessibilityLabel={reveal ? 'Hide password' : 'Show password'}
+            className="py-1.5 pl-2.5"
           >
-            <FontAwesome5
-              name={reveal ? 'eye-slash' : 'eye'}
-              size={14}
-              color={theme.text.secondary}
-              solid
+            <Ionicons
+              name={reveal ? 'eye-off-outline' : 'eye-outline'}
+              size={16}
+              color="#aeb8cc"
             />
           </Pressable>
         ) : null}
       </View>
-      {hint ? <Text style={styles.hint}>{hint}</Text> : null}
+      {error ? (
+        <Text className="ml-0.5 mt-1.5 text-xs font-semibold text-negative">
+          {error}
+        </Text>
+      ) : hint ? (
+        <Text className="mt-1.5 text-[11.5px] font-medium text-text-muted">
+          {hint}
+        </Text>
+      ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { marginBottom: 16 },
-  label: {
-    fontSize: 12.5,
-    fontWeight: '700',
-    color: theme.text.secondary,
-    letterSpacing: 0.3,
-    marginBottom: 8,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.glass.fillSubtle,
-    borderWidth: 1,
-    borderColor: theme.glass.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: 14,
-  },
-  inputRowFocused: {
-    borderColor: theme.solar.main,
-    backgroundColor: theme.glass.fill,
-  },
-  leadingIcon: { marginRight: 10 },
-  input: {
-    flex: 1,
-    paddingVertical: Platform.OS === 'web' ? 13 : 12,
-    fontSize: 15,
-    color: theme.text.primary,
-    fontWeight: '600',
-  },
-  revealBtn: { paddingLeft: 10, paddingVertical: 6 },
-  hint: {
-    fontSize: 11.5,
-    color: theme.text.muted,
-    marginTop: 6,
-    fontWeight: '500',
-  },
-});
+export default Field;

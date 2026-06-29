@@ -1,93 +1,63 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  useWindowDimensions,
-} from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from '../../theme/theme';
+import { cn } from '../../lib/cn';
+import { GRADIENTS } from '../../lib/gradients';
 
-interface SegmentedControlProps {
+export interface SegmentOption {
+  label: string;
   value: string;
-  onChange: (value: string) => void;
-  options?: { full: string; short: string; value: string }[];
 }
 
-const DEFAULT_OPTIONS = [
-  { full: 'Hourly', short: 'Day', value: 'hourly' },
-  { full: 'Weekly', short: 'Week', value: 'weekly' },
-  { full: 'Monthly', short: 'Month', value: 'monthly' },
-  { full: 'Yearly', short: 'Year', value: 'yearly' },
+const DEFAULT_OPTIONS: SegmentOption[] = [
+  { label: 'Hourly', value: 'hourly' },
+  { label: 'Weekly', value: 'weekly' },
+  { label: 'Monthly', value: 'monthly' },
+  { label: 'Yearly', value: 'yearly' },
+  { label: '5-Year', value: 'total' },
 ];
 
-const styles = StyleSheet.create({
-  track: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: theme.radius.pill,
-    borderWidth: 1,
-    borderColor: theme.glass.border,
-    padding: 4,
-    gap: 4,
-  },
-  segment: {
-    flex: 1,
-    borderRadius: theme.radius.pill,
-    paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  activeFill: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: theme.radius.pill,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.text.muted,
-    letterSpacing: 0.2,
-  },
-  labelActive: {
-    color: theme.text.inverse,
-    fontWeight: '800',
-  },
-});
-
 /**
- * iOS-style segmented control with a gradient pill for the active range.
+ * iOS-style segmented control with a solar-gradient pill for the active range
+ * (mirrors apps/web/components/ui/SegmentedControl.tsx).
  */
-export default function SegmentedControl({
+export function SegmentedControl({
   value,
   onChange,
   options = DEFAULT_OPTIONS,
-}: SegmentedControlProps) {
-  const { width } = useWindowDimensions();
-  const compact = width <= 420;
-
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options?: SegmentOption[];
+}) {
   return (
-    <View style={styles.track}>
+    <View className="flex-row gap-1 rounded-pill border border-glass-border bg-[rgba(255,255,255,0.04)] p-1">
       {options.map((opt) => {
         const active = value === opt.value;
         return (
           <Pressable
             key={opt.value}
-            style={styles.segment}
             onPress={() => onChange(opt.value)}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
+            className="flex-1 items-center justify-center rounded-pill py-2.5"
           >
-            {active && (
+            {active ? (
               <LinearGradient
-                colors={theme.solar.gradient}
+                colors={GRADIENTS.solar}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={styles.activeFill}
+                style={[StyleSheet.absoluteFill, { borderRadius: 999 }]}
               />
-            )}
-            <Text style={[styles.label, active && styles.labelActive]}>
-              {compact ? opt.short : opt.full}
+            ) : null}
+            <Text
+              className={cn(
+                'text-[13px]',
+                active
+                  ? 'font-extrabold text-text-inverse'
+                  : 'font-semibold text-text-muted',
+              )}
+            >
+              {opt.label}
             </Text>
           </Pressable>
         );
@@ -95,3 +65,5 @@ export default function SegmentedControl({
     </View>
   );
 }
+
+export default SegmentedControl;
