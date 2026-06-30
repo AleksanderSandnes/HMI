@@ -1,20 +1,7 @@
 "use client";
 
 import { registerAccountSchema } from "@hmi/core";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  CloudSun,
-  Key,
-  Lock,
-  Mail,
-  MapPin,
-  SunMedium,
-  User,
-  UserPlus,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Key, Lock, Mail, MapPin, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -33,35 +20,19 @@ const STEPS = [
   { key: "weather", label: "Weather" },
 ] as const;
 
-type Gradient = "solar" | "energy" | "accent";
-const HEADERS: Record<
-  number,
-  { icon: LucideIcon; gradient: Gradient; title: string; subtitle: string }
-> = {
+const HEADERS: Record<number, { title: string; subtitle: string }> = {
   0: {
-    icon: UserPlus,
-    gradient: "accent",
     title: "Create account",
     subtitle: "Join your energy monitoring dashboard",
   },
   1: {
-    icon: SunMedium,
-    gradient: "energy",
     title: "Connect Growatt",
     subtitle: "Optional — add your solar credentials",
   },
   2: {
-    icon: CloudSun,
-    gradient: "solar",
     title: "Connect Weather.com",
     subtitle: "Optional — add your weather station",
   },
-};
-
-const GRADIENT_CSS: Record<Gradient, string> = {
-  solar: "linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)",
-  energy: "linear-gradient(135deg,#5eead4,#2dd4bf,#10b981)",
-  accent: "linear-gradient(135deg,#a78bfa,#818cf8,#6366f1)",
 };
 
 type Core = ReturnType<typeof useCore>;
@@ -232,15 +203,8 @@ const setField =
     setter((s) => ({ ...s, [key]: e.target.value }));
 
 function RegisterHeader({ header }: { header: (typeof HEADERS)[number] }) {
-  const HeaderIcon = header.icon;
   return (
     <div className="mb-5 flex flex-col items-center text-center">
-      <div
-        className="mb-4 flex h-14 w-14 items-center justify-center rounded-[18px]"
-        style={{ backgroundImage: GRADIENT_CSS[header.gradient] }}
-      >
-        <HeaderIcon size={20} className="text-text-inverse" />
-      </div>
       <h1 className="text-[25px] font-extrabold tracking-tight text-text-primary">
         {header.title}
       </h1>
