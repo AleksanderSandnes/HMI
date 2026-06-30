@@ -5,6 +5,10 @@ import { json } from "../_shared/cors.ts";
 import { adminClient, getWeatherCredentials, recordHealth } from "../_shared/supabase.ts";
 import { fetchHourly, todayAndYesterday } from "../_shared/weather.ts";
 
+// A complete day of PWS hourly history is ~24 observations (one per hour). If yesterday's
+// row already has this many, it's complete and we skip the redundant Weather.com call.
+const COMPLETE_HOURLY_COUNT = 24;
+
 const prettyDate = (yyyymmdd: string) =>
   yyyymmdd.length === 8
     ? `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`
@@ -27,6 +31,19 @@ Deno.serve(async () => {
     const authId = u.auth_id as string;
     try {
       const { stationId, apiKey } = await getWeatherCredentials(admin, authId);
+
+      // Skip the API call if yesterday is already complete in the cache.
+      const { data: existing } = await admin
+        .from("weather_historical")
+        .select("observations")
+        .eq("station_id", stationId)
+        .eq("date", yesterday)
+        .maybeSingle();
+      if (existing && (existing.observations?.length ?? 0) >= COMPLETE_HOURLY_COUNT) {
+        results.push({ authId, count: existing.observations.length, ok: true, skipped: true });
+        continue;
+      }
+
       const observations = await fetchHourly(stationId, apiKey, yesterday);
       const ok = observations.length > 0;
       const when = prettyDate(yesterday);
