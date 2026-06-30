@@ -59,6 +59,110 @@ const isSameDay = (a: Date, b: Date) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
+function MonthNav({ label, onShift }: { label: string; onShift: (delta: number) => void }) {
+  return (
+    <View className="mb-4 flex-row items-center justify-between">
+      <Pressable
+        onPress={() => onShift(-1)}
+        hitSlop={8}
+        className="h-9 w-9 items-center justify-center rounded-md border border-glass-border bg-glass-fill-strong"
+      >
+        <Ionicons name="chevron-back" size={14} color="#aeb8cc" />
+      </Pressable>
+      <Text className="text-base font-extrabold text-text-primary">{label}</Text>
+      <Pressable
+        onPress={() => onShift(1)}
+        hitSlop={8}
+        className="h-9 w-9 items-center justify-center rounded-md border border-glass-border bg-glass-fill-strong"
+      >
+        <Ionicons name="chevron-forward" size={14} color="#aeb8cc" />
+      </Pressable>
+    </View>
+  );
+}
+
+function WeekdayRow() {
+  return (
+    <View className="mb-1.5 flex-row">
+      {WEEKDAYS.map((w) => (
+        <View key={w} style={styles.cell}>
+          <Text className="text-[11px] font-bold tracking-[0.3px] text-text-muted">{w}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function DayCell({
+  date,
+  isSelected,
+  isToday,
+  isFuture,
+  onPick,
+}: {
+  date: Date;
+  isSelected: boolean;
+  isToday: boolean;
+  isFuture: boolean;
+  onPick: (d: Date) => void;
+}) {
+  return (
+    <View style={styles.cell}>
+      <Pressable
+        disabled={isFuture}
+        onPress={() => onPick(date)}
+        className={cn(
+          "h-[38px] w-[38px] items-center justify-center rounded-md",
+          isToday && !isSelected && "border border-[rgba(245,158,11,0.45)]",
+        )}
+      >
+        {isSelected ? (
+          <LinearGradient
+            colors={GRADIENTS.solar}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.daySelected}
+          >
+            <Text className="text-sm font-extrabold text-text-inverse">{date.getDate()}</Text>
+          </LinearGradient>
+        ) : (
+          <Text
+            className={cn(
+              "text-sm font-semibold",
+              isFuture
+                ? "text-[rgba(255,255,255,0.22)]"
+                : isToday
+                  ? "font-extrabold text-solar-light"
+                  : "text-text-secondary",
+            )}
+          >
+            {date.getDate()}
+          </Text>
+        )}
+      </Pressable>
+    </View>
+  );
+}
+
+function CalendarFooter({ onToday, onClose }: { onToday: () => void; onClose: () => void }) {
+  return (
+    <View className="mt-4 flex-row gap-2.5">
+      <Pressable
+        onPress={onToday}
+        className="flex-1 items-center rounded-md border border-solar bg-solar-soft py-3"
+      >
+        <Text className="text-sm font-extrabold text-solar-light">Today</Text>
+      </Pressable>
+      <Pressable
+        onPress={onClose}
+        className="flex-1 items-center rounded-md border border-glass-border bg-glass-fill py-3"
+      >
+        <Text className="text-sm font-bold text-text-secondary">Close</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 export function Calendar({
   visible,
   value,
@@ -114,102 +218,25 @@ export function Calendar({
         />
         <Pressable onPress={(e) => e.stopPropagation()}>
           <GlassCard strong elevated className="p-5" style={{ width: Math.min(340, width - 40) }}>
-            {/* Month navigation */}
-            <View className="mb-4 flex-row items-center justify-between">
-              <Pressable
-                onPress={() => shiftMonth(-1)}
-                hitSlop={8}
-                className="h-9 w-9 items-center justify-center rounded-md border border-glass-border bg-glass-fill-strong"
-              >
-                <Ionicons name="chevron-back" size={14} color="#aeb8cc" />
-              </Pressable>
-              <Text className="text-base font-extrabold text-text-primary">
-                {MONTHS[month]} {year}
-              </Text>
-              <Pressable
-                onPress={() => shiftMonth(1)}
-                hitSlop={8}
-                className="h-9 w-9 items-center justify-center rounded-md border border-glass-border bg-glass-fill-strong"
-              >
-                <Ionicons name="chevron-forward" size={14} color="#aeb8cc" />
-              </Pressable>
-            </View>
-
-            {/* Weekday labels */}
-            <View className="mb-1.5 flex-row">
-              {WEEKDAYS.map((w) => (
-                <View key={w} style={styles.cell}>
-                  <Text className="text-[11px] font-bold tracking-[0.3px] text-text-muted">
-                    {w}
-                  </Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Day grid */}
+            <MonthNav label={`${MONTHS[month]} ${year}`} onShift={shiftMonth} />
+            <WeekdayRow />
             <View className="flex-row flex-wrap">
-              {cells.map((d, i) => {
-                if (!d) return <View key={`e-${i}`} style={styles.cell} />;
-                const isSelected = isSameDay(d, selected);
-                const isToday = isSameDay(d, today);
-                const isFuture = disableFuture && d.getTime() > today.getTime();
-
-                return (
-                  <View key={toISO(d)} style={styles.cell}>
-                    <Pressable
-                      disabled={isFuture}
-                      onPress={() => pick(d)}
-                      className={cn(
-                        "h-[38px] w-[38px] items-center justify-center rounded-md",
-                        isToday && !isSelected && "border border-[rgba(245,158,11,0.45)]",
-                      )}
-                    >
-                      {isSelected ? (
-                        <LinearGradient
-                          colors={GRADIENTS.solar}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={styles.daySelected}
-                        >
-                          <Text className="text-sm font-extrabold text-text-inverse">
-                            {d.getDate()}
-                          </Text>
-                        </LinearGradient>
-                      ) : (
-                        <Text
-                          className={cn(
-                            "text-sm font-semibold",
-                            isFuture
-                              ? "text-[rgba(255,255,255,0.22)]"
-                              : isToday
-                                ? "font-extrabold text-solar-light"
-                                : "text-text-secondary",
-                          )}
-                        >
-                          {d.getDate()}
-                        </Text>
-                      )}
-                    </Pressable>
-                  </View>
-                );
-              })}
+              {cells.map((d, i) =>
+                d ? (
+                  <DayCell
+                    key={toISO(d)}
+                    date={d}
+                    isSelected={isSameDay(d, selected)}
+                    isToday={isSameDay(d, today)}
+                    isFuture={disableFuture && d.getTime() > today.getTime()}
+                    onPick={pick}
+                  />
+                ) : (
+                  <View key={`e-${i}`} style={styles.cell} />
+                ),
+              )}
             </View>
-
-            {/* Footer */}
-            <View className="mt-4 flex-row gap-2.5">
-              <Pressable
-                onPress={() => pick(today)}
-                className="flex-1 items-center rounded-md border border-solar bg-solar-soft py-3"
-              >
-                <Text className="text-sm font-extrabold text-solar-light">Today</Text>
-              </Pressable>
-              <Pressable
-                onPress={onClose}
-                className="flex-1 items-center rounded-md border border-glass-border bg-glass-fill py-3"
-              >
-                <Text className="text-sm font-bold text-text-secondary">Close</Text>
-              </Pressable>
-            </View>
+            <CalendarFooter onToday={() => pick(today)} onClose={onClose} />
           </GlassCard>
         </Pressable>
       </Pressable>

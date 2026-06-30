@@ -27,7 +27,7 @@ export const sharedRules = {
 
   complexity: ["warn", 10],
   "max-depth": ["warn", 4],
-  "max-lines-per-function": ["warn", 80],
+  "max-lines-per-function": ["warn", { max: 80, skipBlankLines: true, skipComments: true }],
   "max-params": ["warn", 4],
 
   "import/order": ["error", { alphabetize: { order: "asc" }, "newlines-between": "always" }],

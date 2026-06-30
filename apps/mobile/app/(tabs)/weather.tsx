@@ -108,23 +108,41 @@ const TIME_OPTIONS = [
   { label: "Weekly", value: "weekly" },
 ];
 
-export default function Weather() {
+function MetricChips({ active, onSelect }: { active: string; onSelect: (key: string) => void }) {
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerClassName="gap-2 pb-1"
+      className="mb-3"
+    >
+      {METRICS.map((t) => {
+        const on = t.key === active;
+        return (
+          <Pressable
+            key={t.key}
+            onPress={() => onSelect(t.key)}
+            className={cn(
+              "flex-row items-center gap-2 rounded-md border px-3.5 py-2",
+              on ? "border-transparent bg-glass-fill-strong" : "border-glass-border bg-glass-fill",
+            )}
+          >
+            {t.icon(on ? t.accent : "#71809a", 14)}
+            <Text
+              style={on ? { color: t.accent } : undefined}
+              className={cn("text-[13px] font-bold", !on && "text-text-muted")}
+            >
+              {t.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
+function useWeatherChartData(dataType: string, timespan: string, ymd: string, meta: MetricMeta) {
   const { weather } = useCore();
-  const { width } = useWindowDimensions();
-  const isTablet = width >= BREAKPOINTS.tablet;
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const [dataType, setDataType] = useState("temperature");
-  const [timespan, setTimespan] = useState("hourly");
-  const [pickerDate, setPickerDate] = useState(toISO(yesterday));
-
-  const meta = METRICS.find((d) => d.key === dataType) ?? METRICS[0];
-  const ymd = pickerDate.replaceAll("-", "");
-  // Phone weekly → 7 daily min/max/avg bands; tablet/hourly → dense series.
-  const phoneWeekly = !isTablet && timespan === "weekly";
-
   const { data: observations, isLoading } = useQuery({
     queryKey: ["wx-hist", timespan, ymd],
     queryFn: async () => {
@@ -144,12 +162,37 @@ export default function Weather() {
     () => buildWeatherDailyBands(observations ?? [], dataType),
     [observations, dataType],
   );
-
   const chartSeries: LineSeries[] = series.series.map((data, i) => ({
     data,
     color: meta.series[i]?.color ?? meta.accent,
     label: meta.series[i]?.label ?? `Series ${i + 1}`,
   }));
+
+  return { isLoading, series, bands, chartSeries };
+}
+
+export default function Weather() {
+  const { width } = useWindowDimensions();
+  const isTablet = width >= BREAKPOINTS.tablet;
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const [dataType, setDataType] = useState("temperature");
+  const [timespan, setTimespan] = useState("hourly");
+  const [pickerDate, setPickerDate] = useState(toISO(yesterday));
+
+  const meta = METRICS.find((d) => d.key === dataType) ?? METRICS[0];
+  const ymd = pickerDate.replaceAll("-", "");
+  // Phone weekly → 7 daily min/max/avg bands; tablet/hourly → dense series.
+  const phoneWeekly = !isTablet && timespan === "weekly";
+
+  const { isLoading, series, bands, chartSeries } = useWeatherChartData(
+    dataType,
+    timespan,
+    ymd,
+    meta,
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
@@ -167,37 +210,7 @@ export default function Weather() {
         />
 
         <GlassCard strong elevated className="p-[18px]">
-          {/* Metric chips */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerClassName="gap-2 pb-1"
-            className="mb-3"
-          >
-            {METRICS.map((t) => {
-              const active = t.key === dataType;
-              return (
-                <Pressable
-                  key={t.key}
-                  onPress={() => setDataType(t.key)}
-                  className={cn(
-                    "flex-row items-center gap-2 rounded-md border px-3.5 py-2",
-                    active
-                      ? "border-transparent bg-glass-fill-strong"
-                      : "border-glass-border bg-glass-fill",
-                  )}
-                >
-                  {t.icon(active ? t.accent : "#71809a", 14)}
-                  <Text
-                    style={active ? { color: t.accent } : undefined}
-                    className={cn("text-[13px] font-bold", !active && "text-text-muted")}
-                  >
-                    {t.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+          <MetricChips active={dataType} onSelect={setDataType} />
 
           {/* Timespan */}
           <View className="mb-4 w-full max-w-[260px]">

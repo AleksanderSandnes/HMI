@@ -71,6 +71,16 @@ function ConfiguredBadge({ on }: { on: boolean }) {
   );
 }
 
+function growattConfig(api: ApiSettingsResponse | null | undefined) {
+  const g = api?.growatt;
+  return { key: g?.email ?? "g", email: g?.email ?? "", configured: !!g?.hasPassword };
+}
+
+function weatherConfig(api: ApiSettingsResponse | null | undefined) {
+  const w = api?.weather;
+  return { key: w?.stationId ?? "w", station: w?.stationId ?? "", configured: !!w?.hasApiKey };
+}
+
 export default function Settings() {
   const core = useCore();
   const { account, settings } = core;
@@ -88,6 +98,9 @@ export default function Settings() {
 
   useEffect(() => settings.subscribeSettings(() => void refetchApi()), [settings, refetchApi]);
 
+  const gc = growattConfig(api);
+  const wc = weatherConfig(api);
+
   return (
     <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
       <ScrollView contentContainerClassName="gap-4 p-4">
@@ -102,9 +115,9 @@ export default function Settings() {
 
         <Section title="Growatt solar" icon="sunny" gradient="energy">
           <GrowattForm
-            key={api?.growatt?.email ?? "g"}
-            initialEmail={api?.growatt?.email ?? ""}
-            configured={!!api?.growatt?.hasPassword}
+            key={gc.key}
+            initialEmail={gc.email}
+            configured={gc.configured}
             settings={settings}
             onSaved={refetchApi}
           />
@@ -112,9 +125,9 @@ export default function Settings() {
 
         <Section title="Weather.com station" icon="cloud" gradient="solar">
           <WeatherForm
-            key={api?.weather?.stationId ?? "w"}
-            initialStationId={api?.weather?.stationId ?? ""}
-            configured={!!api?.weather?.hasApiKey}
+            key={wc.key}
+            initialStationId={wc.station}
+            configured={wc.configured}
             settings={settings}
             onSaved={refetchApi}
           />

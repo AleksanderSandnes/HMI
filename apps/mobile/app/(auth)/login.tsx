@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { loginSchema } from "@hmi/core";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Formik } from "formik";
+import { Formik, type FormikProps } from "formik";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 
@@ -17,6 +17,86 @@ import { useCore } from "../../src/lib/useCore";
 const mail: IconRender = (p) => <Ionicons name="mail-outline" {...p} />;
 const lock: IconRender = (p) => <Ionicons name="lock-closed-outline" {...p} />;
 const arrow: IconRender = (p) => <Ionicons name="arrow-forward" {...p} />;
+
+interface LoginValues {
+  email: string;
+  password: string;
+}
+
+function LoginHeader() {
+  return (
+    <View className="mb-6 items-center">
+      <LinearGradient
+        colors={GRADIENTS.solar}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 18,
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 16,
+        }}
+      >
+        <Ionicons name="flash" size={22} color="#0a1124" />
+      </LinearGradient>
+      <Text className="text-[26px] font-extrabold tracking-tight text-text-primary">
+        Welcome back
+      </Text>
+      <Text className="mt-1.5 text-sm font-medium text-text-muted">
+        Sign in to your energy dashboard
+      </Text>
+    </View>
+  );
+}
+
+function LoginForm({
+  values,
+  errors,
+  touched,
+  handleChange,
+  handleBlur,
+  handleSubmit,
+  isSubmitting,
+}: FormikProps<LoginValues>) {
+  return (
+    <View>
+      <Field
+        label="EMAIL ADDRESS"
+        icon={mail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoComplete="email"
+        placeholder="you@domain.com"
+        value={values.email}
+        onChangeText={handleChange("email")}
+        onBlur={handleBlur("email")}
+        error={touched.email ? errors.email : undefined}
+        editable={!isSubmitting}
+      />
+      <Field
+        label="PASSWORD"
+        icon={lock}
+        secure
+        autoComplete="password"
+        placeholder="Enter your password"
+        value={values.password}
+        onChangeText={handleChange("password")}
+        onBlur={handleBlur("password")}
+        error={touched.password ? errors.password : undefined}
+        editable={!isSubmitting}
+      />
+      <Button
+        label="Sign In"
+        icon={arrow}
+        onPress={() => handleSubmit()}
+        loading={isSubmitting}
+        className="mt-1.5 w-full"
+      />
+    </View>
+  );
+}
 
 export default function Login() {
   const { auth } = useCore();
@@ -33,32 +113,8 @@ export default function Login() {
         keyboardShouldPersistTaps="handled"
       >
         <GlassCard strong elevated className="w-full max-w-[430px] p-8">
-          <View className="mb-6 items-center">
-            <LinearGradient
-              colors={GRADIENTS.solar}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 18,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
-              <Ionicons name="flash" size={22} color="#0a1124" />
-            </LinearGradient>
-            <Text className="text-[26px] font-extrabold tracking-tight text-text-primary">
-              Welcome back
-            </Text>
-            <Text className="mt-1.5 text-sm font-medium text-text-muted">
-              Sign in to your energy dashboard
-            </Text>
-          </View>
-
+          <LoginHeader />
           {error ? <StatusBanner kind="error" message={error} /> : null}
-
           <Formik
             initialValues={{ email: "", password: "" }}
             validationSchema={loginSchema}
@@ -78,50 +134,7 @@ export default function Login() {
               }
             }}
           >
-            {({
-              values,
-              errors,
-              touched,
-              handleChange,
-              handleBlur,
-              handleSubmit,
-              isSubmitting,
-            }) => (
-              <View>
-                <Field
-                  label="EMAIL ADDRESS"
-                  icon={mail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  placeholder="you@domain.com"
-                  value={values.email}
-                  onChangeText={handleChange("email")}
-                  onBlur={handleBlur("email")}
-                  error={touched.email ? errors.email : undefined}
-                  editable={!isSubmitting}
-                />
-                <Field
-                  label="PASSWORD"
-                  icon={lock}
-                  secure
-                  autoComplete="password"
-                  placeholder="Enter your password"
-                  value={values.password}
-                  onChangeText={handleChange("password")}
-                  onBlur={handleBlur("password")}
-                  error={touched.password ? errors.password : undefined}
-                  editable={!isSubmitting}
-                />
-                <Button
-                  label="Sign In"
-                  icon={arrow}
-                  onPress={() => handleSubmit()}
-                  loading={isSubmitting}
-                  className="mt-1.5 w-full"
-                />
-              </View>
-            )}
+            {(props) => <LoginForm {...props} />}
           </Formik>
 
           <View className="mt-6 flex-row items-center justify-center gap-1.5 border-t border-glass-border pt-5">

@@ -25,6 +25,41 @@ function timeAgo(iso: string): string {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+function EmptyState() {
+  return (
+    <GlassCard className="items-center gap-3 p-12">
+      <Ionicons name="notifications-outline" size={32} color="#71809a" />
+      <Text className="text-sm font-semibold text-text-secondary">You&apos;re all caught up</Text>
+      <Text className="text-center text-sm text-text-muted">
+        Solar & weather sync alerts will appear here.
+      </Text>
+    </GlassCard>
+  );
+}
+
+function NotificationRow({ item, onDismiss }: { item: NotificationItem; onDismiss: () => void }) {
+  const { icon, color } = LEVEL[item.level] ?? LEVEL.info;
+  return (
+    <GlassCard className="flex-row items-start gap-3.5 p-4">
+      <Ionicons name={icon} size={18} color={color} style={{ marginTop: 2 }} />
+      <View className="min-w-0 flex-1">
+        <View className="flex-row items-center justify-between gap-2">
+          <Text numberOfLines={1} className="flex-1 font-bold text-text-primary">
+            {item.title}
+          </Text>
+          <Text className="text-xs font-medium text-text-muted">{timeAgo(item.createdAt)}</Text>
+        </View>
+        {item.message ? (
+          <Text className="mt-1 text-sm text-text-secondary">{item.message}</Text>
+        ) : null}
+      </View>
+      <Pressable onPress={onDismiss} hitSlop={8} accessibilityLabel="Dismiss">
+        <Ionicons name="close" size={16} color="#71809a" />
+      </Pressable>
+    </GlassCard>
+  );
+}
+
 export default function Notifications() {
   const { notifications } = useCore();
 
@@ -71,48 +106,19 @@ export default function Notifications() {
             <Text className="text-center text-sm text-text-muted">Loading…</Text>
           </GlassCard>
         ) : items.length === 0 ? (
-          <GlassCard className="items-center gap-3 p-12">
-            <Ionicons name="notifications-outline" size={32} color="#71809a" />
-            <Text className="text-sm font-semibold text-text-secondary">
-              You&apos;re all caught up
-            </Text>
-            <Text className="text-center text-sm text-text-muted">
-              Solar & weather sync alerts will appear here.
-            </Text>
-          </GlassCard>
+          <EmptyState />
         ) : (
           <View className="gap-3">
-            {items.map((item) => {
-              const { icon, color } = LEVEL[item.level] ?? LEVEL.info;
-              return (
-                <GlassCard key={item.id} className="flex-row items-start gap-3.5 p-4">
-                  <Ionicons name={icon} size={18} color={color} style={{ marginTop: 2 }} />
-                  <View className="min-w-0 flex-1">
-                    <View className="flex-row items-center justify-between gap-2">
-                      <Text numberOfLines={1} className="flex-1 font-bold text-text-primary">
-                        {item.title}
-                      </Text>
-                      <Text className="text-xs font-medium text-text-muted">
-                        {timeAgo(item.createdAt)}
-                      </Text>
-                    </View>
-                    {item.message ? (
-                      <Text className="mt-1 text-sm text-text-secondary">{item.message}</Text>
-                    ) : null}
-                  </View>
-                  <Pressable
-                    onPress={async () => {
-                      await notifications.dismissNotification(item.id);
-                      void refetch();
-                    }}
-                    hitSlop={8}
-                    accessibilityLabel="Dismiss"
-                  >
-                    <Ionicons name="close" size={16} color="#71809a" />
-                  </Pressable>
-                </GlassCard>
-              );
-            })}
+            {items.map((item) => (
+              <NotificationRow
+                key={item.id}
+                item={item}
+                onDismiss={async () => {
+                  await notifications.dismissNotification(item.id);
+                  void refetch();
+                }}
+              />
+            ))}
           </View>
         )}
       </ScrollView>
