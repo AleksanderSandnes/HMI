@@ -21,12 +21,11 @@ function AuthGate() {
   useEffect(() => {
     if (isLoading) return;
     const inAuthGroup = segments[0] === '(auth)';
-    const inTabsGroup = segments[0] === '(tabs)';
-
+    // Protect the app: send signed-out users to login. Authenticated users are
+    // NOT auto-redirected off the (auth) group so the multi-step register flow
+    // (which signs in at step 1) can finish; login/register navigate explicitly.
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
-    } else if (session && !inTabsGroup) {
-      router.replace('/(tabs)');
     }
   }, [session, isLoading, segments, router]);
 

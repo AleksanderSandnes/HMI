@@ -1,13 +1,18 @@
 import { ActivityIndicator, View } from 'react-native';
+import { Redirect } from 'expo-router';
+import { useAuth } from '../src/lib/auth';
 
-/**
- * Entry route. The root AuthGate (app/_layout.tsx) redirects to `(auth)/login`
- * or `(tabs)` once the session resolves, so this only renders briefly.
- */
+/** Entry route — sends the user to the app or the login screen by session. */
 export default function Index() {
-  return (
-    <View className="flex-1 items-center justify-center bg-bg-base">
-      <ActivityIndicator color="#f59e0b" />
-    </View>
-  );
+  const { session, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-bg-base">
+        <ActivityIndicator color="#f59e0b" />
+      </View>
+    );
+  }
+
+  return <Redirect href={session ? '/(tabs)' : '/(auth)/login'} />;
 }
