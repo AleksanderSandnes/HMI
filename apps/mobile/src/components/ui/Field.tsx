@@ -15,6 +15,30 @@ interface FieldProps extends Omit<TextInputProps, "style"> {
   error?: string;
 }
 
+function RevealToggle({ reveal, onToggle }: { reveal: boolean; onToggle: () => void }) {
+  return (
+    <Pressable
+      onPress={onToggle}
+      hitSlop={10}
+      accessibilityRole="button"
+      accessibilityLabel={reveal ? "Hide password" : "Show password"}
+      className="py-1.5 pl-2.5"
+    >
+      <Ionicons name={reveal ? "eye-off-outline" : "eye-outline"} size={16} color="#aeb8cc" />
+    </Pressable>
+  );
+}
+
+function FieldHelp({ error, hint }: { error?: string; hint?: string }) {
+  if (error) {
+    return <Text className="ml-0.5 mt-1.5 text-xs font-semibold text-negative">{error}</Text>;
+  }
+  if (hint) {
+    return <Text className="mt-1.5 text-[11.5px] font-medium text-text-muted">{hint}</Text>;
+  }
+  return null;
+}
+
 /**
  * Labeled text input (mirrors apps/web/components/ui/Field.tsx) — glass fill,
  * hairline border, focus glow, optional leading icon and password toggle.
@@ -62,23 +86,9 @@ export function Field({
           }}
           className="flex-1 py-3 text-[15px] font-semibold text-text-primary"
         />
-        {secure ? (
-          <Pressable
-            onPress={() => setReveal((r) => !r)}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel={reveal ? "Hide password" : "Show password"}
-            className="py-1.5 pl-2.5"
-          >
-            <Ionicons name={reveal ? "eye-off-outline" : "eye-outline"} size={16} color="#aeb8cc" />
-          </Pressable>
-        ) : null}
+        {secure ? <RevealToggle reveal={reveal} onToggle={() => setReveal((r) => !r)} /> : null}
       </View>
-      {error ? (
-        <Text className="ml-0.5 mt-1.5 text-xs font-semibold text-negative">{error}</Text>
-      ) : hint ? (
-        <Text className="mt-1.5 text-[11.5px] font-medium text-text-muted">{hint}</Text>
-      ) : null}
+      <FieldHelp error={error} hint={hint} />
     </View>
   );
 }

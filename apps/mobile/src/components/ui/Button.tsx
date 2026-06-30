@@ -35,6 +35,43 @@ const LABEL_COLOR: Record<Variant, string> = {
   danger: "#fb7185", // negative
 };
 
+const VARIANT_CLASS: Record<Variant, string> = {
+  primary: "",
+  ghost: "border-glass-border-strong bg-glass-fill",
+  danger: "border-[rgba(251,113,133,0.35)] bg-[rgba(251,113,133,0.10)]",
+};
+
+function ButtonContent({
+  label,
+  icon,
+  loading,
+  color,
+}: {
+  label: string;
+  icon?: IconRender;
+  loading: boolean;
+  color: string;
+}) {
+  return (
+    <View className="flex-row items-center justify-center gap-2.5">
+      {loading ? (
+        <ActivityIndicator size="small" color={color} />
+      ) : (
+        <>
+          {icon ? icon({ color, size: 15 }) : null}
+          <Text
+            numberOfLines={1}
+            style={{ color }}
+            className="text-[15px] font-extrabold tracking-[0.2px]"
+          >
+            {label}
+          </Text>
+        </>
+      )}
+    </View>
+  );
+}
+
 /**
  * Action button (mirrors apps/web/components/ui/Button.tsx):
  * - primary: solar (or chosen) gradient fill
@@ -54,25 +91,7 @@ export function Button({
 }: ButtonProps) {
   const isDisabled = disabled || loading;
   const color = LABEL_COLOR[variant];
-
-  const inner = (
-    <View className="flex-row items-center justify-center gap-2.5">
-      {loading ? (
-        <ActivityIndicator size="small" color={color} />
-      ) : (
-        <>
-          {icon ? icon({ color, size: 15 }) : null}
-          <Text
-            numberOfLines={1}
-            style={{ color }}
-            className="text-[15px] font-extrabold tracking-[0.2px]"
-          >
-            {label}
-          </Text>
-        </>
-      )}
-    </View>
-  );
+  const inner = <ButtonContent label={label} icon={icon} loading={loading} color={color} />;
 
   if (variant === "primary") {
     return (
@@ -108,8 +127,7 @@ export function Button({
       style={style}
       className={cn(
         "min-h-12 items-center justify-center rounded-md border px-4",
-        variant === "ghost" && "border-glass-border-strong bg-glass-fill",
-        variant === "danger" && "border-[rgba(251,113,133,0.35)] bg-[rgba(251,113,133,0.10)]",
+        VARIANT_CLASS[variant],
         isDisabled && "opacity-50",
         className,
       )}

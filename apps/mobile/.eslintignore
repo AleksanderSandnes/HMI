@@ -1,9 +1,0 @@
-node_modules/
-backend/
-.expo/
-dist/
-build/
-coverage/
-android/
-ios/
-web-build/
