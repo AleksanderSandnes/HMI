@@ -9,6 +9,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } fro
 import { Button } from "../../src/components/ui/Button";
 import { Field } from "../../src/components/ui/Field";
 import { GlassCard } from "../../src/components/ui/GlassCard";
+import { ScreenBackground } from "../../src/components/ui/ScreenBackground";
 import { StatusBanner } from "../../src/components/ui/StatusBanner";
 import type { IconRender } from "../../src/components/ui/types";
 import { GRADIENTS } from "../../src/lib/gradients";
@@ -108,6 +109,7 @@ export default function Login() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 bg-bg-base"
     >
+      <ScreenBackground />
       <ScrollView
         contentContainerClassName="flex-grow items-center justify-center p-6"
         keyboardShouldPersistTaps="handled"
