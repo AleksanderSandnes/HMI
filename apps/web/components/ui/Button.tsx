@@ -14,6 +14,32 @@ const GRADIENTS: Record<Gradient, string> = {
   revenue: "linear-gradient(135deg, #fde68a 0%, #facc15 50%, #eab308 100%)",
 };
 
+const VARIANT_CLASS: Record<Variant, string> = {
+  primary: "text-text-inverse hover:brightness-105",
+  ghost:
+    "border border-glass-border-strong bg-glass-fill text-text-primary hover:bg-glass-fill-strong",
+  danger:
+    "border border-[rgba(251,113,133,0.35)] bg-[rgba(251,113,133,0.10)] text-negative hover:bg-[rgba(251,113,133,0.18)]",
+};
+
+function ButtonContent({
+  label,
+  Icon,
+  loading,
+}: {
+  label: string;
+  Icon?: LucideIcon;
+  loading: boolean;
+}) {
+  if (loading) return <Loader2 size={16} className="animate-spin" />;
+  return (
+    <>
+      {Icon ? <Icon size={15} /> : null}
+      <span className="truncate">{label}</span>
+    </>
+  );
+}
+
 interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "type"> {
   label: string;
   icon?: LucideIcon;
@@ -51,24 +77,13 @@ export function Button({
       style={isPrimary ? { backgroundImage: GRADIENTS[gradient] } : undefined}
       className={cn(
         "flex min-h-12 w-full items-center justify-center gap-2.5 rounded-[var(--radius-md)] px-4 text-[15px] font-extrabold tracking-[0.2px] transition",
-        isPrimary && "text-text-inverse hover:brightness-105",
-        variant === "ghost" &&
-          "border border-glass-border-strong bg-glass-fill text-text-primary hover:bg-glass-fill-strong",
-        variant === "danger" &&
-          "border border-[rgba(251,113,133,0.35)] bg-[rgba(251,113,133,0.10)] text-negative hover:bg-[rgba(251,113,133,0.18)]",
+        VARIANT_CLASS[variant],
         isDisabled && "cursor-not-allowed opacity-50",
         className,
       )}
       {...rest}
     >
-      {loading ? (
-        <Loader2 size={16} className="animate-spin" />
-      ) : (
-        <>
-          {Icon ? <Icon size={15} /> : null}
-          <span className="truncate">{label}</span>
-        </>
-      )}
+      <ButtonContent label={label} Icon={Icon} loading={loading} />
     </button>
   );
 }

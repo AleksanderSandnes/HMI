@@ -29,6 +29,65 @@ interface StatTileProps {
   compact?: boolean;
 }
 
+// Size presets collapse the per-property `compact ? a : b` branching into one
+// lookup (keeps the component's complexity low).
+const SIZES = {
+  regular: {
+    pad: "p-[18px]",
+    headMb: "mb-3.5",
+    chip: 42,
+    iconSize: 17,
+    label: "text-[12.5px]",
+    skeleton: "h-7 w-24",
+    value: "text-[26px]",
+    unit: "text-sm",
+    sublabel: "mt-1.5 text-xs",
+  },
+  compact: {
+    pad: "p-3.5",
+    headMb: "mb-2.5",
+    chip: 30,
+    iconSize: 15,
+    label: "text-[10.5px]",
+    skeleton: "h-6 w-20",
+    value: "text-[21px]",
+    unit: "text-[11px]",
+    sublabel: "mt-1 text-[10.5px]",
+  },
+} as const;
+
+type TileSize = (typeof SIZES)[keyof typeof SIZES];
+
+function DeltaPill({ delta }: { delta: number }) {
+  const positive = delta >= 0;
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-1 rounded-[var(--radius-pill)] px-2.5 py-1",
+        positive
+          ? "bg-[rgba(52,211,153,0.13)] text-positive"
+          : "bg-[rgba(251,113,133,0.13)] text-negative",
+      )}
+    >
+      {positive ? <ArrowUp size={9} /> : <ArrowDown size={9} />}
+      <span className="text-xs font-extrabold">{Math.abs(delta).toFixed(0)}%</span>
+    </div>
+  );
+}
+
+function TileValue({ value, unit, s }: { value: string; unit?: string; s: TileSize }) {
+  return (
+    <div className="mt-1.5 flex items-baseline gap-1.5">
+      <span className={cn("font-extrabold tracking-[-0.5px] text-text-primary", s.value)}>
+        {value}
+      </span>
+      {unit ? (
+        <span className={cn("font-semibold text-text-secondary", s.unit)}>{unit}</span>
+      ) : null}
+    </div>
+  );
+}
+
 /**
  * The app's single metric tile — gradient icon chip + label + value (+ optional
  * delta / sublabel). `compact` shrinks it for dense grids; `loading` renders a
@@ -45,70 +104,30 @@ export function StatTile({
   loading = false,
   compact = false,
 }: StatTileProps) {
-  const hasDelta = delta !== null && delta !== undefined && isFinite(delta);
-  const positive = (delta ?? 0) >= 0;
-  const chip = compact ? 30 : 42;
+  const s = compact ? SIZES.compact : SIZES.regular;
 
   return (
-    <GlassCard strong className={cn("min-w-0 flex-1", compact ? "p-3.5" : "p-[18px]")}>
-      <div className={cn("flex items-center justify-between", compact ? "mb-2.5" : "mb-3.5")}>
+    <GlassCard strong className={cn("min-w-0 flex-1", s.pad)}>
+      <div className={cn("flex items-center justify-between", s.headMb)}>
         <div
           className="flex items-center justify-center rounded-[12px]"
-          style={{ backgroundImage: GRADIENTS[gradient], height: chip, width: chip }}
+          style={{ backgroundImage: GRADIENTS[gradient], height: s.chip, width: s.chip }}
         >
-          <Icon size={compact ? 15 : 17} className="text-[#0a1124]" />
+          <Icon size={s.iconSize} className="text-[#0a1124]" />
         </div>
-        {hasDelta ? (
-          <div
-            className={cn(
-              "flex items-center gap-1 rounded-[var(--radius-pill)] px-2.5 py-1",
-              positive
-                ? "bg-[rgba(52,211,153,0.13)] text-positive"
-                : "bg-[rgba(251,113,133,0.13)] text-negative",
-            )}
-          >
-            {positive ? <ArrowUp size={9} /> : <ArrowDown size={9} />}
-            <span className="text-xs font-extrabold">{Math.abs(delta as number).toFixed(0)}%</span>
-          </div>
-        ) : null}
+        {delta != null && isFinite(delta) ? <DeltaPill delta={delta} /> : null}
       </div>
 
-      <p
-        className={cn(
-          "font-semibold uppercase tracking-[0.3px] text-text-muted",
-          compact ? "text-[10.5px]" : "text-[12.5px]",
-        )}
-      >
+      <p className={cn("font-semibold uppercase tracking-[0.3px] text-text-muted", s.label)}>
         {label}
       </p>
       {loading ? (
-        <Skeleton className={cn("mt-2", compact ? "h-6 w-20" : "h-7 w-24")} />
+        <Skeleton className={cn("mt-2", s.skeleton)} />
       ) : (
-        <div className="mt-1.5 flex items-baseline gap-1.5">
-          <span
-            className={cn(
-              "font-extrabold tracking-[-0.5px] text-text-primary",
-              compact ? "text-[21px]" : "text-[26px]",
-            )}
-          >
-            {value}
-          </span>
-          {unit ? (
-            <span
-              className={cn(
-                "font-semibold text-text-secondary",
-                compact ? "text-[11px]" : "text-sm",
-              )}
-            >
-              {unit}
-            </span>
-          ) : null}
-        </div>
+        <TileValue value={value} unit={unit} s={s} />
       )}
       {sublabel && !loading ? (
-        <p className={cn("text-text-muted", compact ? "mt-1 text-[10.5px]" : "mt-1.5 text-xs")}>
-          {sublabel}
-        </p>
+        <p className={cn("text-text-muted", s.sublabel)}>{sublabel}</p>
       ) : null}
     </GlassCard>
   );
