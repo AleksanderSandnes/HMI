@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import {
   buildAggregatedLabels,
   calculateMetrics,
@@ -86,7 +87,7 @@ describe("buildAggregatedLabels", () => {
 
 describe("calculateMetrics", () => {
   it("prefers API totals when provided", () => {
-    const m = calculateMetrics([0, 0], "hourly", 1, 100, 5);
+    const m = calculateMetrics([0, 0], "hourly", 1, { total: 100, today: 5 });
     expect(m.totalGeneration).toBe(100);
     expect(m.todayGeneration).toBe(5);
   });

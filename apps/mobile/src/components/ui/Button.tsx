@@ -1,79 +1,68 @@
-import React from 'react';
+import { LinearGradient } from "expo-linear-gradient";
 import {
   Text,
   Pressable,
-  StyleSheet,
   ActivityIndicator,
   View,
-  StyleProp,
-  ViewStyle,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome5 } from '@expo/vector-icons';
-import { theme, type GradientColors } from '../../theme/theme';
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 
-type Variant = 'primary' | 'ghost' | 'danger';
+import { cn } from "../../lib/cn";
+import { BUTTON_GRADIENTS, type ButtonGradient } from "../../lib/gradients";
+
+import type { IconRender } from "./types";
+
+type Variant = "primary" | "ghost" | "danger";
 
 interface ButtonProps {
   label: string;
   onPress: () => void;
   variant?: Variant;
-  icon?: React.ComponentProps<typeof FontAwesome5>['name'];
+  icon?: IconRender;
   loading?: boolean;
   disabled?: boolean;
-  gradient?: GradientColors;
+  /** Gradient for the primary variant (default solar). */
+  gradient?: ButtonGradient;
+  /** Layout classes (e.g. 'w-full' / 'flex-1'). */
+  className?: string;
   style?: StyleProp<ViewStyle>;
 }
 
-/**
- * Action button.
- * - primary: solar gradient fill
- * - ghost: translucent glass
- * - danger: red-tinted glass (used for destructive actions like Logout)
- */
-export default function Button({
+const LABEL_COLOR: Record<Variant, string> = {
+  primary: "#0a1124", // text-inverse
+  ghost: "#f6f8fc", // text-primary
+  danger: "#fb7185", // negative
+};
+
+const VARIANT_CLASS: Record<Variant, string> = {
+  primary: "",
+  ghost: "border-glass-border-strong bg-glass-fill",
+  danger: "border-[rgba(251,113,133,0.35)] bg-[rgba(251,113,133,0.10)]",
+};
+
+function ButtonContent({
   label,
-  onPress,
-  variant = 'primary',
   icon,
-  loading = false,
-  disabled = false,
-  gradient,
-  style,
-}: ButtonProps) {
-  const isDisabled = disabled || loading;
-  const content = (
-    <View style={styles.inner}>
+  loading,
+  color,
+}: {
+  label: string;
+  icon?: IconRender;
+  loading: boolean;
+  color: string;
+}) {
+  return (
+    <View className="flex-row items-center justify-center gap-2.5">
       {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={variant === 'primary' ? theme.text.inverse : theme.text.primary}
-        />
+        <ActivityIndicator size="small" color={color} />
       ) : (
         <>
-          {icon ? (
-            <FontAwesome5
-              name={icon}
-              size={14}
-              color={
-                variant === 'primary'
-                  ? theme.text.inverse
-                  : variant === 'danger'
-                  ? theme.negative
-                  : theme.text.primary
-              }
-              solid
-            />
-          ) : null}
+          {icon ? icon({ color, size: 15 }) : null}
           <Text
             numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.85}
-            style={[
-              styles.label,
-              variant === 'primary' && styles.labelPrimary,
-              variant === 'danger' && styles.labelDanger,
-            ]}
+            style={{ color }}
+            className="text-[15px] font-extrabold tracking-[0.2px]"
           >
             {label}
           </Text>
@@ -81,22 +70,50 @@ export default function Button({
       )}
     </View>
   );
+}
 
-  if (variant === 'primary') {
+/**
+ * Action button (mirrors apps/web/components/ui/Button.tsx):
+ * - primary: solar (or chosen) gradient fill
+ * - ghost: translucent glass
+ * - danger: red-tinted glass
+ */
+export function Button({
+  label,
+  onPress,
+  variant = "primary",
+  icon,
+  loading = false,
+  disabled = false,
+  gradient = "solar",
+  className,
+  style,
+}: ButtonProps) {
+  const isDisabled = disabled || loading;
+  const color = LABEL_COLOR[variant];
+  const inner = <ButtonContent label={label} icon={icon} loading={loading} color={color} />;
+
+  if (variant === "primary") {
     return (
       <Pressable
         onPress={onPress}
         disabled={isDisabled}
-        style={[styles.base, isDisabled && styles.disabled, style]}
         accessibilityRole="button"
+        style={style}
+        className={cn("overflow-hidden rounded-md", isDisabled && "opacity-50", className)}
       >
         <LinearGradient
-          colors={gradient ?? theme.solar.gradient}
+          colors={BUTTON_GRADIENTS[gradient]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.fill}
+          style={{
+            minHeight: 48,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 16,
+          }}
         >
-          {content}
+          {inner}
         </LinearGradient>
       </Pressable>
     );
@@ -106,52 +123,18 @@ export default function Button({
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      style={[
-        styles.base,
-        styles.fill,
-        variant === 'ghost' && styles.ghost,
-        variant === 'danger' && styles.danger,
-        isDisabled && styles.disabled,
-        style,
-      ]}
       accessibilityRole="button"
+      style={style}
+      className={cn(
+        "min-h-12 items-center justify-center rounded-md border px-4",
+        VARIANT_CLASS[variant],
+        isDisabled && "opacity-50",
+        className,
+      )}
     >
-      {content}
+      {inner}
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: theme.radius.md,
-    overflow: 'hidden',
-  },
-  fill: {
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 18,
-  },
-  inner: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
-  ghost: {
-    backgroundColor: theme.glass.fill,
-    borderWidth: 1,
-    borderColor: theme.glass.borderStrong,
-  },
-  danger: {
-    backgroundColor: 'rgba(251, 113, 133, 0.10)',
-    borderWidth: 1,
-    borderColor: 'rgba(251, 113, 133, 0.35)',
-  },
-  disabled: { opacity: 0.5 },
-  label: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: theme.text.primary,
-    letterSpacing: 0.2,
-    flexShrink: 1,
-    textAlign: 'center',
-  },
-  labelPrimary: { color: theme.text.inverse },
-  labelDanger: { color: theme.negative },
-});
+export default Button;

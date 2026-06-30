@@ -1,43 +1,38 @@
-import React from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { BREAKPOINTS } from "@hmi/core";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   Modal as RNModal,
   View,
   Text,
   Pressable,
-  StyleSheet,
   ScrollView,
-  Platform,
+  StyleSheet,
   useWindowDimensions,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome5 } from '@expo/vector-icons';
-import { theme, glassBlur, glow, type GradientColors } from '../../theme/theme';
+} from "react-native";
+
+import { GRADIENTS, type StatGradient } from "../../lib/gradients";
+
+import type { IconRender } from "./types";
 
 interface ModalProps {
   visible: boolean;
   onClose: () => void;
-  icon: React.ComponentProps<typeof FontAwesome5>['name'];
-  gradient: GradientColors;
+  icon: IconRender;
+  gradient: StatGradient;
   title: string;
   subtitle?: string;
   children: React.ReactNode;
 }
 
 /**
- * Fancy centered popup with a glass card, gradient icon header and
- * a dimmed backdrop. Used for editing account/profile/password.
+ * Centered popup with a glass card, gradient icon header and dimmed/blurred
+ * backdrop (mirrors the web modal pattern). Used for editing account/password.
  */
-export default function Modal({
-  visible,
-  onClose,
-  icon,
-  gradient,
-  title,
-  subtitle,
-  children,
-}: ModalProps) {
+export function Modal({ visible, onClose, icon, gradient, title, subtitle, children }: ModalProps) {
   const { width } = useWindowDimensions();
-  const isMobile = width <= 768;
+  const isPhone = width < BREAKPOINTS.mobile;
 
   return (
     <RNModal
@@ -47,36 +42,57 @@ export default function Modal({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
+      <Pressable onPress={onClose} className="flex-1 items-center justify-center p-[18px]">
+        <BlurView
+          intensity={18}
+          tint="dark"
+          experimentalBlurMethod="dimezisBlurView"
+          style={StyleSheet.absoluteFill}
+        />
+        <View
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+          className="bg-[rgba(4,7,16,0.72)]"
+        />
         <Pressable
-          style={[
-            styles.card,
-            glassBlur(28),
-            glow(),
-            { width: isMobile ? '100%' : 460, maxWidth: '100%' },
-          ]}
           onPress={(e) => e.stopPropagation()}
+          style={{ width: isPhone ? "100%" : 460, maxWidth: "100%", maxHeight: "88%" }}
+          className="overflow-hidden rounded-lg border border-glass-border-strong bg-[rgba(14,20,35,0.96)] p-[22px]"
         >
-          <View style={styles.header}>
+          <View className="flex-row items-center gap-3.5">
             <LinearGradient
-              colors={gradient}
+              colors={GRADIENTS[gradient]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.icon}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 14,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              <FontAwesome5 name={icon} size={16} color={theme.text.inverse} solid />
+              {icon({ color: "#0a1124", size: 16 })}
             </LinearGradient>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.title}>{title}</Text>
-              {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+            <View className="flex-1">
+              <Text className="text-lg font-extrabold tracking-[-0.3px] text-text-primary">
+                {title}
+              </Text>
+              {subtitle ? (
+                <Text className="mt-0.5 text-[13px] font-medium text-text-muted">{subtitle}</Text>
+              ) : null}
             </View>
-            <Pressable onPress={onClose} hitSlop={10} style={styles.closeBtn}>
-              <FontAwesome5 name="times" size={16} color={theme.text.muted} solid />
+            <Pressable
+              onPress={onClose}
+              hitSlop={10}
+              className="h-8 w-8 items-center justify-center rounded-[10px] border border-glass-border bg-glass-fill"
+            >
+              <Ionicons name="close" size={16} color="#71809a" />
             </Pressable>
           </View>
 
           <ScrollView
-            style={{ marginTop: 18 }}
+            className="mt-[18px]"
             contentContainerStyle={{ paddingBottom: 2 }}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
@@ -89,51 +105,4 @@ export default function Modal({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(4, 7, 16, 0.72)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 18,
-    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(6px)' } as object) : {}),
-  },
-  card: {
-    backgroundColor: 'rgba(14, 20, 35, 0.96)',
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.glass.borderStrong,
-    padding: 22,
-    maxHeight: '88%',
-  },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  icon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: theme.text.primary,
-    letterSpacing: -0.3,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: theme.text.muted,
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.glass.fill,
-    borderWidth: 1,
-    borderColor: theme.glass.border,
-  },
-});
+export default Modal;

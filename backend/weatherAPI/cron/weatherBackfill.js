@@ -1,13 +1,13 @@
-const cron = require('node-cron');
-const User = require('../models/User');
-const { backfillYesterday } = require('../services/weatherService');
-const { createNotification, sendExpoPush } = require('../services/notificationService');
+const cron = require("node-cron");
+const User = require("../models/User");
+const { backfillYesterday } = require("../services/weatherService");
+const { createNotification, sendExpoPush } = require("../services/notificationService");
 
-const isProduction = () => (process.env.NODE_ENV || 'development') === 'production';
+const isProduction = () => (process.env.NODE_ENV || "development") === "production";
 
 // YYYYMMDD -> YYYY-MM-DD for human-readable messages.
 const prettyDate = (yyyymmdd) =>
-  typeof yyyymmdd === 'string' && yyyymmdd.length === 8
+  typeof yyyymmdd === "string" && yyyymmdd.length === 8
     ? `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`
     : yyyymmdd;
 
@@ -24,21 +24,21 @@ async function backfillOne(user) {
 
     await createNotification({
       userId: user._id,
-      type: 'weather_sync',
-      level: ok ? 'success' : 'warning',
-      title: ok ? 'Weather data synced' : 'Weather sync finished — no data',
+      type: "weather_sync",
+      level: ok ? "success" : "warning",
+      title: ok ? "Weather data synced" : "Weather sync finished — no data",
       message: ok
-        ? `Saved ${obs} hourly observation${obs === 1 ? '' : 's'} for ${when} (station ${summary.stationId}).`
+        ? `Saved ${obs} hourly observation${obs === 1 ? "" : "s"} for ${when} (station ${summary.stationId}).`
         : `No weather observations were available for ${when}.`,
       meta: summary,
     });
 
     await sendExpoPush(user.expoPushTokens, {
-      title: ok ? 'Weather data synced' : 'Weather sync finished',
+      title: ok ? "Weather data synced" : "Weather sync finished",
       body: ok
-        ? `${obs} observation${obs === 1 ? '' : 's'} saved for ${when}.`
+        ? `${obs} observation${obs === 1 ? "" : "s"} saved for ${when}.`
         : `No weather data was available for ${when}.`,
-      data: { type: 'weather_sync' },
+      data: { type: "weather_sync" },
     });
 
     return { userId: String(user._id), ...summary, ok };
@@ -47,16 +47,16 @@ async function backfillOne(user) {
 
     await createNotification({
       userId: user._id,
-      type: 'weather_sync',
-      level: 'error',
-      title: 'Weather sync failed',
+      type: "weather_sync",
+      level: "error",
+      title: "Weather sync failed",
       message: error.message,
     });
 
     await sendExpoPush(user.expoPushTokens, {
-      title: 'Weather sync failed',
+      title: "Weather sync failed",
       body: error.message,
-      data: { type: 'weather_sync' },
+      data: { type: "weather_sync" },
     });
 
     return { userId: String(user._id), error: error.message, ok: false };
@@ -65,9 +65,9 @@ async function backfillOne(user) {
 
 // Run the backfill for one specific user (used by the dev trigger endpoint).
 async function runWeatherBackfillForUser(userId) {
-  const user = await User.findById(userId).select('expoPushTokens apiSettings.weather');
+  const user = await User.findById(userId).select("expoPushTokens apiSettings.weather");
   if (!user) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
   return backfillOne(user);
 }
@@ -76,11 +76,9 @@ async function runWeatherBackfillForUser(userId) {
 // weather API key configured; in development the service falls back to env credentials, so
 // all users are processed.
 async function runWeatherBackfillForAll() {
-  const filter = isProduction()
-    ? { 'apiSettings.weather.apiKey': { $nin: [null, ''] } }
-    : {};
+  const filter = isProduction() ? { "apiSettings.weather.apiKey": { $nin: [null, ""] } } : {};
 
-  const users = await User.find(filter).select('expoPushTokens apiSettings.weather');
+  const users = await User.find(filter).select("expoPushTokens apiSettings.weather");
   console.log(`[WeatherCron] Starting backfill for ${users.length} user(s).`);
 
   const results = [];
@@ -88,19 +86,19 @@ async function runWeatherBackfillForAll() {
     results.push(await backfillOne(user));
   }
 
-  console.log('[WeatherCron] Backfill complete.');
+  console.log("[WeatherCron] Backfill complete.");
   return results;
 }
 
 // Schedule the daily 00:01 backfill. node-cron fields: min hour day month weekday.
 function scheduleWeatherBackfill() {
-  cron.schedule('1 0 * * *', () => {
-    console.log('[WeatherCron] Triggered by schedule (00:01).');
+  cron.schedule("1 0 * * *", () => {
+    console.log("[WeatherCron] Triggered by schedule (00:01).");
     runWeatherBackfillForAll().catch((error) =>
-      console.error(`[WeatherCron] Scheduled run failed: ${error.message}`)
+      console.error(`[WeatherCron] Scheduled run failed: ${error.message}`),
     );
   });
-  console.log('[WeatherCron] Scheduled daily weather backfill at 00:01.');
+  console.log("[WeatherCron] Scheduled daily weather backfill at 00:01.");
 }
 
 module.exports = {

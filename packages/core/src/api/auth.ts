@@ -1,7 +1,9 @@
 // Authentication API (Supabase Auth). Ported from mobile src/services/api/api.js.
-import type { Session, User } from '@supabase/supabase-js';
-import type { AuthUser } from '../types/account';
-import type { CoreApiContext } from './context';
+import type { Session, User } from "@supabase/supabase-js";
+
+import type { AuthUser } from "../types/account";
+
+import type { CoreApiContext } from "./context";
 
 /** Build the UI auth payload from a Supabase session + user. */
 function toUser(session: Session | null, user: User): AuthUser {
@@ -10,7 +12,7 @@ function toUser(session: Session | null, user: User): AuthUser {
     email: user.email ?? null,
     username:
       (user.user_metadata?.username as string | undefined) ||
-      (user.email ? user.email.split('@')[0] : ''),
+      (user.email ? user.email.split("@")[0] : ""),
     token: session?.access_token ?? null,
   };
 }
@@ -38,11 +40,7 @@ export function createAuthApi(ctx: CoreApiContext) {
     return toUser(data.session, data.user);
   }
 
-  async function registerUser({
-    email,
-    username,
-    password,
-  }: RegisterInput): Promise<AuthUser> {
+  async function registerUser({ email, username, password }: RegisterInput): Promise<AuthUser> {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -59,13 +57,11 @@ export function createAuthApi(ctx: CoreApiContext) {
         password,
       });
       if (signIn.error) {
-        throw new Error(
-          'Account created. Please confirm your email, then sign in.'
-        );
+        throw new Error("Account created. Please confirm your email, then sign in.");
       }
       session = signIn.data.session;
     }
-    if (!data.user) throw new Error('Registration failed: no user returned.');
+    if (!data.user) throw new Error("Registration failed: no user returned.");
     return toUser(session, data.user);
   }
 

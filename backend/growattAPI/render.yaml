@@ -7,7 +7,7 @@ services:
     startCommand: java -jar target/growatt-1.0-SNAPSHOT.jar
     envVars:
       - key: SERVER_PORT
-        value: '8080'
+        value: "8080"
       - key: SPRING_PROFILES_ACTIVE
         value: production
       - key: FRONTEND_URL
@@ -17,7 +17,7 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: GROWATT_CACHE_ENABLED
-        value: 'true'
+        value: "true"
     healthCheckPath: /actuator/health
     autoDeploy: true
     branch: main

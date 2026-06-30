@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { buildWeatherSeries, toISO } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import {
   CloudRain,
@@ -12,13 +12,14 @@ import {
   Wind,
   type LucideIcon,
 } from "lucide-react";
-import { buildWeatherSeries, toISO } from "@hmi/core";
-import { useCore } from "@/lib/hooks/useCore";
+import { useMemo, useState } from "react";
+
+import { PageHeader } from "@/components/PageHeader";
+import { WeatherChart, type LineSeries } from "@/components/charts/WeatherChart";
+import { DateSelector } from "@/components/ui/DateSelector";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { DateSelector } from "@/components/ui/DateSelector";
-import { WeatherChart, type LineSeries } from "@/components/charts/WeatherChart";
-import { PageHeader } from "@/components/PageHeader";
+import { useCore } from "@/lib/hooks/useCore";
 import { cn } from "@/lib/utils";
 
 interface MetricMeta {
@@ -111,6 +112,34 @@ const TIME_OPTIONS = [
   { label: "Weekly", value: "weekly" },
 ];
 
+function MetricChips({ active, onSelect }: { active: string; onSelect: (key: string) => void }) {
+  return (
+    <div className="flex flex-1 gap-2 overflow-x-auto pb-1">
+      {METRICS.map((t) => {
+        const on = t.key === active;
+        const Icon = t.icon;
+        return (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => onSelect(t.key)}
+            className={cn(
+              "flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] border px-3.5 py-2 text-[13px] font-bold transition",
+              on
+                ? "border-transparent bg-glass-fill-strong"
+                : "border-glass-border bg-glass-fill text-text-muted hover:text-text-secondary",
+            )}
+            style={on ? { color: t.accent } : undefined}
+          >
+            <Icon size={14} />
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function WeatherPage() {
   const { weather } = useCore();
 
@@ -137,7 +166,7 @@ export default function WeatherPage() {
 
   const { labels, series, ticks } = useMemo(
     () => buildWeatherSeries(observations ?? [], dataType, timespan),
-    [observations, dataType, timespan]
+    [observations, dataType, timespan],
   );
 
   const chartSeries: LineSeries[] = series.map((data, i) => ({
@@ -164,35 +193,9 @@ export default function WeatherPage() {
       <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[22px]">
         {/* Data-type chips (left) + timespan (right) on one row. */}
         <div className="mb-4 flex shrink-0 items-center gap-3">
-          <div className="flex flex-1 gap-2 overflow-x-auto pb-1">
-            {METRICS.map((t) => {
-              const active = t.key === dataType;
-              const Icon = t.icon;
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => setDataType(t.key)}
-                  className={cn(
-                    "flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] border px-3.5 py-2 text-[13px] font-bold transition",
-                    active
-                      ? "border-transparent bg-glass-fill-strong"
-                      : "border-glass-border bg-glass-fill text-text-muted hover:text-text-secondary"
-                  )}
-                  style={active ? { color: t.accent } : undefined}
-                >
-                  <Icon size={14} />
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
+          <MetricChips active={dataType} onSelect={setDataType} />
           <div className="w-[220px] shrink-0">
-            <SegmentedControl
-              value={timespan}
-              onChange={setTimespan}
-              options={TIME_OPTIONS}
-            />
+            <SegmentedControl value={timespan} onChange={setTimespan} options={TIME_OPTIONS} />
           </div>
         </div>
 

@@ -25,7 +25,7 @@ export function GlassCard({
         strong ? "glass-strong" : "glass",
         "overflow-hidden rounded-[var(--radius-lg)]",
         elevated && "shadow-[0_18px_30px_rgba(2,6,20,0.55)]",
-        className
+        className,
       )}
       {...rest}
     >

@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  growattConfig,
+  weatherConfig,
+  type ApiSettingsResponse,
+  type UserProfile,
+} from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import {
   CloudSun,
@@ -12,12 +17,13 @@ import {
   SunMedium,
   User,
 } from "lucide-react";
-import type { ApiSettingsResponse, UserProfile } from "@hmi/core";
-import { useCore } from "@/lib/hooks/useCore";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { Field } from "@/components/ui/Field";
+import { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBanner } from "@/components/ui/StatusBanner";
+import { useCore } from "@/lib/hooks/useCore";
 
 type Core = ReturnType<typeof useCore>;
 type Banner = { kind: "success" | "error"; message: string } | null;
@@ -70,17 +76,15 @@ export default function SettingsPage() {
   });
 
   // Cross-device sync: refresh integration settings when they change elsewhere.
-  useEffect(
-    () => settings.subscribeSettings(() => refetchApi()),
-    [settings, refetchApi]
-  );
+  useEffect(() => settings.subscribeSettings(() => void refetchApi()), [settings, refetchApi]);
+
+  const gc = growattConfig(api);
+  const wc = weatherConfig(api);
 
   return (
     <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-5">
       <div>
-        <h1 className="text-[30px] font-extrabold tracking-[-0.8px] text-text-primary">
-          Settings
-        </h1>
+        <h1 className="text-[30px] font-extrabold tracking-[-0.8px] text-text-primary">Settings</h1>
         <p className="mt-1 text-[14.5px] font-medium text-text-muted">
           Account &amp; integration credentials
         </p>
@@ -92,9 +96,9 @@ export default function SettingsPage() {
       <div className="grid items-start gap-4 lg:grid-cols-2">
         <Section title="Growatt solar" icon={SunMedium} gradient="energy">
           <GrowattForm
-            key={api?.growatt?.email ?? "g"}
-            initialEmail={api?.growatt?.email ?? ""}
-            configured={!!api?.growatt?.hasPassword}
+            key={gc.key}
+            initialEmail={gc.email}
+            configured={gc.configured}
             settings={settings}
             onSaved={refetchApi}
           />
@@ -102,9 +106,9 @@ export default function SettingsPage() {
 
         <Section title="Weather.com station" icon={CloudSun} gradient="solar">
           <WeatherForm
-            key={api?.weather?.stationId ?? "w"}
-            initialStationId={api?.weather?.stationId ?? ""}
-            configured={!!api?.weather?.hasApiKey}
+            key={wc.key}
+            initialStationId={wc.station}
+            configured={wc.configured}
             settings={settings}
             onSaved={refetchApi}
           />
@@ -126,9 +130,7 @@ function ConfiguredBadge({ on }: { on: boolean }) {
   return (
     <span
       className={`ml-2 rounded-[var(--radius-pill)] px-2.5 py-1 text-[11px] font-bold ${
-        on
-          ? "bg-[rgba(52,211,153,0.13)] text-positive"
-          : "bg-glass-fill text-text-muted"
+        on ? "bg-[rgba(52,211,153,0.13)] text-positive" : "bg-glass-fill text-text-muted"
       }`}
     >
       {on ? "Configured" : "Not set"}
@@ -171,8 +173,19 @@ function AccountForm({
   return (
     <>
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
-      <Field label="USERNAME" icon={User} value={username} onChange={(e) => setUsername(e.target.value)} />
-      <Field label="EMAIL" icon={Mail} inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <Field
+        label="USERNAME"
+        icon={User}
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <Field
+        label="EMAIL"
+        icon={Mail}
+        inputMode="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
       <Button label="Save profile" onClick={save} loading={saving} />
     </>
   );
@@ -188,8 +201,7 @@ function PasswordForm({ account }: { account: Core["account"] }) {
     setBanner(null);
     if (pw.length < 4)
       return setBanner({ kind: "error", message: "Password must be at least 4 characters." });
-    if (pw !== confirm)
-      return setBanner({ kind: "error", message: "Passwords do not match." });
+    if (pw !== confirm) return setBanner({ kind: "error", message: "Passwords do not match." });
     setSaving(true);
     try {
       await account.updateUserPassword({ currentPassword: "", newPassword: pw });
@@ -209,8 +221,20 @@ function PasswordForm({ account }: { account: Core["account"] }) {
   return (
     <>
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
-      <Field label="NEW PASSWORD" icon={KeyRound} secure value={pw} onChange={(e) => setPw(e.target.value)} />
-      <Field label="CONFIRM PASSWORD" icon={KeyRound} secure value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+      <Field
+        label="NEW PASSWORD"
+        icon={KeyRound}
+        secure
+        value={pw}
+        onChange={(e) => setPw(e.target.value)}
+      />
+      <Field
+        label="CONFIRM PASSWORD"
+        icon={KeyRound}
+        secure
+        value={confirm}
+        onChange={(e) => setConfirm(e.target.value)}
+      />
       <Button label="Change password" onClick={save} loading={saving} />
     </>
   );
@@ -257,8 +281,21 @@ function GrowattForm({
         <ConfiguredBadge on={configured} />
       </p>
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
-      <Field label="ACCOUNT (EMAIL)" icon={Mail} inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <Field label="PASSWORD" icon={KeyRound} secure placeholder="Enter to update" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <Field
+        label="ACCOUNT (EMAIL)"
+        icon={Mail}
+        inputMode="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <Field
+        label="PASSWORD"
+        icon={KeyRound}
+        secure
+        placeholder="Enter to update"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
       <Button label="Save Growatt credentials" gradient="energy" onClick={save} loading={saving} />
     </>
   );
@@ -305,8 +342,21 @@ function WeatherForm({
         <ConfiguredBadge on={configured} />
       </p>
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
-      <Field label="WEATHER STATION ID" icon={MapPin} placeholder="e.g. ISANDN24" value={stationId} onChange={(e) => setStationId(e.target.value)} />
-      <Field label="API KEY" icon={SunMedium} secure placeholder="Enter to update" value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
+      <Field
+        label="WEATHER STATION ID"
+        icon={MapPin}
+        placeholder="e.g. ISANDN24"
+        value={stationId}
+        onChange={(e) => setStationId(e.target.value)}
+      />
+      <Field
+        label="API KEY"
+        icon={SunMedium}
+        secure
+        placeholder="Enter to update"
+        value={apiKey}
+        onChange={(e) => setApiKey(e.target.value)}
+      />
       <Button label="Save weather credentials" onClick={save} loading={saving} />
     </>
   );

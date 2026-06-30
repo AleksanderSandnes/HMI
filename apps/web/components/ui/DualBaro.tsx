@@ -1,8 +1,9 @@
 "use client";
 
-import { clamp, round, toNum } from "@/lib/format";
 import { GlassCard } from "./GlassCard";
 import { Skeleton } from "./Skeleton";
+
+import { clamp, round, toNum } from "@/lib/format";
 
 // Typical sea-level pressure range (hPa) over a 270° arc.
 const P_MIN = 960;
@@ -30,8 +31,7 @@ const TICKS = Array.from({ length: 11 }, (_, i) => {
 });
 
 function Gauge({ value }: { value: number | null }) {
-  const frac =
-    value != null ? clamp((value - P_MIN) / (P_MAX - P_MIN), 0, 1) : null;
+  const frac = value != null ? clamp((value - P_MIN) / (P_MAX - P_MIN), 0, 1) : null;
   const ang = frac != null ? START + frac * SWEEP : null;
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full">
@@ -41,7 +41,13 @@ function Gauge({ value }: { value: number | null }) {
           <stop offset="100%" stopColor="#f59e0b" />
         </linearGradient>
       </defs>
-      <path d={ARC} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="2.5" strokeLinecap="round" />
+      <path
+        d={ARC}
+        fill="none"
+        stroke="rgba(255,255,255,0.12)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
       {TICKS.map((t, i) => (
         <line
           key={i}
@@ -58,11 +64,26 @@ function Gauge({ value }: { value: number | null }) {
           transform={`rotate(${ang} 50 50)`}
           style={{ transition: "transform 0.6s cubic-bezier(.2,.8,.2,1)" }}
         >
-          <line x1="50" y1="53" x2="50" y2="16" stroke="url(#baro-n)" strokeWidth="3" strokeLinecap="round" />
+          <line
+            x1="50"
+            y1="53"
+            x2="50"
+            y2="16"
+            stroke="url(#baro-n)"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
           <path d="M50 10 L45 23 L50 19 L55 23 Z" fill="url(#baro-n)" />
         </g>
       )}
-      <circle cx="50" cy="50" r="3.5" fill="#0a1124" stroke="rgba(255,255,255,0.32)" strokeWidth="1" />
+      <circle
+        cx="50"
+        cy="50"
+        r="3.5"
+        fill="#0a1124"
+        stroke="rgba(255,255,255,0.32)"
+        strokeWidth="1"
+      />
     </svg>
   );
 }
@@ -81,9 +102,7 @@ function Module({
   const v = toNum(value);
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.3px] text-text-muted">
-        {label}
-      </p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.3px] text-text-muted">{label}</p>
       <div className="relative h-[92px] w-[92px]">
         <Gauge value={v} />
       </div>

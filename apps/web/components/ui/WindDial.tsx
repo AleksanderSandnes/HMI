@@ -1,8 +1,10 @@
 "use client";
 
 import { windCompass } from "@hmi/core";
-import { toNum } from "@/lib/format";
+
 import { GlassCard } from "./GlassCard";
+
+import { toNum } from "@/lib/format";
 
 /**
  * Circular wind compass as a single centered object: a dial with an arrow that
@@ -38,11 +40,26 @@ export function WindDial({
               <stop offset="100%" stopColor="#f59e0b" />
             </linearGradient>
           </defs>
-          <circle cx="50" cy="50" r="46" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
-          <text x="50" y="14.5" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#fbbf24">N</text>
-          <text x="88" y="53" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#71809a">E</text>
-          <text x="50" y="91" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#71809a">S</text>
-          <text x="12" y="53" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#71809a">W</text>
+          <circle
+            cx="50"
+            cy="50"
+            r="46"
+            fill="rgba(255,255,255,0.03)"
+            stroke="rgba(255,255,255,0.12)"
+            strokeWidth="1"
+          />
+          <text x="50" y="14.5" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#fbbf24">
+            N
+          </text>
+          <text x="88" y="53" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#71809a">
+            E
+          </text>
+          <text x="50" y="91" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#71809a">
+            S
+          </text>
+          <text x="12" y="53" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#71809a">
+            W
+          </text>
           {/* Arrow on the rim only, so the centre stays clear for the speed. */}
           {deg != null && (
             <g

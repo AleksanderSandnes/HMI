@@ -47,4 +47,4 @@ export interface SolarData {
   device?: SolarDeviceInfo;
 }
 
-export type SolarTimespan = 'hourly' | 'weekly' | 'monthly' | 'yearly' | 'total';
+export type SolarTimespan = "hourly" | "weekly" | "monthly" | "yearly" | "total";

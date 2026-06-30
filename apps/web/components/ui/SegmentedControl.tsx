@@ -38,8 +38,7 @@ export function SegmentedControl({
             style={
               active
                 ? {
-                    backgroundImage:
-                      "linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)",
+                    backgroundImage: "linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)",
                   }
                 : undefined
             }
@@ -47,7 +46,7 @@ export function SegmentedControl({
               "flex-1 rounded-[var(--radius-pill)] py-2.5 text-center text-[13px] transition",
               active
                 ? "font-extrabold text-text-inverse"
-                : "font-semibold text-text-muted hover:text-text-secondary"
+                : "font-semibold text-text-muted hover:text-text-secondary",
             )}
           >
             {opt.label}

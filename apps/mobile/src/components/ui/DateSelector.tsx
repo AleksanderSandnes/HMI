@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
 import {
+  Modal as RNModal,
   View,
   Text,
   Pressable,
   StyleSheet,
-  Modal,
   useWindowDimensions,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome5 } from '@expo/vector-icons';
-import GlassCard from './GlassCard';
-import Calendar from './Calendar';
-import { theme, glassBlur } from '../../theme/theme';
+} from "react-native";
+
+import { cn } from "../../lib/cn";
+import { GRADIENTS } from "../../lib/gradients";
+
+import { Calendar } from "./Calendar";
+import { GlassCard } from "./GlassCard";
 
 interface DateSelectorProps {
   selectedDate: string;
@@ -20,257 +24,222 @@ interface DateSelectorProps {
 }
 
 const QUICK = [
-  { label: 'Today', daysAgo: 0 },
-  { label: 'Yesterday', daysAgo: 1 },
-  { label: '7d ago', daysAgo: 7 },
-  { label: '30d ago', daysAgo: 30 },
+  { label: "Today", daysAgo: 0 },
+  { label: "Yesterday", daysAgo: 1 },
+  { label: "7d ago", daysAgo: 7 },
+  { label: "30d ago", daysAgo: 30 },
 ];
 
-const toISO = (d: Date) => d.toISOString().split('T')[0];
+const toISO = (d: Date) => d.toISOString().split("T")[0];
 
-const styles = StyleSheet.create({
-  trigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  triggerText: { flex: 1 },
-  relative: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: theme.text.primary,
-  },
-  absolute: {
-    fontSize: 12.5,
-    color: theme.text.muted,
-    marginTop: 2,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(4, 7, 16, 0.7)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  sheet: {
-    width: '100%',
-    maxWidth: 420,
-    padding: 22,
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 18,
-  },
-  sheetTitle: {
-    fontSize: 19,
-    fontWeight: '800',
-    color: theme.text.primary,
-  },
-  closeBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.glass.fillStrong,
-    borderWidth: 1,
-    borderColor: theme.glass.border,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: theme.text.muted,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    marginBottom: 12,
-  },
-  quickGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 22,
-  },
-  quickBtn: {
-    flexGrow: 1,
-    flexBasis: '40%',
-    paddingVertical: 13,
-    borderRadius: theme.radius.md,
-    alignItems: 'center',
-    backgroundColor: theme.glass.fill,
-    borderWidth: 1,
-    borderColor: theme.glass.border,
-  },
-  quickBtnActive: {
-    backgroundColor: theme.solar.soft,
-    borderColor: theme.solar.main,
-  },
-  quickText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: theme.text.secondary,
-  },
-  quickTextActive: { color: theme.solar.light },
-  customBtn: {
-    borderRadius: theme.radius.md,
-    overflow: 'hidden',
-  },
-  customInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 15,
-  },
-  customText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: theme.text.inverse,
-  },
-});
+const quickIso = (daysAgo: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return toISO(d);
+};
 
-export default function DateSelector({
+function DateTrigger({
+  relative,
+  absolute,
+  disabled,
+  onPress,
+}: {
+  relative: string;
+  absolute: string;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <GlassCard strong>
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        className="flex-row items-center gap-3.5 px-4 py-3.5"
+      >
+        <LinearGradient
+          colors={GRADIENTS.accent}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="calendar" size={18} color="#0a1124" />
+        </LinearGradient>
+        <View className="flex-1">
+          <Text className="text-base font-extrabold text-text-primary">{relative}</Text>
+          <Text className="mt-0.5 text-[12.5px] text-text-muted">{absolute}</Text>
+        </View>
+        <Ionicons name="chevron-down" size={14} color="#71809a" />
+      </Pressable>
+    </GlassCard>
+  );
+}
+
+interface QuickSheetProps {
+  visible: boolean;
+  width: number;
+  selectedDate: string;
+  onClose: () => void;
+  onPick: (daysAgo: number) => void;
+  onCustom: () => void;
+}
+
+function QuickGrid({
   selectedDate,
-  onDateSelect,
-  disabled = false,
-}: DateSelectorProps) {
+  onPick,
+}: {
+  selectedDate: string;
+  onPick: (daysAgo: number) => void;
+}) {
+  return (
+    <View className="mb-[22px] flex-row flex-wrap gap-2.5">
+      {QUICK.map((q) => {
+        const act = quickIso(q.daysAgo) === selectedDate;
+        return (
+          <Pressable
+            key={q.label}
+            onPress={() => onPick(q.daysAgo)}
+            className={cn(
+              "grow basis-[40%] items-center rounded-md border py-3",
+              act ? "border-solar bg-solar-soft" : "border-glass-border bg-glass-fill",
+            )}
+          >
+            <Text
+              className={cn("text-sm font-bold", act ? "text-solar-light" : "text-text-secondary")}
+            >
+              {q.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function CustomDateButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} className="overflow-hidden rounded-md">
+      <LinearGradient
+        colors={GRADIENTS.solar}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          paddingVertical: 15,
+        }}
+      >
+        <Ionicons name="calendar-outline" size={15} color="#0a1124" />
+        <Text className="text-[15px] font-extrabold text-text-inverse">Pick a custom date</Text>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
+function QuickSheet({ visible, width, selectedDate, onClose, onPick, onCustom }: QuickSheetProps) {
+  return (
+    <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable onPress={onClose} className="flex-1 items-center justify-center p-6">
+        <BlurView
+          intensity={14}
+          tint="dark"
+          experimentalBlurMethod="dimezisBlurView"
+          style={StyleSheet.absoluteFill}
+        />
+        <View
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+          className="bg-[rgba(4,7,16,0.7)]"
+        />
+        <Pressable onPress={(e) => e.stopPropagation()}>
+          <GlassCard
+            strong
+            elevated
+            className="p-[22px]"
+            style={{ width: Math.min(420, width - 48) }}
+          >
+            <View className="mb-[18px] flex-row items-center justify-between">
+              <Text className="text-[19px] font-extrabold text-text-primary">Select date</Text>
+              <Pressable
+                onPress={onClose}
+                className="h-[34px] w-[34px] items-center justify-center rounded-pill border border-glass-border bg-glass-fill-strong"
+              >
+                <Ionicons name="close" size={15} color="#aeb8cc" />
+              </Pressable>
+            </View>
+
+            <Text className="mb-3 text-xs font-bold uppercase tracking-[0.5px] text-text-muted">
+              Quick select
+            </Text>
+            <QuickGrid selectedDate={selectedDate} onPick={onPick} />
+
+            <Text className="mb-3 text-xs font-bold uppercase tracking-[0.5px] text-text-muted">
+              Custom
+            </Text>
+            <CustomDateButton onPress={onCustom} />
+          </GlassCard>
+        </Pressable>
+      </Pressable>
+    </RNModal>
+  );
+}
+
+export function DateSelector({ selectedDate, onDateSelect, disabled = false }: DateSelectorProps) {
   const { width } = useWindowDimensions();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const selectedObj = new Date(selectedDate);
 
   const relative = (() => {
-    const diff = Math.floor(
-      (Date.now() - selectedObj.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    if (diff === 0) return 'Today';
-    if (diff === 1) return 'Yesterday';
+    const diff = Math.floor((Date.now() - selectedObj.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
     if (diff > 1 && diff <= 7) return `${diff} days ago`;
-    return selectedObj.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
+    return selectedObj.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
     });
   })();
 
-  const absolute = selectedObj.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  const absolute = selectedObj.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 
   const pickQuick = (daysAgo: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() - daysAgo);
-    onDateSelect(toISO(d));
+    onDateSelect(quickIso(daysAgo));
     setSheetOpen(false);
-  };
-
-  const isQuickActive = (daysAgo: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() - daysAgo);
-    return toISO(d) === selectedDate;
   };
 
   return (
     <>
-      <GlassCard strong>
-        <Pressable
-          style={styles.trigger}
-          onPress={() => setSheetOpen(true)}
-          disabled={disabled}
-        >
-          <LinearGradient
-            colors={theme.accent.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.iconWrap}
-          >
-            <FontAwesome5 name="calendar-alt" size={18} color="#0a1124" solid />
-          </LinearGradient>
-          <View style={styles.triggerText}>
-            <Text style={styles.relative}>{relative}</Text>
-            <Text style={styles.absolute}>{absolute}</Text>
-          </View>
-          <FontAwesome5
-            name="chevron-down"
-            size={14}
-            color={theme.text.muted}
-          />
-        </Pressable>
-      </GlassCard>
+      <DateTrigger
+        relative={relative}
+        absolute={absolute}
+        disabled={disabled}
+        onPress={() => setSheetOpen(true)}
+      />
 
-      <Modal
+      <QuickSheet
         visible={sheetOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSheetOpen(false)}
-      >
-        <View style={[styles.overlay, glassBlur(6)]}>
-          <GlassCard strong elevated style={[styles.sheet, { maxWidth: Math.min(420, width - 48) }]}>
-            <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>Select date</Text>
-              <Pressable
-                style={styles.closeBtn}
-                onPress={() => setSheetOpen(false)}
-              >
-                <FontAwesome5
-                  name="times"
-                  size={15}
-                  color={theme.text.secondary}
-                />
-              </Pressable>
-            </View>
-
-            <Text style={styles.sectionLabel}>Quick select</Text>
-            <View style={styles.quickGrid}>
-              {QUICK.map((q) => {
-                const act = isQuickActive(q.daysAgo);
-                return (
-                  <Pressable
-                    key={q.label}
-                    style={[styles.quickBtn, act && styles.quickBtnActive]}
-                    onPress={() => pickQuick(q.daysAgo)}
-                  >
-                    <Text style={[styles.quickText, act && styles.quickTextActive]}>
-                      {q.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <Text style={styles.sectionLabel}>Custom</Text>
-            <Pressable
-              style={styles.customBtn}
-              onPress={() => {
-                setSheetOpen(false);
-                setPickerOpen(true);
-              }}
-            >
-              <LinearGradient
-                colors={theme.solar.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.customInner}
-              >
-                <FontAwesome5 name="calendar-day" size={15} color="#0a1124" solid />
-                <Text style={styles.customText}>Pick a custom date</Text>
-              </LinearGradient>
-            </Pressable>
-          </GlassCard>
-        </View>
-      </Modal>
+        width={width}
+        selectedDate={selectedDate}
+        onClose={() => setSheetOpen(false)}
+        onPick={pickQuick}
+        onCustom={() => {
+          setSheetOpen(false);
+          setPickerOpen(true);
+        }}
+      />
 
       <Calendar
         visible={pickerOpen}
@@ -284,3 +253,5 @@ export default function DateSelector({
     </>
   );
 }
+
+export default DateSelector;

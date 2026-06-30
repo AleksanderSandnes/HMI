@@ -1,12 +1,12 @@
-const axios = require('axios');
-const Notification = require('../models/Notification');
+const axios = require("axios");
+const Notification = require("../models/Notification");
 
-const EXPO_PUSH_ENDPOINT = 'https://exp.host/--/api/v2/push/send';
+const EXPO_PUSH_ENDPOINT = "https://exp.host/--/api/v2/push/send";
 
 // Expo push tokens look like `ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]`.
 const isExpoPushToken = (token) =>
-  typeof token === 'string' &&
-  (token.startsWith('ExponentPushToken[') || token.startsWith('ExpoPushToken['));
+  typeof token === "string" &&
+  (token.startsWith("ExponentPushToken[") || token.startsWith("ExpoPushToken["));
 
 /**
  * Persist an in-app notification for a user. Never throws — a failed notification write
@@ -16,10 +16,10 @@ const isExpoPushToken = (token) =>
  */
 const createNotification = async ({
   userId,
-  type = 'system',
-  level = 'info',
+  type = "system",
+  level = "info",
   title,
-  message = '',
+  message = "",
   meta = undefined,
 }) => {
   try {
@@ -52,7 +52,7 @@ const sendExpoPush = async (tokens, { title, body, data = {} }) => {
 
   const messages = valid.map((to) => ({
     to,
-    sound: 'default',
+    sound: "default",
     title,
     body,
     data,
@@ -61,8 +61,8 @@ const sendExpoPush = async (tokens, { title, body, data = {} }) => {
   try {
     await axios.post(EXPO_PUSH_ENDPOINT, messages, {
       headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
+        Accept: "application/json",
+        "Content-Type": "application/json",
       },
       timeout: 10000,
     });

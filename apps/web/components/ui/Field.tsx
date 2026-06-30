@@ -1,17 +1,40 @@
 "use client";
 
-import { useState } from "react";
 import { Eye, EyeOff, type LucideIcon } from "lucide-react";
+import { useState } from "react";
+
 import { cn } from "@/lib/utils";
 
-interface FieldProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
+interface FieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
   label: string;
   icon?: LucideIcon;
   /** Renders a password field with a show/hide toggle. */
   secure?: boolean;
   hint?: string;
   error?: string;
+}
+
+function RevealToggle({ reveal, onToggle }: { reveal: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="py-1.5 pl-2.5 text-text-secondary"
+      aria-label={reveal ? "Hide password" : "Show password"}
+    >
+      {reveal ? <EyeOff size={14} /> : <Eye size={14} />}
+    </button>
+  );
+}
+
+function FieldHelp({ error, hint }: { error?: string; hint?: string }) {
+  if (error) {
+    return <p className="ml-0.5 mt-1.5 text-xs font-semibold text-negative">{error}</p>;
+  }
+  if (hint) {
+    return <p className="mt-1.5 text-[11.5px] font-medium text-text-muted">{hint}</p>;
+  }
+  return null;
 }
 
 /**
@@ -40,18 +63,13 @@ export function Field({
       <div
         className={cn(
           "flex items-center rounded-[var(--radius-md)] border px-3.5 transition",
-          focused
-            ? "border-solar bg-glass-fill"
-            : "border-glass-border bg-glass-fill-subtle"
+          focused ? "border-solar bg-glass-fill" : "border-glass-border bg-glass-fill-subtle",
         )}
       >
         {Icon ? (
           <Icon
             size={14}
-            className={cn(
-              "mr-2.5 shrink-0",
-              focused ? "text-solar-light" : "text-text-muted"
-            )}
+            className={cn("mr-2.5 shrink-0", focused ? "text-solar-light" : "text-text-muted")}
           />
         ) : null}
         <input
@@ -67,27 +85,12 @@ export function Field({
           }}
           className={cn(
             "w-full bg-transparent py-3 text-[15px] font-semibold text-text-primary outline-none placeholder:text-text-muted",
-            className
+            className,
           )}
         />
-        {secure ? (
-          <button
-            type="button"
-            onClick={() => setReveal((r) => !r)}
-            className="py-1.5 pl-2.5 text-text-secondary"
-            aria-label={reveal ? "Hide password" : "Show password"}
-          >
-            {reveal ? <EyeOff size={14} /> : <Eye size={14} />}
-          </button>
-        ) : null}
+        {secure ? <RevealToggle reveal={reveal} onToggle={() => setReveal((r) => !r)} /> : null}
       </div>
-      {error ? (
-        <p className="ml-0.5 mt-1.5 text-xs font-semibold text-negative">
-          {error}
-        </p>
-      ) : hint ? (
-        <p className="mt-1.5 text-[11.5px] font-medium text-text-muted">{hint}</p>
-      ) : null}
+      <FieldHelp error={error} hint={hint} />
     </div>
   );
 }

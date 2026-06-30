@@ -3,61 +3,54 @@
  * Handles secure storage and retrieval of API credentials in MongoDB
  */
 
-const express = require('express');
-const bcrypt = require('bcrypt');
-const isAuthenticated = require('../middleware/isAuth.js');
-const User = require('../models/User');
-const { encrypt, decrypt } = require('../utils/crypto');
+const express = require("express");
+const bcrypt = require("bcrypt");
+const isAuthenticated = require("../middleware/isAuth.js");
+const User = require("../models/User");
+const { encrypt, decrypt } = require("../utils/crypto");
 const router = express.Router();
 
 /**
  * Get user's API settings
  * GET /api/settings/api
  */
-router.get('/api', isAuthenticated, async (req, res) => {
+router.get("/api", isAuthenticated, async (req, res) => {
   try {
     // Log the incoming JWT (if present)
-    const authHeader =
-      req.headers['authorization'] || req.headers['Authorization'];
+    const authHeader = req.headers["authorization"] || req.headers["Authorization"];
     console.log(
-      '[API Settings][GET /api/settings/api] Incoming JWT:',
-      authHeader ? authHeader.substring(0, 40) + '...' : 'None'
+      "[API Settings][GET /api/settings/api] Incoming JWT:",
+      authHeader ? authHeader.substring(0, 40) + "..." : "None",
     );
-    console.log(
-      '[API Settings][GET /api/settings/api] Authenticated user ID:',
-      req.user
-    );
+    console.log("[API Settings][GET /api/settings/api] Authenticated user ID:", req.user);
 
-    const user = await User.findById(req.user).select('apiSettings');
+    const user = await User.findById(req.user).select("apiSettings");
     console.log(
-      '[API Settings][GET /api/settings/api] User lookup result:',
-      user ? 'Found' : 'Not found'
+      "[API Settings][GET /api/settings/api] User lookup result:",
+      user ? "Found" : "Not found",
     );
 
     if (!user) {
-      console.log(
-        '[API Settings][GET /api/settings/api] User not found for ID:',
-        req.user
-      );
-      return res.status(404).json({ message: 'User not found' });
+      console.log("[API Settings][GET /api/settings/api] User not found for ID:", req.user);
+      return res.status(404).json({ message: "User not found" });
     }
 
     // Return API settings without exposing sensitive data
     const apiSettings = {
       weather: {
-        stationId: user.apiSettings?.weather?.stationId || '',
+        stationId: user.apiSettings?.weather?.stationId || "",
         hasApiKey: !!user.apiSettings?.weather?.apiKey,
       },
       growatt: {
-        email: user.apiSettings?.growatt?.email || '',
-        plantId: user.apiSettings?.growatt?.plantId || '',
+        email: user.apiSettings?.growatt?.email || "",
+        plantId: user.apiSettings?.growatt?.plantId || "",
         hasPassword: !!user.apiSettings?.growatt?.password,
       },
     };
 
     console.log(
-      '[API Settings][GET /api/settings/api] Returning apiSettings:',
-      JSON.stringify(apiSettings)
+      "[API Settings][GET /api/settings/api] Returning apiSettings:",
+      JSON.stringify(apiSettings),
     );
 
     res.status(200).json({
@@ -65,13 +58,10 @@ router.get('/api', isAuthenticated, async (req, res) => {
       apiSettings,
     });
   } catch (error) {
-    console.error(
-      '[API Settings][GET /api/settings/api] Error fetching API settings:',
-      error
-    );
+    console.error("[API Settings][GET /api/settings/api] Error fetching API settings:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch API settings',
+      message: "Failed to fetch API settings",
     });
   }
 });
@@ -80,32 +70,29 @@ router.get('/api', isAuthenticated, async (req, res) => {
  * Update user's API settings
  * PUT /api/settings/api
  */
-router.put('/api', isAuthenticated, async (req, res) => {
+router.put("/api", isAuthenticated, async (req, res) => {
   try {
-    console.log(
-      '[API Settings] Received update request:',
-      JSON.stringify(req.body, null, 2)
-    );
+    console.log("[API Settings] Received update request:", JSON.stringify(req.body, null, 2));
 
     const { growatt, weather } = req.body;
 
     // Validate at least one setting is provided
     if (!growatt && !weather) {
-      console.log('[API Settings] Error: No settings provided');
+      console.log("[API Settings] Error: No settings provided");
       return res.status(400).json({
         success: false,
-        message: 'At least one API setting (growatt or weather) is required',
+        message: "At least one API setting (growatt or weather) is required",
       });
     }
 
     const user = await User.findById(req.user);
-    console.log('[API Settings] Found user:', user ? user.email : 'null');
+    console.log("[API Settings] Found user:", user ? user.email : "null");
 
     if (!user) {
-      console.log('[API Settings] Error: User not found');
+      console.log("[API Settings] Error: User not found");
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
@@ -116,26 +103,23 @@ router.put('/api', isAuthenticated, async (req, res) => {
 
     // Update Growatt settings if provided
     if (growatt) {
-      console.log(
-        '[API Settings] Updating Growatt settings:',
-        JSON.stringify(growatt, null, 2)
-      );
+      console.log("[API Settings] Updating Growatt settings:", JSON.stringify(growatt, null, 2));
 
       if (!growatt.email) {
-        console.log('[API Settings] Error: Growatt email missing');
+        console.log("[API Settings] Error: Growatt email missing");
         return res.status(400).json({
           success: false,
-          message: 'Growatt email is required',
+          message: "Growatt email is required",
         });
       }
 
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(growatt.email)) {
-        console.log('[API Settings] Error: Invalid email format');
+        console.log("[API Settings] Error: Invalid email format");
         return res.status(400).json({
           success: false,
-          message: 'Invalid email format',
+          message: "Invalid email format",
         });
       }
 
@@ -144,27 +128,21 @@ router.put('/api', isAuthenticated, async (req, res) => {
       }
 
       user.apiSettings.growatt.email = growatt.email;
-      user.apiSettings.growatt.plantId = growatt.plantId || '';
-      console.log(
-        '[API Settings] Set email and plantId:',
-        user.apiSettings.growatt
-      );
+      user.apiSettings.growatt.plantId = growatt.plantId || "";
+      console.log("[API Settings] Set email and plantId:", user.apiSettings.growatt);
 
       // Only update password if provided
       if (growatt.password && growatt.password.trim()) {
-        console.log('[API Settings] Saving password directly (no encryption)');
+        console.log("[API Settings] Saving password directly (no encryption)");
         // Store password directly (no encryption as requested)
         user.apiSettings.growatt.password = growatt.password.trim();
-        console.log('[API Settings] Password saved successfully');
+        console.log("[API Settings] Password saved successfully");
       }
     }
 
     // Update Weather settings if provided
     if (weather) {
-      console.log(
-        '[API Settings] Updating Weather settings:',
-        JSON.stringify(weather, null, 2)
-      );
+      console.log("[API Settings] Updating Weather settings:", JSON.stringify(weather, null, 2));
 
       if (!user.apiSettings.weather) {
         user.apiSettings.weather = {};
@@ -175,25 +153,25 @@ router.put('/api', isAuthenticated, async (req, res) => {
         (!weather.apiKey || !weather.apiKey.trim()) &&
         (!weather.stationId || !weather.stationId.trim())
       ) {
-        console.log('[API Settings] Removing weather settings (empty values)');
+        console.log("[API Settings] Removing weather settings (empty values)");
         delete user.apiSettings.weather;
       } else {
         if (!weather.stationId || !weather.stationId.trim()) {
-          console.log('[API Settings] Error: Weather station ID missing');
+          console.log("[API Settings] Error: Weather station ID missing");
           return res.status(400).json({
             success: false,
-            message: 'Weather station ID is required',
+            message: "Weather station ID is required",
           });
         }
 
         user.apiSettings.weather.stationId = weather.stationId.trim();
-        console.log('[API Settings] Set weather station ID');
+        console.log("[API Settings] Set weather station ID");
 
         // Only update API key if provided and not empty
         if (weather.apiKey && weather.apiKey.trim()) {
-          console.log('[API Settings] Encrypting weather API key');
+          console.log("[API Settings] Encrypting weather API key");
           user.apiSettings.weather.apiKey = encrypt(weather.apiKey.trim());
-          console.log('[API Settings] Weather API key encrypted successfully');
+          console.log("[API Settings] Weather API key encrypted successfully");
         }
       }
     }
@@ -201,21 +179,18 @@ router.put('/api', isAuthenticated, async (req, res) => {
     // Update timestamp
     user.apiSettings.updatedAt = new Date();
 
-    console.log('[API Settings] Saving user to database...');
+    console.log("[API Settings] Saving user to database...");
     await user.save();
-    console.log('[API Settings] User saved successfully');
-    console.log(
-      '[API Settings] User document after save:',
-      JSON.stringify(user, null, 2)
-    );
+    console.log("[API Settings] User saved successfully");
+    console.log("[API Settings] User document after save:", JSON.stringify(user, null, 2));
 
     console.log(
-      `[API Settings] Updated API settings for user ${user.email}${growatt ? ' (Growatt)' : ''}${weather ? ' (Weather)' : ''}`
+      `[API Settings] Updated API settings for user ${user.email}${growatt ? " (Growatt)" : ""}${weather ? " (Weather)" : ""}`,
     );
 
     res.status(200).json({
       success: true,
-      message: 'API settings updated successfully',
+      message: "API settings updated successfully",
       apiSettings: {
         growatt: user.apiSettings.growatt
           ? {
@@ -233,12 +208,12 @@ router.put('/api', isAuthenticated, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('[API Settings] Error updating API settings:', error);
-    console.error('[API Settings] Error stack:', error.stack);
+    console.error("[API Settings] Error updating API settings:", error);
+    console.error("[API Settings] Error stack:", error.stack);
     res.status(500).json({
       success: false,
-      message: 'Failed to update API settings',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      message: "Failed to update API settings",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 });
@@ -247,14 +222,14 @@ router.put('/api', isAuthenticated, async (req, res) => {
  * Get Growatt credentials (for API use only)
  * GET /api/settings/api/credentials
  */
-router.get('/credentials', isAuthenticated, async (req, res) => {
+router.get("/credentials", isAuthenticated, async (req, res) => {
   try {
-    const user = await User.findById(req.user).select('apiSettings');
+    const user = await User.findById(req.user).select("apiSettings");
 
     if (!user || !user.apiSettings?.growatt?.password) {
       return res.status(404).json({
         success: false,
-        message: 'No Growatt credentials found',
+        message: "No Growatt credentials found",
       });
     }
 
@@ -268,10 +243,10 @@ router.get('/credentials', isAuthenticated, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error retrieving credentials:', error);
+    console.error("Error retrieving credentials:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to retrieve credentials',
+      message: "Failed to retrieve credentials",
     });
   }
 });
@@ -280,14 +255,14 @@ router.get('/credentials', isAuthenticated, async (req, res) => {
  * Get decrypted Weather API credentials (for API use only)
  * POST /api/settings/api/weather-credentials
  */
-router.post('/weather-credentials', isAuthenticated, async (req, res) => {
+router.post("/weather-credentials", isAuthenticated, async (req, res) => {
   try {
-    const user = await User.findById(req.user).select('apiSettings');
+    const user = await User.findById(req.user).select("apiSettings");
 
     if (!user || !user.apiSettings?.weather?.apiKey) {
       return res.status(404).json({
         success: false,
-        message: 'No Weather API credentials found',
+        message: "No Weather API credentials found",
       });
     }
 
@@ -303,17 +278,17 @@ router.post('/weather-credentials', isAuthenticated, async (req, res) => {
         },
       });
     } catch (error) {
-      console.error('Weather API key decryption error:', error);
+      console.error("Weather API key decryption error:", error);
       return res.status(500).json({
         success: false,
-        message: 'Failed to decrypt weather API key',
+        message: "Failed to decrypt weather API key",
       });
     }
   } catch (error) {
-    console.error('Error retrieving weather credentials:', error);
+    console.error("Error retrieving weather credentials:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to retrieve weather credentials',
+      message: "Failed to retrieve weather credentials",
     });
   }
 });
@@ -322,14 +297,14 @@ router.post('/weather-credentials', isAuthenticated, async (req, res) => {
  * Clear user's API settings
  * DELETE /api/settings/api
  */
-router.delete('/api', isAuthenticated, async (req, res) => {
+router.delete("/api", isAuthenticated, async (req, res) => {
   try {
     const user = await User.findById(req.user);
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
@@ -344,13 +319,13 @@ router.delete('/api', isAuthenticated, async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'API settings cleared successfully',
+      message: "API settings cleared successfully",
     });
   } catch (error) {
-    console.error('Error clearing API settings:', error);
+    console.error("Error clearing API settings:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to clear API settings',
+      message: "Failed to clear API settings",
     });
   }
 });

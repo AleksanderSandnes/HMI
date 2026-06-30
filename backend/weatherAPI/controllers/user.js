@@ -1,30 +1,30 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const asyncHandler = require('express-async-handler');
-const User = require('../models/User');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const asyncHandler = require("express-async-handler");
+const User = require("../models/User");
 
 const userController = {
   register: asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
 
-    console.log('Registration request received:', {
+    console.log("Registration request received:", {
       username,
       email,
-      password: '***',
+      password: "***",
     });
 
     if (!username || !email || !password) {
-      console.log('Missing fields:', { username, email, password: !!password });
+      console.log("Missing fields:", { username, email, password: !!password });
       res.status(400);
-      throw new Error('Please fill in all fields');
+      throw new Error("Please fill in all fields");
     }
 
     try {
       const userExists = await User.findOne({ email });
       if (userExists) {
-        console.log('User already exists with email:', email);
+        console.log("User already exists with email:", email);
         res.status(400);
-        throw new Error('User already exists');
+        throw new Error("User already exists");
       }
 
       const salt = await bcrypt.genSalt(10);
@@ -36,11 +36,11 @@ const userController = {
         email,
       });
 
-      console.log('User created successfully:', userCreated.id);
+      console.log("User created successfully:", userCreated.id);
 
       // Generate JWT token for the new user (same as login)
-      const token = jwt.sign({ id: userCreated._id }, 'anykey', {
-        expiresIn: '30d',
+      const token = jwt.sign({ id: userCreated._id }, "anykey", {
+        expiresIn: "30d",
       });
 
       res.status(201).json({
@@ -50,10 +50,10 @@ const userController = {
         token, // include token in response
       });
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error("Registration error:", error);
       if (error.code === 11000) {
         res.status(400);
-        throw new Error('Email already exists');
+        throw new Error("Email already exists");
       }
       throw error;
     }
@@ -64,17 +64,17 @@ const userController = {
 
     const user = await User.findOne({ email });
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new Error("Invalid credentials");
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      throw new Error('Invalid credentials');
+      throw new Error("Invalid credentials");
     }
 
-    const token = jwt.sign({ id: user._id }, 'anykey', { expiresIn: '30d' });
+    const token = jwt.sign({ id: user._id }, "anykey", { expiresIn: "30d" });
     res.json({
-      message: 'Logged in successfully',
+      message: "Logged in successfully",
       token,
       id: user._id,
       email: user.email,
@@ -83,7 +83,7 @@ const userController = {
   }),
 
   profile: asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user).select('-password');
+    const user = await User.findById(req.user).select("-password");
     res.json({ user });
   }),
 
@@ -95,14 +95,14 @@ const userController = {
     // Validation
     if (!username || !email) {
       res.status(400);
-      throw new Error('Username and email are required');
+      throw new Error("Username and email are required");
     }
 
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       res.status(400);
-      throw new Error('Invalid email format');
+      throw new Error("Invalid email format");
     }
 
     try {
@@ -114,28 +114,26 @@ const userController = {
 
       if (existingUser) {
         res.status(400);
-        throw new Error('Email is already in use by another account');
+        throw new Error("Email is already in use by another account");
       }
 
       // Update user
       const updatedUser = await User.findByIdAndUpdate(
         userId,
         { username, email },
-        { new: true, runValidators: true }
-      ).select('-password');
+        { new: true, runValidators: true },
+      ).select("-password");
 
       if (!updatedUser) {
         res.status(404);
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
-      console.log(
-        `[UserController] Profile updated for user ${updatedUser.email}`
-      );
+      console.log(`[UserController] Profile updated for user ${updatedUser.email}`);
 
       res.json({
         success: true,
-        message: 'Profile updated successfully',
+        message: "Profile updated successfully",
         user: {
           id: updatedUser._id,
           username: updatedUser.username,
@@ -143,10 +141,10 @@ const userController = {
         },
       });
     } catch (error) {
-      console.error('Profile update error:', error);
+      console.error("Profile update error:", error);
       if (error.code === 11000) {
         res.status(400);
-        throw new Error('Email is already in use');
+        throw new Error("Email is already in use");
       }
       throw error;
     }
@@ -160,12 +158,12 @@ const userController = {
     // Validation
     if (!currentPassword || !newPassword) {
       res.status(400);
-      throw new Error('Current password and new password are required');
+      throw new Error("Current password and new password are required");
     }
 
     if (newPassword.length < 6) {
       res.status(400);
-      throw new Error('New password must be at least 6 characters long');
+      throw new Error("New password must be at least 6 characters long");
     }
 
     try {
@@ -173,17 +171,14 @@ const userController = {
       const user = await User.findById(userId);
       if (!user) {
         res.status(404);
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       // Verify current password
-      const isCurrentPasswordValid = await bcrypt.compare(
-        currentPassword,
-        user.password
-      );
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
       if (!isCurrentPasswordValid) {
         res.status(400);
-        throw new Error('Current password is incorrect');
+        throw new Error("Current password is incorrect");
       }
 
       // Hash new password
@@ -199,10 +194,10 @@ const userController = {
 
       res.json({
         success: true,
-        message: 'Password updated successfully',
+        message: "Password updated successfully",
       });
     } catch (error) {
-      console.error('Password update error:', error);
+      console.error("Password update error:", error);
       throw error;
     }
   }),
@@ -210,11 +205,11 @@ const userController = {
   // Get user profile data
   getProfile: asyncHandler(async (req, res) => {
     try {
-      const user = await User.findById(req.user).select('-password');
+      const user = await User.findById(req.user).select("-password");
 
       if (!user) {
         res.status(404);
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       res.json({
@@ -228,7 +223,7 @@ const userController = {
         },
       });
     } catch (error) {
-      console.error('Get profile error:', error);
+      console.error("Get profile error:", error);
       throw error;
     }
   }),

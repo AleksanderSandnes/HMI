@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 /**
  * In-app notification (web notification center).
@@ -22,30 +22,26 @@ const notificationSchema = new mongoose.Schema(
     // Source of the notification.
     type: {
       type: String,
-      enum: ['weather_sync', 'solar_sync', 'system'],
-      default: 'system',
+      enum: ["weather_sync", "solar_sync", "system"],
+      default: "system",
     },
     // Outcome severity, drives the icon/colour in the UI.
     level: {
       type: String,
-      enum: ['success', 'error', 'info', 'warning'],
-      default: 'info',
+      enum: ["success", "error", "info", "warning"],
+      default: "info",
     },
     title: { type: String, required: true },
-    message: { type: String, default: '' },
+    message: { type: String, default: "" },
     // Optional structured payload (counts, date, etc.).
     meta: { type: mongoose.Schema.Types.Mixed },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Fast "newest first, per user" look-ups.
 notificationSchema.index({ userId: 1, createdAt: -1 });
 
-const Notification = mongoose.model(
-  'Notification',
-  notificationSchema,
-  'notifications'
-);
+const Notification = mongoose.model("Notification", notificationSchema, "notifications");
 
 module.exports = Notification;

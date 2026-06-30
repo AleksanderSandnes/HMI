@@ -4,14 +4,13 @@
 //         Edge Functions and the Java solar job deliver push: just insert a notification row.
 //   2) Direct: { tokens: string[], title, body, data }.
 // Port of backend/weatherAPI/services/notificationService.sendExpoPush. Never throws fatally.
-import { json } from '../_shared/cors.ts';
-import { adminClient } from '../_shared/supabase.ts';
+import { json } from "../_shared/cors.ts";
+import { adminClient } from "../_shared/supabase.ts";
 
-const EXPO_PUSH_ENDPOINT = 'https://exp.host/--/api/v2/push/send';
+const EXPO_PUSH_ENDPOINT = "https://exp.host/--/api/v2/push/send";
 
 const isExpoPushToken = (t: unknown): t is string =>
-  typeof t === 'string' &&
-  (t.startsWith('ExponentPushToken[') || t.startsWith('ExpoPushToken['));
+  typeof t === "string" && (t.startsWith("ExponentPushToken[") || t.startsWith("ExpoPushToken["));
 
 async function sendExpoPush(
   tokens: string[],
@@ -22,10 +21,10 @@ async function sendExpoPush(
   const valid = tokens.filter(isExpoPushToken);
   if (valid.length === 0) return { sent: 0 };
 
-  const messages = valid.map((to) => ({ to, title, body, data, sound: 'default' }));
+  const messages = valid.map((to) => ({ to, title, body, data, sound: "default" }));
   const res = await fetch(EXPO_PUSH_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(messages),
   });
   return { sent: valid.length, expoStatus: res.status };
@@ -37,25 +36,23 @@ Deno.serve(async (req: Request) => {
     const payload = await req.json();
 
     // Shape 1: database webhook on notifications INSERT.
-    if (payload?.type === 'INSERT' && payload?.record) {
+    if (payload?.type === "INSERT" && payload?.record) {
       const rec = payload.record;
       const { data: profile } = await admin
-        .from('profiles')
-        .select('expo_push_tokens')
-        .eq('auth_id', rec.auth_id)
+        .from("profiles")
+        .select("expo_push_tokens")
+        .eq("auth_id", rec.auth_id)
         .maybeSingle();
       const tokens: string[] = profile?.expo_push_tokens ?? [];
-      const result = await sendExpoPush(
-        tokens,
-        rec.title ?? 'HMI',
-        rec.message ?? '',
-        { type: rec.type ?? 'system', notificationId: rec.id },
-      );
+      const result = await sendExpoPush(tokens, rec.title ?? "HMI", rec.message ?? "", {
+        type: rec.type ?? "system",
+        notificationId: rec.id,
+      });
       return json(result);
     }
 
     // Shape 2: direct invocation.
-    const { tokens = [], title = 'HMI', body = '', data = {} } = payload ?? {};
+    const { tokens = [], title = "HMI", body = "", data = {} } = payload ?? {};
     const result = await sendExpoPush(tokens, title, body, data);
     return json(result);
   } catch (err) {

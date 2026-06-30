@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { buildWeatherSeries, windCompass } from "../utils/weatherSeries";
 
 describe("windCompass", () => {
@@ -52,7 +53,7 @@ describe("buildWeatherSeries (hourly)", () => {
     const { series } = buildWeatherSeries(
       [{ obsTimeLocal: "2026-06-10 06:00:00", metric: {} }],
       "temperature",
-      "hourly"
+      "hourly",
     );
     expect(series[0]).toEqual([0]);
   });

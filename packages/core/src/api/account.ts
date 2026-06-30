@@ -1,11 +1,8 @@
 // Account API — profile + password via Supabase Auth + the `profiles` table.
 // Ported from mobile src/services/accountApiService.ts.
-import type {
-  UpdatePasswordData,
-  UpdateProfileData,
-  UserProfile,
-} from '../types/account';
-import type { CoreApiContext } from './context';
+import type { UpdatePasswordData, UpdateProfileData, UserProfile } from "../types/account";
+
+import type { CoreApiContext } from "./context";
 
 export function createAccountApi(ctx: CoreApiContext) {
   const { supabase } = ctx;
@@ -13,7 +10,7 @@ export function createAccountApi(ctx: CoreApiContext) {
   async function requireUserId(): Promise<string> {
     const { data } = await supabase.auth.getUser();
     if (!data.user) {
-      throw new Error('Authentication required. Please log in again.');
+      throw new Error("Authentication required. Please log in again.");
     }
     return data.user.id;
   }
@@ -22,9 +19,9 @@ export function createAccountApi(ctx: CoreApiContext) {
   async function getUserProfile(): Promise<UserProfile> {
     const authId = await requireUserId();
     const { data, error } = await supabase
-      .from('profiles')
-      .select('id, username, email, created_at, updated_at')
-      .eq('auth_id', authId)
+      .from("profiles")
+      .select("id, username, email, created_at, updated_at")
+      .eq("auth_id", authId)
       .single();
     if (error) throw new Error(error.message);
     return {
@@ -37,15 +34,13 @@ export function createAccountApi(ctx: CoreApiContext) {
   }
 
   /** Update username/email. Email changes also update the auth user. */
-  async function updateUserProfile(
-    profileData: UpdateProfileData
-  ): Promise<UserProfile> {
+  async function updateUserProfile(profileData: UpdateProfileData): Promise<UserProfile> {
     const authId = await requireUserId();
 
     const { data: current } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('auth_id', authId)
+      .from("profiles")
+      .select("email")
+      .eq("auth_id", authId)
       .single();
 
     if (current && profileData.email && profileData.email !== current.email) {
@@ -56,10 +51,10 @@ export function createAccountApi(ctx: CoreApiContext) {
     }
 
     const { data, error } = await supabase
-      .from('profiles')
+      .from("profiles")
       .update({ username: profileData.username, email: profileData.email })
-      .eq('auth_id', authId)
-      .select('id, username, email, created_at, updated_at')
+      .eq("auth_id", authId)
+      .select("id, username, email, created_at, updated_at")
       .single();
     if (error) throw new Error(error.message);
     return {
@@ -72,9 +67,7 @@ export function createAccountApi(ctx: CoreApiContext) {
   }
 
   /** Change the signed-in user's password. */
-  async function updateUserPassword(
-    passwordData: UpdatePasswordData
-  ): Promise<void> {
+  async function updateUserPassword(passwordData: UpdatePasswordData): Promise<void> {
     const { error } = await supabase.auth.updateUser({
       password: passwordData.newPassword,
     });

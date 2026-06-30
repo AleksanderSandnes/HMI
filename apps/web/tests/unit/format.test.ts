@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  average,
-  clamp,
-  lastPositive,
-  round,
-  show,
-  toNum,
-} from "@/lib/format";
+import { average, clamp, lastPositive, round, show, toNum } from "@/lib/format";
 
 describe("toNum", () => {
   it("passes finite numbers through", () => {

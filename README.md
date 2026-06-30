@@ -76,12 +76,12 @@ Growatt API) for the part Supabase can't host.
 
 ## 🛠️ Tech stack
 
-| Layer | Technologies |
-|-------|--------------|
-| **Frontend** | React Native 0.81, Expo SDK 54, React 19, Expo Router, TypeScript, Redux Toolkit, TanStack React Query, Gluestack UI, `react-native-chart-kit`, Formik + Yup, Axios, `crypto-js`, `expo-notifications`, `expo-video` |
-| **Weather API** | Node.js, Express 4, Mongoose 8, JWT (`jsonwebtoken`), `bcrypt`, `node-cron`, Axios |
-| **Growatt API** | Java 17, Spring Boot, Spring Security, Spring Data MongoDB, Maven, Lombok |
-| **Data & infra** | MongoDB Atlas, Vercel (frontend), Render (both backends, Docker for Java) |
+| Layer            | Technologies                                                                                                                                                                                                         |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend**     | React Native 0.81, Expo SDK 54, React 19, Expo Router, TypeScript, Redux Toolkit, TanStack React Query, Gluestack UI, `react-native-chart-kit`, Formik + Yup, Axios, `crypto-js`, `expo-notifications`, `expo-video` |
+| **Weather API**  | Node.js, Express 4, Mongoose 8, JWT (`jsonwebtoken`), `bcrypt`, `node-cron`, Axios                                                                                                                                   |
+| **Growatt API**  | Java 17, Spring Boot, Spring Security, Spring Data MongoDB, Maven, Lombok                                                                                                                                            |
+| **Data & infra** | MongoDB Atlas, Vercel (frontend), Render (both backends, Docker for Java)                                                                                                                                            |
 
 ---
 
@@ -151,15 +151,15 @@ npm run dev        # nodemon, or `npm start` for a plain node process
 
 **Environment variables**
 
-| Variable | Description |
-|----------|-------------|
-| `NODE_ENV` | `development` (local MongoDB) or `production` (Atlas cluster) |
-| `PORT` | API port (default `5000`) |
-| `MONGODB_LOCAL_URI` | Local Mongo URI for development (default `mongodb://localhost:27017/hmi-dev`) |
-| `DB_USERNAME` / `DB_PASSWORD` | Atlas credentials (production) |
-| `JWT_SECRET` | Secret for signing JWTs |
-| `ENCRYPTION_KEY` | Key used to encrypt stored Weather API keys |
-| `FRONTEND_URL` | Allowed CORS origin for the deployed frontend |
+| Variable                      | Description                                                                   |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| `NODE_ENV`                    | `development` (local MongoDB) or `production` (Atlas cluster)                 |
+| `PORT`                        | API port (default `5000`)                                                     |
+| `MONGODB_LOCAL_URI`           | Local Mongo URI for development (default `mongodb://localhost:27017/hmi-dev`) |
+| `DB_USERNAME` / `DB_PASSWORD` | Atlas credentials (production)                                                |
+| `JWT_SECRET`                  | Secret for signing JWTs                                                       |
+| `ENCRYPTION_KEY`              | Key used to encrypt stored Weather API keys                                   |
+| `FRONTEND_URL`                | Allowed CORS origin for the deployed frontend                                 |
 
 ### 3. Growatt API (Java / Spring Boot)
 
@@ -171,14 +171,14 @@ mvn spring-boot:run          # or: java -jar target/growatt-1.0-SNAPSHOT.jar
 
 **Environment variables**
 
-| Variable | Description |
-|----------|-------------|
-| `SERVER_PORT` | API port (default `8080`) |
-| `SPRING_PROFILES_ACTIVE` | `production` to use the production profile |
-| `MONGODB_URI` | Mongo connection string (defaults to `mongodb://localhost:27017/hmi-dev`) |
-| `GROWATT_CACHE_ENABLED` | `true` to cache Growatt responses, `false` to always hit the live API |
-| `FRONTEND_URL` / `BACKEND_URL` | CORS / cross-service URLs |
-| `PROXY_URL` / `PROXY_PORT` | Optional outbound proxy for Growatt requests |
+| Variable                       | Description                                                               |
+| ------------------------------ | ------------------------------------------------------------------------- |
+| `SERVER_PORT`                  | API port (default `8080`)                                                 |
+| `SPRING_PROFILES_ACTIVE`       | `production` to use the production profile                                |
+| `MONGODB_URI`                  | Mongo connection string (defaults to `mongodb://localhost:27017/hmi-dev`) |
+| `GROWATT_CACHE_ENABLED`        | `true` to cache Growatt responses, `false` to always hit the live API     |
+| `FRONTEND_URL` / `BACKEND_URL` | CORS / cross-service URLs                                                 |
+| `PROXY_URL` / `PROXY_PORT`     | Optional outbound proxy for Growatt requests                              |
 
 ### 4. Frontend (Expo)
 
@@ -202,11 +202,11 @@ Use `npm run web:prod` / `npm run start:prod` to run the frontend against produc
 
 Each stack has its own independent test runner — run them from the locations below.
 
-| Stack | Command | Framework | Test location |
-|-------|---------|-----------|---------------|
-| **Frontend** | `npm test` (from repo root) | Jest + `jest-expo` | `src/__tests__/` |
-| **Weather API** | `cd backend/weatherAPI && npm test` | Jest (node) | `backend/weatherAPI/__tests__/` |
-| **Growatt API** | `cd backend/growattAPI && mvn test` | JUnit 5 | `backend/growattAPI/src/test/java/` |
+| Stack           | Command                             | Framework          | Test location                       |
+| --------------- | ----------------------------------- | ------------------ | ----------------------------------- |
+| **Frontend**    | `npm test` (from repo root)         | Jest + `jest-expo` | `src/__tests__/`                    |
+| **Weather API** | `cd backend/weatherAPI && npm test` | Jest (node)        | `backend/weatherAPI/__tests__/`     |
+| **Growatt API** | `cd backend/growattAPI && mvn test` | JUnit 5            | `backend/growattAPI/src/test/java/` |
 
 Frontend extras: `npm run test:watch` (watch mode) and `npm run test:coverage` (coverage report).
 
@@ -230,39 +230,38 @@ npm run lint:fix    # auto-fix where possible
 > Swagger UI covering every endpoint below (auth, account, weather, settings, notifications, and
 > Growatt). The page is web-only and requires authentication.
 
-
 ### Weather API — `weatherAPI` (base `/api`)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Service health check |
-| `POST` | `/user/register` | Register a new account |
-| `POST` | `/user/login` | Log in, returns a JWT |
-| `GET` | `/user/account` | Get the current user's profile |
-| `PUT` | `/user/account/profile` | Update profile |
-| `PUT` | `/user/account/password` | Change password |
-| `GET` | `/weather/current` | Current PWS observation |
-| `GET` | `/weather/hourly/:date` | Hourly history for a day |
-| `GET` | `/weather/all/:date` | Full history for a day |
-| `GET` | `/weather/weekly/:date?` | 7-day daily summaries |
-| `GET` | `/weather/weekly-hourly/:date` | Selected hours across a week |
-| `GET/PUT/DELETE` | `/settings/api` | Read / update / clear a user's API credentials |
-| `GET` | `/notifications` · `/notifications/count` | List notifications / unread count |
-| `DELETE` | `/notifications/clear` · `/notifications/:id` | Clear all / remove one |
-| `POST/DELETE` | `/notifications/push-token` | Register / remove an Expo push token |
+| Method           | Endpoint                                      | Description                                    |
+| ---------------- | --------------------------------------------- | ---------------------------------------------- |
+| `GET`            | `/health`                                     | Service health check                           |
+| `POST`           | `/user/register`                              | Register a new account                         |
+| `POST`           | `/user/login`                                 | Log in, returns a JWT                          |
+| `GET`            | `/user/account`                               | Get the current user's profile                 |
+| `PUT`            | `/user/account/profile`                       | Update profile                                 |
+| `PUT`            | `/user/account/password`                      | Change password                                |
+| `GET`            | `/weather/current`                            | Current PWS observation                        |
+| `GET`            | `/weather/hourly/:date`                       | Hourly history for a day                       |
+| `GET`            | `/weather/all/:date`                          | Full history for a day                         |
+| `GET`            | `/weather/weekly/:date?`                      | 7-day daily summaries                          |
+| `GET`            | `/weather/weekly-hourly/:date`                | Selected hours across a week                   |
+| `GET/PUT/DELETE` | `/settings/api`                               | Read / update / clear a user's API credentials |
+| `GET`            | `/notifications` · `/notifications/count`     | List notifications / unread count              |
+| `DELETE`         | `/notifications/clear` · `/notifications/:id` | Clear all / remove one                         |
+| `POST/DELETE`    | `/notifications/push-token`                   | Register / remove an Expo push token           |
 
 ### Growatt API — `growattAPI` (base `/api/growatt`)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` (and `/actuator/health`) | Service health check |
-| `POST` | `/login` | Authenticate with Growatt, returns plant info |
-| `POST` | `/totalData` | Lifetime / total plant data |
-| `POST` | `/dayChart` | Daily production chart |
-| `POST` | `/weekChart` | Weekly production chart |
-| `POST` | `/monthChart` | Monthly production chart |
-| `POST` | `/yearChart` | Yearly production chart |
-| `POST` | `/invTotalData` | Inverter total data |
+| Method | Endpoint                           | Description                                   |
+| ------ | ---------------------------------- | --------------------------------------------- |
+| `GET`  | `/health` (and `/actuator/health`) | Service health check                          |
+| `POST` | `/login`                           | Authenticate with Growatt, returns plant info |
+| `POST` | `/totalData`                       | Lifetime / total plant data                   |
+| `POST` | `/dayChart`                        | Daily production chart                        |
+| `POST` | `/weekChart`                       | Weekly production chart                       |
+| `POST` | `/monthChart`                      | Monthly production chart                      |
+| `POST` | `/yearChart`                       | Yearly production chart                       |
+| `POST` | `/invTotalData`                    | Inverter total data                           |
 
 ---
 
@@ -270,11 +269,11 @@ npm run lint:fix    # auto-fix where possible
 
 Both backends are described in `render.yaml`, and the frontend in `vercel.json`. Pushes to `main` trigger auto-deploys.
 
-| Service | Platform | Health check |
-|---------|----------|--------------|
-| Frontend | Vercel (`expo export -p web`) | https://hmi-seven.vercel.app |
-| Weather API | Render (Node) | `/api/health` |
-| Growatt API | Render (Docker / Java) | `/actuator/health` |
+| Service     | Platform                      | Health check                 |
+| ----------- | ----------------------------- | ---------------------------- |
+| Frontend    | Vercel (`expo export -p web`) | https://hmi-seven.vercel.app |
+| Weather API | Render (Node)                 | `/api/health`                |
+| Growatt API | Render (Docker / Java)        | `/actuator/health`           |
 
 ---
 

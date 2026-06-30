@@ -1,4 +1,5 @@
 import { type LucideIcon } from "lucide-react";
+
 import { GlassCard } from "./GlassCard";
 import { Skeleton } from "./Skeleton";
 import type { StatGradient } from "./StatTile";
@@ -24,17 +25,13 @@ function Module({
 }) {
   return (
     <div className="min-w-0 flex-1">
-      <p className="text-[11px] font-bold uppercase tracking-[0.3px] text-text-muted">
-        {label}
-      </p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.3px] text-text-muted">{label}</p>
       {loading ? (
         <Skeleton className="mt-2 h-7 w-16" />
       ) : (
         <p className="mt-1 truncate text-[27px] font-extrabold leading-tight tracking-[-0.5px] text-text-primary">
           {value}
-          {unit ? (
-            <span className="ml-1 text-[12px] font-bold text-text-muted">{unit}</span>
-          ) : null}
+          {unit ? <span className="ml-1 text-[12px] font-bold text-text-muted">{unit}</span> : null}
         </p>
       )}
     </div>

@@ -1,7 +1,7 @@
 // Weather observation → chart-series transform (ported/consolidated from mobile
 // useHistoricalWeatherData). Pure: takes raw observations + metric + timespan and
 // returns x-axis labels + one number[] per series. No platform imports.
-import { WEEKDAY_ABBR } from '../constants';
+import { BREAKPOINTS, WEEKDAY_ABBR } from "../constants";
 
 type Obs = Record<string, any>;
 
@@ -29,9 +29,32 @@ const EXTRACTORS: Record<string, ((it: Obs) => number)[]> = {
 };
 
 const COMPASS = [
-  'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
-  'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW',
+  "N",
+  "NNE",
+  "NE",
+  "ENE",
+  "E",
+  "ESE",
+  "SE",
+  "SSE",
+  "S",
+  "SSW",
+  "SW",
+  "WSW",
+  "W",
+  "WNW",
+  "NW",
+  "NNW",
 ];
+
+/**
+ * Responsive weekly-hybrid selection: phones (< tablet breakpoint) render the
+ * 7-day min/max/avg band, tablets render the dense weekly series like web.
+ * True only when the viewport is phone-sized AND the weekly timespan is active.
+ */
+export function isPhoneWeekly(width: number, timespan: string): boolean {
+  return width < BREAKPOINTS.tablet && timespan === "weekly";
+}
 
 /** Wind direction in degrees → 16-point compass label (e.g. 213 → "SSW"). */
 export function windCompass(deg: number | null | undefined): string | null {
@@ -59,12 +82,12 @@ export interface WeatherSeriesResult {
 export function buildWeatherSeries(
   observations: Obs[],
   dataType: string,
-  timespan: string
+  timespan: string,
 ): WeatherSeriesResult {
   const extractors = EXTRACTORS[dataType] ?? EXTRACTORS.temperature;
   if (!observations?.length) return { labels: [], series: extractors.map(() => []) };
 
-  const isWeekly = timespan === 'weekly';
+  const isWeekly = timespan === "weekly";
   const data = isWeekly
     ? observations.filter((it) => {
         const d = new Date(it.obsTimeLocal || it.date);
@@ -72,7 +95,7 @@ export function buildWeatherSeries(
       })
     : observations;
 
-  let lastDayKey = '';
+  let lastDayKey = "";
   const labels = data.map((it) => {
     if (isWeekly) {
       const d = new Date(it.obsTimeLocal || it.date);
@@ -83,25 +106,70 @@ export function buildWeatherSeries(
         lastDayKey = dayKey;
         return `${WEEKDAY_ABBR[d.getDay()]} ${d.getMonth() + 1}/${d.getDate()}`;
       }
-      return '';
+      return "";
     }
-    const time = (it.obsTimeLocal || '').split(' ')[1] || '';
-    const [hh, mm] = time.split(':');
-    if (hh == null || hh === '') return '';
+    const time = (it.obsTimeLocal || "").split(" ")[1] || "";
+    const [hh, mm] = time.split(":");
+    if (hh == null || hh === "") return "";
     // Round to the nearest hour so the :59 PWS readings read as clean hours
     // (00:59 -> 01:00, 23:59 -> 00:00).
     let h = Number(hh);
     if (Number(mm) >= 30) h = (h + 1) % 24;
-    return `${String(h).padStart(2, '0')}:00`;
+    return `${String(h).padStart(2, "0")}:00`;
   });
 
   const series = extractors.map((fn) => data.map(fn));
 
   // Weekly: hand the chart the exact day labels to tick on (deduped, blanks
   // dropped) so all seven days render regardless of pixel width.
-  const ticks = isWeekly
-    ? Array.from(new Set(labels.filter((l) => l !== '')))
-    : undefined;
+  const ticks = isWeekly ? Array.from(new Set(labels.filter((l) => l !== ""))) : undefined;
 
   return { labels, series, ticks };
+}
+
+export interface WeatherDailyBands {
+  /** Abbreviated weekday label per day (e.g. "Mon"), oldest → newest. */
+  labels: string[];
+  /** Daily minimum of the primary metric. */
+  min: number[];
+  /** Daily maximum of the primary metric. */
+  max: number[];
+  /** Daily mean of the primary metric. */
+  avg: number[];
+}
+
+/**
+ * Collapse weekly observations into up to 7 daily points (min / max / avg of the
+ * primary metric) for the phone weekly view — a min–max band + average line —
+ * instead of the dense ~3-hourly series the tablet/web shows. Uses the same
+ * primary extractor as {@link buildWeatherSeries} so the values agree.
+ */
+export function buildWeatherDailyBands(observations: Obs[], dataType: string): WeatherDailyBands {
+  const extract = (EXTRACTORS[dataType] ?? EXTRACTORS.temperature)[0];
+  if (!observations?.length) return { labels: [], min: [], max: [], avg: [] };
+
+  // Group readings by calendar day, preserving chronological order.
+  const byDay = new Map<string, { date: Date; values: number[] }>();
+  for (const it of observations) {
+    const d = new Date(it.obsTimeLocal || it.date);
+    if (isNaN(d.getTime())) continue;
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    let bucket = byDay.get(key);
+    if (!bucket) {
+      bucket = { date: d, values: [] };
+      byDay.set(key, bucket);
+    }
+    bucket.values.push(extract(it));
+  }
+
+  const days = Array.from(byDay.values())
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .slice(-7);
+
+  return {
+    labels: days.map((day) => WEEKDAY_ABBR[day.date.getDay()]),
+    min: days.map((day) => Math.min(...day.values)),
+    max: days.map((day) => Math.max(...day.values)),
+    avg: days.map((day) => day.values.reduce((s, v) => s + v, 0) / day.values.length),
+  };
 }

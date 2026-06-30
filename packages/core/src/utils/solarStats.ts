@@ -3,35 +3,35 @@
 
 export const CO2_PER_KWH = 0.4; // kg CO₂ avoided per kWh of solar (grid average)
 
-export type SimpleChartData = {
+export interface SimpleChartData {
   labels: string[];
   datasets: { data: number[] }[];
-};
+}
 
-export type PeakOutput = {
+export interface PeakOutput {
   value: number;
   label: string;
   unit: string;
-};
+}
 
-export const toISO = (d: Date) => d.toISOString().split('T')[0];
+export const toISO = (d: Date) => d.toISOString().split("T")[0];
 
 export function previousPeriodDate(timespan: string, dateStr: string): string {
   const d = new Date(dateStr);
   switch (timespan) {
-    case 'hourly':
+    case "hourly":
       d.setDate(d.getDate() - 1);
       break;
-    case 'weekly':
+    case "weekly":
       d.setDate(d.getDate() - 7);
       break;
-    case 'monthly':
+    case "monthly":
       d.setMonth(d.getMonth() - 1);
       break;
-    case 'yearly':
+    case "yearly":
       d.setFullYear(d.getFullYear() - 1);
       break;
-    case 'total':
+    case "total":
       d.setFullYear(d.getFullYear() - 5);
       break;
   }
@@ -39,35 +39,35 @@ export function previousPeriodDate(timespan: string, dateStr: string): string {
 }
 
 export function periodLabel(timespan: string): string {
-  if (timespan === 'hourly') return 'Today';
-  if (timespan === 'weekly') return 'This week';
-  if (timespan === 'monthly') return 'This month';
-  if (timespan === 'total') return 'Last 5 years';
-  return 'This year';
+  if (timespan === "hourly") return "Today";
+  if (timespan === "weekly") return "This week";
+  if (timespan === "monthly") return "This month";
+  if (timespan === "total") return "Last 5 years";
+  return "This year";
 }
 
 export function comparisonLabel(timespan: string): string {
-  if (timespan === 'hourly') return 'vs yesterday';
-  if (timespan === 'weekly') return 'vs last week';
-  if (timespan === 'monthly') return 'vs last month';
-  if (timespan === 'total') return 'vs prior 5 years';
-  return 'vs last year';
+  if (timespan === "hourly") return "vs yesterday";
+  if (timespan === "weekly") return "vs last week";
+  if (timespan === "monthly") return "vs last month";
+  if (timespan === "total") return "vs prior 5 years";
+  return "vs last year";
 }
 
 export function chartSubtitle(timespan: string, dateStr: string): string {
   const d = new Date(dateStr);
-  const month = d.toLocaleString('en-US', { month: 'long' });
-  if (timespan === 'hourly')
-    return `Power output · ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-  if (timespan === 'weekly') return `7-day output from ${month} ${d.getDate()}`;
-  if (timespan === 'monthly') return `Daily output · ${month} ${d.getFullYear()}`;
-  if (timespan === 'total') return `Yearly output · last 5 years`;
+  const month = d.toLocaleString("en-US", { month: "long" });
+  if (timespan === "hourly")
+    return `Power output · ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+  if (timespan === "weekly") return `7-day output from ${month} ${d.getDate()}`;
+  if (timespan === "monthly") return `Daily output · ${month} ${d.getFullYear()}`;
+  if (timespan === "total") return `Yearly output · last 5 years`;
   return `Monthly output · ${d.getFullYear()}`;
 }
 
 export function formatCO2(kg: number): { value: string; unit: string } {
-  if (kg >= 1000) return { value: (kg / 1000).toFixed(2), unit: 't' };
-  return { value: kg.toFixed(kg < 10 ? 1 : 0), unit: 'kg' };
+  if (kg >= 1000) return { value: (kg / 1000).toFixed(2), unit: "t" };
+  return { value: kg.toFixed(kg < 10 ? 1 : 0), unit: "kg" };
 }
 
 export function formatPeak(v: number): string {
@@ -81,50 +81,47 @@ export function formatPeak(v: number): string {
  */
 export function peakUnit(value: number, unit: string): string {
   if (value < 1000) return unit;
-  if (unit === 'W') return 'kW';
-  if (unit === 'kWh') return 'MWh';
+  if (unit === "W") return "kW";
+  if (unit === "kWh") return "MWh";
   return unit;
 }
 
 const DAY_NAMES: Record<string, string> = {
-  Mon: 'Monday',
-  Tue: 'Tuesday',
-  Wed: 'Wednesday',
-  Thu: 'Thursday',
-  Fri: 'Friday',
-  Sat: 'Saturday',
-  Sun: 'Sunday',
+  Mon: "Monday",
+  Tue: "Tuesday",
+  Wed: "Wednesday",
+  Thu: "Thursday",
+  Fri: "Friday",
+  Sat: "Saturday",
+  Sun: "Sunday",
 };
 
 const MONTH_NAMES: Record<string, string> = {
-  Jan: 'January',
-  Feb: 'February',
-  Mar: 'March',
-  Apr: 'April',
-  May: 'May',
-  Jun: 'June',
-  Jul: 'July',
-  Aug: 'August',
-  Sep: 'September',
-  Oct: 'October',
-  Nov: 'November',
-  Dec: 'December',
+  Jan: "January",
+  Feb: "February",
+  Mar: "March",
+  Apr: "April",
+  May: "May",
+  Jun: "June",
+  Jul: "July",
+  Aug: "August",
+  Sep: "September",
+  Oct: "October",
+  Nov: "November",
+  Dec: "December",
 };
 
 /** Human-friendly "when" for the peak-output tile. */
 export function peakSublabel(timespan: string, label: string): string {
-  if (!label) return 'No data';
-  if (timespan === 'hourly') return `at ${label}`;
-  if (timespan === 'weekly') return `on ${DAY_NAMES[label] ?? label}`;
-  if (timespan === 'monthly') return `on day ${label}`;
-  if (timespan === 'total') return `in ${label}`;
+  if (!label) return "No data";
+  if (timespan === "hourly") return `at ${label}`;
+  if (timespan === "weekly") return `on ${DAY_NAMES[label] ?? label}`;
+  if (timespan === "monthly") return `on day ${label}`;
+  if (timespan === "total") return `in ${label}`;
   return `in ${MONTH_NAMES[label] ?? label}`;
 }
 
-export function getPeakOutput(
-  data: SimpleChartData,
-  timespan: string
-): PeakOutput | null {
+export function getPeakOutput(data: SimpleChartData, timespan: string): PeakOutput | null {
   const vals = data?.datasets?.[0]?.data ?? [];
   if (!vals.length) return null;
   const max = Math.max(...vals);
@@ -132,8 +129,8 @@ export function getPeakOutput(
   const idx = vals.indexOf(max);
   return {
     value: max,
-    label: data.labels[idx] ?? '',
-    unit: timespan === 'hourly' ? 'W' : 'kWh',
+    label: data.labels[idx] ?? "",
+    unit: timespan === "hourly" ? "W" : "kWh",
   };
 }
 

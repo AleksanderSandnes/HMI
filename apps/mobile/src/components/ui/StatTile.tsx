@@ -1,13 +1,17 @@
-import React from 'react';
-import { View, Text, StyleSheet, StyleProp, ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome5 } from '@expo/vector-icons';
-import GlassCard from './GlassCard';
-import { theme, type GradientColors } from '../../theme/theme';
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { View, Text } from "react-native";
+
+import { cn } from "../../lib/cn";
+import { GRADIENTS, type StatGradient } from "../../lib/gradients";
+
+import { GlassCard } from "./GlassCard";
+import { Skeleton } from "./Skeleton";
+import type { IconRender } from "./types";
 
 interface StatTileProps {
-  icon: React.ComponentProps<typeof FontAwesome5>['name'];
-  gradient: GradientColors;
+  icon: IconRender;
+  gradient: StatGradient;
   label: string;
   value: string;
   unit?: string;
@@ -15,76 +19,80 @@ interface StatTileProps {
   /** Percentage change vs previous period. */
   delta?: number | null;
   loading?: boolean;
+  /** Denser tile for at-a-glance grids like the Dashboard. */
   compact?: boolean;
-  style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
-const styles = StyleSheet.create({
-  card: {
-    padding: 18,
-    flex: 1,
-    minWidth: 150,
-  },
-  cardCompact: {
-    padding: 14,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deltaPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: theme.radius.pill,
-  },
-  deltaText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  label: {
-    fontSize: 12.5,
-    fontWeight: '600',
-    color: theme.text.muted,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
-  valueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 5,
-    marginTop: 6,
-  },
-  value: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: theme.text.primary,
-    letterSpacing: -0.5,
-  },
-  unit: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.text.secondary,
-  },
-  sublabel: {
-    fontSize: 12,
-    color: theme.text.muted,
-    marginTop: 6,
-  },
-});
+function DeltaPill({ delta }: { delta: number }) {
+  const positive = delta >= 0;
+  return (
+    <View
+      className={cn(
+        "flex-row items-center gap-1 rounded-pill px-2.5 py-1",
+        positive ? "bg-[rgba(52,211,153,0.13)]" : "bg-[rgba(251,113,133,0.13)]",
+      )}
+    >
+      <Ionicons
+        name={positive ? "arrow-up" : "arrow-down"}
+        size={9}
+        color={positive ? "#34d399" : "#fb7185"}
+      />
+      <Text className={cn("text-xs font-extrabold", positive ? "text-positive" : "text-negative")}>
+        {Math.abs(delta).toFixed(0)}%
+      </Text>
+    </View>
+  );
+}
 
-export default function StatTile({
+// Size presets collapse the per-property `compact ? a : b` branching into one
+// lookup (keeps the component's complexity low).
+const SIZES = {
+  regular: {
+    pad: "p-[18px]",
+    headMb: "mb-3.5",
+    chip: 42,
+    iconSize: 17,
+    label: "text-[12.5px]",
+    skeleton: "h-7 w-24",
+    value: "text-[26px]",
+    unit: "text-sm",
+    sublabel: "mt-1.5 text-xs",
+  },
+  compact: {
+    pad: "p-3.5",
+    headMb: "mb-2.5",
+    chip: 30,
+    iconSize: 15,
+    label: "text-[10.5px]",
+    skeleton: "h-6 w-20",
+    value: "text-[21px]",
+    unit: "text-[11px]",
+    sublabel: "mt-1 text-[10.5px]",
+  },
+} as const;
+
+type TileSize = (typeof SIZES)[keyof typeof SIZES];
+
+function TileValue({ value, unit, s }: { value: string; unit?: string; s: TileSize }) {
+  return (
+    <View className="mt-1.5 flex-row items-baseline gap-1.5">
+      <Text className={cn("font-extrabold tracking-[-0.5px] text-text-primary", s.value)}>
+        {value}
+      </Text>
+      {unit ? (
+        <Text className={cn("font-semibold text-text-secondary", s.unit)}>{unit}</Text>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * The app's single metric tile (mirrors apps/web/components/ui/StatTile.tsx) —
+ * gradient icon chip + label + value (+ optional delta / sublabel). `compact`
+ * shrinks it for dense grids; `loading` renders a skeleton.
+ */
+export function StatTile({
   icon,
   gradient,
   label,
@@ -94,50 +102,45 @@ export default function StatTile({
   delta,
   loading = false,
   compact = false,
-  style,
+  className,
 }: StatTileProps) {
-  const hasDelta = delta !== null && delta !== undefined && isFinite(delta);
-  const positive = (delta ?? 0) >= 0;
-  const deltaColor = positive ? theme.positive : theme.negative;
+  const s = compact ? SIZES.compact : SIZES.regular;
 
   return (
-    <GlassCard
-      strong
-      style={[styles.card, compact && styles.cardCompact, style]}
-    >
-      <View style={styles.row}>
+    <GlassCard strong className={cn("min-w-0 flex-1", s.pad, className)}>
+      <View className={cn("flex-row items-center justify-between", s.headMb)}>
         <LinearGradient
-          colors={gradient}
+          colors={GRADIENTS[gradient]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.iconWrap}
+          style={{
+            width: s.chip,
+            height: s.chip,
+            borderRadius: 12,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          <FontAwesome5 name={icon} size={17} color="#0a1124" solid />
+          {icon({ color: "#0a1124", size: s.iconSize })}
         </LinearGradient>
-
-        {hasDelta && (
-          <View
-            style={[styles.deltaPill, { backgroundColor: deltaColor + '22' }]}
-          >
-            <FontAwesome5
-              name={positive ? 'arrow-up' : 'arrow-down'}
-              size={9}
-              color={deltaColor}
-              solid
-            />
-            <Text style={[styles.deltaText, { color: deltaColor }]}>
-              {Math.abs(delta as number).toFixed(0)}%
-            </Text>
-          </View>
-        )}
+        {delta != null && isFinite(delta) ? <DeltaPill delta={delta} /> : null}
       </View>
 
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.valueRow}>
-        <Text style={styles.value}>{loading ? '—' : value}</Text>
-        {unit ? <Text style={styles.unit}>{unit}</Text> : null}
-      </View>
-      {sublabel ? <Text style={styles.sublabel}>{sublabel}</Text> : null}
+      <Text className={cn("font-semibold uppercase tracking-[0.3px] text-text-muted", s.label)}>
+        {label}
+      </Text>
+
+      {loading ? (
+        <Skeleton className={cn("mt-2", s.skeleton)} />
+      ) : (
+        <TileValue value={value} unit={unit} s={s} />
+      )}
+
+      {sublabel && !loading ? (
+        <Text className={cn("text-text-muted", s.sublabel)}>{sublabel}</Text>
+      ) : null}
     </GlassCard>
   );
 }
+
+export default StatTile;

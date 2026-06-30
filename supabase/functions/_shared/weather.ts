@@ -2,20 +2,20 @@
 // (weatherService.js + weatherHelpers.js). Endpoints and query params are unchanged so
 // the upstream responses (and therefore the frontend transforms) stay identical.
 
-const BASE_URL = 'https://api.weather.com/v2/pws';
+const BASE_URL = "https://api.weather.com/v2/pws";
 
 const PWS_ENDPOINTS = {
-  CURRENT: '/observations/current',
-  HOURLY: '/history/hourly',
-  DAILY_ALL: '/history/all',
+  CURRENT: "/observations/current",
+  HOURLY: "/history/hourly",
+  DAILY_ALL: "/history/all",
 } as const;
 
 /** Format a Date as YYYYMMDD using local time (matches the frontend's date format). */
 export function toYyyyMmDd(d: Date): string {
   return (
     `${d.getFullYear()}` +
-    `${String(d.getMonth() + 1).padStart(2, '0')}` +
-    `${String(d.getDate()).padStart(2, '0')}`
+    `${String(d.getMonth() + 1).padStart(2, "0")}` +
+    `${String(d.getDate()).padStart(2, "0")}`
   );
 }
 

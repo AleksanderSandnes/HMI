@@ -8,7 +8,7 @@ const {
   fetchMonthlyHistoricalData,
   fetchYearlyHistoricalData,
   getOptimalEndpointForTimeRange,
-} = require('../services/weatherService');
+} = require("../services/weatherService");
 
 const getHourlyWeather = async (req, res) => {
   try {
@@ -16,12 +16,9 @@ const getHourlyWeather = async (req, res) => {
     const weatherData = await fetchHourlyWeather(req.params.date, userId);
     res.json(weatherData);
   } catch (error) {
-    console.error(
-      '[WeatherController] Error fetching hourly weather data:',
-      error
-    );
+    console.error("[WeatherController] Error fetching hourly weather data:", error);
     res.status(500).json({
-      message: 'Error fetching hourly weather data',
+      message: "Error fetching hourly weather data",
       error: error.message,
     });
   }
@@ -33,12 +30,9 @@ const getAllWeather = async (req, res) => {
     const weatherData = await fetchAllWeather(req.params.date, userId);
     res.json(weatherData);
   } catch (error) {
-    console.error(
-      '[WeatherController] Error fetching all weather data:',
-      error
-    );
+    console.error("[WeatherController] Error fetching all weather data:", error);
     res.status(500).json({
-      message: 'Error fetching all weather data',
+      message: "Error fetching all weather data",
       error: error.message,
     });
   }
@@ -50,9 +44,9 @@ const getCurrentWeather = async (req, res) => {
     const weatherData = await fetchCurrentWeather(userId);
     res.json(weatherData);
   } catch (error) {
-    console.error('[WeatherController] Error fetching current weather:', error);
+    console.error("[WeatherController] Error fetching current weather:", error);
     res.status(500).json({
-      message: 'Error fetching current weather',
+      message: "Error fetching current weather",
       error: error.message,
     });
   }
@@ -65,12 +59,9 @@ const getWeeklyWeather = async (req, res) => {
     const weatherData = await fetchWeeklyData(userId);
     res.json(weatherData);
   } catch (error) {
-    console.error(
-      '[WeatherController] Error fetching weekly weather data:',
-      error
-    );
+    console.error("[WeatherController] Error fetching weekly weather data:", error);
     res.status(500).json({
-      message: 'Error fetching weekly weather data',
+      message: "Error fetching weekly weather data",
       error: error.message,
     });
   }
@@ -83,12 +74,9 @@ const getWeeklyHourlyWeather = async (req, res) => {
     const weatherData = await fetchWeeklyHourlyData(selectedDate, userId);
     res.json(weatherData);
   } catch (error) {
-    console.error(
-      '[WeatherController] Error fetching weekly hourly weather data:',
-      error
-    );
+    console.error("[WeatherController] Error fetching weekly hourly weather data:", error);
     res.status(500).json({
-      message: 'Error fetching weekly hourly weather data',
+      message: "Error fetching weekly hourly weather data",
       error: error.message,
     });
   }
@@ -106,8 +94,8 @@ const getEndpointInfo = async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[WeatherController] Error getting endpoint info:', error);
-    res.status(500).json({ message: 'Error getting endpoint information' });
+    console.error("[WeatherController] Error getting endpoint info:", error);
+    res.status(500).json({ message: "Error getting endpoint information" });
   }
 };
 

@@ -73,7 +73,12 @@ body {
     radial-gradient(60% 50% at 18% 0%, rgba(245, 158, 11, 0.2) 0%, transparent 60%),
     radial-gradient(50% 45% at 92% 12%, rgba(45, 212, 191, 0.16) 0%, transparent 60%),
     radial-gradient(60% 60% at 50% 100%, rgba(139, 92, 246, 0.16) 0%, transparent 65%),
-    linear-gradient(180deg, var(--color-bg-grad-1) 0%, var(--color-bg-grad-2) 55%, var(--color-bg-grad-3) 100%);
+    linear-gradient(
+      180deg,
+      var(--color-bg-grad-1) 0%,
+      var(--color-bg-grad-2) 55%,
+      var(--color-bg-grad-3) 100%
+    );
   background-attachment: fixed;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
