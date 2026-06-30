@@ -64,12 +64,120 @@ const GRADIENT_CSS: Record<Gradient, string> = {
   accent: "linear-gradient(135deg,#a78bfa,#818cf8,#6366f1)",
 };
 
-export default function RegisterPage() {
+type Core = ReturnType<typeof useCore>;
+type Setter<T> = (v: T) => void;
+
+interface AccountState {
+  email: string;
+  username: string;
+  password: string;
+  confirmPassword: string;
+}
+
+function validateAccount(account: AccountState): Record<string, string> {
+  try {
+    registerAccountSchema.validateSync(account, { abortEarly: false });
+    return {};
+  } catch (err) {
+    const map: Record<string, string> = {};
+    if (err instanceof Yup.ValidationError) {
+      err.inner.forEach((e) => {
+        if (e.path && !map[e.path]) map[e.path] = e.message;
+      });
+    }
+    return map;
+  }
+}
+
+interface CreateAccountDeps {
+  auth: Core["auth"];
+  account: AccountState;
+  setStep: Setter<number>;
+  setSaving: Setter<boolean>;
+  setStepError: Setter<string | null>;
+  setAccountError: Setter<string | null>;
+  setAccountErrors: Setter<Record<string, string>>;
+}
+
+async function runCreateAccount(d: CreateAccountDeps) {
+  d.setStepError(null);
+  d.setAccountError(null);
+  const errs = validateAccount(d.account);
+  d.setAccountErrors(errs);
+  if (Object.keys(errs).length) return;
+  d.setSaving(true);
+  try {
+    await d.auth.registerUser({
+      email: d.account.email.trim(),
+      username: d.account.username.trim(),
+      password: d.account.password,
+    });
+    d.setStep(1);
+  } catch (e) {
+    d.setAccountError(e instanceof Error ? e.message : "Registration failed. Please try again.");
+  } finally {
+    d.setSaving(false);
+  }
+}
+
+interface SaveGrowattDeps {
+  settings: Core["settings"];
+  growatt: { email: string; password: string };
+  setStep: Setter<number>;
+  setSaving: Setter<boolean>;
+  setStepError: Setter<string | null>;
+}
+
+async function runSaveGrowatt(d: SaveGrowattDeps) {
+  d.setStepError(null);
+  const email = d.growatt.email.trim();
+  const password = d.growatt.password.trim();
+  if (!email && !password) return d.setStep(2);
+  if (!email || !password)
+    return d.setStepError("Enter both account and password, or skip this step.");
+  if (!email.includes("@")) return d.setStepError("Please enter a valid email address.");
+  d.setSaving(true);
+  try {
+    await d.settings.saveGrowattApiSettings({ growatt: { email, password } });
+    d.setStep(2);
+  } catch {
+    d.setStepError("Could not save Growatt credentials. You can add them later in Settings.");
+  } finally {
+    d.setSaving(false);
+  }
+}
+
+interface FinishDeps {
+  settings: Core["settings"];
+  weather: { stationId: string; apiKey: string };
+  done: () => void;
+  setSaving: Setter<boolean>;
+  setStepError: Setter<string | null>;
+}
+
+async function runFinish(d: FinishDeps) {
+  d.setStepError(null);
+  const stationId = d.weather.stationId.trim();
+  const apiKey = d.weather.apiKey.trim();
+  if (!stationId && !apiKey) return d.done();
+  if (!stationId || !apiKey)
+    return d.setStepError("Enter both station ID and API key, or skip this step.");
+  d.setSaving(true);
+  try {
+    await d.settings.saveWeatherApiSettings({ weather: { apiKey, stationId } });
+    d.done();
+  } catch {
+    d.setStepError("Could not save weather credentials. You can add them later in Settings.");
+  } finally {
+    d.setSaving(false);
+  }
+}
+
+function useRegisterFlow() {
   const { auth, settings } = useCore();
   const router = useRouter();
-
   const [step, setStep] = useState(0);
-  const [account, setAccount] = useState({
+  const [account, setAccount] = useState<AccountState>({
     email: "",
     username: "",
     password: "",
@@ -82,239 +190,223 @@ export default function RegisterPage() {
   const [accountError, setAccountError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const setField =
-    <T,>(setter: React.Dispatch<React.SetStateAction<T>>, key: keyof T) =>
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      setter((s) => ({ ...s, [key]: e.target.value }));
-
   const finalize = () => {
     router.replace("/dashboard");
     router.refresh();
   };
 
-  async function handleCreateAccount() {
-    setStepError(null);
-    setAccountError(null);
-    setAccountErrors({});
-    try {
-      await registerAccountSchema.validate(account, { abortEarly: false });
-    } catch (err) {
-      const map: Record<string, string> = {};
-      if (err instanceof Yup.ValidationError) {
-        err.inner.forEach((e) => {
-          if (e.path && !map[e.path]) map[e.path] = e.message;
-        });
-      }
-      setAccountErrors(map);
-      return;
-    }
-    try {
-      setSaving(true);
-      await auth.registerUser({
-        email: account.email.trim(),
-        username: account.username.trim(),
-        password: account.password,
-      });
-      setStep(1);
-    } catch (e) {
-      setAccountError(e instanceof Error ? e.message : "Registration failed. Please try again.");
-    } finally {
-      setSaving(false);
-    }
-  }
+  return {
+    step,
+    setStep,
+    account,
+    setAccount,
+    accountErrors,
+    growatt,
+    setGrowatt,
+    weather,
+    setWeather,
+    stepError,
+    setStepError,
+    accountError,
+    saving,
+    createAccount: () =>
+      runCreateAccount({
+        auth,
+        account,
+        setStep,
+        setSaving,
+        setStepError,
+        setAccountError,
+        setAccountErrors,
+      }),
+    saveGrowatt: () => runSaveGrowatt({ settings, growatt, setStep, setSaving, setStepError }),
+    finish: () => runFinish({ settings, weather, done: finalize, setSaving, setStepError }),
+  };
+}
 
-  async function handleSaveGrowatt() {
-    setStepError(null);
-    const email = growatt.email.trim();
-    const password = growatt.password.trim();
-    if (!email && !password) return setStep(2);
-    if (!email || !password)
-      return setStepError("Enter both account and password, or skip this step.");
-    if (!email.includes("@")) return setStepError("Please enter a valid email address.");
-    try {
-      setSaving(true);
-      await settings.saveGrowattApiSettings({ growatt: { email, password } });
-      setStep(2);
-    } catch {
-      setStepError("Could not save Growatt credentials. You can add them later in Settings.");
-    } finally {
-      setSaving(false);
-    }
-  }
+type RegisterFlow = ReturnType<typeof useRegisterFlow>;
 
-  async function handleFinish() {
-    setStepError(null);
-    const stationId = weather.stationId.trim();
-    const apiKey = weather.apiKey.trim();
-    if (!stationId && !apiKey) return finalize();
-    if (!stationId || !apiKey)
-      return setStepError("Enter both station ID and API key, or skip this step.");
-    try {
-      setSaving(true);
-      await settings.saveWeatherApiSettings({ weather: { apiKey, stationId } });
-      finalize();
-    } catch {
-      setStepError("Could not save weather credentials. You can add them later in Settings.");
-    } finally {
-      setSaving(false);
-    }
-  }
+const setField =
+  <T,>(setter: React.Dispatch<React.SetStateAction<T>>, key: keyof T) =>
+  (e: React.ChangeEvent<HTMLInputElement>) =>
+    setter((s) => ({ ...s, [key]: e.target.value }));
 
-  const header = HEADERS[step];
+function RegisterHeader({ header }: { header: (typeof HEADERS)[number] }) {
   const HeaderIcon = header.icon;
+  return (
+    <div className="mb-5 flex flex-col items-center text-center">
+      <div
+        className="mb-4 flex h-14 w-14 items-center justify-center rounded-[18px]"
+        style={{ backgroundImage: GRADIENT_CSS[header.gradient] }}
+      >
+        <HeaderIcon size={20} className="text-text-inverse" />
+      </div>
+      <h1 className="text-[25px] font-extrabold tracking-tight text-text-primary">
+        {header.title}
+      </h1>
+      <p className="mt-1.5 text-sm font-medium text-text-muted">{header.subtitle}</p>
+    </div>
+  );
+}
+
+function AccountStep({ flow }: { flow: RegisterFlow }) {
+  const { account, setAccount, accountErrors, saving, createAccount } = flow;
+  return (
+    <div>
+      <Field
+        label="EMAIL ADDRESS"
+        icon={Mail}
+        inputMode="email"
+        placeholder="you@domain.com"
+        value={account.email}
+        onChange={setField(setAccount, "email")}
+        error={accountErrors.email}
+        disabled={saving}
+      />
+      <Field
+        label="USERNAME"
+        icon={User}
+        placeholder="Choose a username"
+        value={account.username}
+        onChange={setField(setAccount, "username")}
+        error={accountErrors.username}
+        disabled={saving}
+      />
+      <Field
+        label="PASSWORD"
+        icon={Lock}
+        secure
+        placeholder="Create a secure password"
+        value={account.password}
+        onChange={setField(setAccount, "password")}
+        error={accountErrors.password}
+        disabled={saving}
+      />
+      <Field
+        label="CONFIRM PASSWORD"
+        icon={Lock}
+        secure
+        placeholder="Re-enter your password"
+        value={account.confirmPassword}
+        onChange={setField(setAccount, "confirmPassword")}
+        error={accountErrors.confirmPassword}
+        disabled={saving}
+      />
+      <Button
+        label="Create account"
+        icon={ArrowRight}
+        onClick={createAccount}
+        loading={saving}
+        className="mt-1.5"
+      />
+    </div>
+  );
+}
+
+function GrowattStep({ flow }: { flow: RegisterFlow }) {
+  const { growatt, setGrowatt, saving, setStep, setStepError, saveGrowatt } = flow;
+  return (
+    <div>
+      <Field
+        label="ACCOUNT (EMAIL)"
+        icon={Mail}
+        inputMode="email"
+        placeholder="your-email@domain.com"
+        value={growatt.email}
+        onChange={setField(setGrowatt, "email")}
+        disabled={saving}
+      />
+      <Field
+        label="PASSWORD"
+        icon={Key}
+        secure
+        placeholder="Enter your Growatt password"
+        value={growatt.password}
+        onChange={setField(setGrowatt, "password")}
+        disabled={saving}
+      />
+      <p className="mb-4 mt-0.5 text-center text-[12.5px] font-medium leading-[18px] text-text-muted">
+        Optional — you can add or change this anytime in Settings.
+      </p>
+      <div className="flex gap-3">
+        <Button
+          label="Skip"
+          variant="ghost"
+          onClick={() => {
+            setStepError(null);
+            setStep(2);
+          }}
+        />
+        <Button
+          label="Continue"
+          icon={ArrowRight}
+          gradient="energy"
+          onClick={saveGrowatt}
+          loading={saving}
+        />
+      </div>
+    </div>
+  );
+}
+
+function WeatherStep({ flow }: { flow: RegisterFlow }) {
+  const { weather, setWeather, saving, setStep, setStepError, finish } = flow;
+  return (
+    <div>
+      <Field
+        label="WEATHER STATION ID"
+        icon={MapPin}
+        placeholder="e.g. ISANDN24"
+        hint="Find your local station ID at weather.com/weather/map"
+        value={weather.stationId}
+        onChange={setField(setWeather, "stationId")}
+        disabled={saving}
+      />
+      <Field
+        label="API KEY"
+        icon={Key}
+        secure
+        placeholder="Enter your Weather.com API key"
+        hint="Get your API key from the weather.com developer portal"
+        value={weather.apiKey}
+        onChange={setField(setWeather, "apiKey")}
+        disabled={saving}
+      />
+      <p className="mb-4 mt-0.5 text-center text-[12.5px] font-medium leading-[18px] text-text-muted">
+        Optional — you can add or change this anytime in Settings.
+      </p>
+      <div className="flex gap-3">
+        <Button
+          label="Back"
+          variant="ghost"
+          icon={ArrowLeft}
+          onClick={() => {
+            setStepError(null);
+            setStep(1);
+          }}
+        />
+        <Button label="Finish" icon={Check} onClick={finish} loading={saving} />
+      </div>
+    </div>
+  );
+}
+
+export default function RegisterPage() {
+  const flow = useRegisterFlow();
+  const { step, accountError, stepError } = flow;
+  const header = HEADERS[step];
 
   return (
     <GlassCard strong elevated className="w-full max-w-[460px] p-8 sm:p-9">
       <StepIndicator step={step} />
-
-      <div className="mb-5 flex flex-col items-center text-center">
-        <div
-          className="mb-4 flex h-14 w-14 items-center justify-center rounded-[18px]"
-          style={{ backgroundImage: GRADIENT_CSS[header.gradient] }}
-        >
-          <HeaderIcon size={20} className="text-text-inverse" />
-        </div>
-        <h1 className="text-[25px] font-extrabold tracking-tight text-text-primary">
-          {header.title}
-        </h1>
-        <p className="mt-1.5 text-sm font-medium text-text-muted">{header.subtitle}</p>
-      </div>
+      <RegisterHeader header={header} />
 
       {accountError ? <StatusBanner kind="error" message={accountError} /> : null}
       {stepError ? <StatusBanner kind="error" message={stepError} /> : null}
 
-      {step === 0 ? (
-        <div>
-          <Field
-            label="EMAIL ADDRESS"
-            icon={Mail}
-            inputMode="email"
-            placeholder="you@domain.com"
-            value={account.email}
-            onChange={setField(setAccount, "email")}
-            error={accountErrors.email}
-            disabled={saving}
-          />
-          <Field
-            label="USERNAME"
-            icon={User}
-            placeholder="Choose a username"
-            value={account.username}
-            onChange={setField(setAccount, "username")}
-            error={accountErrors.username}
-            disabled={saving}
-          />
-          <Field
-            label="PASSWORD"
-            icon={Lock}
-            secure
-            placeholder="Create a secure password"
-            value={account.password}
-            onChange={setField(setAccount, "password")}
-            error={accountErrors.password}
-            disabled={saving}
-          />
-          <Field
-            label="CONFIRM PASSWORD"
-            icon={Lock}
-            secure
-            placeholder="Re-enter your password"
-            value={account.confirmPassword}
-            onChange={setField(setAccount, "confirmPassword")}
-            error={accountErrors.confirmPassword}
-            disabled={saving}
-          />
-          <Button
-            label="Create account"
-            icon={ArrowRight}
-            onClick={handleCreateAccount}
-            loading={saving}
-            className="mt-1.5"
-          />
-        </div>
-      ) : null}
-
-      {step === 1 ? (
-        <div>
-          <Field
-            label="ACCOUNT (EMAIL)"
-            icon={Mail}
-            inputMode="email"
-            placeholder="your-email@domain.com"
-            value={growatt.email}
-            onChange={setField(setGrowatt, "email")}
-            disabled={saving}
-          />
-          <Field
-            label="PASSWORD"
-            icon={Key}
-            secure
-            placeholder="Enter your Growatt password"
-            value={growatt.password}
-            onChange={setField(setGrowatt, "password")}
-            disabled={saving}
-          />
-          <p className="mb-4 mt-0.5 text-center text-[12.5px] font-medium leading-[18px] text-text-muted">
-            Optional — you can add or change this anytime in Settings.
-          </p>
-          <div className="flex gap-3">
-            <Button
-              label="Skip"
-              variant="ghost"
-              onClick={() => {
-                setStepError(null);
-                setStep(2);
-              }}
-            />
-            <Button
-              label="Continue"
-              icon={ArrowRight}
-              gradient="energy"
-              onClick={handleSaveGrowatt}
-              loading={saving}
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {step === 2 ? (
-        <div>
-          <Field
-            label="WEATHER STATION ID"
-            icon={MapPin}
-            placeholder="e.g. ISANDN24"
-            hint="Find your local station ID at weather.com/weather/map"
-            value={weather.stationId}
-            onChange={setField(setWeather, "stationId")}
-            disabled={saving}
-          />
-          <Field
-            label="API KEY"
-            icon={Key}
-            secure
-            placeholder="Enter your Weather.com API key"
-            hint="Get your API key from the weather.com developer portal"
-            value={weather.apiKey}
-            onChange={setField(setWeather, "apiKey")}
-            disabled={saving}
-          />
-          <p className="mb-4 mt-0.5 text-center text-[12.5px] font-medium leading-[18px] text-text-muted">
-            Optional — you can add or change this anytime in Settings.
-          </p>
-          <div className="flex gap-3">
-            <Button
-              label="Back"
-              variant="ghost"
-              icon={ArrowLeft}
-              onClick={() => {
-                setStepError(null);
-                setStep(1);
-              }}
-            />
-            <Button label="Finish" icon={Check} onClick={handleFinish} loading={saving} />
-          </div>
-        </div>
-      ) : null}
+      {step === 0 ? <AccountStep flow={flow} /> : null}
+      {step === 1 ? <GrowattStep flow={flow} /> : null}
+      {step === 2 ? <WeatherStep flow={flow} /> : null}
 
       {step === 0 ? (
         <div className="mt-6 flex items-center justify-center gap-1.5 border-t border-glass-border pt-5">

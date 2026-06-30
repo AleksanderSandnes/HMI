@@ -1,7 +1,7 @@
 "use client";
 
 import { loginSchema } from "@hmi/core";
-import { Formik } from "formik";
+import { Formik, type FormikProps } from "formik";
 import { ArrowRight, Lock, Mail, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -13,6 +13,71 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBanner } from "@/components/ui/StatusBanner";
 import { useCore } from "@/lib/hooks/useCore";
 
+interface LoginValues {
+  email: string;
+  password: string;
+}
+
+function LoginHeader() {
+  return (
+    <div className="mb-6 flex flex-col items-center text-center">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)]">
+        <Zap size={20} className="text-text-inverse" fill="currentColor" />
+      </div>
+      <h1 className="text-[26px] font-extrabold tracking-tight text-text-primary">Welcome back</h1>
+      <p className="mt-1.5 text-sm font-medium text-text-muted">Sign in to your energy dashboard</p>
+    </div>
+  );
+}
+
+function LoginFields({
+  values,
+  errors,
+  touched,
+  handleChange,
+  handleBlur,
+  handleSubmit,
+  isSubmitting,
+}: FormikProps<LoginValues>) {
+  return (
+    <form onSubmit={handleSubmit} noValidate>
+      <Field
+        label="EMAIL ADDRESS"
+        icon={Mail}
+        name="email"
+        inputMode="email"
+        autoComplete="email"
+        placeholder="you@domain.com"
+        value={values.email}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        error={touched.email ? errors.email : undefined}
+        disabled={isSubmitting}
+      />
+      <Field
+        label="PASSWORD"
+        icon={Lock}
+        secure
+        name="password"
+        autoComplete="current-password"
+        placeholder="Enter your password"
+        value={values.password}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        error={touched.password ? errors.password : undefined}
+        disabled={isSubmitting}
+      />
+      <Button
+        type="submit"
+        label="Sign In"
+        icon={ArrowRight}
+        loading={isSubmitting}
+        className="mt-1.5"
+      />
+    </form>
+  );
+}
+
 function LoginForm() {
   const { auth } = useCore();
   const router = useRouter();
@@ -22,18 +87,7 @@ function LoginForm() {
 
   return (
     <GlassCard strong elevated className="w-full max-w-[430px] p-8 sm:p-9">
-      <div className="mb-6 flex flex-col items-center text-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)]">
-          <Zap size={20} className="text-text-inverse" fill="currentColor" />
-        </div>
-        <h1 className="text-[26px] font-extrabold tracking-tight text-text-primary">
-          Welcome back
-        </h1>
-        <p className="mt-1.5 text-sm font-medium text-text-muted">
-          Sign in to your energy dashboard
-        </p>
-      </div>
-
+      <LoginHeader />
       {error ? <StatusBanner kind="error" message={error} /> : null}
 
       <Formik
@@ -56,43 +110,7 @@ function LoginForm() {
           }
         }}
       >
-        {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
-          <form onSubmit={handleSubmit} noValidate>
-            <Field
-              label="EMAIL ADDRESS"
-              icon={Mail}
-              name="email"
-              inputMode="email"
-              autoComplete="email"
-              placeholder="you@domain.com"
-              value={values.email}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              error={touched.email ? errors.email : undefined}
-              disabled={isSubmitting}
-            />
-            <Field
-              label="PASSWORD"
-              icon={Lock}
-              secure
-              name="password"
-              autoComplete="current-password"
-              placeholder="Enter your password"
-              value={values.password}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              error={touched.password ? errors.password : undefined}
-              disabled={isSubmitting}
-            />
-            <Button
-              type="submit"
-              label="Sign In"
-              icon={ArrowRight}
-              loading={isSubmitting}
-              className="mt-1.5"
-            />
-          </form>
-        )}
+        {(props) => <LoginFields {...props} />}
       </Formik>
 
       <div className="mt-6 flex items-center justify-center gap-1.5 border-t border-glass-border pt-5">

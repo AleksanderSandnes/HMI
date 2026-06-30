@@ -57,6 +57,16 @@ function Section({
   );
 }
 
+function growattConfig(api: ApiSettingsResponse | null | undefined) {
+  const g = api?.growatt;
+  return { key: g?.email ?? "g", email: g?.email ?? "", configured: !!g?.hasPassword };
+}
+
+function weatherConfig(api: ApiSettingsResponse | null | undefined) {
+  const w = api?.weather;
+  return { key: w?.stationId ?? "w", station: w?.stationId ?? "", configured: !!w?.hasApiKey };
+}
+
 export default function SettingsPage() {
   const { account, settings } = useCore();
 
@@ -73,6 +83,9 @@ export default function SettingsPage() {
   // Cross-device sync: refresh integration settings when they change elsewhere.
   useEffect(() => settings.subscribeSettings(() => void refetchApi()), [settings, refetchApi]);
 
+  const gc = growattConfig(api);
+  const wc = weatherConfig(api);
+
   return (
     <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-5">
       <div>
@@ -88,9 +101,9 @@ export default function SettingsPage() {
       <div className="grid items-start gap-4 lg:grid-cols-2">
         <Section title="Growatt solar" icon={SunMedium} gradient="energy">
           <GrowattForm
-            key={api?.growatt?.email ?? "g"}
-            initialEmail={api?.growatt?.email ?? ""}
-            configured={!!api?.growatt?.hasPassword}
+            key={gc.key}
+            initialEmail={gc.email}
+            configured={gc.configured}
             settings={settings}
             onSaved={refetchApi}
           />
@@ -98,9 +111,9 @@ export default function SettingsPage() {
 
         <Section title="Weather.com station" icon={CloudSun} gradient="solar">
           <WeatherForm
-            key={api?.weather?.stationId ?? "w"}
-            initialStationId={api?.weather?.stationId ?? ""}
-            configured={!!api?.weather?.hasApiKey}
+            key={wc.key}
+            initialStationId={wc.station}
+            configured={wc.configured}
             settings={settings}
             onSaved={refetchApi}
           />

@@ -25,6 +25,41 @@ function timeAgo(iso: string): string {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+function EmptyState() {
+  return (
+    <GlassCard className="flex flex-col items-center gap-3 p-12 text-center">
+      <Bell size={32} className="text-text-muted" />
+      <p className="text-sm font-semibold text-text-secondary">You&apos;re all caught up</p>
+      <p className="text-sm text-text-muted">Solar &amp; weather sync alerts will appear here.</p>
+    </GlassCard>
+  );
+}
+
+function NotificationRow({ item, onDismiss }: { item: NotificationItem; onDismiss: () => void }) {
+  const { icon: Icon, className } = LEVEL[item.level] ?? LEVEL.info;
+  return (
+    <GlassCard className="flex items-start gap-3.5 p-4">
+      <Icon size={18} className={`mt-0.5 shrink-0 ${className}`} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <p className="truncate font-bold text-text-primary">{item.title}</p>
+          <span className="shrink-0 text-xs font-medium text-text-muted">
+            {timeAgo(item.createdAt)}
+          </span>
+        </div>
+        {item.message ? <p className="mt-1 text-sm text-text-secondary">{item.message}</p> : null}
+      </div>
+      <button
+        onClick={onDismiss}
+        aria-label="Dismiss"
+        className="shrink-0 rounded-md p-1 text-text-muted transition hover:text-text-primary"
+      >
+        <X size={16} />
+      </button>
+    </GlassCard>
+  );
+}
+
 export default function NotificationsPage() {
   const { notifications } = useCore();
 
@@ -69,44 +104,19 @@ export default function NotificationsPage() {
       {isLoading ? (
         <GlassCard className="p-8 text-center text-sm text-text-muted">Loading…</GlassCard>
       ) : items.length === 0 ? (
-        <GlassCard className="flex flex-col items-center gap-3 p-12 text-center">
-          <Bell size={32} className="text-text-muted" />
-          <p className="text-sm font-semibold text-text-secondary">You&apos;re all caught up</p>
-          <p className="text-sm text-text-muted">
-            Solar &amp; weather sync alerts will appear here.
-          </p>
-        </GlassCard>
+        <EmptyState />
       ) : (
         <div className="flex flex-col gap-3">
-          {items.map((item) => {
-            const { icon: Icon, className } = LEVEL[item.level] ?? LEVEL.info;
-            return (
-              <GlassCard key={item.id} className="flex items-start gap-3.5 p-4">
-                <Icon size={18} className={`mt-0.5 shrink-0 ${className}`} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate font-bold text-text-primary">{item.title}</p>
-                    <span className="shrink-0 text-xs font-medium text-text-muted">
-                      {timeAgo(item.createdAt)}
-                    </span>
-                  </div>
-                  {item.message ? (
-                    <p className="mt-1 text-sm text-text-secondary">{item.message}</p>
-                  ) : null}
-                </div>
-                <button
-                  onClick={async () => {
-                    await notifications.dismissNotification(item.id);
-                    void refetch();
-                  }}
-                  aria-label="Dismiss"
-                  className="shrink-0 rounded-md p-1 text-text-muted transition hover:text-text-primary"
-                >
-                  <X size={16} />
-                </button>
-              </GlassCard>
-            );
-          })}
+          {items.map((item) => (
+            <NotificationRow
+              key={item.id}
+              item={item}
+              onDismiss={async () => {
+                await notifications.dismissNotification(item.id);
+                void refetch();
+              }}
+            />
+          ))}
         </div>
       )}
     </div>

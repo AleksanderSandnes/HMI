@@ -89,6 +89,60 @@ interface QuickSheetProps {
   onCustom: () => void;
 }
 
+function QuickGrid({
+  selectedDate,
+  onPick,
+}: {
+  selectedDate: string;
+  onPick: (daysAgo: number) => void;
+}) {
+  return (
+    <View className="mb-[22px] flex-row flex-wrap gap-2.5">
+      {QUICK.map((q) => {
+        const act = quickIso(q.daysAgo) === selectedDate;
+        return (
+          <Pressable
+            key={q.label}
+            onPress={() => onPick(q.daysAgo)}
+            className={cn(
+              "grow basis-[40%] items-center rounded-md border py-3",
+              act ? "border-solar bg-solar-soft" : "border-glass-border bg-glass-fill",
+            )}
+          >
+            <Text
+              className={cn("text-sm font-bold", act ? "text-solar-light" : "text-text-secondary")}
+            >
+              {q.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function CustomDateButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} className="overflow-hidden rounded-md">
+      <LinearGradient
+        colors={GRADIENTS.solar}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          paddingVertical: 15,
+        }}
+      >
+        <Ionicons name="calendar-outline" size={15} color="#0a1124" />
+        <Text className="text-[15px] font-extrabold text-text-inverse">Pick a custom date</Text>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
 function QuickSheet({ visible, width, selectedDate, onClose, onPick, onCustom }: QuickSheetProps) {
   return (
     <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -124,53 +178,12 @@ function QuickSheet({ visible, width, selectedDate, onClose, onPick, onCustom }:
             <Text className="mb-3 text-xs font-bold uppercase tracking-[0.5px] text-text-muted">
               Quick select
             </Text>
-            <View className="mb-[22px] flex-row flex-wrap gap-2.5">
-              {QUICK.map((q) => {
-                const act = quickIso(q.daysAgo) === selectedDate;
-                return (
-                  <Pressable
-                    key={q.label}
-                    onPress={() => onPick(q.daysAgo)}
-                    className={cn(
-                      "grow basis-[40%] items-center rounded-md border py-3",
-                      act ? "border-solar bg-solar-soft" : "border-glass-border bg-glass-fill",
-                    )}
-                  >
-                    <Text
-                      className={cn(
-                        "text-sm font-bold",
-                        act ? "text-solar-light" : "text-text-secondary",
-                      )}
-                    >
-                      {q.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <QuickGrid selectedDate={selectedDate} onPick={onPick} />
 
             <Text className="mb-3 text-xs font-bold uppercase tracking-[0.5px] text-text-muted">
               Custom
             </Text>
-            <Pressable onPress={onCustom} className="overflow-hidden rounded-md">
-              <LinearGradient
-                colors={GRADIENTS.solar}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  paddingVertical: 15,
-                }}
-              >
-                <Ionicons name="calendar-outline" size={15} color="#0a1124" />
-                <Text className="text-[15px] font-extrabold text-text-inverse">
-                  Pick a custom date
-                </Text>
-              </LinearGradient>
-            </Pressable>
+            <CustomDateButton onPress={onCustom} />
           </GlassCard>
         </Pressable>
       </Pressable>

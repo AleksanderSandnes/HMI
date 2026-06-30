@@ -327,6 +327,56 @@ function CalendarPopover({
 const STEP_BTN =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong disabled:opacity-50";
 
+function TriggerRow({
+  rootRef,
+  disabled,
+  pretty,
+  open,
+  onShift,
+  onToggle,
+}: {
+  rootRef: React.RefObject<HTMLDivElement | null>;
+  disabled: boolean;
+  pretty: string;
+  open: boolean;
+  onShift: (days: number) => void;
+  onToggle: () => void;
+}) {
+  return (
+    <div ref={rootRef} className="flex items-center gap-1.5">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onShift(-1)}
+        aria-label="Previous day"
+        className={STEP_BTN}
+      >
+        <ChevronLeft size={18} />
+      </button>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={onToggle}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-4 py-2 text-sm font-bold text-text-primary transition hover:bg-glass-fill-strong disabled:opacity-50"
+      >
+        <CalendarDays size={14} className="text-text-secondary" />
+        {pretty}
+      </button>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onShift(1)}
+        aria-label="Next day"
+        className={STEP_BTN}
+      >
+        <ChevronRight size={18} />
+      </button>
+    </div>
+  );
+}
+
 function CalendarBody({
   view,
   monthGrid,
@@ -405,37 +455,14 @@ export function DateSelector({
 
   return (
     <GlassCard strong className="flex w-fit items-center p-1.5">
-      <div ref={rootRef} className="flex items-center gap-1.5">
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => shift(-1)}
-          aria-label="Previous day"
-          className={STEP_BTN}
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={pop.toggleOpen}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-4 py-2 text-sm font-bold text-text-primary transition hover:bg-glass-fill-strong disabled:opacity-50"
-        >
-          <CalendarDays size={14} className="text-text-secondary" />
-          {pretty}
-        </button>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => shift(1)}
-          aria-label="Next day"
-          className={STEP_BTN}
-        >
-          <ChevronRight size={18} />
-        </button>
-      </div>
+      <TriggerRow
+        rootRef={rootRef}
+        disabled={disabled}
+        pretty={pretty}
+        open={open}
+        onShift={shift}
+        onToggle={pop.toggleOpen}
+      />
       {open && pos && typeof document !== "undefined" ? (
         <CalendarPopover
           pos={pos}

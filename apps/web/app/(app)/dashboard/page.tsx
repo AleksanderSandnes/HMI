@@ -41,15 +41,16 @@ interface CurrentMetric {
   precipRate?: number;
   precipTotal?: number;
 }
+interface CurrentObs {
+  humidity?: number;
+  winddir?: number;
+  uv?: number;
+  solarRadiation?: number;
+  obsTimeLocal?: string;
+  metric?: CurrentMetric;
+}
 interface CurrentWeather {
-  observations?: Array<{
-    humidity?: number;
-    winddir?: number;
-    uv?: number;
-    solarRadiation?: number;
-    obsTimeLocal?: string;
-    metric?: CurrentMetric;
-  }>;
+  observations?: CurrentObs[];
 }
 
 function SectionLabel({
@@ -73,7 +74,45 @@ function SectionLabel({
   );
 }
 
-export default function DashboardPage() {
+function StatusBadge({ online }: { online: boolean | null | undefined }) {
+  if (online == null) return null;
+  return (
+    <span
+      className={`flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-1 text-[11px] font-bold ${online ? "bg-[rgba(52,211,153,0.13)] text-positive" : "bg-[rgba(251,113,133,0.13)] text-negative"}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${online ? "bg-positive" : "bg-negative"}`} />
+      {online ? "Online" : "Offline"}
+    </span>
+  );
+}
+
+function solarMetrics(solar?: SolarData, solarWeek?: SolarData) {
+  return {
+    peak: solar ? getPeakOutput(solar.chartData, "hourly") : null,
+    todayGen: solar?.metrics.todayGeneration ?? null,
+    weekGen: solarWeek?.metrics.todayGeneration ?? null,
+    lifetime: solar?.metrics.totalGeneration ?? null,
+  };
+}
+
+function solarDevice(solar: SolarData | undefined, currentPower: number) {
+  const device = solar?.device;
+  const capacityKw = device?.capacity ? round(device.capacity / 1000, 1) : null;
+  const utilisation =
+    device?.capacity && currentPower > 0
+      ? Math.round((currentPower / device.capacity) * 100)
+      : null;
+  return { device, capacityKw, utilisation };
+}
+
+function weatherNow(weatherData?: CurrentWeather) {
+  const obs = weatherData?.observations?.[0];
+  const m: CurrentMetric = obs?.metric ?? {};
+  const feelsLike = m.heatIndex ?? m.windChill ?? m.temp;
+  return { obs, m, feelsLike };
+}
+
+function useDashboardData() {
   const { growatt, weather } = useCore();
   const today = toISO(new Date());
   const yesterday = useMemo(() => {
@@ -82,22 +121,18 @@ export default function DashboardPage() {
     return toISO(d);
   }, []);
 
-  // Solar today (load-once; no auto-refresh — Growatt IP-ban caution).
   const { data: solar, isLoading: solarLoading } = useQuery<SolarData>({
     queryKey: ["dashboard-solar", today],
     queryFn: () => growatt.fetchSolarData("hourly", today),
     refetchOnWindowFocus: false,
     staleTime: Infinity,
   });
-  // Solar this week (7-day total).
   const { data: solarWeek } = useQuery<SolarData>({
     queryKey: ["dashboard-solar-week", yesterday],
     queryFn: () => growatt.fetchSolarData("weekly", yesterday),
     refetchOnWindowFocus: false,
     staleTime: Infinity,
   });
-
-  // Weather: live current (focus-gated 60s) + weekly history for averages.
   const { data: weatherData, isLoading: weatherLoading } = useQuery<CurrentWeather>({
     queryKey: ["dashboard-weather"],
     queryFn: () => weather.getCurrentWeatherData(),
@@ -111,7 +146,6 @@ export default function DashboardPage() {
     staleTime: 30 * 60_000,
   });
 
-  // Weekly averages per metric, from the historical observations.
   const wkAvg = useMemo(() => {
     const obs = weekObs?.observations ?? [];
     const avg = (key: string) => average(buildWeatherSeries(obs, key, "weekly").series[0] ?? []);
@@ -129,50 +163,24 @@ export default function DashboardPage() {
     [solar],
   );
 
-  const peak = solar ? getPeakOutput(solar.chartData, "hourly") : null;
-  const todayGen = solar?.metrics.todayGeneration ?? null;
-  const weekGen = solarWeek?.metrics.todayGeneration ?? null;
-  const lifetime = solar?.metrics.totalGeneration ?? null;
-  const device = solar?.device;
-  const capacityKw = device?.capacity ? round(device.capacity / 1000, 1) : null;
-  const utilisation =
-    device?.capacity && currentPower > 0
-      ? Math.round((currentPower / device.capacity) * 100)
-      : null;
+  return {
+    solarLoading,
+    wxLoading: weatherLoading && !weatherData,
+    currentPower,
+    wkAvg,
+    ...solarMetrics(solar, solarWeek),
+    ...solarDevice(solar, currentPower),
+    ...weatherNow(weatherData),
+  };
+}
 
-  const obs = weatherData?.observations?.[0];
-  const m = obs?.metric ?? {};
-  const feelsLike = m.heatIndex ?? m.windChill ?? m.temp;
-  const wxLoading = weatherLoading && !weatherData;
+type DashboardModel = ReturnType<typeof useDashboardData>;
 
-  const statusBadge =
-    device?.online != null ? (
-      <span
-        className={`flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-1 text-[11px] font-bold ${
-          device.online
-            ? "bg-[rgba(52,211,153,0.13)] text-positive"
-            : "bg-[rgba(251,113,133,0.13)] text-negative"
-        }`}
-      >
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${device.online ? "bg-positive" : "bg-negative"}`}
-        />
-        {device.online ? "Online" : "Offline"}
-      </span>
-    ) : null;
-
+function SolarSection({ model }: { model: DashboardModel }) {
+  const { todayGen, weekGen, lifetime, currentPower, peak, utilisation, capacityKw, solarLoading } =
+    model;
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 md:h-full">
-      <PageHeader
-        title="Home Production"
-        subtitle={
-          [device?.plantName, device?.model].filter(Boolean).join(" · ") ||
-          "Solar & weather overview"
-        }
-        right={statusBadge}
-      />
-
-      {/* Solar */}
+    <>
       <SectionLabel
         icon={Sun}
         text="Solar"
@@ -234,8 +242,102 @@ export default function DashboardPage() {
           loading={solarLoading}
         />
       </div>
+    </>
+  );
+}
 
-      {/* Weather */}
+function WeatherTilesA({ model }: { model: DashboardModel }) {
+  const { obs, m, wkAvg, wxLoading } = model;
+  return (
+    <>
+      <WindDial degrees={obs?.winddir} speed={m.windSpeed} gust={m.windGust} unit="km/h" />
+      <DualStat
+        icon={Thermometer}
+        gradient="solar"
+        label="Temperature"
+        aLabel="Now"
+        aValue={show(m.temp)}
+        aUnit="°C"
+        bLabel="Week average"
+        bValue={show(wkAvg.temp)}
+        bUnit="°C"
+        loading={wxLoading}
+      />
+      <DualStat
+        icon={Droplets}
+        gradient="co2"
+        label="Humidity"
+        aLabel="Now"
+        aValue={show(obs?.humidity)}
+        aUnit="%"
+        bLabel="Week average"
+        bValue={show(wkAvg.humidity)}
+        bUnit="%"
+        loading={wxLoading}
+      />
+      <DualBaro now={m.pressure} avg={wkAvg.pressure} unit="hPa" loading={wxLoading} />
+    </>
+  );
+}
+
+function WeatherTilesB({ model }: { model: DashboardModel }) {
+  const { obs, m, feelsLike, wkAvg, wxLoading } = model;
+  return (
+    <>
+      <DualStat
+        icon={SunMedium}
+        gradient="solar"
+        label="Solar radiation"
+        aLabel="Now"
+        aValue={show(obs?.solarRadiation)}
+        aUnit="W/m²"
+        bLabel="Week average"
+        bValue={show(wkAvg.solar)}
+        bUnit="W/m²"
+        loading={wxLoading}
+      />
+      <DualStat
+        icon={Sun}
+        gradient="revenue"
+        label="UV index"
+        aLabel="Now"
+        aValue={show(obs?.uv)}
+        bLabel="Week average"
+        bValue={show(wkAvg.uv)}
+        loading={wxLoading}
+      />
+      <DualStat
+        icon={CloudRain}
+        gradient="energy"
+        label="Precipitation"
+        aLabel="Rate"
+        aValue={show(m.precipRate, 1)}
+        aUnit="mm/h"
+        bLabel="Today"
+        bValue={show(m.precipTotal, 1)}
+        bUnit="mm"
+        loading={wxLoading}
+      />
+      <DualStat
+        icon={Thermometer}
+        gradient="accent"
+        label="Feels like"
+        aLabel="Now"
+        aValue={show(feelsLike)}
+        aUnit="°C"
+        bLabel="Wind chill"
+        bValue={show(m.windChill)}
+        bUnit="°C"
+        loading={wxLoading}
+      />
+    </>
+  );
+}
+
+function WeatherSection({ model }: { model: DashboardModel }) {
+  const { obs } = model;
+  return (
+    <>
       <SectionLabel
         icon={CloudRain}
         text="Weather"
@@ -248,79 +350,29 @@ export default function DashboardPage() {
         }
       />
       <div className="grid auto-rows-fr grid-cols-2 gap-3 md:min-h-0 md:flex-[2] md:grid-cols-4">
-        <WindDial degrees={obs?.winddir} speed={m.windSpeed} gust={m.windGust} unit="km/h" />
-        <DualStat
-          icon={Thermometer}
-          gradient="solar"
-          label="Temperature"
-          aLabel="Now"
-          aValue={show(m.temp)}
-          aUnit="°C"
-          bLabel="Week average"
-          bValue={show(wkAvg.temp)}
-          bUnit="°C"
-          loading={wxLoading}
-        />
-        <DualStat
-          icon={Droplets}
-          gradient="co2"
-          label="Humidity"
-          aLabel="Now"
-          aValue={show(obs?.humidity)}
-          aUnit="%"
-          bLabel="Week average"
-          bValue={show(wkAvg.humidity)}
-          bUnit="%"
-          loading={wxLoading}
-        />
-        <DualBaro now={m.pressure} avg={wkAvg.pressure} unit="hPa" loading={wxLoading} />
-        <DualStat
-          icon={SunMedium}
-          gradient="solar"
-          label="Solar radiation"
-          aLabel="Now"
-          aValue={show(obs?.solarRadiation)}
-          aUnit="W/m²"
-          bLabel="Week average"
-          bValue={show(wkAvg.solar)}
-          bUnit="W/m²"
-          loading={wxLoading}
-        />
-        <DualStat
-          icon={Sun}
-          gradient="revenue"
-          label="UV index"
-          aLabel="Now"
-          aValue={show(obs?.uv)}
-          bLabel="Week average"
-          bValue={show(wkAvg.uv)}
-          loading={wxLoading}
-        />
-        <DualStat
-          icon={CloudRain}
-          gradient="energy"
-          label="Precipitation"
-          aLabel="Rate"
-          aValue={show(m.precipRate, 1)}
-          aUnit="mm/h"
-          bLabel="Today"
-          bValue={show(m.precipTotal, 1)}
-          bUnit="mm"
-          loading={wxLoading}
-        />
-        <DualStat
-          icon={Thermometer}
-          gradient="accent"
-          label="Feels like"
-          aLabel="Now"
-          aValue={show(feelsLike)}
-          aUnit="°C"
-          bLabel="Wind chill"
-          bValue={show(m.windChill)}
-          bUnit="°C"
-          loading={wxLoading}
-        />
+        <WeatherTilesA model={model} />
+        <WeatherTilesB model={model} />
       </div>
+    </>
+  );
+}
+
+export default function DashboardPage() {
+  const model = useDashboardData();
+  const { device } = model;
+
+  return (
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 md:h-full">
+      <PageHeader
+        title="Home Production"
+        subtitle={
+          [device?.plantName, device?.model].filter(Boolean).join(" · ") ||
+          "Solar & weather overview"
+        }
+        right={<StatusBadge online={device?.online} />}
+      />
+      <SolarSection model={model} />
+      <WeatherSection model={model} />
     </div>
   );
 }

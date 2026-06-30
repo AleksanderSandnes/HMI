@@ -255,8 +255,112 @@ function SolarSection({ model, tileW }: { model: DashboardModel; tileW: number }
   );
 }
 
-function WeatherSection({ model, tileW }: { model: DashboardModel; tileW: number }) {
+function WeatherTilesA({ model, tileW, h }: { model: DashboardModel; tileW: number; h: number }) {
+  const { obs, m, wkAvg, wxLoading } = model;
+  return (
+    <>
+      <Tile w={tileW} h={h}>
+        <WindDial degrees={obs?.winddir} speed={m.windSpeed} gust={m.windGust} unit="km/h" />
+      </Tile>
+      <Tile w={tileW} h={h}>
+        <DualStat
+          icon={ic("thermometer")}
+          gradient="solar"
+          label="Temperature"
+          aLabel="Now"
+          aValue={show(m.temp)}
+          aUnit="°C"
+          bLabel="Week avg"
+          bValue={show(wkAvg.temp)}
+          bUnit="°C"
+          loading={wxLoading}
+        />
+      </Tile>
+      <Tile w={tileW} h={h}>
+        <DualStat
+          icon={ic("water")}
+          gradient="co2"
+          label="Humidity"
+          aLabel="Now"
+          aValue={show(obs?.humidity)}
+          aUnit="%"
+          bLabel="Week avg"
+          bValue={show(wkAvg.humidity)}
+          bUnit="%"
+          loading={wxLoading}
+        />
+      </Tile>
+      <Tile w={tileW} h={h}>
+        <DualBaro now={m.pressure} avg={wkAvg.pressure} unit="hPa" />
+      </Tile>
+    </>
+  );
+}
+
+function WeatherTilesB({ model, tileW, h }: { model: DashboardModel; tileW: number; h: number }) {
   const { obs, m, feelsLike, wkAvg, wxLoading } = model;
+  return (
+    <>
+      <Tile w={tileW} h={h}>
+        <DualStat
+          icon={ic("sunny")}
+          gradient="solar"
+          label="Solar radiation"
+          aLabel="Now"
+          aValue={show(obs?.solarRadiation)}
+          aUnit="W/m²"
+          bLabel="Week avg"
+          bValue={show(wkAvg.solar)}
+          bUnit="W/m²"
+          loading={wxLoading}
+        />
+      </Tile>
+      <Tile w={tileW} h={h}>
+        <DualStat
+          icon={ic("sunny-outline")}
+          gradient="revenue"
+          label="UV index"
+          aLabel="Now"
+          aValue={show(obs?.uv)}
+          bLabel="Week avg"
+          bValue={show(wkAvg.uv)}
+          loading={wxLoading}
+        />
+      </Tile>
+      <Tile w={tileW} h={h}>
+        <DualStat
+          icon={ic("rainy")}
+          gradient="energy"
+          label="Precipitation"
+          aLabel="Rate"
+          aValue={show(m.precipRate, 1)}
+          aUnit="mm/h"
+          bLabel="Today"
+          bValue={show(m.precipTotal, 1)}
+          bUnit="mm"
+          loading={wxLoading}
+        />
+      </Tile>
+      <Tile w={tileW} h={h}>
+        <DualStat
+          icon={ic("thermometer-outline")}
+          gradient="accent"
+          label="Feels like"
+          aLabel="Now"
+          aValue={show(feelsLike)}
+          aUnit="°C"
+          bLabel="Wind chill"
+          bValue={show(m.windChill)}
+          bUnit="°C"
+          loading={wxLoading}
+        />
+      </Tile>
+    </>
+  );
+}
+
+function WeatherSection({ model, tileW }: { model: DashboardModel; tileW: number }) {
+  const { obs } = model;
   const h = 168;
   return (
     <>
@@ -272,94 +376,8 @@ function WeatherSection({ model, tileW }: { model: DashboardModel; tileW: number
         }
       />
       <View className="flex-row flex-wrap gap-3">
-        <Tile w={tileW} h={h}>
-          <WindDial degrees={obs?.winddir} speed={m.windSpeed} gust={m.windGust} unit="km/h" />
-        </Tile>
-        <Tile w={tileW} h={h}>
-          <DualStat
-            icon={ic("thermometer")}
-            gradient="solar"
-            label="Temperature"
-            aLabel="Now"
-            aValue={show(m.temp)}
-            aUnit="°C"
-            bLabel="Week avg"
-            bValue={show(wkAvg.temp)}
-            bUnit="°C"
-            loading={wxLoading}
-          />
-        </Tile>
-        <Tile w={tileW} h={h}>
-          <DualStat
-            icon={ic("water")}
-            gradient="co2"
-            label="Humidity"
-            aLabel="Now"
-            aValue={show(obs?.humidity)}
-            aUnit="%"
-            bLabel="Week avg"
-            bValue={show(wkAvg.humidity)}
-            bUnit="%"
-            loading={wxLoading}
-          />
-        </Tile>
-        <Tile w={tileW} h={h}>
-          <DualBaro now={m.pressure} avg={wkAvg.pressure} unit="hPa" />
-        </Tile>
-        <Tile w={tileW} h={h}>
-          <DualStat
-            icon={ic("sunny")}
-            gradient="solar"
-            label="Solar radiation"
-            aLabel="Now"
-            aValue={show(obs?.solarRadiation)}
-            aUnit="W/m²"
-            bLabel="Week avg"
-            bValue={show(wkAvg.solar)}
-            bUnit="W/m²"
-            loading={wxLoading}
-          />
-        </Tile>
-        <Tile w={tileW} h={h}>
-          <DualStat
-            icon={ic("sunny-outline")}
-            gradient="revenue"
-            label="UV index"
-            aLabel="Now"
-            aValue={show(obs?.uv)}
-            bLabel="Week avg"
-            bValue={show(wkAvg.uv)}
-            loading={wxLoading}
-          />
-        </Tile>
-        <Tile w={tileW} h={h}>
-          <DualStat
-            icon={ic("rainy")}
-            gradient="energy"
-            label="Precipitation"
-            aLabel="Rate"
-            aValue={show(m.precipRate, 1)}
-            aUnit="mm/h"
-            bLabel="Today"
-            bValue={show(m.precipTotal, 1)}
-            bUnit="mm"
-            loading={wxLoading}
-          />
-        </Tile>
-        <Tile w={tileW} h={h}>
-          <DualStat
-            icon={ic("thermometer-outline")}
-            gradient="accent"
-            label="Feels like"
-            aLabel="Now"
-            aValue={show(feelsLike)}
-            aUnit="°C"
-            bLabel="Wind chill"
-            bValue={show(m.windChill)}
-            bUnit="°C"
-            loading={wxLoading}
-          />
-        </Tile>
+        <WeatherTilesA model={model} tileW={tileW} h={h} />
+        <WeatherTilesB model={model} tileW={tileW} h={h} />
       </View>
     </>
   );
