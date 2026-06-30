@@ -37,7 +37,10 @@ interface Point {
   value: number;
 }
 
-function SolarTooltip({ isArea, unit }: { isArea: boolean; unit: string }) {
+// Recharts locates the Tooltip by inspecting its direct children's component type
+// (like the axes in buildAxes). Returning the <Tooltip> from a builder — rather than
+// wrapping it in a custom component — keeps it discoverable, so hover/cursor work.
+function buildTooltip(isArea: boolean, unit: string) {
   return (
     <Tooltip
       cursor={isArea ? CURSOR : false}
@@ -258,7 +261,7 @@ export function SolarChart({
 
   const { chartData, max, yMax, peakIndex, peakLabel } = solarModel(values, labels);
   const axes = showAxes ? buildAxes(yMax) : null;
-  const tooltip = <SolarTooltip isArea={isArea} unit={isArea ? "W" : "kWh"} />;
+  const tooltip = buildTooltip(isArea, isArea ? "W" : "kWh");
 
   return (
     <Frame heightClass={heightClass} height={height}>

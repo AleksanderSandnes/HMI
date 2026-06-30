@@ -23,7 +23,11 @@ export interface LineSeries {
   label: string;
 }
 
-function WeatherDefs({ clean }: { clean: LineSeries[] }) {
+// Recharts discovers graphical items / Tooltip / defs by inspecting its direct children's
+// component type, recursing into arrays but NOT into Fragments or custom components. So these
+// are builder functions returning real recharts elements (or arrays), not wrapper components —
+// otherwise the series never render and hover does nothing.
+function buildDefs(clean: LineSeries[]) {
   return (
     <defs>
       {clean.map((s, si) => (
@@ -37,15 +41,7 @@ function WeatherDefs({ clean }: { clean: LineSeries[] }) {
   );
 }
 
-function WeatherTooltip({
-  clean,
-  range,
-  unit,
-}: {
-  clean: LineSeries[];
-  range: number;
-  unit: string;
-}) {
+function buildTooltip(clean: LineSeries[], range: number, unit: string) {
   return (
     <Tooltip
       cursor={CURSOR}
@@ -79,28 +75,25 @@ function WeatherTooltip({
   );
 }
 
-function WeatherAreas({ clean, n }: { clean: LineSeries[]; n: number }) {
-  // Render last series first so the primary series sits on top.
-  return (
-    <>
-      {clean
-        .map((s, si) => ({ s, si }))
-        .reverse()
-        .map(({ s, si }) => (
-          <Area
-            key={si}
-            type="monotone"
-            dataKey={`s${si}`}
-            stroke={s.color}
-            strokeWidth={2.6}
-            fill={`url(#wx-${si})`}
-            dot={n <= 32 ? { r: 2.6, fill: s.color, stroke: "#0a1124", strokeWidth: 1.4 } : false}
-            activeDot={{ r: 5, fill: s.color, stroke: "#0a1124", strokeWidth: 2 }}
-            isAnimationActive={false}
-          />
-        ))}
-    </>
-  );
+function buildAreas(clean: LineSeries[], n: number) {
+  // Render last series first so the primary series sits on top. Returns an array (not a
+  // Fragment) so Recharts' findAllByType recurses into it and discovers the Areas.
+  return clean
+    .map((s, si) => ({ s, si }))
+    .reverse()
+    .map(({ s, si }) => (
+      <Area
+        key={si}
+        type="monotone"
+        dataKey={`s${si}`}
+        stroke={s.color}
+        strokeWidth={2.6}
+        fill={`url(#wx-${si})`}
+        dot={n <= 32 ? { r: 2.6, fill: s.color, stroke: "#0a1124", strokeWidth: 1.4 } : false}
+        activeDot={{ r: 5, fill: s.color, stroke: "#0a1124", strokeWidth: 2 }}
+        isAnimationActive={false}
+      />
+    ));
 }
 
 function readClean(series: LineSeries[]) {
@@ -203,7 +196,7 @@ export function WeatherChart({
           data={buildRows(labels, clean)}
           margin={{ top: 22, right: 18, bottom: 6, left: 0 }}
         >
-          <WeatherDefs clean={clean} />
+          {buildDefs(clean)}
           <CartesianGrid vertical={false} stroke={GRID_STROKE} />
           <XAxis
             dataKey="label"
@@ -221,8 +214,8 @@ export function WeatherChart({
             domain={[yMin, yMax]}
             tickFormatter={(v: number) => fmt(v, range)}
           />
-          <WeatherTooltip clean={clean} range={range} unit={unit} />
-          <WeatherAreas clean={clean} n={n} />
+          {buildTooltip(clean, range, unit)}
+          {buildAreas(clean, n)}
         </AreaChart>
       </ResponsiveContainer>
     </Frame>
