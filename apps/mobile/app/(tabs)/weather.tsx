@@ -35,6 +35,7 @@ interface MetricMeta {
 
 const io =
   (name: keyof typeof Ionicons.glyphMap) =>
+  // eslint-disable-next-line react/display-name -- render-prop, not a component
   (color: string, size: number): ReactNode => (
     <Ionicons name={name} color={color} size={size} />
   );

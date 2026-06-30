@@ -21,10 +21,11 @@ import type { IconRender } from '../../src/components/ui/types';
 
 const ic =
   (name: keyof typeof Ionicons.glyphMap): IconRender =>
+  // eslint-disable-next-line react/display-name -- render-prop, not a component
   (p) => <Ionicons name={name} {...p} />;
 
 interface CurrentWeather {
-  observations?: Array<{
+  observations?: {
     humidity?: number;
     winddir?: number;
     uv?: number;
@@ -40,7 +41,7 @@ interface CurrentWeather {
       precipRate?: number;
       precipTotal?: number;
     };
-  }>;
+  }[];
 }
 
 function SectionLabel({ icon, text, right }: { icon: keyof typeof Ionicons.glyphMap; text: string; right?: ReactNode }) {

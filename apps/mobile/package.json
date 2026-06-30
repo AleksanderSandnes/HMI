@@ -19,7 +19,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "eslint app src --ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "npm run lint -- --fix"
+    "lint:fix": "npm run lint -- --fix",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
