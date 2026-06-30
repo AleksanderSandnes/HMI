@@ -1,56 +1,69 @@
 # HMI — Home Management Interface
 
-A personal home-energy dashboard that brings **solar production** and **local weather** together in one clean, responsive interface. HMI pulls live data from a Growatt solar inverter and a Weather.com personal weather station (PWS), caches it, and visualises it across day / week / month / year charts — on the web, tablet, and mobile.
+A personal home-energy dashboard that brings **solar production** and **local weather** together in
+one clean, responsive interface. HMI pulls live data from a Growatt solar inverter and a Weather.com
+personal weather station (PWS), caches it, and visualises it across hour / week / month / year / 5-year
+charts — on the web, tablet, and mobile.
 
 🔗 **Live demo:** https://hmi-seven.vercel.app
 
-> ⚠️ The backend services run on Render's free tier and may take **30–60 seconds** to wake from cold start. The first request after a period of inactivity will be slow.
+> ⚠️ The Growatt service runs on Render's free tier and may take **30–60 seconds** to wake from a cold
+> start. The first solar request after a period of inactivity will be slow.
 
 ---
 
 ## ✨ Features
 
-- **☀️ Solar monitoring** — real-time and historical production from a Growatt plant, with day, week, month, and year charts plus lifetime totals.
-- **🌦️ Weather station** — current conditions and hourly / daily history from a Weather.com PWS, with weekly hourly breakdowns.
-- **🔐 Authentication** — JWT-based login and registration; every data route is scoped to the signed-in user.
-- **🗝️ Encrypted credential storage** — users supply their own Growatt and Weather.com credentials; the weather API key is encrypted at rest.
-- **🔔 Notifications** — an in-app notification centre (web) and Expo push notifications (mobile/tablet), backed by daily background jobs.
-- **🚀 Smart caching** — historical solar and weather data is cached in MongoDB so repeated views don't re-hit the upstream APIs.
-- **📱 Responsive UI** — a Next.js web app and an Expo iOS/Android app sharing business logic.
+- **☀️ Solar monitoring** — real-time and historical production from a Growatt plant (hourly, weekly,
+  monthly, yearly, 5-year) plus lifetime totals, peak markers, and utilisation.
+- **🌦️ Weather station** — current conditions plus hourly and weekly history from a Weather.com PWS.
+  On phones the weekly view collapses to 7 daily min/max/avg bands; tablets show the dense series.
+- **🔐 Authentication** — Supabase Auth (GoTrue, ES256 JWT); every row is scoped to the signed-in user.
+- **🗝️ Encrypted credential storage** — users supply their own Growatt and Weather.com credentials;
+  secrets live in Supabase **Vault**, never in plaintext columns or on the client.
+- **🔔 Notifications** — a Realtime in-app notification centre (web) and Expo push (mobile/tablet),
+  driven by daily background jobs (pg_cron + Edge Functions).
+- **🚀 Smart caching** — historical solar/weather data is cached in Postgres so repeat views don't
+  re-hit the upstream APIs.
+- **📱 Responsive UI** — a Next.js web app and an Expo iOS/Android app sharing one business-logic layer.
 
 ---
 
 ## 🗂️ Monorepo
 
-A Turborepo + npm-workspaces monorepo (laid out like the Catalyst project):
+A **Turborepo + npm-workspaces** monorepo:
 
 ```
 apps/
-  web/     Next.js 16 (App Router) web app — Vercel
-  mobile/  Expo / React Native iOS + Android app — EAS
+  web/      Next.js 16 (App Router) web app — deployed on Vercel
+  mobile/   Expo SDK 54 / React Native iOS + Android app — built with EAS
 packages/
-  core/    @hmi/core — platform-agnostic shared logic (types, chart math,
-           validation, framework-agnostic API clients) bundled into each app
-backend/growattAPI/   Java Growatt service (Render)   ·   supabase/   (unchanged)
+  core/     @hmi/core — platform-agnostic shared logic (types, validation, chart math,
+            weather/solar helpers, framework-agnostic API clients) bundled into each app
+backend/
+  growattAPI/   Java 17 / Spring Boot — the one dedicated integration service (Render)
+  weatherAPI/   ⚠️ RETIRED Node service, kept for reference only (replaced by Supabase)
+supabase/   Postgres schema, RLS, Auth, Realtime, Edge Functions, pg_cron, Vault
 ```
 
-`@hmi/core` is a compile-time library (not a server): the `api/*` modules are
-client-side helpers that call Supabase + the Java Growatt service.
+`@hmi/core` is a **compile-time library**, not a server: its `api/*` modules are client-side helpers
+that call Supabase + the Java Growatt service. Both apps consume it as the single source of truth —
+neither duplicates types, validation, or chart logic.
 
 ---
 
 ## 🏗️ Architecture
 
-HMI runs on **Supabase** as its platform, with one dedicated integration service (the Java
-Growatt API) for the part Supabase can't host.
+HMI runs on **Supabase** as its platform, with one dedicated integration service (the Java Growatt
+API) for the part Supabase can't host.
 
 ```
 ┌──────────────────┐        ┌──────────────────────────────────────────┐
 │   Frontend       │───────►│   Supabase                               │
 │   Next.js web    │        │   • Auth (GoTrue, ES256 JWT)             │
-│   (Vercel) +     │◄──────►│   • Postgres + RLS (users/settings/      │
-│   Expo mobile    │        │     notifications/weather/solar cache)   │
-│ • Solar charts   │        │   • Realtime (notification center)       │
+│   (Vercel) +     │◄──────►│   • Postgres + RLS (profiles/settings/   │
+│   Expo mobile    │        │     notifications/weather + solar cache) │
+│ • Solar charts   │        │   • Realtime (notification centre)       │
 │ • Weather views  │        │   • Edge Functions: weather-current /    │
 │ • Notifications  │        │     weather-history / weather-backfill / │
 │ • Settings       │        │     send-push / outage-monitor           │
@@ -62,230 +75,235 @@ Growatt API) for the part Supabase can't host.
 │   Growatt API        │───────────────────────┘
 │   Java / Spring Boot │
 │   (Render, Docker)   │──► server.growatt.com  (server-side login from Vault)
-│ • Day/Week/Month/Yr  │
+│ • Hour/Wk/Mo/Yr/5yr  │
 │ • Total & inverter   │
-│ • Solar backfill job │
 └──────────────────────┘
 ```
 
-- The **frontend** talks to **Supabase** for auth, settings, weather, and notifications, and to the **Growatt API** (with its Supabase JWT) for solar charts.
-- The **Growatt API** is the one component kept on Render: it needs egress-IP/proxy control because Growatt IP-blocks. It authenticates the Supabase JWT, logs into Growatt **server-side** using the user's Vault-stored credentials, and reads/writes the same Supabase Postgres (solar cache, notifications).
-- The retired **Node weatherAPI** and **MongoDB** have been replaced by Supabase. Weather.com fetches run in Edge Functions; historical reads come straight from Postgres via PostgREST.
+- The **frontend** talks to **Supabase** for auth, settings, weather, and notifications, and to the
+  **Growatt API** (presenting its Supabase JWT) for solar charts.
+- The **Growatt API** is the one component kept on Render: it needs egress-IP/proxy control because
+  Growatt IP-blocks. It validates the Supabase JWT (against the project JWKS), logs into Growatt
+  **server-side** with the user's Vault-stored credentials, and reads/writes the same Supabase
+  Postgres (solar cache, notifications).
+- **Weather.com** is a plain REST API (no IP-blocking), so its fetches run in Supabase **Edge
+  Functions**; historical reads come straight from Postgres via PostgREST.
+- The old **Node weatherAPI** and **MongoDB** are **retired** — replaced by Supabase. The
+  `backend/weatherAPI/` directory remains only for historical reference and is not deployed.
 
 ---
 
 ## 🛠️ Tech stack
 
-| Layer            | Technologies                                                                                                                                                                                                         |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Frontend**     | React Native 0.81, Expo SDK 54, React 19, Expo Router, TypeScript, Redux Toolkit, TanStack React Query, Gluestack UI, `react-native-chart-kit`, Formik + Yup, Axios, `crypto-js`, `expo-notifications`, `expo-video` |
-| **Weather API**  | Node.js, Express 4, Mongoose 8, JWT (`jsonwebtoken`), `bcrypt`, `node-cron`, Axios                                                                                                                                   |
-| **Growatt API**  | Java 17, Spring Boot, Spring Security, Spring Data MongoDB, Maven, Lombok                                                                                                                                            |
-| **Data & infra** | MongoDB Atlas, Vercel (frontend), Render (both backends, Docker for Java)                                                                                                                                            |
+| Layer           | Technologies                                                                                          |
+| --------------- | ----------------------------------------------------------------------------------------------------- |
+| **Web**         | Next.js 16 (App Router), React 19, TypeScript, Tailwind v4, TanStack Query, Recharts                  |
+| **Mobile**      | Expo SDK 54, React Native 0.81, Expo Router, NativeWind v4, Victory Native XL + Skia, TanStack Query  |
+| **Shared**      | `@hmi/core` — TypeScript, Yup validation, pure chart/weather/solar helpers                            |
+| **Growatt API** | Java 17, Spring Boot, Spring Security (OAuth2 resource server / JWKS), Spring Data JPA, Maven, Lombok |
+| **Platform**    | Supabase (Postgres + Auth + Realtime + Storage + Edge Functions + pg_cron + Vault)                    |
+| **Infra**       | Vercel (web), EAS (mobile), Render (Java, Docker)                                                     |
+| **Tooling**     | Turborepo, ESLint 9 (flat config), Prettier, Vitest (core/web), jest-expo (mobile), GitHub Actions    |
 
 ---
 
-## 📁 Repository structure
+## 🚀 Local development
 
-```
-HMI/
-├── app/                      # Expo Router routes ONLY (every file here is a route)
-│   ├── (tabs)/               # Growatt, Weather Station, Notifications, Settings
-│   ├── auth/                 # Login & register screens
-│   ├── pages/                # "Premium" page implementations
-│   ├── api/swagger.tsx       # Web-only Swagger UI page (/api/swagger)
-│   ├── index.js              # Landing screen
-│   └── _layout.tsx           # Root layout
-├── src/                      # Non-route application code
-│   ├── components/           # Shared UI components
-│   ├── services/             # Data-mode + per-domain service layer
-│   ├── redux/                # Redux store, auth slice, app wrapper
-│   ├── context/  hooks/      # React context & hooks
-│   ├── constants/  theme/  utils/  interface/
-│   ├── api/openapi.ts        # OpenAPI spec powering the Swagger page
-│   └── __tests__/            # Frontend Jest tests
-├── backend/
-│   ├── weatherAPI/           # Node.js / Express service
-│   │   ├── controllers/  routes/  services/  models/
-│   │   ├── middleware/  cron/  utils/  database/
-│   │   ├── __tests__/        # Jest tests
-│   │   └── server.js
-│   └── growattAPI/           # Java / Spring Boot service
-│       ├── src/main/java/    # controllers, entities, services, repositories
-│       ├── src/test/java/    # JUnit 5 tests
-│       ├── Dockerfile
-│       └── pom.xml
-├── assets/                   # Icons, splash, images
-├── app.json                  # Expo config
-├── jest.config.js            # Frontend Jest config
-├── vercel.json               # Vercel build config
-└── render.yaml               # Render service config
-```
-
----
-
-## 🚀 Getting started
+The whole stack runs locally. Minimum to see the app working: **Supabase (local) + one of the apps**.
+Add the **Java Growatt service** when you want live solar charts.
 
 ### Prerequisites
 
-- **Node.js 18+**
-- **Java 17+** and **Maven** (for the Growatt API)
-- **MongoDB** — a local instance for development, or a MongoDB Atlas cluster for production
-- A **Growatt account** and a **Weather.com PWS API key** (entered per-user in the app's Settings)
+| Tool                       | Version        | Needed for                                            |
+| -------------------------- | -------------- | ----------------------------------------------------- |
+| **Node.js**                | 22 (LTS)       | everything (web, mobile, core, tooling)               |
+| **npm**                    | 10+            | workspaces                                            |
+| **Supabase CLI**           | ≥ 2.108        | local Supabase stack (`supabase start`)               |
+| **Docker** (or Podman)     | running daemon | **required** by the local Supabase stack              |
+| **Java JDK + Maven**       | 17+            | the Growatt API (optional — only for live solar data) |
+| **Watchman** (recommended) | latest         | faster Metro file-watching for mobile                 |
 
-### 1. Clone
+> 💡 The Supabase CLI is already present at `~/.local/bin/supabase`. Docker is **not** installed by
+> default on this machine — install Docker Desktop / `docker` and start the daemon before
+> `supabase start`, or the local stack won't come up.
+
+### 1. Install dependencies
 
 ```bash
-git clone https://github.com/APSandnes/HMI.git
+git clone https://github.com/AleksanderSandnes/HMI.git
 cd HMI
+npm install        # installs every workspace (web, mobile, core)
 ```
 
-### 2. Weather API (Node.js)
+### 2. Start Supabase locally
+
+The local stack is fully described by `supabase/config.toml`, and the schema is applied from
+`supabase/migrations/*` automatically.
 
 ```bash
-cd backend/weatherAPI
-npm install
-# create a .env file (see variables below)
-npm run dev        # nodemon, or `npm start` for a plain node process
+supabase start     # boots Postgres, Auth, Realtime, Storage, Studio (needs Docker)
 ```
 
-**Environment variables**
+This prints (and `supabase status` re-prints) the local endpoints and keys:
 
-| Variable                      | Description                                                                   |
-| ----------------------------- | ----------------------------------------------------------------------------- |
-| `NODE_ENV`                    | `development` (local MongoDB) or `production` (Atlas cluster)                 |
-| `PORT`                        | API port (default `5000`)                                                     |
-| `MONGODB_LOCAL_URI`           | Local Mongo URI for development (default `mongodb://localhost:27017/hmi-dev`) |
-| `DB_USERNAME` / `DB_PASSWORD` | Atlas credentials (production)                                                |
-| `JWT_SECRET`                  | Secret for signing JWTs                                                       |
-| `ENCRYPTION_KEY`              | Key used to encrypt stored Weather API keys                                   |
-| `FRONTEND_URL`                | Allowed CORS origin for the deployed frontend                                 |
+| Service        | URL                                                       |
+| -------------- | --------------------------------------------------------- |
+| API gateway    | `http://127.0.0.1:54321`                                  |
+| Postgres       | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+| Studio (GUI)   | `http://127.0.0.1:54323`                                  |
+| Mailpit (SMTP) | `http://127.0.0.1:54324` (catches auth emails)            |
 
-### 3. Growatt API (Java / Spring Boot)
+Copy the printed **`anon key`** — you'll paste it into the app env files below. Email confirmation is
+disabled locally, so registering returns a session immediately.
+
+Useful commands:
+
+```bash
+supabase status                         # show URLs + keys again
+supabase db reset                       # re-apply all migrations from scratch
+supabase functions serve                # run Edge Functions locally (weather-*, send-push, …)
+supabase stop                           # tear the stack down
+```
+
+### 3. Configure environment
+
+Copy the example files and point them at your **local** Supabase (`http://127.0.0.1:54321`) using the
+`anon key` from `supabase status`.
+
+```bash
+cp apps/web/.env.example    apps/web/.env.local
+cp apps/mobile/.env.example apps/mobile/.env
+```
+
+**`apps/web/.env.local`**
+
+```bash
+NEXT_PUBLIC_DATA_MODE=development
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<local anon key from `supabase status`>
+# Leave blank to call the local Java service at http://localhost:8080 in dev,
+# or set https://growattapi.onrender.com to use the deployed solar backend.
+NEXT_PUBLIC_JAVA_API=
+```
+
+**`apps/mobile/.env`** — same values with the `EXPO_PUBLIC_` prefix:
+
+```bash
+EXPO_PUBLIC_DATA_MODE=development
+EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+EXPO_PUBLIC_SUPABASE_ANON_KEY=<local anon key from `supabase status`>
+EXPO_PUBLIC_JAVA_API=
+```
+
+> 📱 **Devices can't reach `127.0.0.1`.** The iOS simulator and Expo web can, but an **Android
+> emulator** needs `http://10.0.2.2:54321` and a **physical device** needs your machine's LAN IP
+> (e.g. `http://192.168.1.20:54321`). Adjust `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_JAVA_API`
+> accordingly.
+>
+> To develop against the **hosted** Supabase project instead of a local stack, point the URL/anon-key
+> at it and keep `DATA_MODE=development`.
+
+### 4. Run an app (development mode)
+
+**Web** (Next.js, http://localhost:3000):
+
+```bash
+npm run web            # → next dev in apps/web
+```
+
+**Mobile** (Expo dev server):
+
+```bash
+npm run mobile         # → expo start in apps/mobile
+# or target a platform directly:
+npm --workspace @hmi/mobile run ios       # iOS simulator
+npm --workspace @hmi/mobile run android   # Android emulator
+npm --workspace @hmi/mobile run web       # Expo web
+```
+
+> Charts use Victory Native XL + Skia, which need a **dev build** (not Expo Go) — `expo-dev-client`
+> is already configured; build it once with EAS or `expo run:ios` / `expo run:android`.
+
+### 5. (Optional) Run the Growatt API for live solar data
+
+Auth, weather, settings, and notifications work with Supabase alone. The Java service is only needed
+for **Solar** charts. It connects to your local Supabase Postgres and validates local Supabase JWTs:
 
 ```bash
 cd backend/growattAPI
-mvn clean package -DskipTests
-mvn spring-boot:run          # or: java -jar target/growatt-1.0-SNAPSHOT.jar
+SPRING_PROFILES_ACTIVE=local mvn spring-boot:run      # serves http://localhost:8080
 ```
 
-**Environment variables**
+The bundled `local` profile (`src/main/resources/application-local.properties`) defaults to the local
+Supabase Postgres (`localhost:54322`, `postgres`/`postgres`) and the local JWKS
+(`http://localhost:54321/auth/v1/.well-known/jwks.json`) — no extra env needed. Override any value
+with the matching `SPRING_DATASOURCE_*` / `SUPABASE_JWKS_URI` env var.
 
-| Variable                       | Description                                                               |
-| ------------------------------ | ------------------------------------------------------------------------- |
-| `SERVER_PORT`                  | API port (default `8080`)                                                 |
-| `SPRING_PROFILES_ACTIVE`       | `production` to use the production profile                                |
-| `MONGODB_URI`                  | Mongo connection string (defaults to `mongodb://localhost:27017/hmi-dev`) |
-| `GROWATT_CACHE_ENABLED`        | `true` to cache Growatt responses, `false` to always hit the live API     |
-| `FRONTEND_URL` / `BACKEND_URL` | CORS / cross-service URLs                                                 |
-| `PROXY_URL` / `PROXY_PORT`     | Optional outbound proxy for Growatt requests                              |
+### 6. First run
 
-### 4. Frontend (Expo)
+1. Open the app → **Register** (returns you logged-in; no email step locally).
+2. **Settings** → enter your Growatt account + password and Weather.com station id + API key. The
+   plant id is derived server-side; secrets are stored in Vault.
+3. Solar charts populate once the Growatt service can log in; weather populates via the Edge Functions
+   (`supabase functions serve`).
+
+---
+
+## 🧪 Quality gate
+
+Run the whole gate from the repo root (Turborepo fans out across `core`, `web`, `mobile`):
 
 ```bash
-# from the repo root
-npm install
-npm run web:dev      # web against local backends (development data mode)
-npm run start:dev    # Expo dev server for native (iOS/Android)
+npm run check     # prettier --check + eslint (per package) + tsc --noEmit
+npm run test      # vitest (core/web) + jest-expo (mobile)
 ```
 
-The data mode is controlled by `EXPO_PUBLIC_DATA_MODE`:
+Granular:
 
-- **`development`** — targets local backends (`http://localhost:5000` and `http://localhost:8080`).
-- **`production`** — targets the deployed Render services.
+| Task        | Command                                                              |
+| ----------- | -------------------------------------------------------------------- |
+| Format      | `npm run format` (write) · `npm run format:check`                    |
+| Lint (all)  | `npm run lint`                                                       |
+| Lint (one)  | `npm run lint --workspace @hmi/core` (or `@hmi/web` / `@hmi/mobile`) |
+| Typecheck   | `npm run typecheck`                                                  |
+| Tests (all) | `npm run test`                                                       |
+| Growatt API | `cd backend/growattAPI && mvn test`                                  |
 
-Use `npm run web:prod` / `npm run start:prod` to run the frontend against production backends. Production API URLs can be overridden with `EXPO_PUBLIC_WEATHER_API_PRODUCTION` and `EXPO_PUBLIC_JAVA_API`.
-
----
-
-## 🧪 Testing
-
-Each stack has its own independent test runner — run them from the locations below.
-
-| Stack           | Command                             | Framework          | Test location                       |
-| --------------- | ----------------------------------- | ------------------ | ----------------------------------- |
-| **Frontend**    | `npm test` (from repo root)         | Jest + `jest-expo` | `src/__tests__/`                    |
-| **Weather API** | `cd backend/weatherAPI && npm test` | Jest (node)        | `backend/weatherAPI/__tests__/`     |
-| **Growatt API** | `cd backend/growattAPI && mvn test` | JUnit 5            | `backend/growattAPI/src/test/java/` |
-
-Frontend extras: `npm run test:watch` (watch mode) and `npm run test:coverage` (coverage report).
-
-> ℹ️ The Growatt API includes a live-API integration test (`GrowattWebClientTest`) that is
-> `@Disabled` by default so it never breaks the build. To run it locally, add real credentials
-> to `backend/growattAPI/src/test/resources/application.properties` and remove the `@Disabled`
-> annotation. `MD5Test` reaches out to Growatt's servers and is skipped automatically when offline.
-
-### Linting
-
-```bash
-npm run lint        # ESLint (Expo config) over app/ and src/
-npm run lint:fix    # auto-fix where possible
-```
+CI (`.github/workflows/ci.yml`) runs a **per-package lint matrix** plus the **test** suites and a
+Prettier + typecheck **quality** job on every push / PR to `main` and `test`.
 
 ---
 
-## 📡 API reference
+## 🌿 Branching & deployment
 
-> 🔎 **Interactive docs:** when signed in on the web app, visit **`/api/swagger`** for a live
-> Swagger UI covering every endpoint below (auth, account, weather, settings, notifications, and
-> Growatt). The page is web-only and requires authentication.
+Work flows **feature → `test` → `main`** — never commit straight to `main`.
 
-### Weather API — `weatherAPI` (base `/api`)
+| Target      | Platform                      | Trigger / health                                    |
+| ----------- | ----------------------------- | --------------------------------------------------- |
+| Web         | Vercel (Next.js)              | push to `main` · https://hmi-seven.vercel.app       |
+| Mobile      | EAS                           | manual EAS build / submit                           |
+| Growatt API | Render (Docker / Java)        | push to `main` (`render.yaml`) · `/actuator/health` |
+| Supabase    | Supabase (GitHub integration) | `supabase/migrations/*` applied on merge            |
 
-| Method           | Endpoint                                      | Description                                    |
-| ---------------- | --------------------------------------------- | ---------------------------------------------- |
-| `GET`            | `/health`                                     | Service health check                           |
-| `POST`           | `/user/register`                              | Register a new account                         |
-| `POST`           | `/user/login`                                 | Log in, returns a JWT                          |
-| `GET`            | `/user/account`                               | Get the current user's profile                 |
-| `PUT`            | `/user/account/profile`                       | Update profile                                 |
-| `PUT`            | `/user/account/password`                      | Change password                                |
-| `GET`            | `/weather/current`                            | Current PWS observation                        |
-| `GET`            | `/weather/hourly/:date`                       | Hourly history for a day                       |
-| `GET`            | `/weather/all/:date`                          | Full history for a day                         |
-| `GET`            | `/weather/weekly/:date?`                      | 7-day daily summaries                          |
-| `GET`            | `/weather/weekly-hourly/:date`                | Selected hours across a week                   |
-| `GET/PUT/DELETE` | `/settings/api`                               | Read / update / clear a user's API credentials |
-| `GET`            | `/notifications` · `/notifications/count`     | List notifications / unread count              |
-| `DELETE`         | `/notifications/clear` · `/notifications/:id` | Clear all / remove one                         |
-| `POST/DELETE`    | `/notifications/push-token`                   | Register / remove an Expo push token           |
-
-### Growatt API — `growattAPI` (base `/api/growatt`)
-
-| Method | Endpoint                           | Description                                   |
-| ------ | ---------------------------------- | --------------------------------------------- |
-| `GET`  | `/health` (and `/actuator/health`) | Service health check                          |
-| `POST` | `/login`                           | Authenticate with Growatt, returns plant info |
-| `POST` | `/totalData`                       | Lifetime / total plant data                   |
-| `POST` | `/dayChart`                        | Daily production chart                        |
-| `POST` | `/weekChart`                       | Weekly production chart                       |
-| `POST` | `/monthChart`                      | Monthly production chart                      |
-| `POST` | `/yearChart`                       | Yearly production chart                       |
-| `POST` | `/invTotalData`                    | Inverter total data                           |
-
----
-
-## ☁️ Deployment
-
-Both backends are described in `render.yaml`, and the frontend in `vercel.json`. Pushes to `main` trigger auto-deploys.
-
-| Service     | Platform                      | Health check                 |
-| ----------- | ----------------------------- | ---------------------------- |
-| Frontend    | Vercel (`expo export -p web`) | https://hmi-seven.vercel.app |
-| Weather API | Render (Node)                 | `/api/health`                |
-| Growatt API | Render (Docker / Java)        | `/actuator/health`           |
+Deploy env vars are set in each platform's dashboard (never committed): Vercel gets `NEXT_PUBLIC_*`;
+Render gets `SPRING_DATASOURCE_PASSWORD` (the Supabase DB password) and the rest from `render.yaml`.
+After a fresh deploy, schedule the pg_cron jobs once via `supabase/post_deploy/cron_jobs.sql`.
 
 ---
 
 ## 🔐 Security notes
 
-- All weather, settings, and notification routes require a valid JWT.
-- Each user stores their own Growatt and Weather.com credentials; the Weather API key is encrypted at rest using `ENCRYPTION_KEY`.
-- CORS is restricted to known frontend origins.
-- Secrets are supplied via environment variables and are never committed to the repo.
+- Every table is protected by **RLS** (`auth.uid() = auth_id`); weather rows are readable by the user
+  whose configured station matches.
+- Each user stores their own Growatt and Weather.com credentials in **Supabase Vault** — never in
+  plaintext columns or on the client.
+- The Java service validates Supabase-issued JWTs against the project **JWKS** (ES256).
+- CORS is restricted to known frontend origins; secrets come from environment variables / Vault and
+  are never committed.
 
 ---
 
 ## 📄 License
 
-This is a personal project and is not currently published under an open-source license. Please contact the author before reusing the code.
+This is a personal project and is not currently published under an open-source license. Please
+contact the author before reusing the code.

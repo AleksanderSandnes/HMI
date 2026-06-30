@@ -71,32 +71,23 @@ build/
 # SECURITY & SENSITIVE DATA - CRITICAL TO IGNORE
 # ==============================================
 
-# Environment files with credentials
-.env
-.env.local
-.env.development
-.env.production
-.env.staging
-/backend/.env
-/backend/weatherAPI/.env
+# Environment files (credentials) — but keep the secret-free example templates
+.env*
+!.env.example
+!**/.env.example
 
 # Google Play service account key (eas submit)
 play-service-account.json
 
-# Application properties with sensitive data
+# Spring property files that may hold secrets. The committed application-local
+# and application-production profiles use env-var overrides + Supabase Vault, so
+# they are NOT matched here; the bare application.properties (e.g. the test
+# resource holding real Growatt creds) and the variants below stay ignored.
 **/application.properties
-**/application-local.properties
 **/application-dev.properties
-**/application-prod.properties
 **/application-staging.properties
-
-# Backup files of sensitive configurations
-src/main/resources/application.properties.backup
-src/main/resources/application.properties.bak
-src/test/resources/application.properties.backup
-src/test/resources/application.properties.bak
-
-# Any files containing credentials or API keys
+**/*.properties.backup
+**/*.properties.bak
 **/credentials.properties
 **/secrets.properties
 **/config.properties
@@ -220,7 +211,3 @@ replay_pid*
 # Profiling files
 *.prof
 *.hprof
-backend/weatherAPI/.env
-backend/weatherAPI/.env
-.env.production.template
-.env*
