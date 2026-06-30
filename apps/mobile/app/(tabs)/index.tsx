@@ -1,11 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
   BREAKPOINTS,
-  buildWeatherSeries,
+  dashboardWeekAverages,
   formatPeak,
-  getPeakOutput,
+  lastPositive,
   peakUnit,
+  show,
+  solarDevice,
+  solarMetrics,
   toISO,
+  weatherNow,
+  type CurrentWeather,
   type SolarData,
 } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
@@ -17,35 +22,12 @@ import { PageHeader } from "../../src/components/PageHeader";
 import { WindDial, DualBaro } from "../../src/components/charts";
 import { DualStat } from "../../src/components/ui/DualStat";
 import type { IconRender } from "../../src/components/ui/types";
-import { average, lastPositive, round, show } from "../../src/lib/format";
 import { useCore } from "../../src/lib/useCore";
 
 const ic =
   (name: keyof typeof Ionicons.glyphMap): IconRender =>
   // eslint-disable-next-line react/display-name -- render-prop, not a component
   (p) => <Ionicons name={name} {...p} />;
-
-interface CurrentMetric {
-  temp?: number;
-  heatIndex?: number;
-  windChill?: number;
-  windSpeed?: number;
-  windGust?: number;
-  pressure?: number;
-  precipRate?: number;
-  precipTotal?: number;
-}
-interface CurrentObs {
-  humidity?: number;
-  winddir?: number;
-  uv?: number;
-  solarRadiation?: number;
-  obsTimeLocal?: string;
-  metric?: CurrentMetric;
-}
-interface CurrentWeather {
-  observations?: CurrentObs[];
-}
 
 function SectionLabel({
   icon,
@@ -86,32 +68,6 @@ function Tile({ w, h, children }: { w: number; h: number; children: ReactNode })
   return <View style={{ width: w, height: h }}>{children}</View>;
 }
 
-function solarMetrics(solar?: SolarData, solarWeek?: SolarData) {
-  return {
-    peak: solar ? getPeakOutput(solar.chartData, "hourly") : null,
-    todayGen: solar?.metrics.todayGeneration ?? null,
-    weekGen: solarWeek?.metrics.todayGeneration ?? null,
-    lifetime: solar?.metrics.totalGeneration ?? null,
-  };
-}
-
-function solarDevice(solar: SolarData | undefined, currentPower: number) {
-  const device = solar?.device;
-  const capacityKw = device?.capacity ? round(device.capacity / 1000, 1) : null;
-  const utilisation =
-    device?.capacity && currentPower > 0
-      ? Math.round((currentPower / device.capacity) * 100)
-      : null;
-  return { device, capacityKw, utilisation };
-}
-
-function weatherNow(weatherData?: CurrentWeather) {
-  const obs = weatherData?.observations?.[0];
-  const m: CurrentMetric = obs?.metric ?? {};
-  const feelsLike = m.heatIndex ?? m.windChill ?? m.temp;
-  return { obs, m, feelsLike };
-}
-
 function useDashboardData() {
   const { growatt, weather } = useCore();
   const today = toISO(new Date());
@@ -146,17 +102,7 @@ function useDashboardData() {
     staleTime: 30 * 60_000,
   });
 
-  const wkAvg = useMemo(() => {
-    const obs = weekObs?.observations ?? [];
-    const avg = (key: string) => average(buildWeatherSeries(obs, key, "weekly").series[0] ?? []);
-    return {
-      temp: avg("temperature"),
-      humidity: avg("humidity"),
-      pressure: avg("pressure"),
-      solar: avg("solarRadiation"),
-      uv: avg("uvIndex"),
-    };
-  }, [weekObs]);
+  const wkAvg = useMemo(() => dashboardWeekAverages(weekObs), [weekObs]);
 
   const currentPower = useMemo(
     () => lastPositive(solar?.chartData?.datasets?.[0]?.data ?? []),

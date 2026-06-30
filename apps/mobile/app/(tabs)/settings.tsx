@@ -1,5 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { ApiSettingsResponse, UserProfile } from "@hmi/core";
+import {
+  growattConfig,
+  weatherConfig,
+  type ApiSettingsResponse,
+  type UserProfile,
+} from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState, type ReactNode } from "react";
@@ -69,16 +74,6 @@ function ConfiguredBadge({ on }: { on: boolean }) {
       </Text>
     </View>
   );
-}
-
-function growattConfig(api: ApiSettingsResponse | null | undefined) {
-  const g = api?.growatt;
-  return { key: g?.email ?? "g", email: g?.email ?? "", configured: !!g?.hasPassword };
-}
-
-function weatherConfig(api: ApiSettingsResponse | null | undefined) {
-  const w = api?.weather;
-  return { key: w?.stationId ?? "w", station: w?.stationId ?? "", configured: !!w?.hasApiKey };
 }
 
 export default function Settings() {

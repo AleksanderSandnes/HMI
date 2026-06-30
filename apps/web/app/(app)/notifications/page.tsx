@@ -1,6 +1,6 @@
 "use client";
 
-import type { NotificationItem, NotificationLevel } from "@hmi/core";
+import { timeAgo, type NotificationItem, type NotificationLevel } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, Bell, CheckCircle2, Info, Trash2, X, type LucideIcon } from "lucide-react";
 import { useEffect } from "react";
@@ -14,16 +14,6 @@ const LEVEL: Record<NotificationLevel, { icon: LucideIcon; className: string }> 
   warning: { icon: AlertCircle, className: "text-solar-light" },
   info: { icon: Info, className: "text-accent-light" },
 };
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
 
 function EmptyState() {
   return (

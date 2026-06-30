@@ -1,7 +1,7 @@
 // Weather observation → chart-series transform (ported/consolidated from mobile
 // useHistoricalWeatherData). Pure: takes raw observations + metric + timespan and
 // returns x-axis labels + one number[] per series. No platform imports.
-import { WEEKDAY_ABBR } from "../constants";
+import { BREAKPOINTS, WEEKDAY_ABBR } from "../constants";
 
 type Obs = Record<string, any>;
 
@@ -46,6 +46,15 @@ const COMPASS = [
   "NW",
   "NNW",
 ];
+
+/**
+ * Responsive weekly-hybrid selection: phones (< tablet breakpoint) render the
+ * 7-day min/max/avg band, tablets render the dense weekly series like web.
+ * True only when the viewport is phone-sized AND the weekly timespan is active.
+ */
+export function isPhoneWeekly(width: number, timespan: string): boolean {
+  return width < BREAKPOINTS.tablet && timespan === "weekly";
+}
 
 /** Wind direction in degrees → 16-point compass label (e.g. 213 → "SSW"). */
 export function windCompass(deg: number | null | undefined): string | null {

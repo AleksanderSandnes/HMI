@@ -1,5 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { BREAKPOINTS, buildWeatherSeries, buildWeatherDailyBands, toISO } from "@hmi/core";
+import { buildWeatherSeries, buildWeatherDailyBands, isPhoneWeekly, toISO } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState, type ReactNode } from "react";
 import { ScrollView, Text, View, Pressable, useWindowDimensions } from "react-native";
@@ -173,7 +173,6 @@ function useWeatherChartData(dataType: string, timespan: string, ymd: string, me
 
 export default function Weather() {
   const { width } = useWindowDimensions();
-  const isTablet = width >= BREAKPOINTS.tablet;
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -185,7 +184,7 @@ export default function Weather() {
   const meta = METRICS.find((d) => d.key === dataType) ?? METRICS[0];
   const ymd = pickerDate.replaceAll("-", "");
   // Phone weekly → 7 daily min/max/avg bands; tablet/hourly → dense series.
-  const phoneWeekly = !isTablet && timespan === "weekly";
+  const phoneWeekly = isPhoneWeekly(width, timespan);
 
   const { isLoading, series, bands, chartSeries } = useWeatherChartData(
     dataType,
