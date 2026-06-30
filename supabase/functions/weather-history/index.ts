@@ -9,7 +9,7 @@ import {
   recordHealth,
   requireUser,
 } from "../_shared/supabase.ts";
-import { fetchHourly, todayAndYesterday } from "../_shared/weather.ts";
+import { fetchHourly, isFresh, todayAndYesterday } from "../_shared/weather.ts";
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -25,22 +25,27 @@ Deno.serve(async (req: Request) => {
 
     const { stationId, apiKey } = await getWeatherCredentials(admin, authId);
     const { today, yesterday } = todayAndYesterday();
+    // Today/yesterday are still "live" (the day is incomplete / just ended), so they are
+    // refreshed on the short TTL; older days are complete and cached permanently.
+    const isLive = date === today || date === yesterday;
 
-    // Cache-aside: serve a stored completed day if present.
+    // Cache-aside: serve a stored day if it is a completed past day, or a live day still fresh.
     const { data: cached } = await admin
       .from("weather_historical")
-      .select("observations")
+      .select("observations, cached_at")
       .eq("station_id", stationId)
       .eq("date", date)
       .maybeSingle();
-    if (cached) return json({ observations: cached.observations, cached: true });
+    if (cached && (!isLive || isFresh(cached.cached_at))) {
+      return json({ observations: cached.observations, cached: true });
+    }
 
-    // Miss -> live fetch.
+    // Miss / stale -> live fetch.
     const observations = await fetchHourly(stationId, apiKey, date);
 
-    // Persist completed past days only (never today/yesterday — the cron backfills yesterday).
-    const shouldPersist = date !== today && date !== yesterday && observations.length > 0;
-    if (shouldPersist) {
+    // Persist: live days always (even empty) so the TTL throttle holds; completed past days
+    // only when they carry observations.
+    if (isLive || observations.length > 0) {
       await admin.from("weather_historical").upsert(
         {
           station_id: stationId,

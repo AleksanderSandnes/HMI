@@ -8,7 +8,7 @@ import {
   recordHealth,
   requireUser,
 } from "../_shared/supabase.ts";
-import { fetchCurrent } from "../_shared/weather.ts";
+import { fetchCurrent, isFresh } from "../_shared/weather.ts";
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -18,6 +18,17 @@ Deno.serve(async (req: Request) => {
   try {
     authId = await requireUser(req);
     const { stationId, apiKey } = await getWeatherCredentials(admin, authId);
+
+    // Cache-aside with a short TTL: serve the stored observation if it was fetched within the
+    // live window, so repeated dashboard polls don't each hit Weather.com.
+    const { data: cached } = await admin
+      .from("weather_current")
+      .select("observations, fetched_at")
+      .eq("station_id", stationId)
+      .maybeSingle();
+    if (cached && isFresh(cached.fetched_at)) {
+      return json({ observations: cached.observations, cached: true });
+    }
 
     const payload = await fetchCurrent(stationId, apiKey);
     const observations = payload?.observations ?? [];

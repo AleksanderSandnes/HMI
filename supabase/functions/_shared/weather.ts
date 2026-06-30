@@ -26,6 +26,16 @@ export function todayAndYesterday(): { today: string; yesterday: string } {
   return { today: toYyyyMmDd(now), yesterday: toYyyyMmDd(y) };
 }
 
+/** Freshness window for "live" weather (current conditions + today/yesterday hourly). */
+export const LIVE_TTL_MS = 5 * 60 * 1000;
+
+/** Whether a stored ISO timestamp is still within `ttlMs` of now. */
+export function isFresh(timestamp: string | null | undefined, ttlMs = LIVE_TTL_MS): boolean {
+  if (!timestamp) return false;
+  const t = new Date(timestamp).getTime();
+  return Number.isFinite(t) && Date.now() - t < ttlMs;
+}
+
 // deno-lint-ignore no-explicit-any
 async function getJson(url: string): Promise<any> {
   const res = await fetch(url);

@@ -15,6 +15,17 @@ function parseYmd(s: string): Date {
   return new Date(Number(s.slice(0, 4)), Number(s.slice(4, 6)) - 1, Number(s.slice(6, 8)));
 }
 
+/** Live freshness window (ms) for today/yesterday — mirrors the Edge Function TTL. */
+const LIVE_TTL_MS = 5 * 60 * 1000;
+
+/** Whether `date` (YYYYMMDD) is today or yesterday — i.e. still a "live", incomplete day. */
+function isLiveDate(date: string): boolean {
+  const now = new Date();
+  const y = new Date(now);
+  y.setDate(now.getDate() - 1);
+  return date === toYmd(now) || date === toYmd(y);
+}
+
 /** The 7 YYYYMMDD dates (oldest first) ending on `end` (or today). */
 function weekDatesEnding(end?: string): string[] {
   const last = end ? parseYmd(end) : new Date();
@@ -30,14 +41,24 @@ function weekDatesEnding(end?: string): string[] {
 export function createWeatherApi(ctx: CoreApiContext) {
   const { supabase } = ctx;
 
-  /** Hourly observations for one day: cache first (PostgREST), then the Edge Function. */
+  /**
+   * Hourly observations for one day: cache first (PostgREST), then the Edge Function.
+   * A completed past day is served straight from the cache; today/yesterday are only served
+   * from the cache while fresh (within the live TTL), otherwise the function refreshes them.
+   */
   async function readDay(date: string): Promise<any[]> {
     const { data } = await supabase
       .from("weather_historical")
-      .select("observations")
+      .select("observations, cached_at")
       .eq("date", date)
       .maybeSingle();
-    if (data?.observations) return data.observations;
+    if (data?.observations) {
+      const live = isLiveDate(date);
+      const fresh = data.cached_at
+        ? Date.now() - new Date(data.cached_at).getTime() < LIVE_TTL_MS
+        : false;
+      if (!live || fresh) return data.observations;
+    }
 
     const { data: fn, error } = await supabase.functions.invoke("weather-history", {
       body: { date },
