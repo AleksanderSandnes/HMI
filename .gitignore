@@ -12,10 +12,6 @@ dist/
 node_modules/
 /backend/growattAPI/node_modules
 
-# Monorepo temp backups (migration)
-.node_modules_old/
-.package-lock.json.old
-
 # ==============================================
 # MONOREPO / TURBO / NEXT.JS
 # ==============================================
