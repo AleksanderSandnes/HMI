@@ -11,17 +11,49 @@ on:
       - test
 
 jobs:
-  quality:
+  # Lint each package with its own command, selected per package:
+  #   @hmi/core → eslint src · @hmi/web → eslint · @hmi/mobile → eslint .
+  lint:
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - "@hmi/core"
+          - "@hmi/web"
+          - "@hmi/mobile"
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
       - run: npm ci
+      - run: npm run lint --workspace ${{ matrix.package }}
 
-      - run: npm run check
+  # Run the test suites (core/web Vitest, mobile jest-expo) on commits to
+  # main and test.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test
+
+  # Preserve the rest of the quality gate (Prettier + typecheck) so it does not
+  # regress alongside the per-package lint + test jobs.
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run typecheck
