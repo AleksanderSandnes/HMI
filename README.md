@@ -7,9 +7,6 @@ charts — on the web, tablet, and mobile.
 
 🔗 **Live website:** https://hmi-six.vercel.app
 
-> ⚠️ The Growatt service runs on Render's free tier and may take **30–60 seconds** to wake from a cold
-> start. The first solar request after a period of inactivity will be slow.
-
 ---
 
 ## ✨ Features
