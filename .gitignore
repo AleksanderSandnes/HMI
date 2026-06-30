@@ -10,8 +10,7 @@ dist/
 # NODE.JS & NPM
 # ==============================================
 node_modules/
-/backend/node_modules
-/backend/weatherAPI/node_modules
+/backend/growattAPI/node_modules
 
 # Monorepo temp backups (migration)
 .node_modules_old/

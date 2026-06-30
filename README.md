@@ -39,7 +39,6 @@ packages/
             weather/solar helpers, framework-agnostic API clients) bundled into each app
 backend/
   growattAPI/   Java 17 / Spring Boot — the one dedicated integration service (Render)
-  weatherAPI/   ⚠️ RETIRED Node service, kept for reference only (replaced by Supabase)
 supabase/   Postgres schema, RLS, Auth, Realtime, Edge Functions, pg_cron, Vault
 ```
 
@@ -79,14 +78,12 @@ API) for the part Supabase can't host.
 
 - The **frontend** talks to **Supabase** for auth, settings, weather, and notifications, and to the
   **Growatt API** (presenting its Supabase JWT) for solar charts.
-- The **Growatt API** is the one component kept on Render: it needs egress-IP/proxy control because
-  Growatt IP-blocks. It validates the Supabase JWT (against the project JWKS), logs into Growatt
-  **server-side** with the user's Vault-stored credentials, and reads/writes the same Supabase
-  Postgres (solar cache, notifications).
-- **Weather.com** is a plain REST API (no IP-blocking), so its fetches run in Supabase **Edge
-  Functions**; historical reads come straight from Postgres via PostgREST.
-- The old **Node weatherAPI** and **MongoDB** are **retired** — replaced by Supabase. The
-  `backend/weatherAPI/` directory remains only for historical reference and is not deployed.
+- The **Growatt API** is the one component kept on Render: it needs server-side outbound control
+  that Edge Functions can't provide. It validates the Supabase JWT (against the project JWKS), logs
+  into Growatt **server-side** with the user's Vault-stored credentials, and reads/writes the same
+  Supabase Postgres (solar cache, notifications).
+- **Weather.com** is a plain REST API, so its fetches run in Supabase **Edge Functions**; historical
+  reads come straight from Postgres via PostgREST.
 
 ---
 
@@ -277,7 +274,7 @@ Work flows **feature → `test` → `main`** — never commit straight to `main`
 
 | Target      | Platform                      | Trigger / health                                    |
 | ----------- | ----------------------------- | --------------------------------------------------- |
-| Web         | Vercel (Next.js)              | push to `main` · https://hmi-six.vercel.app       |
+| Web         | Vercel (Next.js)              | push to `main` · https://hmi-six.vercel.app         |
 | Mobile      | EAS                           | manual EAS build / submit                           |
 | Growatt API | Render (Docker / Java)        | push to `main` (`render.yaml`) · `/actuator/health` |
 | Supabase    | Supabase (GitHub integration) | `supabase/migrations/*` applied on merge            |

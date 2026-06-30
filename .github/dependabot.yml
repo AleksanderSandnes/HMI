@@ -23,15 +23,3 @@ updates:
     labels:
       - "dependencies"
       - "javascript"
-
-  # npm backend (weatherAPI, Node / Express)
-  - package-ecosystem: "npm"
-    directory: "/backend/weatherAPI"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    commit-message:
-      prefix: "deps(weatherAPI)"
-    labels:
-      - "dependencies"
-      - "javascript"
