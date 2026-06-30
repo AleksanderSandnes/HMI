@@ -84,6 +84,21 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * Neutralize Chrome/Safari autofill styling: WebKit paints an opaque off-white
+ * fill and dark text over autofilled inputs, which breaks the dark glass fields.
+ * The ~infinite background-color transition keeps that fill from ever painting,
+ * and -webkit-text-fill-color restores the themed text/caret colour.
+ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--color-text-primary);
+  caret-color: var(--color-text-primary);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 /* Reusable glass surface helper (parity with mobile GlassCard). */
 @utility glass {
   background-color: var(--color-glass-fill);
