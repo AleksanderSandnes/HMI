@@ -33,7 +33,7 @@ export const sharedRules = {
   "import/order": ["error", { alphabetize: { order: "asc" }, "newlines-between": "always" }],
 
   "unused-imports/no-unused-imports": "error",
-  "unused-imports/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+  "unused-imports/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
   // unused-imports owns unused-variable detection — disable the TS rule so they
   // don't double-report.
   "@typescript-eslint/no-unused-vars": "off",

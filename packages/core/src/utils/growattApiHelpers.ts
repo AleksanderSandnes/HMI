@@ -68,36 +68,34 @@ export function optimizeChartData(
 
   for (let i = 0; i < rangedData.length; i += samplingInterval) {
     sampledData.push(rangedData[i]);
-    // Format labels to show clean hour labels
-    const label = rangedLabels[i];
-    const [hour, minute] = label.split(":");
-
-    // For hourly view, only show full hours
-    if (timespan === "hourly") {
-      if (minute === "00") {
-        sampledLabels.push(`${hour}:00`);
-      } else {
-        // Round to nearest hour for cleaner display
-        const hourNum = parseInt(hour);
-        const displayHour = minute >= "30" ? hourNum + 1 : hourNum;
-        sampledLabels.push(`${displayHour.toString().padStart(2, "0")}:00`);
-      }
-    } else {
-      // For other timespans, show hour:minute as before
-      if (minute === "00") {
-        sampledLabels.push(`${hour}:00`);
-      } else if (minute === "30" && samplingInterval <= 6) {
-        sampledLabels.push(`${hour}:30`);
-      } else {
-        sampledLabels.push(label);
-      }
-    }
+    sampledLabels.push(formatSampleLabel(rangedLabels[i], timespan, samplingInterval));
   }
 
   return {
     data: sampledData,
     labels: sampledLabels,
   };
+}
+
+/** Clean hour-label formatting for a sampled chart point. */
+function formatSampleLabel(label: string, timespan: string, samplingInterval: number): string {
+  const [hour, minute] = label.split(":");
+  if (minute === "00") return `${hour}:00`;
+
+  if (timespan === "hourly") {
+    // Round to the nearest hour for cleaner display.
+    const displayHour = minute >= "30" ? parseInt(hour) + 1 : parseInt(hour);
+    return `${displayHour.toString().padStart(2, "0")}:00`;
+  }
+  if (minute === "30" && samplingInterval <= 6) return `${hour}:30`;
+  return label;
+}
+
+/** Generation totals from the Growatt API (override the calculated fallback). */
+export interface ApiGenerationTotals {
+  total?: number;
+  today?: number;
+  month?: number;
 }
 
 /**
@@ -107,9 +105,7 @@ export function calculateMetrics(
   powerValues: number[],
   timespan: string,
   pricePerKwh: number = 1,
-  totalGenerationFromApi?: number,
-  todayGenerationFromApi?: number,
-  monthGenerationFromApi?: number,
+  api: ApiGenerationTotals = {},
 ): SolarMetrics {
   // Sum power values and convert to kWh (5-minute intervals, so divide by 12 for hourly average)
   const totalGenerationWh = powerValues.reduce((sum, value) => sum + value, 0) / 12;
@@ -123,14 +119,14 @@ export function calculateMetrics(
   switch (timespan) {
     case "monthly":
       // For monthly view, show month generation as "today" and total as "total"
-      finalTodayGeneration = monthGenerationFromApi ?? calculatedTodayGenerationKwh;
-      finalTotalGeneration = totalGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTodayGeneration = api.month ?? calculatedTodayGenerationKwh;
+      finalTotalGeneration = api.total ?? calculatedTodayGenerationKwh;
       break;
     case "hourly":
     default:
       // For hourly view, show today's generation and total
-      finalTodayGeneration = todayGenerationFromApi ?? calculatedTodayGenerationKwh;
-      finalTotalGeneration = totalGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTodayGeneration = api.today ?? calculatedTodayGenerationKwh;
+      finalTotalGeneration = api.total ?? calculatedTodayGenerationKwh;
       break;
   }
 
