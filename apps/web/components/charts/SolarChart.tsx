@@ -136,15 +136,20 @@ function AreaView({
   tooltip,
   peakLabel,
   max,
+  width,
+  height,
 }: {
   chartData: Point[];
   axes: React.ReactNode;
   tooltip: React.ReactNode;
   peakLabel: string;
   max: number;
+  // Injected by ResponsiveContainer via cloneElement — must reach the chart.
+  width?: number;
+  height?: number;
 }) {
   return (
-    <AreaChart data={chartData} margin={MARGIN}>
+    <AreaChart width={width} height={height} data={chartData} margin={MARGIN}>
       <defs>
         <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#34d399" stopOpacity={0.55} />
@@ -190,15 +195,26 @@ function BarView({
   tooltip,
   gapPct,
   peakIndex,
+  width,
+  height,
 }: {
   chartData: Point[];
   axes: React.ReactNode;
   tooltip: React.ReactNode;
   gapPct: number;
   peakIndex: number;
+  // Injected by ResponsiveContainer via cloneElement — must reach the chart.
+  width?: number;
+  height?: number;
 }) {
   return (
-    <BarChart data={chartData} margin={MARGIN} barCategoryGap={`${gapPct}%`}>
+    <BarChart
+      width={width}
+      height={height}
+      data={chartData}
+      margin={MARGIN}
+      barCategoryGap={`${gapPct}%`}
+    >
       <defs>
         <linearGradient id="barPeak" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#fbbf24" />
