@@ -13,7 +13,7 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: production
       - key: FRONTEND_URL
-        value: https://hmi-seven.vercel.app
+        value: https://hmi-six.vercel.app
       # Supabase Postgres (Supavisor session-mode pooler). URL + username are not secret;
       # the DB password is set in the Render dashboard (sync:false).
       - key: SPRING_DATASOURCE_URL

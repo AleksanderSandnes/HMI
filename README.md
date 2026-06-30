@@ -5,7 +5,7 @@ one clean, responsive interface. HMI pulls live data from a Growatt solar invert
 personal weather station (PWS), caches it, and visualises it across hour / week / month / year / 5-year
 charts — on the web, tablet, and mobile.
 
-🔗 **Live website:** https://hmi-seven.vercel.app
+🔗 **Live website:** https://hmi-six.vercel.app
 
 > ⚠️ The Growatt service runs on Render's free tier and may take **30–60 seconds** to wake from a cold
 > start. The first solar request after a period of inactivity will be slow.
@@ -280,7 +280,7 @@ Work flows **feature → `test` → `main`** — never commit straight to `main`
 
 | Target      | Platform                      | Trigger / health                                    |
 | ----------- | ----------------------------- | --------------------------------------------------- |
-| Web         | Vercel (Next.js)              | push to `main` · https://hmi-seven.vercel.app       |
+| Web         | Vercel (Next.js)              | push to `main` · https://hmi-six.vercel.app       |
 | Mobile      | EAS                           | manual EAS build / submit                           |
 | Growatt API | Render (Docker / Java)        | push to `main` (`render.yaml`) · `/actuator/health` |
 | Supabase    | Supabase (GitHub integration) | `supabase/migrations/*` applied on merge            |

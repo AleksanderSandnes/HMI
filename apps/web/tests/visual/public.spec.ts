@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
  * First run records baselines into tests/visual/public.spec.ts-snapshots/.
  *
  * To compare against the previous (Expo-web) UI, capture references from the live
- * build (https://hmi-seven.vercel.app) and diff manually; authenticated dashboard
+ * build (https://hmi-six.vercel.app) and diff manually; authenticated dashboard
  * snapshots require a seeded test session and are added once that fixture exists.
  */
 const PAGES = [
