@@ -1,9 +1,11 @@
-import { View, Text } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { GRADIENTS, type StatGradient } from '../../lib/gradients';
-import type { IconRender } from './types';
-import { GlassCard } from './GlassCard';
-import { Skeleton } from './Skeleton';
+import { LinearGradient } from "expo-linear-gradient";
+import { View, Text } from "react-native";
+
+import { GRADIENTS, type StatGradient } from "../../lib/gradients";
+
+import { GlassCard } from "./GlassCard";
+import { Skeleton } from "./Skeleton";
+import type { IconRender } from "./types";
 
 function Module({
   label,
@@ -29,9 +31,7 @@ function Module({
           className="mt-1 text-[27px] font-extrabold leading-tight tracking-[-0.5px] text-text-primary"
         >
           {value}
-          {unit ? (
-            <Text className="text-[12px] font-bold text-text-muted"> {unit}</Text>
-          ) : null}
+          {unit ? <Text className="text-[12px] font-bold text-text-muted"> {unit}</Text> : null}
         </Text>
       )}
     </View>
@@ -67,10 +67,7 @@ export function DualStat({
   loading?: boolean;
 }) {
   return (
-    <GlassCard
-      strong
-      className="h-full min-w-0 flex-1 justify-center gap-3.5 p-4"
-    >
+    <GlassCard strong className="h-full min-w-0 flex-1 justify-center gap-3.5 p-4">
       <View className="flex-row items-center gap-2">
         <LinearGradient
           colors={GRADIENTS[gradient]}
@@ -80,11 +77,11 @@ export function DualStat({
             width: 32,
             height: 32,
             borderRadius: 10,
-            alignItems: 'center',
-            justifyContent: 'center',
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {icon({ color: '#0a1124', size: 16 })}
+          {icon({ color: "#0a1124", size: 16 })}
         </LinearGradient>
         <Text className="text-[12px] font-bold uppercase tracking-[0.3px] text-text-muted">
           {label}

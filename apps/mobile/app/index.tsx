@@ -1,6 +1,7 @@
-import { ActivityIndicator, View } from 'react-native';
-import { Redirect } from 'expo-router';
-import { useAuth } from '../src/lib/auth';
+import { Redirect } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
+
+import { useAuth } from "../src/lib/auth";
 
 /** Entry route — sends the user to the app or the login screen by session. */
 export default function Index() {
@@ -14,5 +15,5 @@ export default function Index() {
     );
   }
 
-  return <Redirect href={session ? '/(tabs)' : '/(auth)/login'} />;
+  return <Redirect href={session ? "/(tabs)" : "/(auth)/login"} />;
 }

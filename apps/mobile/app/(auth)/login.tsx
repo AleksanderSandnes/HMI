@@ -1,24 +1,18 @@
-import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Formik } from 'formik';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { loginSchema } from '@hmi/core';
-import { useCore } from '../../src/lib/useCore';
-import { GlassCard } from '../../src/components/ui/GlassCard';
-import { Field } from '../../src/components/ui/Field';
-import { Button } from '../../src/components/ui/Button';
-import { StatusBanner } from '../../src/components/ui/StatusBanner';
-import { GRADIENTS } from '../../src/lib/gradients';
-import type { IconRender } from '../../src/components/ui/types';
+import { Ionicons } from "@expo/vector-icons";
+import { loginSchema } from "@hmi/core";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { Formik } from "formik";
+import { useState } from "react";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+
+import { Button } from "../../src/components/ui/Button";
+import { Field } from "../../src/components/ui/Field";
+import { GlassCard } from "../../src/components/ui/GlassCard";
+import { StatusBanner } from "../../src/components/ui/StatusBanner";
+import type { IconRender } from "../../src/components/ui/types";
+import { GRADIENTS } from "../../src/lib/gradients";
+import { useCore } from "../../src/lib/useCore";
 
 const mail: IconRender = (p) => <Ionicons name="mail-outline" {...p} />;
 const lock: IconRender = (p) => <Ionicons name="lock-closed-outline" {...p} />;
@@ -31,7 +25,7 @@ export default function Login() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 bg-bg-base"
     >
       <ScrollView
@@ -48,8 +42,8 @@ export default function Login() {
                 width: 56,
                 height: 56,
                 borderRadius: 18,
-                alignItems: 'center',
-                justifyContent: 'center',
+                alignItems: "center",
+                justifyContent: "center",
                 marginBottom: 16,
               }}
             >
@@ -66,18 +60,18 @@ export default function Login() {
           {error ? <StatusBanner kind="error" message={error} /> : null}
 
           <Formik
-            initialValues={{ email: '', password: '' }}
+            initialValues={{ email: "", password: "" }}
             validationSchema={loginSchema}
             onSubmit={async (values, { setSubmitting }) => {
               setError(null);
               try {
                 await auth.loginUser(values);
-                router.replace('/(tabs)');
+                router.replace("/(tabs)");
               } catch (e) {
                 setError(
                   e instanceof Error
                     ? e.message
-                    : 'Login failed. Check your credentials and try again.',
+                    : "Login failed. Check your credentials and try again.",
                 );
               } finally {
                 setSubmitting(false);
@@ -102,8 +96,8 @@ export default function Login() {
                   autoComplete="email"
                   placeholder="you@domain.com"
                   value={values.email}
-                  onChangeText={handleChange('email')}
-                  onBlur={handleBlur('email')}
+                  onChangeText={handleChange("email")}
+                  onBlur={handleBlur("email")}
                   error={touched.email ? errors.email : undefined}
                   editable={!isSubmitting}
                 />
@@ -114,8 +108,8 @@ export default function Login() {
                   autoComplete="password"
                   placeholder="Enter your password"
                   value={values.password}
-                  onChangeText={handleChange('password')}
-                  onBlur={handleBlur('password')}
+                  onChangeText={handleChange("password")}
+                  onBlur={handleBlur("password")}
                   error={touched.password ? errors.password : undefined}
                   editable={!isSubmitting}
                 />
@@ -131,13 +125,9 @@ export default function Login() {
           </Formik>
 
           <View className="mt-6 flex-row items-center justify-center gap-1.5 border-t border-glass-border pt-5">
-            <Text className="text-sm font-medium text-text-muted">
-              Don&apos;t have an account?
-            </Text>
-            <Pressable onPress={() => router.push('/(auth)/register')}>
-              <Text className="text-sm font-extrabold text-solar-light">
-                Create one
-              </Text>
+            <Text className="text-sm font-medium text-text-muted">Don&apos;t have an account?</Text>
+            <Pressable onPress={() => router.push("/(auth)/register")}>
+              <Text className="text-sm font-extrabold text-solar-light">Create one</Text>
             </Pressable>
           </View>
         </GlassCard>

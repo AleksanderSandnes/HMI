@@ -16,14 +16,12 @@ export function round(v: number | null | undefined, dp = 0): number | null {
 /** Display string for a metric value — rounded, or an em dash when missing. */
 export function show(v: number | null | undefined, dp = 0): string {
   const r = round(v, dp);
-  return r == null ? '—' : `${r}`;
+  return r == null ? "—" : `${r}`;
 }
 
 /** Mean of the meaningful values (ignoring null/NaN and exact zeros), or null. */
 export function average(vals: (number | null | undefined)[]): number | null {
-  const nums = vals.filter(
-    (v): v is number => v != null && !isNaN(v) && v !== 0,
-  );
+  const nums = vals.filter((v): v is number => v != null && !isNaN(v) && v !== 0);
   return nums.length ? nums.reduce((s, v) => s + v, 0) / nums.length : null;
 }
 

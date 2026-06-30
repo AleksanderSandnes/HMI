@@ -1,6 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import {
+  buildWeatherSeries,
+  formatPeak,
+  getPeakOutput,
+  peakUnit,
+  toISO,
+  type SolarData,
+} from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import {
   CloudRain,
@@ -14,20 +21,14 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
-import {
-  buildWeatherSeries,
-  formatPeak,
-  getPeakOutput,
-  peakUnit,
-  toISO,
-  type SolarData,
-} from "@hmi/core";
-import { useCore } from "@/lib/hooks/useCore";
-import { average, lastPositive, round, show } from "@/lib/format";
+import { useMemo } from "react";
+
+import { PageHeader } from "@/components/PageHeader";
+import { DualBaro } from "@/components/ui/DualBaro";
 import { DualStat } from "@/components/ui/DualStat";
 import { WindDial } from "@/components/ui/WindDial";
-import { DualBaro } from "@/components/ui/DualBaro";
-import { PageHeader } from "@/components/PageHeader";
+import { average, lastPositive, round, show } from "@/lib/format";
+import { useCore } from "@/lib/hooks/useCore";
 
 interface CurrentMetric {
   temp?: number;
@@ -113,8 +114,7 @@ export default function DashboardPage() {
   // Weekly averages per metric, from the historical observations.
   const wkAvg = useMemo(() => {
     const obs = weekObs?.observations ?? [];
-    const avg = (key: string) =>
-      average(buildWeatherSeries(obs, key, "weekly").series[0] ?? []);
+    const avg = (key: string) => average(buildWeatherSeries(obs, key, "weekly").series[0] ?? []);
     return {
       temp: avg("temperature"),
       humidity: avg("humidity"),
@@ -126,7 +126,7 @@ export default function DashboardPage() {
 
   const currentPower = useMemo(
     () => lastPositive(solar?.chartData?.datasets?.[0]?.data ?? []),
-    [solar]
+    [solar],
   );
 
   const peak = solar ? getPeakOutput(solar.chartData, "hourly") : null;
@@ -249,13 +249,77 @@ export default function DashboardPage() {
       />
       <div className="grid auto-rows-fr grid-cols-2 gap-3 md:min-h-0 md:flex-[2] md:grid-cols-4">
         <WindDial degrees={obs?.winddir} speed={m.windSpeed} gust={m.windGust} unit="km/h" />
-        <DualStat icon={Thermometer} gradient="solar" label="Temperature" aLabel="Now" aValue={show(m.temp)} aUnit="°C" bLabel="Week average" bValue={show(wkAvg.temp)} bUnit="°C" loading={wxLoading} />
-        <DualStat icon={Droplets} gradient="co2" label="Humidity" aLabel="Now" aValue={show(obs?.humidity)} aUnit="%" bLabel="Week average" bValue={show(wkAvg.humidity)} bUnit="%" loading={wxLoading} />
+        <DualStat
+          icon={Thermometer}
+          gradient="solar"
+          label="Temperature"
+          aLabel="Now"
+          aValue={show(m.temp)}
+          aUnit="°C"
+          bLabel="Week average"
+          bValue={show(wkAvg.temp)}
+          bUnit="°C"
+          loading={wxLoading}
+        />
+        <DualStat
+          icon={Droplets}
+          gradient="co2"
+          label="Humidity"
+          aLabel="Now"
+          aValue={show(obs?.humidity)}
+          aUnit="%"
+          bLabel="Week average"
+          bValue={show(wkAvg.humidity)}
+          bUnit="%"
+          loading={wxLoading}
+        />
         <DualBaro now={m.pressure} avg={wkAvg.pressure} unit="hPa" loading={wxLoading} />
-        <DualStat icon={SunMedium} gradient="solar" label="Solar radiation" aLabel="Now" aValue={show(obs?.solarRadiation)} aUnit="W/m²" bLabel="Week average" bValue={show(wkAvg.solar)} bUnit="W/m²" loading={wxLoading} />
-        <DualStat icon={Sun} gradient="revenue" label="UV index" aLabel="Now" aValue={show(obs?.uv)} bLabel="Week average" bValue={show(wkAvg.uv)} loading={wxLoading} />
-        <DualStat icon={CloudRain} gradient="energy" label="Precipitation" aLabel="Rate" aValue={show(m.precipRate, 1)} aUnit="mm/h" bLabel="Today" bValue={show(m.precipTotal, 1)} bUnit="mm" loading={wxLoading} />
-        <DualStat icon={Thermometer} gradient="accent" label="Feels like" aLabel="Now" aValue={show(feelsLike)} aUnit="°C" bLabel="Wind chill" bValue={show(m.windChill)} bUnit="°C" loading={wxLoading} />
+        <DualStat
+          icon={SunMedium}
+          gradient="solar"
+          label="Solar radiation"
+          aLabel="Now"
+          aValue={show(obs?.solarRadiation)}
+          aUnit="W/m²"
+          bLabel="Week average"
+          bValue={show(wkAvg.solar)}
+          bUnit="W/m²"
+          loading={wxLoading}
+        />
+        <DualStat
+          icon={Sun}
+          gradient="revenue"
+          label="UV index"
+          aLabel="Now"
+          aValue={show(obs?.uv)}
+          bLabel="Week average"
+          bValue={show(wkAvg.uv)}
+          loading={wxLoading}
+        />
+        <DualStat
+          icon={CloudRain}
+          gradient="energy"
+          label="Precipitation"
+          aLabel="Rate"
+          aValue={show(m.precipRate, 1)}
+          aUnit="mm/h"
+          bLabel="Today"
+          bValue={show(m.precipTotal, 1)}
+          bUnit="mm"
+          loading={wxLoading}
+        />
+        <DualStat
+          icon={Thermometer}
+          gradient="accent"
+          label="Feels like"
+          aLabel="Now"
+          aValue={show(feelsLike)}
+          aUnit="°C"
+          bLabel="Wind chill"
+          bValue={show(m.windChill)}
+          bUnit="°C"
+          loading={wxLoading}
+        />
       </div>
     </div>
   );

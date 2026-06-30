@@ -1,12 +1,9 @@
 // Shared Supabase clients + per-user credential resolution for the weather Edge Functions.
-import {
-  createClient,
-  type SupabaseClient,
-} from 'https://esm.sh/@supabase/supabase-js@2.108.2';
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.108.2";
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 /** Service-role client — bypasses RLS. Used for Vault reads and cache upserts. */
 export function adminClient(): SupabaseClient {
@@ -17,8 +14,8 @@ export function adminClient(): SupabaseClient {
 
 /** Resolve the calling user's auth id from their bearer token. Throws if unauthenticated. */
 export async function requireUser(req: Request): Promise<string> {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader) throw new Error('Missing Authorization header');
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) throw new Error("Missing Authorization header");
 
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -28,7 +25,7 @@ export async function requireUser(req: Request): Promise<string> {
     data: { user },
     error,
   } = await userClient.auth.getUser();
-  if (error || !user) throw new Error('Invalid or expired session');
+  if (error || !user) throw new Error("Invalid or expired session");
   return user.id;
 }
 
@@ -47,26 +44,23 @@ export async function getWeatherCredentials(
   authId: string,
 ): Promise<WeatherCredentials> {
   const { data: settings, error } = await admin
-    .from('user_settings')
-    .select('weather_station_id, weather_api_key_secret_id')
-    .eq('auth_id', authId)
+    .from("user_settings")
+    .select("weather_station_id, weather_api_key_secret_id")
+    .eq("auth_id", authId)
     .single();
   if (error) throw new Error(`Failed to load settings: ${error.message}`);
 
   const stationId = settings?.weather_station_id;
   const secretId = settings?.weather_api_key_secret_id;
   if (!stationId || !secretId) {
-    throw new Error(
-      'Weather API credentials not configured. Set them up in Settings.',
-    );
+    throw new Error("Weather API credentials not configured. Set them up in Settings.");
   }
 
-  const { data: apiKey, error: secretErr } = await admin.rpc(
-    'get_vault_secret',
-    { p_secret_id: secretId },
-  );
+  const { data: apiKey, error: secretErr } = await admin.rpc("get_vault_secret", {
+    p_secret_id: secretId,
+  });
   if (secretErr || !apiKey) {
-    throw new Error('Failed to read Weather API key from Vault.');
+    throw new Error("Failed to read Weather API key from Vault.");
   }
   return { stationId, apiKey: apiKey as string };
 }
@@ -75,13 +69,13 @@ export async function getWeatherCredentials(
 export async function recordHealth(
   admin: SupabaseClient,
   authId: string,
-  source: 'growatt' | 'weather',
-  status: 'ok' | 'error',
+  source: "growatt" | "weather",
+  status: "ok" | "error",
   detail?: string,
 ): Promise<void> {
   try {
     await admin
-      .from('integration_health')
+      .from("integration_health")
       .insert({ auth_id: authId, source, status, detail: detail ?? null });
   } catch (_e) {
     // health recording must never break the caller

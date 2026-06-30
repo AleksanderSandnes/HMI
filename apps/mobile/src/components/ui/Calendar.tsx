@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from "react";
 import {
   Modal as RNModal,
   View,
@@ -6,13 +9,12 @@ import {
   Pressable,
   StyleSheet,
   useWindowDimensions,
-} from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { cn } from '../../lib/cn';
-import { GRADIENTS } from '../../lib/gradients';
-import { GlassCard } from './GlassCard';
+} from "react-native";
+
+import { cn } from "../../lib/cn";
+import { GRADIENTS } from "../../lib/gradients";
+
+import { GlassCard } from "./GlassCard";
 
 interface CalendarProps {
   visible: boolean;
@@ -24,16 +26,27 @@ interface CalendarProps {
   disableFuture?: boolean;
 }
 
-const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const toISO = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-    d.getDate(),
-  ).padStart(2, '0')}`;
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(
+    2,
+    "0",
+  )}`;
 
 const startOfDay = (d: Date) => {
   const n = new Date(d);
@@ -78,8 +91,7 @@ export function Calendar({
   for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
   while (cells.length % 7 !== 0) cells.push(null);
 
-  const shiftMonth = (delta: number) =>
-    setViewMonth(new Date(year, month + delta, 1));
+  const shiftMonth = (delta: number) => setViewMonth(new Date(year, month + delta, 1));
 
   const pick = (d: Date) => {
     onSelect(toISO(d));
@@ -87,16 +99,8 @@ export function Calendar({
   };
 
   return (
-    <RNModal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <Pressable
-        onPress={onClose}
-        className="flex-1 items-center justify-center p-5"
-      >
+    <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable onPress={onClose} className="flex-1 items-center justify-center p-5">
         <BlurView
           intensity={14}
           tint="dark"
@@ -109,12 +113,7 @@ export function Calendar({
           className="bg-[rgba(4,7,16,0.7)]"
         />
         <Pressable onPress={(e) => e.stopPropagation()}>
-          <GlassCard
-            strong
-            elevated
-            className="p-5"
-            style={{ width: Math.min(340, width - 40) }}
-          >
+          <GlassCard strong elevated className="p-5" style={{ width: Math.min(340, width - 40) }}>
             {/* Month navigation */}
             <View className="mb-4 flex-row items-center justify-between">
               <Pressable
@@ -161,10 +160,8 @@ export function Calendar({
                       disabled={isFuture}
                       onPress={() => pick(d)}
                       className={cn(
-                        'h-[38px] w-[38px] items-center justify-center rounded-md',
-                        isToday &&
-                          !isSelected &&
-                          'border border-[rgba(245,158,11,0.45)]',
+                        "h-[38px] w-[38px] items-center justify-center rounded-md",
+                        isToday && !isSelected && "border border-[rgba(245,158,11,0.45)]",
                       )}
                     >
                       {isSelected ? (
@@ -181,12 +178,12 @@ export function Calendar({
                       ) : (
                         <Text
                           className={cn(
-                            'text-sm font-semibold',
+                            "text-sm font-semibold",
                             isFuture
-                              ? 'text-[rgba(255,255,255,0.22)]'
+                              ? "text-[rgba(255,255,255,0.22)]"
                               : isToday
-                                ? 'font-extrabold text-solar-light'
-                                : 'text-text-secondary',
+                                ? "font-extrabold text-solar-light"
+                                : "text-text-secondary",
                           )}
                         >
                           {d.getDate()}
@@ -204,17 +201,13 @@ export function Calendar({
                 onPress={() => pick(today)}
                 className="flex-1 items-center rounded-md border border-solar bg-solar-soft py-3"
               >
-                <Text className="text-sm font-extrabold text-solar-light">
-                  Today
-                </Text>
+                <Text className="text-sm font-extrabold text-solar-light">Today</Text>
               </Pressable>
               <Pressable
                 onPress={onClose}
                 className="flex-1 items-center rounded-md border border-glass-border bg-glass-fill py-3"
               >
-                <Text className="text-sm font-bold text-text-secondary">
-                  Close
-                </Text>
+                <Text className="text-sm font-bold text-text-secondary">Close</Text>
               </Pressable>
             </View>
           </GlassCard>
@@ -228,15 +221,15 @@ const styles = StyleSheet.create({
   cell: {
     width: `${100 / 7}%`,
     aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   daySelected: {
     width: 38,
     height: 38,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

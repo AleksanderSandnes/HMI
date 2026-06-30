@@ -1,21 +1,18 @@
 // Mobile env resolution. Mirrors apps/web/lib/env.ts but reads EXPO_PUBLIC_*
 // and uses the React Native __DEV__ flag. @hmi/core never reads process.env —
 // we hand it a CoreEnv built here.
-import type { CoreEnv, DataMode } from '@hmi/core';
+import type { CoreEnv, DataMode } from "@hmi/core";
 
 export const DATA_MODE: DataMode =
-  process.env.EXPO_PUBLIC_DATA_MODE === 'production'
-    ? 'production'
-    : 'development';
+  process.env.EXPO_PUBLIC_DATA_MODE === "production" ? "production" : "development";
 
 export const SUPABASE_URL =
-  process.env.EXPO_PUBLIC_SUPABASE_URL ||
-  'https://xdttfrknoazcqcelieck.supabase.co';
+  process.env.EXPO_PUBLIC_SUPABASE_URL || "https://xdttfrknoazcqcelieck.supabase.co";
 
-export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "";
 
-export const RENDER_JAVA_API = 'https://growattapi.onrender.com';
-export const LOCAL_JAVA_API = 'http://localhost:8080';
+export const RENDER_JAVA_API = "https://growattapi.onrender.com";
+export const LOCAL_JAVA_API = "http://localhost:8080";
 
 /**
  * Resolve the Java Growatt service base URL (no trailing /api — core appends the
@@ -32,14 +29,14 @@ export function resolveJavaApiBaseUrl(opts: {
   isDev: boolean;
 }): string {
   if (opts.override) return opts.override;
-  const useLocal = opts.isDev && opts.dataMode !== 'production';
+  const useLocal = opts.isDev && opts.dataMode !== "production";
   return useLocal ? LOCAL_JAVA_API : RENDER_JAVA_API;
 }
 
 export const JAVA_API_BASE_URL = resolveJavaApiBaseUrl({
   override: process.env.EXPO_PUBLIC_JAVA_API,
   dataMode: DATA_MODE,
-  isDev: typeof __DEV__ !== 'undefined' ? __DEV__ : false,
+  isDev: typeof __DEV__ !== "undefined" ? __DEV__ : false,
 });
 
 export function coreEnv(): CoreEnv {

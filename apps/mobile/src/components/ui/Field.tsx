@@ -1,16 +1,12 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  type TextInputProps,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { cn } from '../../lib/cn';
-import type { IconRender } from './types';
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import { View, Text, TextInput, Pressable, type TextInputProps } from "react-native";
 
-interface FieldProps extends Omit<TextInputProps, 'style'> {
+import { cn } from "../../lib/cn";
+
+import type { IconRender } from "./types";
+
+interface FieldProps extends Omit<TextInputProps, "style"> {
   label: string;
   icon?: IconRender;
   /** Renders a password field with a show/hide toggle. */
@@ -43,15 +39,13 @@ export function Field({
       </Text>
       <View
         className={cn(
-          'flex-row items-center rounded-md border px-3.5',
-          focused
-            ? 'border-solar bg-glass-fill'
-            : 'border-glass-border bg-glass-fill-subtle',
+          "flex-row items-center rounded-md border px-3.5",
+          focused ? "border-solar bg-glass-fill" : "border-glass-border bg-glass-fill-subtle",
         )}
       >
         {icon ? (
           <View className="mr-2.5">
-            {icon({ color: focused ? '#fbbf24' : '#71809a', size: 14 })}
+            {icon({ color: focused ? "#fbbf24" : "#71809a", size: 14 })}
           </View>
         ) : null}
         <TextInput
@@ -73,25 +67,17 @@ export function Field({
             onPress={() => setReveal((r) => !r)}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel={reveal ? 'Hide password' : 'Show password'}
+            accessibilityLabel={reveal ? "Hide password" : "Show password"}
             className="py-1.5 pl-2.5"
           >
-            <Ionicons
-              name={reveal ? 'eye-off-outline' : 'eye-outline'}
-              size={16}
-              color="#aeb8cc"
-            />
+            <Ionicons name={reveal ? "eye-off-outline" : "eye-outline"} size={16} color="#aeb8cc" />
           </Pressable>
         ) : null}
       </View>
       {error ? (
-        <Text className="ml-0.5 mt-1.5 text-xs font-semibold text-negative">
-          {error}
-        </Text>
+        <Text className="ml-0.5 mt-1.5 text-xs font-semibold text-negative">{error}</Text>
       ) : hint ? (
-        <Text className="mt-1.5 text-[11.5px] font-medium text-text-muted">
-          {hint}
-        </Text>
+        <Text className="mt-1.5 text-[11.5px] font-medium text-text-muted">{hint}</Text>
       ) : null}
     </View>
   );

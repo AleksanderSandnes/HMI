@@ -1,13 +1,9 @@
 // weather-backfill — daily cron (pg_cron). Backfills YESTERDAY's hourly observations for
 // every user with weather credentials, then inserts one notification per user (which the
 // notifications->send-push webhook turns into an Expo push). Port of cron/weatherBackfill.js.
-import { json } from '../_shared/cors.ts';
-import {
-  adminClient,
-  getWeatherCredentials,
-  recordHealth,
-} from '../_shared/supabase.ts';
-import { fetchHourly, todayAndYesterday } from '../_shared/weather.ts';
+import { json } from "../_shared/cors.ts";
+import { adminClient, getWeatherCredentials, recordHealth } from "../_shared/supabase.ts";
+import { fetchHourly, todayAndYesterday } from "../_shared/weather.ts";
 
 const prettyDate = (yyyymmdd: string) =>
   yyyymmdd.length === 8
@@ -20,10 +16,10 @@ Deno.serve(async () => {
 
   // Every user that has both a station and a Vault-stored API key configured.
   const { data: users, error } = await admin
-    .from('user_settings')
-    .select('auth_id, weather_station_id, weather_api_key_secret_id')
-    .not('weather_station_id', 'is', null)
-    .not('weather_api_key_secret_id', 'is', null);
+    .from("user_settings")
+    .select("auth_id, weather_station_id, weather_api_key_secret_id")
+    .not("weather_station_id", "is", null)
+    .not("weather_api_key_secret_id", "is", null);
   if (error) return json({ error: error.message }, 500);
 
   const results: unknown[] = [];
@@ -36,41 +32,47 @@ Deno.serve(async () => {
       const when = prettyDate(yesterday);
 
       if (ok) {
-        await admin.from('weather_historical').upsert(
+        await admin.from("weather_historical").upsert(
           {
             station_id: stationId,
             date: yesterday,
             observations,
             cached_at: new Date().toISOString(),
           },
-          { onConflict: 'station_id,date' },
+          { onConflict: "station_id,date" },
         );
       }
 
-      await admin.from('notifications').insert({
+      await admin.from("notifications").insert({
         auth_id: authId,
-        type: 'weather_sync',
-        level: ok ? 'success' : 'warning',
-        title: ok ? 'Weather data synced' : 'Weather sync finished — no data',
+        type: "weather_sync",
+        level: ok ? "success" : "warning",
+        title: ok ? "Weather data synced" : "Weather sync finished — no data",
         message: ok
-          ? `Saved ${observations.length} hourly observation${observations.length === 1 ? '' : 's'} for ${when} (station ${stationId}).`
+          ? `Saved ${observations.length} hourly observation${observations.length === 1 ? "" : "s"} for ${when} (station ${stationId}).`
           : `No weather observations were available for ${when}.`,
-        meta: { source: 'weather', date: yesterday, stationId, count: observations.length },
+        meta: { source: "weather", date: yesterday, stationId, count: observations.length },
       });
 
-      await recordHealth(admin, authId, 'weather', ok ? 'ok' : 'error', ok ? undefined : 'no observations');
+      await recordHealth(
+        admin,
+        authId,
+        "weather",
+        ok ? "ok" : "error",
+        ok ? undefined : "no observations",
+      );
       results.push({ authId, count: observations.length, ok });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      await admin.from('notifications').insert({
+      await admin.from("notifications").insert({
         auth_id: authId,
-        type: 'weather_sync',
-        level: 'error',
-        title: 'Weather sync failed',
+        type: "weather_sync",
+        level: "error",
+        title: "Weather sync failed",
         message,
-        meta: { source: 'weather', date: yesterday },
+        meta: { source: "weather", date: yesterday },
       });
-      await recordHealth(admin, authId, 'weather', 'error', message);
+      await recordHealth(admin, authId, "weather", "error", message);
       results.push({ authId, error: message });
     }
   }

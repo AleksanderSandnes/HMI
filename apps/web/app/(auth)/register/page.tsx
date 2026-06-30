@@ -1,9 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import * as Yup from "yup";
+import { registerAccountSchema } from "@hmi/core";
 import {
   ArrowLeft,
   ArrowRight,
@@ -18,12 +15,16 @@ import {
   UserPlus,
   type LucideIcon,
 } from "lucide-react";
-import { registerAccountSchema } from "@hmi/core";
-import { useCore } from "@/lib/hooks/useCore";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { Field } from "@/components/ui/Field";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import * as Yup from "yup";
+
 import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBanner } from "@/components/ui/StatusBanner";
+import { useCore } from "@/lib/hooks/useCore";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
@@ -116,9 +117,7 @@ export default function RegisterPage() {
       });
       setStep(1);
     } catch (e) {
-      setAccountError(
-        e instanceof Error ? e.message : "Registration failed. Please try again."
-      );
+      setAccountError(e instanceof Error ? e.message : "Registration failed. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -131,16 +130,13 @@ export default function RegisterPage() {
     if (!email && !password) return setStep(2);
     if (!email || !password)
       return setStepError("Enter both account and password, or skip this step.");
-    if (!email.includes("@"))
-      return setStepError("Please enter a valid email address.");
+    if (!email.includes("@")) return setStepError("Please enter a valid email address.");
     try {
       setSaving(true);
       await settings.saveGrowattApiSettings({ growatt: { email, password } });
       setStep(2);
     } catch {
-      setStepError(
-        "Could not save Growatt credentials. You can add them later in Settings."
-      );
+      setStepError("Could not save Growatt credentials. You can add them later in Settings.");
     } finally {
       setSaving(false);
     }
@@ -158,9 +154,7 @@ export default function RegisterPage() {
       await settings.saveWeatherApiSettings({ weather: { apiKey, stationId } });
       finalize();
     } catch {
-      setStepError(
-        "Could not save weather credentials. You can add them later in Settings."
-      );
+      setStepError("Could not save weather credentials. You can add them later in Settings.");
     } finally {
       setSaving(false);
     }
@@ -183,9 +177,7 @@ export default function RegisterPage() {
         <h1 className="text-[25px] font-extrabold tracking-tight text-text-primary">
           {header.title}
         </h1>
-        <p className="mt-1.5 text-sm font-medium text-text-muted">
-          {header.subtitle}
-        </p>
+        <p className="mt-1.5 text-sm font-medium text-text-muted">{header.subtitle}</p>
       </div>
 
       {accountError ? <StatusBanner kind="error" message={accountError} /> : null}
@@ -319,21 +311,14 @@ export default function RegisterPage() {
                 setStep(1);
               }}
             />
-            <Button
-              label="Finish"
-              icon={Check}
-              onClick={handleFinish}
-              loading={saving}
-            />
+            <Button label="Finish" icon={Check} onClick={handleFinish} loading={saving} />
           </div>
         </div>
       ) : null}
 
       {step === 0 ? (
         <div className="mt-6 flex items-center justify-center gap-1.5 border-t border-glass-border pt-5">
-          <span className="text-sm font-medium text-text-muted">
-            Already have an account?
-          </span>
+          <span className="text-sm font-medium text-text-muted">Already have an account?</span>
           <Link href="/login" className="text-sm font-extrabold text-solar-light">
             Sign in
           </Link>
@@ -356,12 +341,8 @@ function StepIndicator({ step }: { step: number }) {
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full border text-xs font-extrabold",
                   done && "border-solar bg-solar text-text-inverse",
-                  active &&
-                    !done &&
-                    "border-solar bg-solar-soft text-solar-light",
-                  !active &&
-                    !done &&
-                    "border-glass-border-strong bg-glass-fill text-text-muted"
+                  active && !done && "border-solar bg-solar-soft text-solar-light",
+                  !active && !done && "border-glass-border-strong bg-glass-fill text-text-muted",
                 )}
               >
                 {done ? <Check size={12} /> : i + 1}
@@ -369,7 +350,7 @@ function StepIndicator({ step }: { step: number }) {
               <span
                 className={cn(
                   "mt-1.5 text-[11px] font-bold",
-                  active ? "text-text-secondary" : "text-text-muted"
+                  active ? "text-text-secondary" : "text-text-muted",
                 )}
               >
                 {s.label}
@@ -379,7 +360,7 @@ function StepIndicator({ step }: { step: number }) {
               <div
                 className={cn(
                   "-mt-4 h-0.5 w-10 rounded",
-                  i < step ? "bg-solar" : "bg-glass-border-strong"
+                  i < step ? "bg-solar" : "bg-glass-border-strong",
                 )}
               />
             ) : null}

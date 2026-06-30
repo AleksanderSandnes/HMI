@@ -1,19 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import {
-  AlertCircle,
-  Bell,
-  CheckCircle2,
-  Info,
-  Trash2,
-  X,
-  type LucideIcon,
-} from "lucide-react";
 import type { NotificationItem, NotificationLevel } from "@hmi/core";
-import { useCore } from "@/lib/hooks/useCore";
+import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, Bell, CheckCircle2, Info, Trash2, X, type LucideIcon } from "lucide-react";
+import { useEffect } from "react";
+
 import { GlassCard } from "@/components/ui/GlassCard";
+import { useCore } from "@/lib/hooks/useCore";
 
 const LEVEL: Record<NotificationLevel, { icon: LucideIcon; className: string }> = {
   success: { icon: CheckCircle2, className: "text-positive" },
@@ -42,7 +35,7 @@ export default function NotificationsPage() {
 
   // Live updates: refetch on any insert/delete for this user.
   useEffect(() => {
-    const unsub = notifications.subscribeNotifications(() => refetch());
+    const unsub = notifications.subscribeNotifications(() => void refetch());
     return unsub;
   }, [notifications, refetch]);
 
@@ -63,7 +56,7 @@ export default function NotificationsPage() {
           <button
             onClick={async () => {
               await notifications.clearNotifications();
-              refetch();
+              void refetch();
             }}
             className="flex items-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-3.5 py-2 text-sm font-bold text-text-muted transition hover:text-negative"
           >
@@ -74,15 +67,11 @@ export default function NotificationsPage() {
       </div>
 
       {isLoading ? (
-        <GlassCard className="p-8 text-center text-sm text-text-muted">
-          Loading…
-        </GlassCard>
+        <GlassCard className="p-8 text-center text-sm text-text-muted">Loading…</GlassCard>
       ) : items.length === 0 ? (
         <GlassCard className="flex flex-col items-center gap-3 p-12 text-center">
           <Bell size={32} className="text-text-muted" />
-          <p className="text-sm font-semibold text-text-secondary">
-            You&apos;re all caught up
-          </p>
+          <p className="text-sm font-semibold text-text-secondary">You&apos;re all caught up</p>
           <p className="text-sm text-text-muted">
             Solar &amp; weather sync alerts will appear here.
           </p>
@@ -92,30 +81,23 @@ export default function NotificationsPage() {
           {items.map((item) => {
             const { icon: Icon, className } = LEVEL[item.level] ?? LEVEL.info;
             return (
-              <GlassCard
-                key={item.id}
-                className="flex items-start gap-3.5 p-4"
-              >
+              <GlassCard key={item.id} className="flex items-start gap-3.5 p-4">
                 <Icon size={18} className={`mt-0.5 shrink-0 ${className}`} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate font-bold text-text-primary">
-                      {item.title}
-                    </p>
+                    <p className="truncate font-bold text-text-primary">{item.title}</p>
                     <span className="shrink-0 text-xs font-medium text-text-muted">
                       {timeAgo(item.createdAt)}
                     </span>
                   </div>
                   {item.message ? (
-                    <p className="mt-1 text-sm text-text-secondary">
-                      {item.message}
-                    </p>
+                    <p className="mt-1 text-sm text-text-secondary">{item.message}</p>
                   ) : null}
                 </div>
                 <button
                   onClick={async () => {
                     await notifications.dismissNotification(item.id);
-                    refetch();
+                    void refetch();
                   }}
                   aria-label="Dismiss"
                   className="shrink-0 rounded-md p-1 text-text-muted transition hover:text-text-primary"

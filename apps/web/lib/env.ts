@@ -3,16 +3,12 @@
 import type { CoreEnv, DataMode } from "@hmi/core";
 
 export const DATA_MODE: DataMode =
-  process.env.NEXT_PUBLIC_DATA_MODE === "production"
-    ? "production"
-    : "development";
+  process.env.NEXT_PUBLIC_DATA_MODE === "production" ? "production" : "development";
 
 export const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://xdttfrknoazcqcelieck.supabase.co";
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://xdttfrknoazcqcelieck.supabase.co";
 
-export const SUPABASE_ANON_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 export const RENDER_JAVA_API = "https://growattapi.onrender.com";
 export const LOCAL_JAVA_API = "http://localhost:8080";

@@ -1,5 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CoreApiContext } from "@hmi/core";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { coreEnv } from "../env";
 
 /**
@@ -12,8 +13,7 @@ export function coreContext(supabase: SupabaseClient): CoreApiContext {
     supabase,
     getAccessToken: async () =>
       (await supabase.auth.getSession()).data.session?.access_token ?? null,
-    getCurrentUserId: async () =>
-      (await supabase.auth.getSession()).data.session?.user?.id ?? null,
+    getCurrentUserId: async () => (await supabase.auth.getSession()).data.session?.user?.id ?? null,
     env: coreEnv(),
   };
 }

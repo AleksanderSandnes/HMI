@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { loginSchema, registerAccountSchema } from "../validation/auth";
 
 const validLogin = { email: "user@example.com", password: "secret" };
@@ -9,9 +10,9 @@ describe("loginSchema", () => {
   });
 
   it("rejects a missing email with a friendly message", async () => {
-    await expect(
-      loginSchema.validate({ ...validLogin, email: "" })
-    ).rejects.toThrow("Email is required");
+    await expect(loginSchema.validate({ ...validLogin, email: "" })).rejects.toThrow(
+      "Email is required",
+    );
   });
 
   it("rejects a malformed email", async () => {
@@ -37,20 +38,20 @@ describe("registerAccountSchema", () => {
 
   it("requires a username", async () => {
     await expect(
-      registerAccountSchema.validate({ ...validRegister, username: "" })
+      registerAccountSchema.validate({ ...validRegister, username: "" }),
     ).rejects.toThrow("Username is required");
   });
 
   it("requires confirmPassword to match password", async () => {
     await expect(
-      registerAccountSchema.validate({ ...validRegister, confirmPassword: "different" })
+      registerAccountSchema.validate({ ...validRegister, confirmPassword: "different" }),
     ).rejects.toThrow("Passwords must match");
   });
 
   it("requires confirmPassword to be present", async () => {
     const { confirmPassword: _omit, ...withoutConfirm } = validRegister;
-    await expect(
-      registerAccountSchema.validate(withoutConfirm)
-    ).rejects.toThrow("Please confirm your password");
+    await expect(registerAccountSchema.validate(withoutConfirm)).rejects.toThrow(
+      "Please confirm your password",
+    );
   });
 });

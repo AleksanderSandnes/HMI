@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import {
   Text,
   Pressable,
@@ -5,13 +6,14 @@ import {
   View,
   type StyleProp,
   type ViewStyle,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { cn } from '../../lib/cn';
-import { BUTTON_GRADIENTS, type ButtonGradient } from '../../lib/gradients';
-import type { IconRender } from './types';
+} from "react-native";
 
-type Variant = 'primary' | 'ghost' | 'danger';
+import { cn } from "../../lib/cn";
+import { BUTTON_GRADIENTS, type ButtonGradient } from "../../lib/gradients";
+
+import type { IconRender } from "./types";
+
+type Variant = "primary" | "ghost" | "danger";
 
 interface ButtonProps {
   label: string;
@@ -28,9 +30,9 @@ interface ButtonProps {
 }
 
 const LABEL_COLOR: Record<Variant, string> = {
-  primary: '#0a1124', // text-inverse
-  ghost: '#f6f8fc', // text-primary
-  danger: '#fb7185', // negative
+  primary: "#0a1124", // text-inverse
+  ghost: "#f6f8fc", // text-primary
+  danger: "#fb7185", // negative
 };
 
 /**
@@ -42,11 +44,11 @@ const LABEL_COLOR: Record<Variant, string> = {
 export function Button({
   label,
   onPress,
-  variant = 'primary',
+  variant = "primary",
   icon,
   loading = false,
   disabled = false,
-  gradient = 'solar',
+  gradient = "solar",
   className,
   style,
 }: ButtonProps) {
@@ -72,18 +74,14 @@ export function Button({
     </View>
   );
 
-  if (variant === 'primary') {
+  if (variant === "primary") {
     return (
       <Pressable
         onPress={onPress}
         disabled={isDisabled}
         accessibilityRole="button"
         style={style}
-        className={cn(
-          'overflow-hidden rounded-md',
-          isDisabled && 'opacity-50',
-          className,
-        )}
+        className={cn("overflow-hidden rounded-md", isDisabled && "opacity-50", className)}
       >
         <LinearGradient
           colors={BUTTON_GRADIENTS[gradient]}
@@ -91,8 +89,8 @@ export function Button({
           end={{ x: 1, y: 1 }}
           style={{
             minHeight: 48,
-            alignItems: 'center',
-            justifyContent: 'center',
+            alignItems: "center",
+            justifyContent: "center",
             paddingHorizontal: 16,
           }}
         >
@@ -109,11 +107,10 @@ export function Button({
       accessibilityRole="button"
       style={style}
       className={cn(
-        'min-h-12 items-center justify-center rounded-md border px-4',
-        variant === 'ghost' && 'border-glass-border-strong bg-glass-fill',
-        variant === 'danger' &&
-          'border-[rgba(251,113,133,0.35)] bg-[rgba(251,113,133,0.10)]',
-        isDisabled && 'opacity-50',
+        "min-h-12 items-center justify-center rounded-md border px-4",
+        variant === "ghost" && "border-glass-border-strong bg-glass-fill",
+        variant === "danger" && "border-[rgba(251,113,133,0.35)] bg-[rgba(251,113,133,0.10)]",
+        isDisabled && "opacity-50",
         className,
       )}
     >

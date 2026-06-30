@@ -1,6 +1,7 @@
-import { View, StyleSheet, type ViewProps } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { cn } from '../../lib/cn';
+import { BlurView } from "expo-blur";
+import { View, StyleSheet, type ViewProps } from "react-native";
+
+import { cn } from "../../lib/cn";
 
 interface GlassCardProps extends ViewProps {
   /** Stronger fill + border for primary surfaces. */
@@ -15,7 +16,7 @@ interface GlassCardProps extends ViewProps {
 
 const ELEVATED = StyleSheet.create({
   shadow: {
-    shadowColor: '#020614',
+    shadowColor: "#020614",
     shadowOpacity: 0.55,
     shadowRadius: 30,
     shadowOffset: { width: 0, height: 18 },
@@ -42,8 +43,8 @@ export function GlassCard({
     <View
       style={[elevated && ELEVATED, style]}
       className={cn(
-        'overflow-hidden rounded-lg border',
-        strong ? 'border-glass-border-strong' : 'border-glass-border',
+        "overflow-hidden rounded-lg border",
+        strong ? "border-glass-border-strong" : "border-glass-border",
         className,
       )}
       {...rest}
@@ -56,10 +57,7 @@ export function GlassCard({
       />
       <View
         pointerEvents="none"
-        className={cn(
-          'absolute inset-0',
-          strong ? 'bg-glass-fill-strong' : 'bg-glass-fill',
-        )}
+        className={cn("absolute inset-0", strong ? "bg-glass-fill-strong" : "bg-glass-fill")}
       />
       {children}
     </View>

@@ -1,11 +1,13 @@
-import { View, Text } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { cn } from '../../lib/cn';
-import { GRADIENTS, type StatGradient } from '../../lib/gradients';
-import type { IconRender } from './types';
-import { GlassCard } from './GlassCard';
-import { Skeleton } from './Skeleton';
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { View, Text } from "react-native";
+
+import { cn } from "../../lib/cn";
+import { GRADIENTS, type StatGradient } from "../../lib/gradients";
+
+import { GlassCard } from "./GlassCard";
+import { Skeleton } from "./Skeleton";
+import type { IconRender } from "./types";
 
 interface StatTileProps {
   icon: IconRender;
@@ -44,16 +46,8 @@ export function StatTile({
   const chip = compact ? 30 : 42;
 
   return (
-    <GlassCard
-      strong
-      className={cn('min-w-0 flex-1', compact ? 'p-3.5' : 'p-[18px]', className)}
-    >
-      <View
-        className={cn(
-          'flex-row items-center justify-between',
-          compact ? 'mb-2.5' : 'mb-3.5',
-        )}
-      >
+    <GlassCard strong className={cn("min-w-0 flex-1", compact ? "p-3.5" : "p-[18px]", className)}>
+      <View className={cn("flex-row items-center justify-between", compact ? "mb-2.5" : "mb-3.5")}>
         <LinearGradient
           colors={GRADIENTS[gradient]}
           start={{ x: 0, y: 0 }}
@@ -62,32 +56,27 @@ export function StatTile({
             width: chip,
             height: chip,
             borderRadius: 12,
-            alignItems: 'center',
-            justifyContent: 'center',
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {icon({ color: '#0a1124', size: compact ? 15 : 17 })}
+          {icon({ color: "#0a1124", size: compact ? 15 : 17 })}
         </LinearGradient>
 
         {hasDelta ? (
           <View
             className={cn(
-              'flex-row items-center gap-1 rounded-pill px-2.5 py-1',
-              positive
-                ? 'bg-[rgba(52,211,153,0.13)]'
-                : 'bg-[rgba(251,113,133,0.13)]',
+              "flex-row items-center gap-1 rounded-pill px-2.5 py-1",
+              positive ? "bg-[rgba(52,211,153,0.13)]" : "bg-[rgba(251,113,133,0.13)]",
             )}
           >
             <Ionicons
-              name={positive ? 'arrow-up' : 'arrow-down'}
+              name={positive ? "arrow-up" : "arrow-down"}
               size={9}
-              color={positive ? '#34d399' : '#fb7185'}
+              color={positive ? "#34d399" : "#fb7185"}
             />
             <Text
-              className={cn(
-                'text-xs font-extrabold',
-                positive ? 'text-positive' : 'text-negative',
-              )}
+              className={cn("text-xs font-extrabold", positive ? "text-positive" : "text-negative")}
             >
               {Math.abs(delta as number).toFixed(0)}%
             </Text>
@@ -97,21 +86,21 @@ export function StatTile({
 
       <Text
         className={cn(
-          'font-semibold uppercase tracking-[0.3px] text-text-muted',
-          compact ? 'text-[10.5px]' : 'text-[12.5px]',
+          "font-semibold uppercase tracking-[0.3px] text-text-muted",
+          compact ? "text-[10.5px]" : "text-[12.5px]",
         )}
       >
         {label}
       </Text>
 
       {loading ? (
-        <Skeleton className={cn('mt-2', compact ? 'h-6 w-20' : 'h-7 w-24')} />
+        <Skeleton className={cn("mt-2", compact ? "h-6 w-20" : "h-7 w-24")} />
       ) : (
         <View className="mt-1.5 flex-row items-baseline gap-1.5">
           <Text
             className={cn(
-              'font-extrabold tracking-[-0.5px] text-text-primary',
-              compact ? 'text-[21px]' : 'text-[26px]',
+              "font-extrabold tracking-[-0.5px] text-text-primary",
+              compact ? "text-[21px]" : "text-[26px]",
             )}
           >
             {value}
@@ -119,8 +108,8 @@ export function StatTile({
           {unit ? (
             <Text
               className={cn(
-                'font-semibold text-text-secondary',
-                compact ? 'text-[11px]' : 'text-sm',
+                "font-semibold text-text-secondary",
+                compact ? "text-[11px]" : "text-sm",
               )}
             >
               {unit}
@@ -130,12 +119,7 @@ export function StatTile({
       )}
 
       {sublabel && !loading ? (
-        <Text
-          className={cn(
-            'text-text-muted',
-            compact ? 'mt-1 text-[10.5px]' : 'mt-1.5 text-xs',
-          )}
-        >
+        <Text className={cn("text-text-muted", compact ? "mt-1 text-[10.5px]" : "mt-1.5 text-xs")}>
           {sublabel}
         </Text>
       ) : null}

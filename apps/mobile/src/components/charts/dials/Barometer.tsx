@@ -1,4 +1,3 @@
-import { View, Text } from 'react-native';
 import {
   Canvas,
   Group,
@@ -7,9 +6,11 @@ import {
   Circle,
   LinearGradient,
   vec,
-} from '@shopify/react-native-skia';
-import { clamp, round, toNum } from '../../../lib/format';
-import { GlassCard } from '../../ui/GlassCard';
+} from "@shopify/react-native-skia";
+import { View, Text } from "react-native";
+
+import { clamp, round, toNum } from "../../../lib/format";
+import { GlassCard } from "../../ui/GlassCard";
 
 // Typical sea-level pressure range (hPa) over a 270° arc — mirrors web DualBaro.
 const P_MIN = 960;
@@ -39,8 +40,7 @@ const TICKS = Array.from({ length: 11 }, (_, i) => {
 });
 
 function Gauge({ value }: { value: number | null }) {
-  const frac =
-    value != null ? clamp((value - P_MIN) / (P_MAX - P_MIN), 0, 1) : null;
+  const frac = value != null ? clamp((value - P_MIN) / (P_MAX - P_MIN), 0, 1) : null;
   const ang = frac != null ? START + frac * SWEEP : null;
 
   return (
@@ -60,7 +60,7 @@ function Gauge({ value }: { value: number | null }) {
               p1={t.p1}
               p2={t.p2}
               strokeWidth={t.major ? 1.4 : 1}
-              color={t.major ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.16)'}
+              color={t.major ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.16)"}
             />
           ))}
           {ang != null ? (
@@ -69,14 +69,14 @@ function Gauge({ value }: { value: number | null }) {
                 <LinearGradient
                   start={vec(50, 16)}
                   end={vec(50, 53)}
-                  colors={['#fde047', '#f59e0b']}
+                  colors={["#fde047", "#f59e0b"]}
                 />
               </Path>
               <Path path="M50 10 L45 23 L50 19 L55 23 Z">
                 <LinearGradient
                   start={vec(50, 10)}
                   end={vec(50, 23)}
-                  colors={['#fde047', '#f59e0b']}
+                  colors={["#fde047", "#f59e0b"]}
                 />
               </Path>
             </Group>
@@ -114,7 +114,7 @@ function Module({
       </Text>
       <Gauge value={v} />
       <Text className="text-[17px] font-extrabold leading-none text-text-primary">
-        {r != null ? r : '—'}
+        {r != null ? r : "—"}
         <Text className="text-[10px] font-bold text-text-muted"> {unit}</Text>
       </Text>
     </View>
@@ -128,7 +128,7 @@ function Module({
 export function DualBaro({
   now,
   avg,
-  unit = 'hPa',
+  unit = "hPa",
 }: {
   now?: number | null;
   avg?: number | null;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import {
   chartSubtitle,
   comparisonLabel,
@@ -118,9 +119,7 @@ describe("getPeakOutput", () => {
 
   it("returns null for empty or all-zero data", () => {
     expect(getPeakOutput({ labels: [], datasets: [{ data: [] }] }, "hourly")).toBeNull();
-    expect(
-      getPeakOutput({ labels: ["a"], datasets: [{ data: [0] }] }, "hourly")
-    ).toBeNull();
+    expect(getPeakOutput({ labels: ["a"], datasets: [{ data: [0] }] }, "hourly")).toBeNull();
   });
 });
 

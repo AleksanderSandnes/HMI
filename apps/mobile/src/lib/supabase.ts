@@ -6,27 +6,24 @@
  * a cached copy. Mirrors apps/web/lib/supabase/client.ts (which uses @supabase/ssr
  * cookies); here we use the AsyncStorage adapter instead.
  */
-import 'react-native-url-polyfill/auto';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from './env';
+import "react-native-url-polyfill/auto";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { Platform } from "react-native";
+
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./env";
 
 /** localStorage on web; AsyncStorage on native. */
-const storage = Platform.OS === 'web' ? undefined : AsyncStorage;
+const storage = Platform.OS === "web" ? undefined : AsyncStorage;
 
-export const supabase: SupabaseClient = createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
-  {
-    auth: {
-      storage,
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: Platform.OS === 'web',
-    },
+export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: Platform.OS === "web",
   },
-);
+});
 
 /** Current access token (Supabase JWT), or null if signed out. */
 export async function getAccessToken(): Promise<string | null> {

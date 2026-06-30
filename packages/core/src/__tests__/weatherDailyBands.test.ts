@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { buildWeatherDailyBands } from "../utils/weatherSeries";
 
 // Two calendar days of temperature readings (Wed 2026-06-10, Thu 2026-06-11).

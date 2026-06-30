@@ -1,5 +1,7 @@
 "use client";
 
+import { formatMetric as fmt } from "@hmi/core";
+import { Loader2 } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -9,10 +11,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Loader2 } from "lucide-react";
-import { formatMetric as fmt } from "@hmi/core";
-import { weatherYDomain } from "@/lib/chart";
+
 import { AXIS_TICK, CURSOR, GRID_STROKE } from "./chartTheme";
+
+import { weatherYDomain } from "@/lib/chart";
 
 export interface LineSeries {
   data: number[];
@@ -55,17 +57,13 @@ export function WeatherChart({
   const all = clean.flatMap((s) => s.data);
 
   const sizer = (node: React.ReactNode) =>
-    heightClass ? (
-      <div className={heightClass}>{node}</div>
-    ) : (
-      <div style={{ height }}>{node}</div>
-    );
+    heightClass ? <div className={heightClass}>{node}</div> : <div style={{ height }}>{node}</div>;
 
   if (loading) {
     return sizer(
       <div className="flex h-full w-full items-center justify-center">
         <Loader2 size={32} className="animate-spin text-solar-light" />
-      </div>
+      </div>,
     );
   }
 
@@ -73,7 +71,7 @@ export function WeatherChart({
     return sizer(
       <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-text-muted">
         {emptyText}
-      </div>
+      </div>,
     );
   }
 
@@ -127,14 +125,14 @@ export function WeatherChart({
             if (!active || !payload?.length) return null;
             return (
               <div className="min-w-[120px] rounded-xl border border-glass-border-strong bg-[rgba(10,17,36,0.94)] px-3 py-2.5">
-                <p className="mb-1.5 text-[11px] font-bold text-text-muted">
-                  {label}
-                </p>
+                <p className="mb-1.5 text-[11px] font-bold text-text-muted">{label}</p>
                 {payload.map((p, i) => (
                   <div key={i} className="mt-0.5 flex items-center gap-2">
                     <span
                       className="h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: clean[Number(p.dataKey?.toString().slice(1))]?.color }}
+                      style={{
+                        backgroundColor: clean[Number(p.dataKey?.toString().slice(1))]?.color,
+                      }}
                     />
                     <span className="flex-1 text-[11.5px] font-semibold text-text-secondary">
                       {clean[Number(p.dataKey?.toString().slice(1))]?.label}

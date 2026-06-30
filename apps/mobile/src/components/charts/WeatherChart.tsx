@@ -1,15 +1,10 @@
-import { useMemo } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
-import {
-  CartesianChart,
-  Line,
-  Area,
-  AreaRange,
-  useChartPressState,
-} from 'victory-native';
-import { Circle, LinearGradient, vec } from '@shopify/react-native-skia';
-import { formatMetric, weatherYDomain } from '@hmi/core';
-import { AXIS_LABEL_COLOR, GRID_COLOR, axisFont } from './chartTheme';
+import { formatMetric, weatherYDomain } from "@hmi/core";
+import { Circle, LinearGradient, vec } from "@shopify/react-native-skia";
+import { useMemo } from "react";
+import { ActivityIndicator, Text, View } from "react-native";
+import { CartesianChart, Line, Area, AreaRange, useChartPressState } from "victory-native";
+
+import { AXIS_LABEL_COLOR, GRID_COLOR, axisFont } from "./chartTheme";
 
 const FONT = axisFont(12);
 
@@ -49,26 +44,18 @@ export function WeatherChart({
   labels,
   series,
   band,
-  bandColor = '#fbbf24',
-  unit = '',
+  bandColor = "#fbbf24",
   loading = false,
   height = 320,
-  emptyText = 'No data for this period',
+  emptyText = "No data for this period",
 }: WeatherChartProps) {
   const isBand = !!band && band.avg.length > 0;
-  const clean = useMemo(
-    () => (series || []).filter((s) => s.data && s.data.length > 0),
-    [series],
-  );
+  const clean = useMemo(() => (series || []).filter((s) => s.data && s.data.length > 0), [series]);
 
-  const allValues = isBand
-    ? [...band!.min, ...band!.max]
-    : clean.flatMap((s) => s.data);
+  const allValues = isBand ? [...band!.min, ...band!.max] : clean.flatMap((s) => s.data);
   const { min: yMin, max: yMax, range } = weatherYDomain(allValues);
 
-  const yKeys = isBand
-    ? (['min', 'max', 'avg'] as const)
-    : clean.map((_, i) => `s${i}` as const);
+  const yKeys = isBand ? (["min", "max", "avg"] as const) : clean.map((_, i) => `s${i}` as const);
 
   const rows = useMemo<Record<string, number>[]>(() => {
     if (isBand) {
@@ -89,7 +76,7 @@ export function WeatherChart({
   }, [isBand, labels, band, clean]);
 
   // Press state keyed on the avg (band) or first series for the crosshair.
-  const pressKey = isBand ? 'avg' : 's0';
+  const pressKey = isBand ? "avg" : "s0";
   const { state, isActive } = useChartPressState({ x: 0, y: { [pressKey]: 0 } });
 
   const hasData = isBand ? band!.avg.length > 0 : clean.length > 0 && rows.length > 0;
@@ -105,9 +92,7 @@ export function WeatherChart({
   if (!hasData) {
     return (
       <View style={{ height }} className="items-center justify-center">
-        <Text className="text-sm font-semibold text-text-muted">
-          {emptyText}
-        </Text>
+        <Text className="text-sm font-semibold text-text-muted">{emptyText}</Text>
       </View>
     );
   }
@@ -126,7 +111,7 @@ export function WeatherChart({
           lineColor: GRID_COLOR,
           labelColor: AXIS_LABEL_COLOR,
           tickCount: { x: Math.min(7, labels.length), y: 5 },
-          formatXLabel: (i) => labels[Math.round(Number(i))] ?? '',
+          formatXLabel: (i) => labels[Math.round(Number(i))] ?? "",
           formatYLabel: (v) => formatMetric(Number(v), range),
         }}
       >
@@ -141,12 +126,7 @@ export function WeatherChart({
                   color={bandColor}
                   opacity={0.16}
                 />
-                <Line
-                  points={points.avg}
-                  color={bandColor}
-                  strokeWidth={2.6}
-                  curveType="natural"
-                />
+                <Line points={points.avg} color={bandColor} strokeWidth={2.6} curveType="natural" />
                 {isActive && state.y[pressKey] ? (
                   <Circle
                     cx={state.x.position}
@@ -196,7 +176,7 @@ export function WeatherChart({
                   cx={state.x.position}
                   cy={state.y[pressKey].position}
                   r={5}
-                  color={clean[0]?.color ?? '#fbbf24'}
+                  color={clean[0]?.color ?? "#fbbf24"}
                 />
               ) : null}
             </>

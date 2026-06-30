@@ -1,7 +1,7 @@
 // Pure Growatt chart-math helpers (ported verbatim from mobile src/utils/growattApiHelpers.ts).
 // No platform imports — safe for web (Next.js) and native (Expo).
-import { MONTH_ABBR, WEEKDAY_ABBR } from '../constants';
-import type { SolarMetrics } from '../types/solar';
+import { MONTH_ABBR, WEEKDAY_ABBR } from "../constants";
+import type { SolarMetrics } from "../types/solar";
 
 /**
  * Clean and filter power data to handle null/undefined values
@@ -22,9 +22,7 @@ export function generateTimeLabels(): string[] {
   const labels = [];
   for (let hour = 0; hour < 24; hour++) {
     for (let minute = 0; minute < 60; minute += 5) {
-      labels.push(
-        `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-      );
+      labels.push(`${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`);
     }
   }
   return labels;
@@ -37,25 +35,21 @@ export function generateTimeLabels(): string[] {
 export function optimizeChartData(
   powerValues: number[],
   labels: string[],
-  timespan: string
+  timespan: string,
 ): { data: number[]; labels: string[] } {
   // Find the range of meaningful data (where power > 5W to avoid noise)
   const meaningfulThreshold = 5; // Watts
-  const firstMeaningfulIndex = powerValues.findIndex(
-    (value) => value > meaningfulThreshold
-  );
+  const firstMeaningfulIndex = powerValues.findIndex((value) => value > meaningfulThreshold);
   const lastMeaningfulIndex = powerValues
     .slice()
     .reverse()
     .findIndex((value) => value > meaningfulThreshold);
   const actualLastIndex =
-    lastMeaningfulIndex >= 0
-      ? powerValues.length - 1 - lastMeaningfulIndex
-      : -1;
+    lastMeaningfulIndex >= 0 ? powerValues.length - 1 - lastMeaningfulIndex : -1;
 
   if (firstMeaningfulIndex === -1 || actualLastIndex === -1) {
     // No meaningful data found
-    return { data: [0], labels: ['No Data'] };
+    return { data: [0], labels: ["No Data"] };
   }
 
   // Extract the meaningful range with minimal padding to avoid showing zeros
@@ -76,23 +70,23 @@ export function optimizeChartData(
     sampledData.push(rangedData[i]);
     // Format labels to show clean hour labels
     const label = rangedLabels[i];
-    const [hour, minute] = label.split(':');
+    const [hour, minute] = label.split(":");
 
     // For hourly view, only show full hours
-    if (timespan === 'hourly') {
-      if (minute === '00') {
+    if (timespan === "hourly") {
+      if (minute === "00") {
         sampledLabels.push(`${hour}:00`);
       } else {
         // Round to nearest hour for cleaner display
         const hourNum = parseInt(hour);
-        const displayHour = minute >= '30' ? hourNum + 1 : hourNum;
-        sampledLabels.push(`${displayHour.toString().padStart(2, '0')}:00`);
+        const displayHour = minute >= "30" ? hourNum + 1 : hourNum;
+        sampledLabels.push(`${displayHour.toString().padStart(2, "0")}:00`);
       }
     } else {
       // For other timespans, show hour:minute as before
-      if (minute === '00') {
+      if (minute === "00") {
         sampledLabels.push(`${hour}:00`);
-      } else if (minute === '30' && samplingInterval <= 6) {
+      } else if (minute === "30" && samplingInterval <= 6) {
         sampledLabels.push(`${hour}:30`);
       } else {
         sampledLabels.push(label);
@@ -115,11 +109,10 @@ export function calculateMetrics(
   pricePerKwh: number = 1,
   totalGenerationFromApi?: number,
   todayGenerationFromApi?: number,
-  monthGenerationFromApi?: number
+  monthGenerationFromApi?: number,
 ): SolarMetrics {
   // Sum power values and convert to kWh (5-minute intervals, so divide by 12 for hourly average)
-  const totalGenerationWh =
-    powerValues.reduce((sum, value) => sum + value, 0) / 12;
+  const totalGenerationWh = powerValues.reduce((sum, value) => sum + value, 0) / 12;
   const calculatedTodayGenerationKwh = totalGenerationWh / 1000;
 
   // Use API values if provided, otherwise fall back to calculated values
@@ -128,20 +121,16 @@ export function calculateMetrics(
 
   // Determine what to show based on timespan
   switch (timespan) {
-    case 'monthly':
+    case "monthly":
       // For monthly view, show month generation as "today" and total as "total"
-      finalTodayGeneration =
-        monthGenerationFromApi ?? calculatedTodayGenerationKwh;
-      finalTotalGeneration =
-        totalGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTodayGeneration = monthGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTotalGeneration = totalGenerationFromApi ?? calculatedTodayGenerationKwh;
       break;
-    case 'hourly':
+    case "hourly":
     default:
       // For hourly view, show today's generation and total
-      finalTodayGeneration =
-        todayGenerationFromApi ?? calculatedTodayGenerationKwh;
-      finalTotalGeneration =
-        totalGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTodayGeneration = todayGenerationFromApi ?? calculatedTodayGenerationKwh;
+      finalTotalGeneration = totalGenerationFromApi ?? calculatedTodayGenerationKwh;
       break;
   }
 
@@ -162,12 +151,12 @@ export function calculateMetrics(
 export function buildAggregatedLabels(
   timespan: string,
   count: number,
-  dayLabels?: string[]
+  dayLabels?: string[],
 ): string[] {
-  if (timespan === 'weekly') {
+  if (timespan === "weekly") {
     if (dayLabels && dayLabels.length) {
       return dayLabels.map((d) => {
-        const [year, month, day] = d.split('-').map(Number);
+        const [year, month, day] = d.split("-").map(Number);
         const date = new Date(year, (month || 1) - 1, day || 1);
         return WEEKDAY_ABBR[date.getDay()] ?? d;
       });
@@ -175,11 +164,11 @@ export function buildAggregatedLabels(
     return Array.from({ length: count }, (_, i) => `Day ${i + 1}`);
   }
 
-  if (timespan === 'yearly') {
+  if (timespan === "yearly") {
     return Array.from({ length: count }, (_, i) => MONTH_ABBR[i] ?? `${i + 1}`);
   }
 
-  if (timespan === 'total') {
+  if (timespan === "total") {
     // One label per year, ending on the current year (e.g. 2022..2026).
     const endYear = new Date().getFullYear();
     return Array.from({ length: count }, (_, i) => `${endYear - (count - 1) + i}`);

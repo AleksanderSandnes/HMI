@@ -1,8 +1,9 @@
-import { ActivityIndicator, Text, View } from 'react-native';
-import { CartesianChart, Line, Area, Bar } from 'victory-native';
-import { Circle, LinearGradient, vec } from '@shopify/react-native-skia';
-import { formatNum, barGapPercent, type SimpleChartData } from '@hmi/core';
-import { AXIS_LABEL_COLOR, GRID_COLOR, axisFont } from './chartTheme';
+import { formatNum, barGapPercent, type SimpleChartData } from "@hmi/core";
+import { Circle, LinearGradient, vec } from "@shopify/react-native-skia";
+import { ActivityIndicator, Text, View } from "react-native";
+import { CartesianChart, Line, Area, Bar } from "victory-native";
+
+import { AXIS_LABEL_COLOR, GRID_COLOR, axisFont } from "./chartTheme";
 
 const FONT = axisFont(12);
 
@@ -19,15 +20,10 @@ interface SolarChartProps {
  * rounded gradient bars with the peak bar highlighted (a second Bar layer whose
  * non-peak points are flattened to the axis, mirroring web's per-bar Cell color).
  */
-export function SolarChart({
-  data,
-  timespan,
-  loading = false,
-  height = 300,
-}: SolarChartProps) {
+export function SolarChart({ data, timespan, loading = false, height = 300 }: SolarChartProps) {
   const values = data?.datasets?.[0]?.data ?? [];
   const labels = data?.labels ?? [];
-  const isArea = timespan === 'hourly';
+  const isArea = timespan === "hourly";
 
   if (loading) {
     return (
@@ -58,17 +54,15 @@ export function SolarChart({
       <CartesianChart
         data={rows}
         xKey="x"
-        yKeys={['value']}
+        yKeys={["value"]}
         domain={{ y: [0, yMax] }}
-        domainPadding={
-          isArea ? { left: 8, right: 8, top: 22 } : { left: 16, right: 16, top: 22 }
-        }
+        domainPadding={isArea ? { left: 8, right: 8, top: 22 } : { left: 16, right: 16, top: 22 }}
         axisOptions={{
           font: FONT,
           lineColor: GRID_COLOR,
           labelColor: AXIS_LABEL_COLOR,
           tickCount: { x: Math.min(6, values.length), y: 5 },
-          formatXLabel: (i) => labels[Math.round(Number(i))] ?? '',
+          formatXLabel: (i) => labels[Math.round(Number(i))] ?? "",
           formatYLabel: (v) => formatNum(Number(v)),
         }}
       >
@@ -77,18 +71,14 @@ export function SolarChart({
             const peak = points.value[peakIndex];
             return (
               <>
-                <Area
-                  points={points.value}
-                  y0={chartBounds.bottom}
-                  curveType="natural"
-                >
+                <Area points={points.value} y0={chartBounds.bottom} curveType="natural">
                   <LinearGradient
                     start={vec(0, chartBounds.top)}
                     end={vec(0, chartBounds.bottom)}
                     colors={[
-                      'rgba(52,211,153,0.55)',
-                      'rgba(16,185,129,0.10)',
-                      'rgba(16,185,129,0)',
+                      "rgba(52,211,153,0.55)",
+                      "rgba(16,185,129,0.10)",
+                      "rgba(16,185,129,0)",
                     ]}
                   />
                 </Area>
@@ -96,17 +86,12 @@ export function SolarChart({
                   <LinearGradient
                     start={vec(chartBounds.left, 0)}
                     end={vec(chartBounds.right, 0)}
-                    colors={['#34d399', '#818cf8']}
+                    colors={["#34d399", "#818cf8"]}
                   />
                 </Line>
                 {peak?.y != null ? (
                   <>
-                    <Circle
-                      cx={peak.x}
-                      cy={peak.y}
-                      r={9}
-                      color="rgba(245,158,11,0.18)"
-                    />
+                    <Circle cx={peak.x} cy={peak.y} r={9} color="rgba(245,158,11,0.18)" />
                     <Circle cx={peak.x} cy={peak.y} r={4.5} color="#fbbf24" />
                   </>
                 ) : null}
@@ -129,7 +114,7 @@ export function SolarChart({
                 <LinearGradient
                   start={vec(0, chartBounds.top)}
                   end={vec(0, chartBounds.bottom)}
-                  colors={['rgba(129,140,248,0.95)', 'rgba(99,102,241,0.65)']}
+                  colors={["rgba(129,140,248,0.95)", "rgba(99,102,241,0.65)"]}
                 />
               </Bar>
               <Bar
@@ -141,7 +126,7 @@ export function SolarChart({
                 <LinearGradient
                   start={vec(0, chartBounds.top)}
                   end={vec(0, chartBounds.bottom)}
-                  colors={['#fbbf24', '#f59e0b']}
+                  colors={["#fbbf24", "#f59e0b"]}
                 />
               </Bar>
             </>

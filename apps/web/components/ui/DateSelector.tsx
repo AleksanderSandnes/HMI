@@ -1,9 +1,11 @@
 "use client";
 
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+import { GlassCard } from "./GlassCard";
+
 import {
   buildMonthGrid,
   nextZoomView,
@@ -14,16 +16,36 @@ import {
   yearBlockStart,
   type CalendarView as View,
 } from "@/lib/date";
-import { GlassCard } from "./GlassCard";
+import { cn } from "@/lib/utils";
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 const MONTHS_SHORT = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
 const POPOVER_W = 300;
@@ -64,7 +86,7 @@ export function DateSelector({
     const margin = 8;
     const left = Math.min(
       Math.max(rect.left + rect.width / 2, half + margin),
-      window.innerWidth - half - margin
+      window.innerWidth - half - margin,
     );
     const up = window.innerHeight - rect.bottom < POPOVER_H;
     const top = up ? rect.top - 10 : rect.bottom + 10;
@@ -168,7 +190,7 @@ export function DateSelector({
                     : inMonth
                       ? "text-text-primary hover:bg-glass-fill-strong"
                       : "text-text-muted/50 hover:bg-glass-fill",
-                  !isSelected && isToday && "ring-1 ring-solar-light/60"
+                  !isSelected && isToday && "ring-1 ring-solar-light/60",
                 )}
               >
                 {d.getDate()}
@@ -194,7 +216,7 @@ export function DateSelector({
                 "flex h-11 items-center justify-center rounded-[var(--radius-md)] text-[13px] font-bold transition",
                 isSel
                   ? "bg-solar-light text-text-inverse"
-                  : "text-text-primary hover:bg-glass-fill-strong"
+                  : "text-text-primary hover:bg-glass-fill-strong",
               )}
             >
               {mo}
@@ -218,7 +240,7 @@ export function DateSelector({
                 "flex h-11 items-center justify-center rounded-[var(--radius-md)] text-[13px] font-bold transition",
                 isSel
                   ? "bg-solar-light text-text-inverse"
-                  : "text-text-primary hover:bg-glass-fill-strong"
+                  : "text-text-primary hover:bg-glass-fill-strong",
               )}
             >
               {yr}
@@ -259,9 +281,7 @@ export function DateSelector({
                 className="flex flex-1 items-center justify-center gap-1 rounded-[var(--radius-sm)] py-1 text-sm font-extrabold text-text-primary transition hover:bg-glass-fill"
               >
                 {headerLabel}
-                {view !== "year" ? (
-                  <ChevronDown size={13} className="text-text-muted" />
-                ) : null}
+                {view !== "year" ? <ChevronDown size={13} className="text-text-muted" /> : null}
               </button>
               <button
                 type="button"
@@ -274,7 +294,7 @@ export function DateSelector({
             </div>
             {body}
           </div>,
-          document.body
+          document.body,
         )
       : null;
 

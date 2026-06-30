@@ -1,19 +1,19 @@
 // Optimal endpoint mapping based on Weather.com API documentation
 const PWS_ENDPOINTS = {
   // Current weather - most accurate real-time data
-  CURRENT: '/observations/current',
+  CURRENT: "/observations/current",
 
   // Hourly data - best for same-day hourly breakdown
-  HOURLY: '/history/hourly',
+  HOURLY: "/history/hourly",
 
   // Daily historical - best for specific date all observations
-  DAILY_ALL: '/history/all',
+  DAILY_ALL: "/history/all",
 
   // Recent observations - best for recent 24-48 hour data
-  RECENT_DAY: '/observations/all/1day',
+  RECENT_DAY: "/observations/all/1day",
 
   // Daily summaries - best for weekly/monthly aggregate data
-  DAILY_SUMMARY: '/dailysummary/7day',
+  DAILY_SUMMARY: "/dailysummary/7day",
 
   // NOTE: /observations/hourly/7day endpoint appears unreliable
   // Using /dailysummary/7day instead for weekly data
@@ -21,9 +21,10 @@ const PWS_ENDPOINTS = {
 
 // Format a Date as YYYYMMDD using local time (matches the frontend's date format).
 const toYyyyMmDd = (d) =>
-  `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(
-    d.getDate()
-  ).padStart(2, '0')}`;
+  `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(
+    2,
+    "0",
+  )}`;
 
 const getSelectedDateParts = (selectedDate) => {
   // Parse YYYYMMDD format correctly
@@ -45,7 +46,7 @@ const getWeekDatesFromDateParts = (year, month, day) => {
   for (let i = 0; i < 7; i++) {
     const weekDate = new Date(startDate);
     weekDate.setDate(startDate.getDate() + i);
-    const formattedDate = `${weekDate.getFullYear()}${String(weekDate.getMonth() + 1).padStart(2, '0')}${String(weekDate.getDate()).padStart(2, '0')}`;
+    const formattedDate = `${weekDate.getFullYear()}${String(weekDate.getMonth() + 1).padStart(2, "0")}${String(weekDate.getDate()).padStart(2, "0")}`;
     weekDates.push(formattedDate);
   }
 
@@ -60,35 +61,35 @@ const getWeekDatesForSelectedDate = (selectedDate) => {
 // Utility function to get the best endpoint for a given time range
 const getOptimalEndpointForTimeRange = (timeRange, date) => {
   switch (timeRange.toLowerCase()) {
-    case 'hourly':
+    case "hourly":
       return {
         endpoint: PWS_ENDPOINTS.HOURLY,
         params: { date },
-        description: 'Hourly historical data for specific date',
+        description: "Hourly historical data for specific date",
       };
-    case 'weekly':
+    case "weekly":
       return {
         endpoint: PWS_ENDPOINTS.DAILY_SUMMARY,
         params: {},
-        description: '7-day daily summary (best available for weekly view)',
+        description: "7-day daily summary (best available for weekly view)",
       };
-    case 'current':
+    case "current":
       return {
         endpoint: PWS_ENDPOINTS.CURRENT,
         params: {},
-        description: 'Current weather observations',
+        description: "Current weather observations",
       };
-    case 'recent':
+    case "recent":
       return {
         endpoint: PWS_ENDPOINTS.RECENT_DAY,
         params: {},
-        description: 'Recent 24-hour observations',
+        description: "Recent 24-hour observations",
       };
     default:
       return {
         endpoint: PWS_ENDPOINTS.DAILY_ALL,
         params: { date },
-        description: 'Default: All observations for specific date',
+        description: "Default: All observations for specific date",
       };
   }
 };

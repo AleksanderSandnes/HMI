@@ -1,7 +1,8 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { cn } from '../../lib/cn';
-import { GRADIENTS } from '../../lib/gradients';
+import { LinearGradient } from "expo-linear-gradient";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+
+import { cn } from "../../lib/cn";
+import { GRADIENTS } from "../../lib/gradients";
 
 export interface SegmentOption {
   label: string;
@@ -9,11 +10,11 @@ export interface SegmentOption {
 }
 
 const DEFAULT_OPTIONS: SegmentOption[] = [
-  { label: 'Hourly', value: 'hourly' },
-  { label: 'Weekly', value: 'weekly' },
-  { label: 'Monthly', value: 'monthly' },
-  { label: 'Yearly', value: 'yearly' },
-  { label: '5-Year', value: 'total' },
+  { label: "Hourly", value: "hourly" },
+  { label: "Weekly", value: "weekly" },
+  { label: "Monthly", value: "monthly" },
+  { label: "Yearly", value: "yearly" },
+  { label: "5-Year", value: "total" },
 ];
 
 /**
@@ -51,10 +52,8 @@ export function SegmentedControl({
             ) : null}
             <Text
               className={cn(
-                'text-[13px]',
-                active
-                  ? 'font-extrabold text-text-inverse'
-                  : 'font-semibold text-text-muted',
+                "text-[13px]",
+                active ? "font-extrabold text-text-inverse" : "font-semibold text-text-muted",
               )}
             >
               {opt.label}

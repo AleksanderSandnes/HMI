@@ -2,10 +2,7 @@ import { CheckCircle2, Info, AlertCircle, type LucideIcon } from "lucide-react";
 
 type Kind = "success" | "error" | "info" | "warning";
 
-const CONFIG: Record<
-  Kind,
-  { className: string; icon: LucideIcon }
-> = {
+const CONFIG: Record<Kind, { className: string; icon: LucideIcon }> = {
   success: {
     className: "border-[rgba(52,211,153,0.33)] bg-[rgba(52,211,153,0.12)] text-positive",
     icon: CheckCircle2,
@@ -32,9 +29,7 @@ export function StatusBanner({ kind, message }: { kind: Kind; message: string })
       className={`mb-3.5 flex items-center gap-2.5 rounded-[var(--radius-sm)] border px-3.5 py-2.5 ${className}`}
     >
       <Icon size={14} className="shrink-0" />
-      <span className="flex-1 text-[13px] font-bold leading-[17px]">
-        {message}
-      </span>
+      <span className="flex-1 text-[13px] font-bold leading-[17px]">{message}</span>
     </div>
   );
 }

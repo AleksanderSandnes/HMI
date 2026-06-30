@@ -1,20 +1,21 @@
-import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery } from '@tanstack/react-query';
 import {
   chartSubtitle,
   toISO,
   type SimpleChartData,
   type SolarData,
   type SolarTimespan,
-} from '@hmi/core';
-import { useCore } from '../../src/lib/useCore';
-import { PageHeader } from '../../src/components/PageHeader';
-import { GlassCard } from '../../src/components/ui/GlassCard';
-import { SegmentedControl } from '../../src/components/ui/SegmentedControl';
-import { DateSelector } from '../../src/components/ui/DateSelector';
-import { SolarChart } from '../../src/components/charts';
+} from "@hmi/core";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { PageHeader } from "../../src/components/PageHeader";
+import { SolarChart } from "../../src/components/charts";
+import { DateSelector } from "../../src/components/ui/DateSelector";
+import { GlassCard } from "../../src/components/ui/GlassCard";
+import { SegmentedControl } from "../../src/components/ui/SegmentedControl";
+import { useCore } from "../../src/lib/useCore";
 
 const EMPTY: SimpleChartData = { labels: [], datasets: [{ data: [] }] };
 
@@ -24,18 +25,18 @@ export default function Solar() {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const [timespan, setTimespan] = useState('hourly');
+  const [timespan, setTimespan] = useState("hourly");
   const [pickerDate, setPickerDate] = useState(toISO(yesterday));
 
   const { data: solar, isLoading } = useQuery<SolarData>({
-    queryKey: ['solar', timespan, pickerDate],
+    queryKey: ["solar", timespan, pickerDate],
     queryFn: () => growatt.fetchSolarData(timespan as SolarTimespan, pickerDate),
   });
 
   const chartData = solar?.chartData ?? EMPTY;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
       <ScrollView contentContainerClassName="gap-4 p-4">
         <PageHeader
           title="Solar Production"
@@ -51,9 +52,7 @@ export default function Solar() {
 
         <GlassCard strong elevated className="p-[18px]">
           <View className="mb-3">
-            <Text className="text-[19px] font-extrabold text-text-primary">
-              Power Generation
-            </Text>
+            <Text className="text-[19px] font-extrabold text-text-primary">Power Generation</Text>
             <Text className="mt-0.5 text-[13px] font-medium text-text-muted">
               {chartSubtitle(timespan, pickerDate)}
             </Text>

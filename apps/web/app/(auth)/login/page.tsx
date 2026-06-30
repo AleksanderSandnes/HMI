@@ -1,16 +1,17 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { loginSchema } from "@hmi/core";
 import { Formik } from "formik";
 import { ArrowRight, Lock, Mail, Zap } from "lucide-react";
-import { loginSchema } from "@hmi/core";
-import { useCore } from "@/lib/hooks/useCore";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { Field } from "@/components/ui/Field";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+
 import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBanner } from "@/components/ui/StatusBanner";
+import { useCore } from "@/lib/hooks/useCore";
 
 function LoginForm() {
   const { auth } = useCore();
@@ -48,22 +49,14 @@ function LoginForm() {
             setError(
               e instanceof Error
                 ? e.message
-                : "Login failed. Check your credentials and try again."
+                : "Login failed. Check your credentials and try again.",
             );
           } finally {
             setSubmitting(false);
           }
         }}
       >
-        {({
-          values,
-          errors,
-          touched,
-          handleChange,
-          handleBlur,
-          handleSubmit,
-          isSubmitting,
-        }) => (
+        {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
           <form onSubmit={handleSubmit} noValidate>
             <Field
               label="EMAIL ADDRESS"
@@ -103,13 +96,8 @@ function LoginForm() {
       </Formik>
 
       <div className="mt-6 flex items-center justify-center gap-1.5 border-t border-glass-border pt-5">
-        <span className="text-sm font-medium text-text-muted">
-          Don&apos;t have an account?
-        </span>
-        <Link
-          href="/register"
-          className="text-sm font-extrabold text-solar-light"
-        >
+        <span className="text-sm font-medium text-text-muted">Don&apos;t have an account?</span>
+        <Link href="/register" className="text-sm font-extrabold text-solar-light">
           Create one
         </Link>
       </div>

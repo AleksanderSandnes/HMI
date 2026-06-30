@@ -1,7 +1,7 @@
-const asyncHandler = require('express-async-handler');
-const mongoose = require('mongoose');
-const Notification = require('../models/Notification');
-const User = require('../models/User');
+const asyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
+const Notification = require("../models/Notification");
+const User = require("../models/User");
 
 const notificationController = {
   // List the current user's notifications, newest first.
@@ -37,7 +37,7 @@ const notificationController = {
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400);
-      throw new Error('Invalid notification id');
+      throw new Error("Invalid notification id");
     }
 
     const deleted = await Notification.findOneAndDelete({
@@ -47,7 +47,7 @@ const notificationController = {
 
     if (!deleted) {
       res.status(404);
-      throw new Error('Notification not found');
+      throw new Error("Notification not found");
     }
 
     res.json({ success: true, id });
@@ -63,9 +63,9 @@ const notificationController = {
   registerPushToken: asyncHandler(async (req, res) => {
     const { token } = req.body;
 
-    if (!token || typeof token !== 'string') {
+    if (!token || typeof token !== "string") {
       res.status(400);
-      throw new Error('A push token string is required');
+      throw new Error("A push token string is required");
     }
 
     // addToSet avoids duplicate tokens across re-registrations.
@@ -80,9 +80,9 @@ const notificationController = {
   removePushToken: asyncHandler(async (req, res) => {
     const { token } = req.body;
 
-    if (!token || typeof token !== 'string') {
+    if (!token || typeof token !== "string") {
       res.status(400);
-      throw new Error('A push token string is required');
+      throw new Error("A push token string is required");
     }
 
     await User.findByIdAndUpdate(req.user, {

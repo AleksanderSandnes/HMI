@@ -1,5 +1,5 @@
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
 
 // Standard bottom tabs for now. Phase 5 rebuilds this as the responsive
 // bottom-bar (phone) / left-sidebar (tablet) navigation with nav-stats.
@@ -8,19 +8,19 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#f59e0b',
-        tabBarInactiveTintColor: '#71809a',
+        tabBarActiveTintColor: "#f59e0b",
+        tabBarInactiveTintColor: "#71809a",
         tabBarStyle: {
-          backgroundColor: '#0a1124',
-          borderTopColor: 'rgba(255,255,255,0.09)',
+          backgroundColor: "#0a1124",
+          borderTopColor: "rgba(255,255,255,0.09)",
         },
-        sceneStyle: { backgroundColor: '#070b16' },
+        sceneStyle: { backgroundColor: "#070b16" },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
+          title: "Dashboard",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="grid-outline" color={color} size={size} />
           ),
@@ -29,7 +29,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="solar"
         options={{
-          title: 'Solar',
+          title: "Solar",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="sunny-outline" color={color} size={size} />
           ),
@@ -38,7 +38,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="weather"
         options={{
-          title: 'Weather',
+          title: "Weather",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="partly-sunny-outline" color={color} size={size} />
           ),
@@ -47,7 +47,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="notifications"
         options={{
-          title: 'Alerts',
+          title: "Alerts",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="notifications-outline" color={color} size={size} />
           ),
@@ -56,7 +56,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: "Settings",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" color={color} size={size} />
           ),

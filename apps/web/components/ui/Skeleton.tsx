@@ -4,10 +4,7 @@ import { cn } from "@/lib/utils";
 export function Skeleton({ className }: { className?: string }) {
   return (
     <div
-      className={cn(
-        "animate-pulse rounded-[var(--radius-sm)] bg-glass-fill-strong",
-        className
-      )}
+      className={cn("animate-pulse rounded-[var(--radius-sm)] bg-glass-fill-strong", className)}
     />
   );
 }

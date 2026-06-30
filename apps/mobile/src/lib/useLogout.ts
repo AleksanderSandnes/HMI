@@ -1,7 +1,9 @@
-import { useCallback } from 'react';
-import { useAuth } from './auth';
-import { useCore } from './useCore';
-import { unregisterPushOnLogout } from '../services/pushNotifications';
+import { useCallback } from "react";
+
+import { unregisterPushOnLogout } from "../services/pushNotifications";
+
+import { useAuth } from "./auth";
+import { useCore } from "./useCore";
 
 /**
  * Sign out, first removing this device's Expo push token from the backend while the

@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
   chartSubtitle,
   formatPeak,
@@ -10,13 +8,16 @@ import {
   toISO,
   type SolarData,
 } from "@hmi/core";
-import { useCore } from "@/lib/hooks/useCore";
-import { useNavStats } from "@/lib/nav-stats";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+
+import { PageHeader } from "@/components/PageHeader";
+import { SolarChart } from "@/components/charts/SolarChart";
+import { DateSelector } from "@/components/ui/DateSelector";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { DateSelector } from "@/components/ui/DateSelector";
-import { SolarChart } from "@/components/charts/SolarChart";
-import { PageHeader } from "@/components/PageHeader";
+import { useCore } from "@/lib/hooks/useCore";
+import { useNavStats } from "@/lib/nav-stats";
 
 const ZERO = {
   todayGeneration: 0,
@@ -75,9 +76,7 @@ export default function SolarPage() {
       <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[22px]">
         <div className="mb-[18px] flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-[19px] font-extrabold text-text-primary">
-              Power Generation
-            </h2>
+            <h2 className="text-[19px] font-extrabold text-text-primary">Power Generation</h2>
             <p className="mt-0.5 text-[13px] font-medium text-text-muted">
               {chartSubtitle(timespan, pickerDate)}
             </p>

@@ -1,22 +1,18 @@
 // Weather API — cached history from Supabase (PostgREST, RLS-scoped) with an Edge
 // Function fallback; current conditions via the weather-current Edge Function.
 // Ported from mobile src/services/weatherApiService.ts.
-import type { CoreApiContext } from './context';
+import type { CoreApiContext } from "./context";
 
 function toYmd(d: Date): string {
   return (
     `${d.getFullYear()}` +
-    `${String(d.getMonth() + 1).padStart(2, '0')}` +
-    `${String(d.getDate()).padStart(2, '0')}`
+    `${String(d.getMonth() + 1).padStart(2, "0")}` +
+    `${String(d.getDate()).padStart(2, "0")}`
   );
 }
 
 function parseYmd(s: string): Date {
-  return new Date(
-    Number(s.slice(0, 4)),
-    Number(s.slice(4, 6)) - 1,
-    Number(s.slice(6, 8))
-  );
+  return new Date(Number(s.slice(0, 4)), Number(s.slice(4, 6)) - 1, Number(s.slice(6, 8)));
 }
 
 /** The 7 YYYYMMDD dates (oldest first) ending on `end` (or today). */
@@ -37,23 +33,22 @@ export function createWeatherApi(ctx: CoreApiContext) {
   /** Hourly observations for one day: cache first (PostgREST), then the Edge Function. */
   async function readDay(date: string): Promise<any[]> {
     const { data } = await supabase
-      .from('weather_historical')
-      .select('observations')
-      .eq('date', date)
+      .from("weather_historical")
+      .select("observations")
+      .eq("date", date)
       .maybeSingle();
     if (data?.observations) return data.observations;
 
-    const { data: fn, error } = await supabase.functions.invoke(
-      'weather-history',
-      { body: { date } }
-    );
+    const { data: fn, error } = await supabase.functions.invoke("weather-history", {
+      body: { date },
+    });
     if (error) return [];
     return fn?.observations ?? [];
   }
 
   /** Current conditions (live via Edge Function). */
   async function getCurrentWeatherData(): Promise<any> {
-    const { data, error } = await supabase.functions.invoke('weather-current');
+    const { data, error } = await supabase.functions.invoke("weather-current");
     if (error) throw new Error(error.message);
     return data;
   }
@@ -79,10 +74,7 @@ export function createWeatherApi(ctx: CoreApiContext) {
   }
 
   /** Hourly observations across the week ending on `startDate`. */
-  async function getWeeklyHourlyWeatherData(
-    startDate: string,
-    _endDate?: string
-  ): Promise<any> {
+  async function getWeeklyHourlyWeatherData(startDate: string, _endDate?: string): Promise<any> {
     const dates = weekDatesEnding(startDate);
     let observations: any[] = [];
     for (const d of dates) {

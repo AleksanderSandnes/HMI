@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   createAccountApi,
   createAuthApi,
@@ -7,9 +6,11 @@ import {
   createNotificationsApi,
   createSettingsApi,
   createWeatherApi,
-} from '@hmi/core';
-import { supabase } from './supabase';
-import { coreContext } from './context';
+} from "@hmi/core";
+import { useMemo } from "react";
+
+import { coreContext } from "./context";
+import { supabase } from "./supabase";
 
 /**
  * Accessor for the @hmi/core API factories, wired to the mobile Supabase client.

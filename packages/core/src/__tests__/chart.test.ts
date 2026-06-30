@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { weatherYDomain, barGapPercent } from "../utils/chart";
 
 describe("weatherYDomain", () => {

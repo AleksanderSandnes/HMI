@@ -1,7 +1,9 @@
 import { ArrowDown, ArrowUp, type LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 import { GlassCard } from "./GlassCard";
 import { Skeleton } from "./Skeleton";
+
+import { cn } from "@/lib/utils";
 
 export type StatGradient = "energy" | "revenue" | "solar" | "co2" | "accent";
 
@@ -62,13 +64,11 @@ export function StatTile({
               "flex items-center gap-1 rounded-[var(--radius-pill)] px-2.5 py-1",
               positive
                 ? "bg-[rgba(52,211,153,0.13)] text-positive"
-                : "bg-[rgba(251,113,133,0.13)] text-negative"
+                : "bg-[rgba(251,113,133,0.13)] text-negative",
             )}
           >
             {positive ? <ArrowUp size={9} /> : <ArrowDown size={9} />}
-            <span className="text-xs font-extrabold">
-              {Math.abs(delta as number).toFixed(0)}%
-            </span>
+            <span className="text-xs font-extrabold">{Math.abs(delta as number).toFixed(0)}%</span>
           </div>
         ) : null}
       </div>
@@ -76,7 +76,7 @@ export function StatTile({
       <p
         className={cn(
           "font-semibold uppercase tracking-[0.3px] text-text-muted",
-          compact ? "text-[10.5px]" : "text-[12.5px]"
+          compact ? "text-[10.5px]" : "text-[12.5px]",
         )}
       >
         {label}
@@ -88,7 +88,7 @@ export function StatTile({
           <span
             className={cn(
               "font-extrabold tracking-[-0.5px] text-text-primary",
-              compact ? "text-[21px]" : "text-[26px]"
+              compact ? "text-[21px]" : "text-[26px]",
             )}
           >
             {value}
@@ -97,7 +97,7 @@ export function StatTile({
             <span
               className={cn(
                 "font-semibold text-text-secondary",
-                compact ? "text-[11px]" : "text-sm"
+                compact ? "text-[11px]" : "text-sm",
               )}
             >
               {unit}

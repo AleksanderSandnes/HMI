@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
 import { createClient } from "@/lib/supabase/server";
 
-const BACKGROUND_VIDEO_URI =
-  "https://cdn.pixabay.com/video/2023/11/13/188912-884171167_large.mp4";
+const BACKGROUND_VIDEO_URI = "https://cdn.pixabay.com/video/2023/11/13/188912-884171167_large.mp4";
 
 /** Landing page. Authenticated users go straight to the dashboard. */
 export default async function LandingPage() {
@@ -31,12 +31,8 @@ export default async function LandingPage() {
         <h1 className="text-[42px] font-extrabold leading-tight tracking-tight text-white drop-shadow-lg md:text-[68px]">
           Home Production Interface
         </h1>
-        <p className="mt-2 text-lg font-medium text-white/80 md:text-2xl">
-          Created by
-        </p>
-        <p className="text-lg font-semibold text-white md:text-2xl">
-          Aleksander Sandnes
-        </p>
+        <p className="mt-2 text-lg font-medium text-white/80 md:text-2xl">Created by</p>
+        <p className="text-lg font-semibold text-white md:text-2xl">Aleksander Sandnes</p>
         <p className="mt-4 max-w-xl text-base text-white/75 md:text-lg">
           Monitor your energy production and consumption in real-time
         </p>

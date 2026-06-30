@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, type LucideIcon } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 type Variant = "primary" | "ghost" | "danger";
@@ -13,8 +14,7 @@ const GRADIENTS: Record<Gradient, string> = {
   revenue: "linear-gradient(135deg, #fde68a 0%, #facc15 50%, #eab308 100%)",
 };
 
-interface ButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "type"> {
+interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "type"> {
   label: string;
   icon?: LucideIcon;
   variant?: Variant;
@@ -57,7 +57,7 @@ export function Button({
         variant === "danger" &&
           "border border-[rgba(251,113,133,0.35)] bg-[rgba(251,113,133,0.10)] text-negative hover:bg-[rgba(251,113,133,0.18)]",
         isDisabled && "cursor-not-allowed opacity-50",
-        className
+        className,
       )}
       {...rest}
     >

@@ -1,4 +1,4 @@
-import { usePushRegistration } from '../hooks/usePushRegistration';
+import { usePushRegistration } from "../hooks/usePushRegistration";
 
 /**
  * Headless component that registers the device's Expo push token once the user is logged

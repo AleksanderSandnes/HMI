@@ -1,26 +1,24 @@
-import { useEffect } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery } from '@tanstack/react-query';
-import { Ionicons } from '@expo/vector-icons';
-import type { NotificationItem, NotificationLevel } from '@hmi/core';
-import { useCore } from '../../src/lib/useCore';
-import { GlassCard } from '../../src/components/ui/GlassCard';
+import { Ionicons } from "@expo/vector-icons";
+import type { NotificationItem, NotificationLevel } from "@hmi/core";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const LEVEL: Record<
-  NotificationLevel,
-  { icon: keyof typeof Ionicons.glyphMap; color: string }
-> = {
-  success: { icon: 'checkmark-circle', color: '#34d399' },
-  error: { icon: 'alert-circle', color: '#fb7185' },
-  warning: { icon: 'warning', color: '#fbbf24' },
-  info: { icon: 'information-circle', color: '#818cf8' },
+import { GlassCard } from "../../src/components/ui/GlassCard";
+import { useCore } from "../../src/lib/useCore";
+
+const LEVEL: Record<NotificationLevel, { icon: keyof typeof Ionicons.glyphMap; color: string }> = {
+  success: { icon: "checkmark-circle", color: "#34d399" },
+  error: { icon: "alert-circle", color: "#fb7185" },
+  warning: { icon: "warning", color: "#fbbf24" },
+  info: { icon: "information-circle", color: "#818cf8" },
 };
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 1) return 'just now';
+  if (m < 1) return "just now";
   if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h ago`;
@@ -31,19 +29,19 @@ export default function Notifications() {
   const { notifications } = useCore();
 
   const { data, refetch, isLoading } = useQuery<NotificationItem[]>({
-    queryKey: ['notifications'],
+    queryKey: ["notifications"],
     queryFn: () => notifications.fetchNotifications(),
   });
 
   useEffect(() => {
-    const unsub = notifications.subscribeNotifications(() => refetch());
+    const unsub = notifications.subscribeNotifications(() => void refetch());
     return unsub;
   }, [notifications, refetch]);
 
   const items = data ?? [];
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
       <ScrollView contentContainerClassName="gap-4 p-4">
         <View className="flex-row items-center justify-between">
           <View className="flex-1">
@@ -51,14 +49,14 @@ export default function Notifications() {
               Notifications
             </Text>
             <Text className="mt-1 text-[14px] font-medium text-text-muted">
-              {items.length} {items.length === 1 ? 'notification' : 'notifications'}
+              {items.length} {items.length === 1 ? "notification" : "notifications"}
             </Text>
           </View>
           {items.length > 0 ? (
             <Pressable
               onPress={async () => {
                 await notifications.clearNotifications();
-                refetch();
+                void refetch();
               }}
               className="flex-row items-center gap-2 rounded-md border border-glass-border bg-glass-fill px-3.5 py-2"
             >
@@ -105,7 +103,7 @@ export default function Notifications() {
                   <Pressable
                     onPress={async () => {
                       await notifications.dismissNotification(item.id);
-                      refetch();
+                      void refetch();
                     }}
                     hitSlop={8}
                     accessibilityLabel="Dismiss"

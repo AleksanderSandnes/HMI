@@ -1,5 +1,7 @@
 "use client";
 
+import { formatNum, type SimpleChartData } from "@hmi/core";
+import { Loader2 } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -13,10 +15,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Loader2 } from "lucide-react";
-import { formatNum, type SimpleChartData } from "@hmi/core";
-import { barGapPercent } from "@/lib/chart";
+
 import { AXIS_TICK, CURSOR, GRID_STROKE } from "./chartTheme";
+
+import { barGapPercent } from "@/lib/chart";
 
 interface SolarChartProps {
   data: SimpleChartData;
@@ -48,17 +50,13 @@ export function SolarChart({
   const unit = isArea ? "W" : "kWh";
 
   const sizer = (node: React.ReactNode) =>
-    heightClass ? (
-      <div className={heightClass}>{node}</div>
-    ) : (
-      <div style={{ height }}>{node}</div>
-    );
+    heightClass ? <div className={heightClass}>{node}</div> : <div style={{ height }}>{node}</div>;
 
   if (loading) {
     return sizer(
       <div className="flex h-full w-full items-center justify-center">
         <Loader2 size={32} className="animate-spin text-solar-light" />
-      </div>
+      </div>,
     );
   }
 
@@ -66,7 +64,7 @@ export function SolarChart({
     return sizer(
       <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-text-muted">
         No production data for this period
-      </div>
+      </div>,
     );
   }
 
@@ -92,9 +90,7 @@ export function SolarChart({
             <p className="text-[15px] font-extrabold text-text-primary">
               {formatNum(Number(p.value))} {unit}
             </p>
-            <p className="mt-px text-[11px] font-semibold text-text-muted">
-              {p.payload.label}
-            </p>
+            <p className="mt-px text-[11px] font-semibold text-text-muted">{p.payload.label}</p>
           </div>
         );
       }}
@@ -132,10 +128,7 @@ export function SolarChart({
   const chart = (
     <ResponsiveContainer width="100%" height={heightClass ? "100%" : height}>
       {isArea ? (
-        <AreaChart
-          data={chartData}
-          margin={{ top: 22, right: 16, bottom: 6, left: 0 }}
-        >
+        <AreaChart data={chartData} margin={{ top: 22, right: 16, bottom: 6, left: 0 }}>
           <defs>
             <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#34d399" stopOpacity={0.55} />
@@ -214,10 +207,7 @@ export function SolarChart({
           {tooltip}
           <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={72} isAnimationActive={false}>
             {chartData.map((entry, i) => (
-              <Cell
-                key={i}
-                fill={i === peakIndex ? "url(#barPeak)" : "url(#barNormal)"}
-              />
+              <Cell key={i} fill={i === peakIndex ? "url(#barPeak)" : "url(#barNormal)"} />
             ))}
           </Bar>
         </BarChart>

@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
 import {
   Modal as RNModal,
   View,
@@ -6,14 +9,13 @@ import {
   Pressable,
   StyleSheet,
   useWindowDimensions,
-} from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { cn } from '../../lib/cn';
-import { GRADIENTS } from '../../lib/gradients';
-import { GlassCard } from './GlassCard';
-import { Calendar } from './Calendar';
+} from "react-native";
+
+import { cn } from "../../lib/cn";
+import { GRADIENTS } from "../../lib/gradients";
+
+import { Calendar } from "./Calendar";
+import { GlassCard } from "./GlassCard";
 
 interface DateSelectorProps {
   selectedDate: string;
@@ -22,42 +24,36 @@ interface DateSelectorProps {
 }
 
 const QUICK = [
-  { label: 'Today', daysAgo: 0 },
-  { label: 'Yesterday', daysAgo: 1 },
-  { label: '7d ago', daysAgo: 7 },
-  { label: '30d ago', daysAgo: 30 },
+  { label: "Today", daysAgo: 0 },
+  { label: "Yesterday", daysAgo: 1 },
+  { label: "7d ago", daysAgo: 7 },
+  { label: "30d ago", daysAgo: 30 },
 ];
 
-const toISO = (d: Date) => d.toISOString().split('T')[0];
+const toISO = (d: Date) => d.toISOString().split("T")[0];
 
-export function DateSelector({
-  selectedDate,
-  onDateSelect,
-  disabled = false,
-}: DateSelectorProps) {
+export function DateSelector({ selectedDate, onDateSelect, disabled = false }: DateSelectorProps) {
   const { width } = useWindowDimensions();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const selectedObj = new Date(selectedDate);
 
   const relative = (() => {
-    const diff = Math.floor(
-      (Date.now() - selectedObj.getTime()) / (1000 * 60 * 60 * 24),
-    );
-    if (diff === 0) return 'Today';
-    if (diff === 1) return 'Yesterday';
+    const diff = Math.floor((Date.now() - selectedObj.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
     if (diff > 1 && diff <= 7) return `${diff} days ago`;
-    return selectedObj.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
+    return selectedObj.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
     });
   })();
 
-  const absolute = selectedObj.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  const absolute = selectedObj.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 
   const pickQuick = (daysAgo: number) => {
@@ -89,19 +85,15 @@ export function DateSelector({
               width: 44,
               height: 44,
               borderRadius: 14,
-              alignItems: 'center',
-              justifyContent: 'center',
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <Ionicons name="calendar" size={18} color="#0a1124" />
           </LinearGradient>
           <View className="flex-1">
-            <Text className="text-base font-extrabold text-text-primary">
-              {relative}
-            </Text>
-            <Text className="mt-0.5 text-[12.5px] text-text-muted">
-              {absolute}
-            </Text>
+            <Text className="text-base font-extrabold text-text-primary">{relative}</Text>
+            <Text className="mt-0.5 text-[12.5px] text-text-muted">{absolute}</Text>
           </View>
           <Ionicons name="chevron-down" size={14} color="#71809a" />
         </Pressable>
@@ -136,9 +128,7 @@ export function DateSelector({
               style={{ width: Math.min(420, width - 48) }}
             >
               <View className="mb-[18px] flex-row items-center justify-between">
-                <Text className="text-[19px] font-extrabold text-text-primary">
-                  Select date
-                </Text>
+                <Text className="text-[19px] font-extrabold text-text-primary">Select date</Text>
                 <Pressable
                   onPress={() => setSheetOpen(false)}
                   className="h-[34px] w-[34px] items-center justify-center rounded-pill border border-glass-border bg-glass-fill-strong"
@@ -158,16 +148,14 @@ export function DateSelector({
                       key={q.label}
                       onPress={() => pickQuick(q.daysAgo)}
                       className={cn(
-                        'grow basis-[40%] items-center rounded-md border py-3',
-                        act
-                          ? 'border-solar bg-solar-soft'
-                          : 'border-glass-border bg-glass-fill',
+                        "grow basis-[40%] items-center rounded-md border py-3",
+                        act ? "border-solar bg-solar-soft" : "border-glass-border bg-glass-fill",
                       )}
                     >
                       <Text
                         className={cn(
-                          'text-sm font-bold',
-                          act ? 'text-solar-light' : 'text-text-secondary',
+                          "text-sm font-bold",
+                          act ? "text-solar-light" : "text-text-secondary",
                         )}
                       >
                         {q.label}
@@ -192,9 +180,9 @@ export function DateSelector({
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
                     gap: 10,
                     paddingVertical: 15,
                   }}
