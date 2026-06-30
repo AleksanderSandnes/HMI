@@ -103,23 +103,22 @@ API) for the part Supabase can't host.
 
 ## 🚀 Local development
 
-The whole stack runs locally. Minimum to see the app working: **Supabase (local) + one of the apps**.
-Add the **Java Growatt service** when you want live solar charts.
+The whole stack can run locally. HMI needs all of its services together — **Supabase**, the **Java
+Growatt service**, and one of the **apps** (web or mobile) — so the steps below bring up the full
+stack for end-to-end use.
 
 ### Prerequisites
 
-| Tool                       | Version        | Needed for                                            |
-| -------------------------- | -------------- | ----------------------------------------------------- |
-| **Node.js**                | 22 (LTS)       | everything (web, mobile, core, tooling)               |
-| **npm**                    | 10+            | workspaces                                            |
-| **Supabase CLI**           | ≥ 2.108        | local Supabase stack (`supabase start`)               |
-| **Docker** (or Podman)     | running daemon | **required** by the local Supabase stack              |
-| **Java JDK + Maven**       | 17+            | the Growatt API (optional — only for live solar data) |
-| **Watchman** (recommended) | latest         | faster Metro file-watching for mobile                 |
+| Tool                       | Version        | Needed for                               |
+| -------------------------- | -------------- | ---------------------------------------- |
+| **Node.js**                | 22 (LTS)       | everything (web, mobile, core, tooling)  |
+| **npm**                    | 10+            | workspaces                               |
+| **Supabase CLI**           | ≥ 2.108        | local Supabase stack (`supabase start`)  |
+| **Docker** (or Podman)     | running daemon | **required** by the local Supabase stack |
+| **Java JDK + Maven**       | 17+            | the Growatt service (solar data)         |
+| **Watchman** (recommended) | latest         | faster Metro file-watching for mobile    |
 
-> 💡 The Supabase CLI is already present at `~/.local/bin/supabase`. Docker is **not** installed by
-> default on this machine — install Docker Desktop / `docker` and start the daemon before
-> `supabase start`, or the local stack won't come up.
+> 💡 Start the Docker daemon before `supabase start` — the local Supabase stack runs on Docker.
 
 ### 1. Install dependencies
 
@@ -175,8 +174,7 @@ cp apps/mobile/.env.example apps/mobile/.env
 NEXT_PUBLIC_DATA_MODE=development
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<local anon key from `supabase status`>
-# Leave blank to call the local Java service at http://localhost:8080 in dev,
-# or set https://growattapi.onrender.com to use the deployed solar backend.
+# Blank → the local Java service at http://localhost:8080 (started in step 5).
 NEXT_PUBLIC_JAVA_API=
 ```
 
@@ -193,9 +191,6 @@ EXPO_PUBLIC_JAVA_API=
 > emulator** needs `http://10.0.2.2:54321` and a **physical device** needs your machine's LAN IP
 > (e.g. `http://192.168.1.20:54321`). Adjust `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_JAVA_API`
 > accordingly.
->
-> To develop against the **hosted** Supabase project instead of a local stack, point the URL/anon-key
-> at it and keep `DATA_MODE=development`.
 
 ### 4. Run an app (development mode)
 
@@ -218,10 +213,10 @@ npm --workspace @hmi/mobile run web       # Expo web
 > Charts use Victory Native XL + Skia, which need a **dev build** (not Expo Go) — `expo-dev-client`
 > is already configured; build it once with EAS or `expo run:ios` / `expo run:android`.
 
-### 5. (Optional) Run the Growatt API for live solar data
+### 5. Run the Growatt service
 
-Auth, weather, settings, and notifications work with Supabase alone. The Java service is only needed
-for **Solar** charts. It connects to your local Supabase Postgres and validates local Supabase JWTs:
+The Java Growatt service powers the **Solar** charts. It connects to your local Supabase Postgres and
+validates local Supabase JWTs:
 
 ```bash
 cd backend/growattAPI
