@@ -3,10 +3,12 @@ package service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import controller.GrowattWebClient;
 import entity.DayResponse;
 import entity.EnergyRequest;
 import entity.IntegrationHealth;
@@ -80,13 +82,15 @@ public class SolarBackfillJob {
 		try {
 			GrowattSession session = sessionService.loginFor(user.getAuthId());
 			String plantId = session.plantId();
+			// The session is already logged in here, so the supplier just hands back its client.
+			Supplier<GrowattWebClient> client = session::client;
 
 			// Day (force-persist yesterday) + the other ranges (self-persist when completed).
-			DayResponse day = growattDataService.getDayChart(session.client(), new EnergyRequest(plantId, dayDate));
+			DayResponse day = growattDataService.getDayChart(client, new EnergyRequest(plantId, dayDate));
 			growattDataService.backfillDayChart(plantId, dayDate, day);
-			growattDataService.getWeekChart(session.client(), new EnergyRequest(plantId, dayDate));
-			growattDataService.getMonthChart(session.client(), new EnergyRequest(plantId, yesterday.format(MONTH_FMT)));
-			growattDataService.getYearChart(session.client(), new EnergyRequest(plantId, String.valueOf(yesterday.getYear())));
+			growattDataService.getWeekChart(client, new EnergyRequest(plantId, dayDate));
+			growattDataService.getMonthChart(client, new EnergyRequest(plantId, yesterday.format(MONTH_FMT)));
+			growattDataService.getYearChart(client, new EnergyRequest(plantId, String.valueOf(yesterday.getYear())));
 
 			double kwh = dayEnergyKwh(day);
 			String message = kwh > 0

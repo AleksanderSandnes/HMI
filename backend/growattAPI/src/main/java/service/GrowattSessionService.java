@@ -1,5 +1,6 @@
 package service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -24,6 +25,16 @@ public class GrowattSessionService {
 	private final UserSettingsRepository userSettingsRepository;
 	private final GrowattClientFactory clientFactory;
 
+	/**
+	 * The plant id stored in the user's settings, if any. Lets callers build the solar cache
+	 * key (and serve cache hits) without performing a Growatt login.
+	 */
+	public Optional<String> storedPlantId(UUID authId) {
+		return userSettingsRepository.findById(authId)
+				.map(UserSettings::getGrowattPlantId)
+				.filter(StringUtils::isNotBlank);
+	}
+
 	/** Log into Growatt for the given Supabase user. Throws if Growatt isn't configured. */
 	public GrowattSession loginFor(UUID authId) {
 		UserSettings settings = userSettingsRepository.findById(authId)
@@ -41,9 +52,14 @@ public class GrowattSessionService {
 		GrowattWebClient client = clientFactory.create();
 		client.login(new LoginRequest(settings.getGrowattEmail(), password));
 
-		String plantId = StringUtils.isNotBlank(settings.getGrowattPlantId())
-				? settings.getGrowattPlantId()
-				: client.getPlantId();
+		String plantId = settings.getGrowattPlantId();
+		if (StringUtils.isBlank(plantId)) {
+			// Resolve it from the login and persist so future requests skip the login on cache hits.
+			plantId = client.getPlantId();
+			if (StringUtils.isNotBlank(plantId)) {
+				userSettingsRepository.updateGrowattPlantId(authId, plantId);
+			}
+		}
 		if (StringUtils.isBlank(plantId)) {
 			throw new IllegalStateException("No plant id available after Growatt login.");
 		}

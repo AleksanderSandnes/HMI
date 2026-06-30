@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -84,12 +85,14 @@ public class GrowattDataService {
 	@Value("${growatt.cache.totalTtlMinutes:" + DEFAULT_TOTAL_TTL + "}")
 	private long totalTtlMinutes;
 
-	public DayResponse getDayChart(GrowattWebClient client, EnergyRequest request) {
-		return getOrFetch(CacheType.DAY, request, DayResponse.class, client::getInvEnergyDayChart);
+	public DayResponse getDayChart(Supplier<GrowattWebClient> client, EnergyRequest request) {
+		return getOrFetch(CacheType.DAY, request, DayResponse.class,
+				r -> client.get().getInvEnergyDayChart(r));
 	}
 
-	public MonthResponse getMonthChart(GrowattWebClient client, EnergyRequest request) {
-		return getOrFetch(CacheType.MONTH, request, MonthResponse.class, client::getInvEnergyMonthChart);
+	public MonthResponse getMonthChart(Supplier<GrowattWebClient> client, EnergyRequest request) {
+		return getOrFetch(CacheType.MONTH, request, MonthResponse.class,
+				r -> client.get().getInvEnergyMonthChart(r));
 	}
 
 	/**
@@ -98,9 +101,10 @@ public class GrowattDataService {
 	 * TTL, so the live Growatt login is hit at most once per TTL window per plant rather than on
 	 * every dashboard load.
 	 */
-	public TotalDataResponse getTotalData(GrowattWebClient client, EnergyRequest request) {
+	public TotalDataResponse getTotalData(Supplier<GrowattWebClient> client, EnergyRequest request) {
 		EnergyRequest keyed = new EnergyRequest(request.getPlantId(), LocalDate.now().format(DAY_FMT));
-		return getOrFetch(CacheType.SNAPSHOT, keyed, TotalDataResponse.class, r -> client.getTotalData(request));
+		return getOrFetch(CacheType.SNAPSHOT, keyed, TotalDataResponse.class,
+				r -> client.get().getTotalData(request));
 	}
 
 	/**
@@ -117,12 +121,12 @@ public class GrowattDataService {
 	 * first request and served afterwards, while a week still including today is refreshed once
 	 * per current-period TTL window.</p>
 	 */
-	public WeekResponse getWeekChart(GrowattWebClient client, EnergyRequest request) {
+	public WeekResponse getWeekChart(Supplier<GrowattWebClient> client, EnergyRequest request) {
 		return getOrFetch(CacheType.WEEK, request, WeekResponse.class, r -> assembleWeekChart(client, r));
 	}
 
 	/** Assemble the weekly view live from the daily totals of the covering month chart(s). */
-	private WeekResponse assembleWeekChart(GrowattWebClient client, EnergyRequest request) {
+	private WeekResponse assembleWeekChart(Supplier<GrowattWebClient> client, EnergyRequest request) {
 		LocalDate end;
 		try {
 			end = LocalDate.parse(request.getDate(), DAY_FMT);
@@ -169,8 +173,9 @@ public class GrowattDataService {
 		return 0.0;
 	}
 
-	public YearResponse getYearChart(GrowattWebClient client, EnergyRequest request) {
-		return getOrFetch(CacheType.YEAR, request, YearResponse.class, client::getInvEnergyYearChart);
+	public YearResponse getYearChart(Supplier<GrowattWebClient> client, EnergyRequest request) {
+		return getOrFetch(CacheType.YEAR, request, YearResponse.class,
+				r -> client.get().getInvEnergyYearChart(r));
 	}
 
 	/**
@@ -178,8 +183,9 @@ public class GrowattDataService {
 	 * still-incomplete year, so it is treated as a current period and refreshed once per
 	 * {@link #totalTtlMinutes} window (a day by default) rather than on every request.
 	 */
-	public YearResponse getTotalChart(GrowattWebClient client, EnergyRequest request) {
-		return getOrFetch(CacheType.TOTAL, request, YearResponse.class, client::getInvEnergyTotalChart);
+	public YearResponse getTotalChart(Supplier<GrowattWebClient> client, EnergyRequest request) {
+		return getOrFetch(CacheType.TOTAL, request, YearResponse.class,
+				r -> client.get().getInvEnergyTotalChart(r));
 	}
 
 	/**
@@ -214,7 +220,8 @@ public class GrowattDataService {
 		try {
 			Optional<SolarDataCache> cached = repository.findFirstByTypeAndPlantIdAndDate(type.name(), plantId, date);
 			if (cached.isPresent() && (!current || isFresh(type, cached.get()))) {
-				log.info("[Cache] HIT {} ({})", logKey(type, plantId, date), current ? "fresh" : "completed");
+				log.info("[Cache] HIT {} - served from DB, no Growatt call ({})", logKey(type, plantId, date),
+						current ? "within TTL" : "completed period");
 				return objectMapper.readValue(cached.get().getPayload(), clazz);
 			}
 			if (cached.isPresent()) {

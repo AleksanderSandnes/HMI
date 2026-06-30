@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -58,61 +59,77 @@ public class GrowattApiController {
 	@PostMapping("/totalData")
 	public ResponseEntity<TotalDataResponse> getTotalData(@Valid @RequestBody EnergyRequest request,
 			@AuthenticationPrincipal Jwt jwt) {
-		GrowattSession session = login(jwt, request);
-		return ResponseEntity.ok(growattDataService.getTotalData(session.client(), request));
+		return ResponseEntity.ok(growattDataService.getTotalData(resolve(jwt, request), request));
 	}
 
 	@PostMapping("/invTotalData")
 	public ResponseEntity<TotalDataInvResponse> getInvTotalData(@Valid @RequestBody EnergyRequest request,
 			@AuthenticationPrincipal Jwt jwt) {
-		GrowattSession session = login(jwt, request);
-		return ResponseEntity.ok(session.client().getInvTotalData(request));
+		return ResponseEntity.ok(resolve(jwt, request).get().getInvTotalData(request));
 	}
 
 	@PostMapping("/dayChart")
 	public ResponseEntity<DayResponse> getDayChart(@Valid @RequestBody EnergyRequest request,
 			@AuthenticationPrincipal Jwt jwt) {
-		GrowattSession session = login(jwt, request);
-		return ResponseEntity.ok(growattDataService.getDayChart(session.client(), request));
+		return ResponseEntity.ok(growattDataService.getDayChart(resolve(jwt, request), request));
 	}
 
 	@PostMapping("/weekChart")
 	public ResponseEntity<WeekResponse> getWeekChart(@Valid @RequestBody EnergyRequest request,
 			@AuthenticationPrincipal Jwt jwt) {
-		GrowattSession session = login(jwt, request);
-		return ResponseEntity.ok(growattDataService.getWeekChart(session.client(), request));
+		return ResponseEntity.ok(growattDataService.getWeekChart(resolve(jwt, request), request));
 	}
 
 	@PostMapping("/monthChart")
 	public ResponseEntity<MonthResponse> getMonthChart(@Valid @RequestBody EnergyRequest request,
 			@AuthenticationPrincipal Jwt jwt) {
-		GrowattSession session = login(jwt, request);
-		return ResponseEntity.ok(growattDataService.getMonthChart(session.client(), request));
+		return ResponseEntity.ok(growattDataService.getMonthChart(resolve(jwt, request), request));
 	}
 
 	@PostMapping("/yearChart")
 	public ResponseEntity<YearResponse> getYearChart(@Valid @RequestBody EnergyRequest request,
 			@AuthenticationPrincipal Jwt jwt) {
-		GrowattSession session = login(jwt, request);
-		return ResponseEntity.ok(growattDataService.getYearChart(session.client(), request));
+		return ResponseEntity.ok(growattDataService.getYearChart(resolve(jwt, request), request));
 	}
 
 	/** Five-year overview: one energy total per year (v2 getDevicesTotalChart). */
 	@PostMapping("/totalChart")
 	public ResponseEntity<YearResponse> getTotalChart(@Valid @RequestBody EnergyRequest request,
 			@AuthenticationPrincipal Jwt jwt) {
-		GrowattSession session = login(jwt, request);
-		return ResponseEntity.ok(growattDataService.getTotalChart(session.client(), request));
+		return ResponseEntity.ok(growattDataService.getTotalChart(resolve(jwt, request), request));
 	}
 
 	/**
-	 * Log into Growatt for the authenticated user and force the request's plant id to the
-	 * one resolved from their settings/login (so a client can never query another plant).
+	 * Resolve the authenticated user's plant id and a <b>lazy</b> Growatt client for this request.
+	 *
+	 * <p>The plant id is forced from the user's server-side settings (so a client can never query
+	 * another plant). When it is already stored we avoid logging in entirely; only then is the
+	 * returned client supplier invoked — and it logs in <i>at most once</i> (memoized) — when the
+	 * data service actually needs a live fetch on a cache miss. Cache hits therefore make no
+	 * Growatt call at all.</p>
 	 */
-	private GrowattSession login(Jwt jwt, EnergyRequest request) {
+	private Supplier<GrowattWebClient> resolve(Jwt jwt, EnergyRequest request) {
 		UUID authId = UUID.fromString(jwt.getSubject());
-		GrowattSession session = sessionService.loginFor(authId);
-		request.setPlantId(session.plantId());
-		return session;
+		Supplier<GrowattSession> session = memoize(() -> sessionService.loginFor(authId));
+		String plantId = sessionService.storedPlantId(authId).orElseGet(() -> session.get().plantId());
+		request.setPlantId(plantId);
+		return () -> session.get().client();
+	}
+
+	/** A thread-unsafe (single-request) memoizing supplier: the delegate runs at most once. */
+	private static <T> Supplier<T> memoize(Supplier<T> delegate) {
+		return new Supplier<>() {
+			private T value;
+			private boolean resolved;
+
+			@Override
+			public T get() {
+				if (!resolved) {
+					value = delegate.get();
+					resolved = true;
+				}
+				return value;
+			}
+		};
 	}
 }
