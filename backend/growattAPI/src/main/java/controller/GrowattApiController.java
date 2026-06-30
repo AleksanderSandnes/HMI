@@ -59,7 +59,7 @@ public class GrowattApiController {
 	public ResponseEntity<TotalDataResponse> getTotalData(@Valid @RequestBody EnergyRequest request,
 			@AuthenticationPrincipal Jwt jwt) {
 		GrowattSession session = login(jwt, request);
-		return ResponseEntity.ok(session.client().getTotalData(request));
+		return ResponseEntity.ok(growattDataService.getTotalData(session.client(), request));
 	}
 
 	@PostMapping("/invTotalData")

@@ -1,5 +1,6 @@
 package service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Year;
@@ -23,6 +24,7 @@ import entity.EnergyRequest;
 import entity.GrowattResponse;
 import entity.MonthResponse;
 import entity.SolarDataCache;
+import entity.TotalDataResponse;
 import entity.WeekResponse;
 import entity.YearResponse;
 import io.micrometer.common.util.StringUtils;
@@ -31,26 +33,26 @@ import lombok.extern.slf4j.Slf4j;
 import repository.SolarDataCacheRepository;
 
 /**
- * Provides Growatt chart data with a transparent MongoDB cache in front of the live
+ * Provides Growatt chart data with a transparent Postgres cache in front of the live
  * {@link GrowattWebClient}.
  *
- * <p>Only the genuinely historical, date-specific chart series are cached (day / month /
- * year). Cumulative "as of now" snapshots such as totalData are intentionally <b>not</b>
- * cached, because they are not tied to a past date.</p>
+ * <p>Cache-aside strategy keyed by {@code (type, plantId, date)}. Every range is cached:
+ * check the DB first, fall back to the live API on a miss, save the result, then serve.</p>
  *
- * <p>Cache-aside strategy keyed by {@code (type, plantId, date)}:</p>
  * <ul>
- *   <li><b>Current period</b> (today / ongoing month / ongoing year): always fetched
- *       live, never read from or written to the cache, because the data is still
- *       incomplete.</li>
- *   <li><b>Yesterday</b> (day type): read from cache first; on a miss it is fetched live
- *       but <i>not</i> saved, because a background job backfills the previous day.</li>
- *   <li><b>Older completed periods</b>: read from cache first; on a miss it is fetched
- *       live <i>and</i> saved for future historical look-ups.</li>
+ *   <li><b>Completed past periods</b> (older day, past month/year): served from cache
+ *       forever; on a miss they are fetched live and saved (only when they carry real
+ *       production).</li>
+ *   <li><b>Current, still-incomplete periods</b> (today / ongoing month / ongoing year /
+ *       the 5-year overview / the live totals snapshot): served from cache while fresh, then
+ *       refreshed. Freshness is bounded by a per-type TTL so the upstream API is hit at most
+ *       once per window per plant — {@value #DEFAULT_CURRENT_TTL} min for day/month/year/
+ *       snapshot, {@value #DEFAULT_TOTAL_TTL} min (one day) for the slow-moving 5-year chart.
+ *       Current-period results are always upserted (even empty) so the throttle holds even
+ *       before the plant has produced anything for the day.</li>
  * </ul>
  *
- * <p>Empty responses (no real production, e.g. all null/zero) are never saved, and any
- * cache failure falls back to a live Growatt call, so caching never breaks the API.</p>
+ * <p>Any cache failure falls back to a live Growatt call, so caching never breaks the API.</p>
  */
 @Slf4j
 @Service
@@ -59,8 +61,11 @@ public class GrowattDataService {
 
 	/** Range discriminator stored alongside each cached entry. */
 	public enum CacheType {
-		DAY, WEEK, MONTH, YEAR
+		DAY, WEEK, MONTH, YEAR, TOTAL, SNAPSHOT
 	}
+
+	private static final String DEFAULT_CURRENT_TTL = "60";
+	private static final String DEFAULT_TOTAL_TTL = "1440";
 
 	private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
@@ -71,12 +76,31 @@ public class GrowattDataService {
 	@Value("${growatt.cache.enabled:true}")
 	private boolean cacheEnabled;
 
+	/** TTL (minutes) for current, still-incomplete periods: today / this month / this year / snapshot. */
+	@Value("${growatt.cache.currentTtlMinutes:" + DEFAULT_CURRENT_TTL + "}")
+	private long currentTtlMinutes;
+
+	/** TTL (minutes) for the 5-year overview — slow-moving, so a daily refresh is plenty. */
+	@Value("${growatt.cache.totalTtlMinutes:" + DEFAULT_TOTAL_TTL + "}")
+	private long totalTtlMinutes;
+
 	public DayResponse getDayChart(GrowattWebClient client, EnergyRequest request) {
 		return getOrFetch(CacheType.DAY, request, DayResponse.class, client::getInvEnergyDayChart);
 	}
 
 	public MonthResponse getMonthChart(GrowattWebClient client, EnergyRequest request) {
 		return getOrFetch(CacheType.MONTH, request, MonthResponse.class, client::getInvEnergyMonthChart);
+	}
+
+	/**
+	 * The cumulative "as of now" totals snapshot (lifetime / today / month generation + device
+	 * status). Cached as {@link CacheType#SNAPSHOT} keyed by today's date with the current-period
+	 * TTL, so the live Growatt login is hit at most once per TTL window per plant rather than on
+	 * every dashboard load.
+	 */
+	public TotalDataResponse getTotalData(GrowattWebClient client, EnergyRequest request) {
+		EnergyRequest keyed = new EnergyRequest(request.getPlantId(), LocalDate.now().format(DAY_FMT));
+		return getOrFetch(CacheType.SNAPSHOT, keyed, TotalDataResponse.class, r -> client.getTotalData(request));
 	}
 
 	/**
@@ -89,9 +113,9 @@ public class GrowattDataService {
 	 * of the window; a blank/unparseable date falls back to today.</p>
 	 *
 	 * <p>The assembled response is itself cached (type {@code WEEK}, keyed by the window's end
-	 * date) via the shared {@link #getOrFetch} cache-aside, so a completed past week is saved on
-	 * first request and served from MongoDB afterwards without re-assembling. A week that still
-	 * includes today is treated as the current, incomplete period and is never cached.</p>
+	 * date) via the shared {@link #getOrFetch} cache-aside: a completed past week is saved on
+	 * first request and served afterwards, while a week still including today is refreshed once
+	 * per current-period TTL window.</p>
 	 */
 	public WeekResponse getWeekChart(GrowattWebClient client, EnergyRequest request) {
 		return getOrFetch(CacheType.WEEK, request, WeekResponse.class, r -> assembleWeekChart(client, r));
@@ -150,20 +174,19 @@ public class GrowattDataService {
 	}
 
 	/**
-	 * Five-year chart (one energy total per year). Always fetched live and never cached: the
-	 * window always includes the current, still-incomplete year, so the most recent value
-	 * keeps changing.
+	 * Five-year chart (one energy total per year). The window always includes the current,
+	 * still-incomplete year, so it is treated as a current period and refreshed once per
+	 * {@link #totalTtlMinutes} window (a day by default) rather than on every request.
 	 */
 	public YearResponse getTotalChart(GrowattWebClient client, EnergyRequest request) {
-		return client.getInvEnergyTotalChart(request);
+		return getOrFetch(CacheType.TOTAL, request, YearResponse.class, client::getInvEnergyTotalChart);
 	}
 
 	/**
-	 * Force-persist a freshly fetched DAY chart for a past date, bypassing the
-	 * {@link #shouldPersist} "skip yesterday" rule. This is the explicit backfill hook the
-	 * daily solar job uses to save yesterday's day chart (which the cache path deliberately
-	 * never saves). Upserts so a repeated run updates instead of violating the unique index.
-	 * Empty/unsuccessful responses are skipped. Never throws.
+	 * Force-persist a freshly fetched DAY chart for a past date. This is the explicit backfill
+	 * hook the daily solar job uses to save yesterday's day chart. Upserts so a repeated run
+	 * updates instead of violating the unique index. Empty/unsuccessful responses are skipped.
+	 * Never throws.
 	 */
 	public void backfillDayChart(String plantId, String date, DayResponse response) {
 		if (!isSuccessful(response) || !response.hasData()) {
@@ -171,18 +194,7 @@ public class GrowattDataService {
 					logKey(CacheType.DAY, plantId, date));
 			return;
 		}
-		try {
-			SolarDataCache document = repository
-					.findFirstByTypeAndPlantIdAndDate(CacheType.DAY.name(), plantId, date)
-					.orElseGet(() -> new SolarDataCache(CacheType.DAY.name(), plantId, date, null, null));
-			document.setPayload(objectMapper.writeValueAsString(response));
-			document.setCachedAt(Instant.now());
-			repository.save(document);
-			log.info("[Cache] BACKFILL SAVE {}", logKey(CacheType.DAY, plantId, date));
-		} catch (Exception e) {
-			log.warn("[Cache] backfill save failed for {} ({})", logKey(CacheType.DAY, plantId, date),
-					e.getMessage());
-		}
+		upsert(CacheType.DAY, plantId, date, response);
 	}
 
 	private <T extends GrowattResponse> T getOrFetch(CacheType type, EnergyRequest request, Class<T> clazz,
@@ -190,48 +202,67 @@ public class GrowattDataService {
 		String plantId = request.getPlantId();
 		String date = request.getDate();
 
-		// Always go live for the current/ongoing period, when caching is disabled, or when
-		// we have no plantId to build a stable key with.
-		if (!cacheEnabled || StringUtils.isBlank(plantId) || isCurrentPeriod(type, date)) {
+		// We need a stable, non-blank (type, plantId, date) key to cache against; otherwise go live.
+		if (!cacheEnabled || StringUtils.isBlank(plantId) || StringUtils.isBlank(date)) {
 			log.info("[Cache] BYPASS -> live fetch (type={}, plantId={}, date={})", type, plantId, date);
 			return liveFetch.apply(request);
 		}
 
+		boolean current = isCurrentPeriod(type, date);
+
 		// 1) Try the database first.
 		try {
 			Optional<SolarDataCache> cached = repository.findFirstByTypeAndPlantIdAndDate(type.name(), plantId, date);
-			if (cached.isPresent()) {
-				log.info("[Cache] HIT {}", logKey(type, plantId, date));
+			if (cached.isPresent() && (!current || isFresh(type, cached.get()))) {
+				log.info("[Cache] HIT {} ({})", logKey(type, plantId, date), current ? "fresh" : "completed");
 				return objectMapper.readValue(cached.get().getPayload(), clazz);
+			}
+			if (cached.isPresent()) {
+				log.info("[Cache] STALE {} -> refetching", logKey(type, plantId, date));
 			}
 		} catch (Exception e) {
 			log.warn("[Cache] read failed for {} ({}), falling back to live", logKey(type, plantId, date),
 					e.getMessage());
 		}
 
-		// 2) Cache miss -> call the Growatt API.
+		// 2) Cache miss / stale -> call the Growatt API.
 		log.info("[Cache] MISS {} -> calling Growatt", logKey(type, plantId, date));
 		T result = liveFetch.apply(request);
 
-		// 3) Persist successful, completed, non-empty historical results only.
-		if (isSuccessful(result) && result.hasData() && shouldPersist(type, date)) {
-			persist(type, plantId, date, result);
-		} else if (isSuccessful(result) && !result.hasData()) {
-			log.info("[Cache] SKIP save for {} - response has no production data", logKey(type, plantId, date));
+		// 3) Persist. Current periods are always upserted (even empty) so the TTL throttle holds;
+		// completed periods are only saved when they carry real production.
+		if (isSuccessful(result) && (current || result.hasData())) {
+			upsert(type, plantId, date, result);
+		} else if (isSuccessful(result)) {
+			log.info("[Cache] SKIP save for {} - completed period has no production data",
+					logKey(type, plantId, date));
 		}
 
 		return result;
 	}
 
-	private <T extends GrowattResponse> void persist(CacheType type, String plantId, String date, T result) {
+	/** Insert or update the cache entry for {@code (type, plantId, date)} with a fresh timestamp. */
+	private <T extends GrowattResponse> void upsert(CacheType type, String plantId, String date, T result) {
 		try {
-			SolarDataCache document = new SolarDataCache(type.name(), plantId, date,
-					objectMapper.writeValueAsString(result), Instant.now());
+			SolarDataCache document = repository
+					.findFirstByTypeAndPlantIdAndDate(type.name(), plantId, date)
+					.orElseGet(() -> new SolarDataCache(type.name(), plantId, date, null, null));
+			document.setPayload(objectMapper.writeValueAsString(result));
+			document.setCachedAt(Instant.now());
 			repository.save(document);
 			log.info("[Cache] SAVE {}", logKey(type, plantId, date));
 		} catch (Exception e) {
 			log.warn("[Cache] save failed for {} ({})", logKey(type, plantId, date), e.getMessage());
 		}
+	}
+
+	/** Whether a cached current-period entry is still within its per-type TTL window. */
+	private boolean isFresh(CacheType type, SolarDataCache cache) {
+		if (cache.getCachedAt() == null) {
+			return false;
+		}
+		long ttl = type == CacheType.TOTAL ? totalTtlMinutes : currentTtlMinutes;
+		return cache.getCachedAt().isAfter(Instant.now().minus(Duration.ofMinutes(ttl)));
 	}
 
 	private boolean isSuccessful(GrowattResponse response) {
@@ -240,8 +271,9 @@ public class GrowattDataService {
 
 	/**
 	 * Whether the requested date refers to the current, still-ongoing period. Such data is
-	 * incomplete and must always be fetched live. A blank or unparseable date is treated as
-	 * "current" so we never cache an ambiguous key.
+	 * incomplete and is served from cache only while fresh (within the TTL). A blank or
+	 * unparseable date is treated as "current". The 5-year ({@code TOTAL}) and live totals
+	 * ({@code SNAPSHOT}) views are always current — they keep changing as the day/year advances.
 	 */
 	// Package-private for unit testing of the period-classification logic.
 	boolean isCurrentPeriod(CacheType type, String date) {
@@ -259,30 +291,15 @@ public class GrowattDataService {
 					return YearMonth.parse(date, MONTH_FMT).equals(YearMonth.now());
 				case YEAR:
 					return Year.parse(date).equals(Year.now());
+				case TOTAL:
+				case SNAPSHOT:
+					return true;
 				default:
 					return true;
 			}
 		} catch (Exception e) {
 			log.warn("[Cache] could not parse date '{}' for type {}, treating as live", date, type);
 			return true;
-		}
-	}
-
-	/**
-	 * Whether a freshly fetched response should be saved on a cache miss. The current period
-	 * never reaches this check (it bypasses the cache entirely). For the day type we skip
-	 * yesterday, because a background job is responsible for backfilling the previous day.
-	 */
-	// Package-private for unit testing of the persistence-eligibility logic.
-	boolean shouldPersist(CacheType type, String date) {
-		try {
-			if (type == CacheType.DAY) {
-				return !LocalDate.parse(date, DAY_FMT).isEqual(LocalDate.now().minusDays(1));
-			}
-			// Completed past months / years can be persisted immediately.
-			return true;
-		} catch (Exception e) {
-			return false;
 		}
 	}
 

@@ -74,25 +74,14 @@ class GrowattDataServiceTest {
 		assertFalse(service.isCurrentPeriod(CacheType.YEAR, lastYear));
 	}
 
-	// ---------------- shouldPersist ----------------
-
 	@Test
-	void shouldPersist_daySkipsYesterdayButSavesOlderDays() {
-		String yesterday = LocalDate.now().minusDays(1).format(DAY_FMT);
-		String twoDaysAgo = LocalDate.now().minusDays(2).format(DAY_FMT);
-		assertFalse(service.shouldPersist(CacheType.DAY, yesterday));
-		assertTrue(service.shouldPersist(CacheType.DAY, twoDaysAgo));
-	}
-
-	@Test
-	void shouldPersist_monthAndYearAlwaysPersistWhenPast() {
-		assertTrue(service.shouldPersist(CacheType.MONTH, "2023-05"));
-		assertTrue(service.shouldPersist(CacheType.YEAR, "2023"));
-	}
-
-	@Test
-	void shouldPersist_unparseableDayDateIsNotPersisted() {
-		assertFalse(service.shouldPersist(CacheType.DAY, "garbage"));
+	void isCurrentPeriod_totalAndSnapshotAreAlwaysCurrent() {
+		// The 5-year overview and the live totals snapshot always include the ongoing
+		// year/day, so they are never "completed" and are refreshed on their TTL window.
+		assertTrue(service.isCurrentPeriod(CacheType.TOTAL, Year.now().toString()));
+		assertTrue(service.isCurrentPeriod(CacheType.TOTAL, Year.now().minusYears(1).toString()));
+		assertTrue(service.isCurrentPeriod(CacheType.SNAPSHOT, LocalDate.now().format(DAY_FMT)));
+		assertTrue(service.isCurrentPeriod(CacheType.SNAPSHOT, LocalDate.now().minusDays(5).format(DAY_FMT)));
 	}
 
 	// ---------------- extractDayEnergy ----------------
