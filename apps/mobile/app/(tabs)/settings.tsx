@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ApiSettingsResponse, UserProfile } from '@hmi/core';
 import { useCore } from '../../src/lib/useCore';
-import { useAuth } from '../../src/lib/auth';
+import { useLogout } from '../../src/lib/useLogout';
 import { GlassCard } from '../../src/components/ui/GlassCard';
 import { Field } from '../../src/components/ui/Field';
 import { Button } from '../../src/components/ui/Button';
@@ -65,7 +65,7 @@ function ConfiguredBadge({ on }: { on: boolean }) {
 export default function Settings() {
   const core = useCore();
   const { account, settings } = core;
-  const { signOut } = useAuth();
+  const logout = useLogout();
 
   const { data: profile } = useQuery<UserProfile>({
     queryKey: ['profile'],
@@ -119,7 +119,7 @@ export default function Settings() {
           <PasswordForm account={account} />
         </Section>
 
-        <Button label="Sign out" variant="danger" onPress={signOut} className="w-full" />
+        <Button label="Sign out" variant="danger" onPress={logout} className="w-full" />
       </ScrollView>
     </SafeAreaView>
   );

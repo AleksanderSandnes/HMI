@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../src/lib/auth';
 import { QueryProvider } from '../src/lib/query';
+import PushRegistrar from '../src/components/PushRegistrar';
 
 /**
  * Auth gate (replaces the old Redux AppWrapper). Redirects between the `(auth)`
@@ -47,6 +48,7 @@ export default function RootLayout() {
         <QueryProvider>
           <AuthProvider>
             <StatusBar style="light" backgroundColor="#070b16" />
+            <PushRegistrar />
             <AuthGate />
           </AuthProvider>
         </QueryProvider>

@@ -1,26 +1,27 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
-import { useSelector } from 'react-redux';
-
-import { registerPushToken } from '../services/notificationsApiService';
+import { useAuth } from '../lib/auth';
+import { useCore } from '../lib/useCore';
 import { storePushToken } from '../services/pushNotifications';
 
 /**
- * Registers this device's Expo push token with the backend so the nightly cron jobs can
- * deliver push notifications (mobile/tablet). Web is excluded — it uses the in-app
- * notification center instead.
+ * Registers this device's Expo push token with the backend (profiles.expo_push_tokens)
+ * so the cron jobs can deliver push notifications (mobile/tablet). Web is excluded — it
+ * uses the in-app notification center instead.
  *
  * Defensive by design: it silently no-ops on web, on simulators/emulators, when permission
- * is denied, or when no EAS `projectId` is configured yet. Real push delivery requires an
- * EAS projectId (run `eas init`) and a development/standalone build on a physical device.
+ * is denied, or when no EAS `projectId` is configured. Real push delivery requires an EAS
+ * projectId and a dev/standalone build on a physical device.
  */
 export function usePushRegistration(): void {
-  const user = useSelector((state: any) => state?.auth?.user);
+  const { session } = useAuth();
+  const { notifications } = useCore();
+  const userId = session?.user?.id;
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    if (!user?.token) return;
+    if (!userId) return;
 
     let cancelled = false;
 
@@ -67,8 +68,7 @@ export function usePushRegistration(): void {
           (Constants as any)?.easConfig?.projectId;
         if (!projectId) {
           console.warn(
-            '[Push] No EAS projectId configured — skipping push token registration. ' +
-              'Run `eas init` and rebuild to enable push notifications.'
+            '[Push] No EAS projectId configured — skipping push token registration.',
           );
           return;
         }
@@ -76,7 +76,7 @@ export function usePushRegistration(): void {
         const tokenResponse = await Notifications.getExpoPushTokenAsync({ projectId });
         const token = tokenResponse?.data;
         if (token && !cancelled) {
-          await registerPushToken(token);
+          await notifications.registerPushToken(token);
           await storePushToken(token);
           console.log('[Push] Expo push token registered with backend.');
         }
@@ -88,7 +88,7 @@ export function usePushRegistration(): void {
     return () => {
       cancelled = true;
     };
-  }, [user?.token]);
+  }, [userId, notifications]);
 }
 
 export default usePushRegistration;
