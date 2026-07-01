@@ -18,9 +18,11 @@ import {
   SettingsRow,
   Toggle,
 } from "../../../src/components/settings/list";
+import { Avatar } from "../../../src/components/ui/Avatar";
 import { Button } from "../../../src/components/ui/Button";
 import { GlassCard } from "../../../src/components/ui/GlassCard";
 import { ScreenBackground } from "../../../src/components/ui/ScreenBackground";
+import { useAvatar } from "../../../src/lib/useAvatar";
 import { useCore } from "../../../src/lib/useCore";
 import { useLogout } from "../../../src/lib/useLogout";
 import { usePreference } from "../../../src/lib/usePreference";
@@ -33,14 +35,11 @@ function initials(name?: string | null): string {
 }
 
 function ProfileCard({ profile, onPress }: { profile?: UserProfile; onPress: () => void }) {
+  const { uri } = useAvatar();
   return (
     <Pressable onPress={onPress}>
       <GlassCard strong className="flex-row items-center gap-3.5 p-3.5">
-        <View className="h-[52px] w-[52px] items-center justify-center rounded-pill border border-glass-border-strong bg-[#1a2036]">
-          <Text className="text-[17px] font-extrabold text-[#c9d2e6]">
-            {initials(profile?.username)}
-          </Text>
-        </View>
+        <Avatar initials={initials(profile?.username)} uri={uri} size={52} />
         <View className="min-w-0 flex-1">
           <Text className="text-[16px] font-extrabold text-text-primary">
             {profile?.username ?? "Your profile"}

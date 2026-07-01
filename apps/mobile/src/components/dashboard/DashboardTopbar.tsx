@@ -1,6 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
 
+import { useAvatar } from "../../lib/useAvatar";
+import { Avatar } from "../ui/Avatar";
+
 function deriveInitials(name?: string | null): string {
   if (!name) return "·";
   const parts = name.trim().split(/\s+/);
@@ -20,6 +23,7 @@ export function DashboardTopbar({
   online?: boolean | null;
   onBellPress: () => void;
 }) {
+  const { uri } = useAvatar();
   return (
     <View className="flex-row items-center justify-between pt-1.5">
       <Text className="text-[21px] font-black tracking-[-0.5px] text-text-primary">HMI</Text>
@@ -38,10 +42,8 @@ export function DashboardTopbar({
             </View>
           ) : null}
         </Pressable>
-        <View className="h-[38px] w-[38px] items-center justify-center rounded-pill border border-glass-border-strong bg-[#1a2036]">
-          <Text className="text-[13px] font-extrabold text-[#c9d2e6]">
-            {deriveInitials(username)}
-          </Text>
+        <View>
+          <Avatar initials={deriveInitials(username)} uri={uri} size={38} />
           {online ? (
             <View className="absolute -bottom-0.5 -right-0.5 h-[11px] w-[11px] rounded-pill border-2 border-bg-base bg-positive" />
           ) : null}

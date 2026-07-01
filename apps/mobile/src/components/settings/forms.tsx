@@ -1,10 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { GRADIENTS, type StatGradient } from "../../lib/gradients";
+import { useAvatar } from "../../lib/useAvatar";
 import type { CoreApis } from "../../lib/useCore";
+import { Avatar } from "../ui/Avatar";
 import { Button } from "../ui/Button";
 import { Field } from "../ui/Field";
 import { GlassCard } from "../ui/GlassCard";
@@ -25,6 +28,19 @@ function deriveInitials(name?: string | null): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return name.slice(0, 2).toUpperCase();
+}
+
+async function pickAvatar(setAvatar: (uri: string) => Promise<void>) {
+  const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!perm.granted) return;
+  const res = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ["images"],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.6,
+  });
+  const uri = res.canceled ? null : res.assets[0]?.uri;
+  if (uri) await setAvatar(uri);
 }
 
 export function ConfiguredBadge({ on }: { on: boolean }) {
@@ -106,6 +122,7 @@ export function AccountForm({
 }) {
   const [username, setUsername] = useState(initialUsername);
   const [email, setEmail] = useState(initialEmail);
+  const { uri, setAvatar } = useAvatar();
   const { banner, saving, save } = useSaver(async () => {
     await account.updateUserProfile({ username, email });
   });
@@ -113,14 +130,12 @@ export function AccountForm({
   return (
     <>
       <View className="items-center">
-        <View className="h-[84px] w-[84px] items-center justify-center rounded-pill border border-glass-border-strong bg-[#1a2036]">
-          <Text className="text-[28px] font-extrabold text-[#c9d2e6]">
-            {deriveInitials(username)}
-          </Text>
+        <Pressable onPress={() => void pickAvatar(setAvatar)} accessibilityLabel="Change photo">
+          <Avatar initials={deriveInitials(username)} uri={uri} size={84} />
           <View className="absolute -bottom-0.5 -right-0.5 h-7 w-7 items-center justify-center rounded-pill border-[3px] border-bg-base bg-solar">
             <Ionicons name="pencil" size={13} color="#0a1124" />
           </View>
-        </View>
+        </Pressable>
       </View>
 
       <GlassCard strong className="gap-1 p-[18px]">
