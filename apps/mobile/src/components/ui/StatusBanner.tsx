@@ -2,38 +2,41 @@ import { Ionicons } from "@expo/vector-icons";
 import { View, Text } from "react-native";
 
 import { cn } from "../../lib/cn";
+import { useThemeColors, type ThemeColors } from "../../lib/theme";
 
 export type StatusKind = "success" | "error" | "warning" | "info";
 
-const CONFIG: Record<
-  StatusKind,
-  { className: string; color: string; icon: keyof typeof Ionicons.glyphMap }
-> = {
-  success: {
-    className: "border-[rgba(52,211,153,0.33)] bg-[rgba(52,211,153,0.12)]",
-    color: "#34d399",
-    icon: "checkmark-circle",
-  },
-  error: {
-    className: "border-[rgba(251,113,133,0.33)] bg-[rgba(251,113,133,0.12)]",
-    color: "#fb7185",
-    icon: "alert-circle",
-  },
-  warning: {
-    className: "border-[rgba(245,158,11,0.33)] bg-solar-soft",
-    color: "#fbbf24",
-    icon: "warning",
-  },
-  info: {
-    className: "border-[rgba(245,158,11,0.33)] bg-solar-soft",
-    color: "#fbbf24",
-    icon: "information-circle",
-  },
-};
+function statusConfig(
+  colors: ThemeColors,
+): Record<StatusKind, { className: string; color: string; icon: keyof typeof Ionicons.glyphMap }> {
+  return {
+    success: {
+      className: "border-[rgba(52,211,153,0.33)] bg-[rgba(52,211,153,0.12)]",
+      color: colors.positive,
+      icon: "checkmark-circle",
+    },
+    error: {
+      className: "border-[rgba(251,113,133,0.33)] bg-[rgba(251,113,133,0.12)]",
+      color: colors.negative,
+      icon: "alert-circle",
+    },
+    warning: {
+      className: "border-[rgba(245,158,11,0.33)] bg-solar-soft",
+      color: colors.solarTint,
+      icon: "warning",
+    },
+    info: {
+      className: "border-[rgba(245,158,11,0.33)] bg-solar-soft",
+      color: colors.solarTint,
+      icon: "information-circle",
+    },
+  };
+}
 
 /** Inline status banner (mirrors apps/web/components/ui/StatusBanner.tsx). */
 export function StatusBanner({ kind, message }: { kind: StatusKind; message: string }) {
-  const { className, color, icon } = CONFIG[kind];
+  const { colors } = useThemeColors();
+  const { className, color, icon } = statusConfig(colors)[kind];
   return (
     <View
       className={cn(

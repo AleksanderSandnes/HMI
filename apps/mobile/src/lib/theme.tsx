@@ -42,6 +42,10 @@ export interface ThemeColors {
   scrim: string;
   /** Solid (non-glass) panel background, e.g. the notifications sheet. */
   panelBg: string;
+  /** Low-alpha `negative`-tinted border, for danger ghost buttons/chips. */
+  dangerBorder: string;
+  /** Low-alpha `negative`-tinted fill, for danger ghost buttons/chips. */
+  dangerBg: string;
 }
 
 const LIGHT: ThemeColors = {
@@ -64,6 +68,8 @@ const LIGHT: ThemeColors = {
   dialRing: "rgba(20, 26, 41, 0.14)",
   scrim: "rgba(20, 26, 41, 0.25)",
   panelBg: "rgba(255, 255, 255, 0.97)",
+  dangerBorder: "rgba(225, 29, 72, 0.35)",
+  dangerBg: "rgba(225, 29, 72, 0.1)",
 };
 
 const DARK: ThemeColors = {
@@ -86,6 +92,8 @@ const DARK: ThemeColors = {
   dialRing: "rgba(255, 255, 255, 0.12)",
   scrim: "rgba(4, 7, 14, 0.5)",
   panelBg: "#0d1320",
+  dangerBorder: "rgba(251, 113, 133, 0.35)",
+  dangerBg: "rgba(251, 113, 133, 0.1)",
 };
 
 /**

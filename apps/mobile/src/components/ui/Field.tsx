@@ -3,6 +3,7 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable, type TextInputProps } from "react-native";
 
 import { cn } from "../../lib/cn";
+import { useThemeColors } from "../../lib/theme";
 
 import type { IconRender } from "./types";
 
@@ -16,6 +17,7 @@ interface FieldProps extends Omit<TextInputProps, "style"> {
 }
 
 function RevealToggle({ reveal, onToggle }: { reveal: boolean; onToggle: () => void }) {
+  const { colors } = useThemeColors();
   return (
     <Pressable
       onPress={onToggle}
@@ -24,7 +26,11 @@ function RevealToggle({ reveal, onToggle }: { reveal: boolean; onToggle: () => v
       accessibilityLabel={reveal ? "Hide password" : "Show password"}
       className="py-1.5 pl-2.5"
     >
-      <Ionicons name={reveal ? "eye-off-outline" : "eye-outline"} size={16} color="#aeb8cc" />
+      <Ionicons
+        name={reveal ? "eye-off-outline" : "eye-outline"}
+        size={16}
+        color={colors.textSecondary}
+      />
     </Pressable>
   );
 }
@@ -55,6 +61,7 @@ export function Field({
 }: FieldProps) {
   const [focused, setFocused] = useState(false);
   const [reveal, setReveal] = useState(false);
+  const { colors } = useThemeColors();
 
   return (
     <View className="mb-4">
@@ -69,13 +76,13 @@ export function Field({
       >
         {icon ? (
           <View className="mr-2.5">
-            {icon({ color: focused ? "#fbbf24" : "#71809a", size: 14 })}
+            {icon({ color: focused ? colors.solarTint : colors.textMuted, size: 14 })}
           </View>
         ) : null}
         <TextInput
           {...inputProps}
           secureTextEntry={secure && !reveal}
-          placeholderTextColor="#71809a"
+          placeholderTextColor={colors.textMuted}
           onFocus={(e) => {
             setFocused(true);
             onFocus?.(e);

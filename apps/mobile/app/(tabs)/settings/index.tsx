@@ -21,6 +21,7 @@ import {
 import { Avatar } from "../../../src/components/ui/Avatar";
 import { Button } from "../../../src/components/ui/Button";
 import { GlassCard } from "../../../src/components/ui/GlassCard";
+import { useThemeColors } from "../../../src/lib/theme";
 import { useAvatar } from "../../../src/lib/useAvatar";
 import { useCore } from "../../../src/lib/useCore";
 import { useLogout } from "../../../src/lib/useLogout";
@@ -35,6 +36,7 @@ function initials(name?: string | null): string {
 
 function ProfileCard({ profile, onPress }: { profile?: UserProfile; onPress: () => void }) {
   const { uri } = useAvatar();
+  const { colors } = useThemeColors();
   return (
     <Pressable onPress={onPress}>
       <GlassCard strong className="flex-row items-center gap-3.5 p-3.5">
@@ -45,9 +47,37 @@ function ProfileCard({ profile, onPress }: { profile?: UserProfile; onPress: () 
           </Text>
           <Text className="mt-0.5 text-[12.5px] text-text-muted">{profile?.email ?? "—"}</Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#71809a" />
+        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
       </GlassCard>
     </Pressable>
+  );
+}
+
+function PreferencesGroup({
+  pushOn,
+  setPushOn,
+}: {
+  pushOn: boolean;
+  setPushOn: (v: boolean) => void;
+}) {
+  const { mode, setMode } = useThemeColors();
+  return (
+    <SettingsGroup>
+      <SettingsRow
+        icon="notifications"
+        gradient="accent"
+        title="Push notifications"
+        subtitle="Alerts on this device"
+        right={<Toggle value={pushOn} onChange={setPushOn} />}
+      />
+      <SettingsRow
+        icon="moon"
+        gradient="energy"
+        title="Dark theme"
+        subtitle={mode === "dark" ? "Dark" : "Light"}
+        right={<Toggle value={mode === "dark"} onChange={(v) => setMode(v ? "dark" : "light")} />}
+      />
+    </SettingsGroup>
   );
 }
 
@@ -105,22 +135,7 @@ export default function SettingsHub() {
         </SettingsGroup>
 
         <GroupLabel>Preferences</GroupLabel>
-        <SettingsGroup>
-          <SettingsRow
-            icon="notifications"
-            gradient="accent"
-            title="Push notifications"
-            subtitle="Alerts on this device"
-            right={<Toggle value={pushOn} onChange={setPushOn} />}
-          />
-          <SettingsRow
-            icon="moon"
-            gradient="energy"
-            title="Dark theme"
-            subtitle="Match system · always on"
-            right={<Toggle value disabled />}
-          />
-        </SettingsGroup>
+        <PreferencesGroup pushOn={pushOn} setPushOn={setPushOn} />
 
         <GroupLabel>Account</GroupLabel>
         <SettingsGroup>

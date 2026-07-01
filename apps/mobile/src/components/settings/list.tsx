@@ -5,6 +5,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { cn } from "../../lib/cn";
 import { GRADIENTS, type StatGradient } from "../../lib/gradients";
+import { useThemeColors } from "../../lib/theme";
 import { GlassCard } from "../ui/GlassCard";
 
 export function GroupLabel({ children }: { children: ReactNode }) {
@@ -45,6 +46,7 @@ export function SettingsRow({
   right?: ReactNode;
   onPress?: () => void;
 }) {
+  const { colors } = useThemeColors();
   const body = (
     <View className="flex-row items-center gap-3 px-3.5 py-3">
       <LinearGradient
@@ -65,7 +67,8 @@ export function SettingsRow({
         <Text className="text-[14.5px] font-bold text-text-primary">{title}</Text>
         {subtitle ? <Text className="mt-0.5 text-[11.5px] text-text-muted">{subtitle}</Text> : null}
       </View>
-      {right ?? (onPress ? <Ionicons name="chevron-forward" size={18} color="#71809a" /> : null)}
+      {right ??
+        (onPress ? <Ionicons name="chevron-forward" size={18} color={colors.textMuted} /> : null)}
     </View>
   );
   return onPress ? <Pressable onPress={onPress}>{body}</Pressable> : body;

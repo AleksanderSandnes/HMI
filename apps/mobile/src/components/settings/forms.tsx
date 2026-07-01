@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 
 import { GRADIENTS, type StatGradient } from "../../lib/gradients";
+import { hairline, useThemeColors } from "../../lib/theme";
 import { useAvatar } from "../../lib/useAvatar";
 import type { CoreApis } from "../../lib/useCore";
 import { Avatar } from "../ui/Avatar";
@@ -193,10 +194,11 @@ function pwStrength(pw: string): number {
 }
 
 function StrengthMeter({ pw }: { pw: string }) {
+  const { mode, colors } = useThemeColors();
   if (!pw) return null;
   const s = pwStrength(pw);
   const label = ["", "Weak", "Fair", "Good", "Strong"][s];
-  const color = s >= 3 ? "#34d399" : "#fbbf24";
+  const color = s >= 3 ? colors.energyTint : colors.solarTint;
   return (
     <View className="-mt-2 mb-3">
       <View className="flex-row gap-1.5">
@@ -204,7 +206,7 @@ function StrengthMeter({ pw }: { pw: string }) {
           <View
             key={i}
             className="h-1 flex-1 rounded-pill"
-            style={{ backgroundColor: i < s ? color : "rgba(255,255,255,0.12)" }}
+            style={{ backgroundColor: i < s ? color : hairline(mode, 0.12) }}
           />
         ))}
       </View>

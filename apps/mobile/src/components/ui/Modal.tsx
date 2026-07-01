@@ -13,6 +13,7 @@ import {
 } from "react-native";
 
 import { GRADIENTS, type StatGradient } from "../../lib/gradients";
+import { useThemeColors } from "../../lib/theme";
 
 import type { IconRender } from "./types";
 
@@ -33,6 +34,7 @@ interface ModalProps {
 export function Modal({ visible, onClose, icon, gradient, title, subtitle, children }: ModalProps) {
   const { width } = useWindowDimensions();
   const isPhone = width < BREAKPOINTS.mobile;
+  const { mode, colors } = useThemeColors();
 
   return (
     <RNModal
@@ -45,19 +47,23 @@ export function Modal({ visible, onClose, icon, gradient, title, subtitle, child
       <Pressable onPress={onClose} className="flex-1 items-center justify-center p-[18px]">
         <BlurView
           intensity={18}
-          tint="dark"
+          tint={mode === "dark" ? "dark" : "light"}
           experimentalBlurMethod="dimezisBlurView"
           style={StyleSheet.absoluteFill}
         />
         <View
           pointerEvents="none"
-          style={StyleSheet.absoluteFill}
-          className="bg-[rgba(4,7,16,0.72)]"
+          style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }]}
         />
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          style={{ width: isPhone ? "100%" : 460, maxWidth: "100%", maxHeight: "88%" }}
-          className="overflow-hidden rounded-lg border border-glass-border-strong bg-[rgba(14,20,35,0.96)] p-[22px]"
+          style={{
+            width: isPhone ? "100%" : 460,
+            maxWidth: "100%",
+            maxHeight: "88%",
+            backgroundColor: colors.panelBg,
+          }}
+          className="overflow-hidden rounded-lg border border-glass-border-strong p-[22px]"
         >
           <View className="flex-row items-center gap-3.5">
             <LinearGradient
@@ -87,7 +93,7 @@ export function Modal({ visible, onClose, icon, gradient, title, subtitle, child
               hitSlop={10}
               className="h-8 w-8 items-center justify-center rounded-[10px] border border-glass-border bg-glass-fill"
             >
-              <Ionicons name="close" size={16} color="#71809a" />
+              <Ionicons name="close" size={16} color={colors.textMuted} />
             </Pressable>
           </View>
 

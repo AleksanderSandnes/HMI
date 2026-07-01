@@ -10,6 +10,7 @@ import {
 
 import { cn } from "../../lib/cn";
 import { BUTTON_GRADIENTS, type ButtonGradient } from "../../lib/gradients";
+import { useThemeColors, type ThemeColors } from "../../lib/theme";
 
 import type { IconRender } from "./types";
 
@@ -29,17 +30,25 @@ interface ButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
-const LABEL_COLOR: Record<Variant, string> = {
-  primary: "#0a1124", // text-inverse
-  ghost: "#f6f8fc", // text-primary
-  danger: "#fb7185", // negative
-};
+function labelColor(variant: Variant, colors: ThemeColors): string {
+  if (variant === "primary") return colors.textInverse;
+  if (variant === "danger") return colors.negative;
+  return colors.textPrimary;
+}
 
-const VARIANT_CLASS: Record<Variant, string> = {
-  primary: "",
-  ghost: "border-glass-border-strong bg-glass-fill",
-  danger: "border-[rgba(251,113,133,0.35)] bg-[rgba(251,113,133,0.10)]",
-};
+/** Border/fill for the non-primary (ghost/danger) variants. */
+function nonPrimaryDecoration(
+  variant: Variant,
+  colors: ThemeColors,
+): { style?: StyleProp<ViewStyle>; className?: string } {
+  if (variant === "danger") {
+    return { style: { borderColor: colors.dangerBorder, backgroundColor: colors.dangerBg } };
+  }
+  if (variant === "ghost") {
+    return { className: "border-glass-border-strong bg-glass-fill" };
+  }
+  return {};
+}
 
 function ButtonContent({
   label,
@@ -89,8 +98,9 @@ export function Button({
   className,
   style,
 }: ButtonProps) {
+  const { colors } = useThemeColors();
   const isDisabled = disabled || loading;
-  const color = LABEL_COLOR[variant];
+  const color = labelColor(variant, colors);
   const inner = <ButtonContent label={label} icon={icon} loading={loading} color={color} />;
 
   if (variant === "primary") {
@@ -119,15 +129,17 @@ export function Button({
     );
   }
 
+  const decoration = nonPrimaryDecoration(variant, colors);
+
   return (
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
       accessibilityRole="button"
-      style={style}
+      style={[decoration.style, style]}
       className={cn(
         "min-h-12 items-center justify-center rounded-md border px-4",
-        VARIANT_CLASS[variant],
+        decoration.className,
         isDisabled && "opacity-50",
         className,
       )}
