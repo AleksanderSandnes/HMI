@@ -10,7 +10,7 @@ import {
 } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PageHeader } from "../../src/components/PageHeader";
@@ -81,11 +81,11 @@ function StatCaps({ solar, timespan }: { solar?: SolarData; timespan: string }) 
   const c = capValues(solar, timespan);
   if (!c.hasData) return null;
   return (
-    <GlassCard className="mt-3 flex-row items-stretch px-4 py-3.5">
+    <View className="mt-3 flex-row items-stretch rounded-md border border-glass-border px-4 py-3.5">
       <Cap label={c.labels[0]} value={c.peakText} />
       <View className="mx-4 w-px self-stretch bg-glass-border" />
       <Cap label={c.labels[1]} value={c.totalText} />
-    </GlassCard>
+    </View>
   );
 }
 
@@ -108,7 +108,7 @@ export default function Solar() {
   return (
     <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
       <ScreenBackground />
-      <ScrollView contentContainerClassName="gap-4 p-4">
+      <View className="flex-1 gap-4 p-4">
         <PageHeader
           title="Solar Production"
           subtitle="Real-time photovoltaic intelligence"
@@ -121,7 +121,7 @@ export default function Solar() {
           }
         />
 
-        <GlassCard strong elevated className="p-[18px]">
+        <GlassCard strong elevated className="flex-1 p-[18px]">
           <View className="mb-3">
             <Text className="text-[19px] font-extrabold text-text-primary">Power Generation</Text>
             <Text className="mt-0.5 text-[13px] font-medium text-text-muted">
@@ -133,17 +133,11 @@ export default function Solar() {
             <SegmentedControl value={timespan} onChange={setTimespan} />
           </View>
 
-          <SolarChart
-            data={chartData}
-            timespan={timespan}
-            date={pickerDate}
-            loading={isLoading}
-            height={300}
-          />
+          <SolarChart data={chartData} timespan={timespan} date={pickerDate} loading={isLoading} />
 
           {!isLoading ? <StatCaps solar={solar} timespan={timespan} /> : null}
         </GlassCard>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

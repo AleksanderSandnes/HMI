@@ -52,7 +52,6 @@ interface WeatherChartProps {
   bandColor?: string;
   unit?: string;
   loading?: boolean;
-  height?: number;
   emptyText?: string;
 }
 
@@ -84,6 +83,12 @@ function buildModel(
 
 function toPoints(geo: ChartGeometry, data: number[]): Pt[] {
   return Array.from({ length: geo.count }, (_, i) => ({ x: geo.x(i), y: geo.y(data[i] ?? 0) }));
+}
+
+/** Whether to render the canvas or an empty/loading message, once measured. */
+function chartView(loading: boolean, hasData: boolean, size: { w: number; h: number }) {
+  const ready = size.w > 0 && size.h > 0;
+  return { showCanvas: ready && !loading && hasData, showEmpty: ready && !loading && !hasData };
 }
 
 function SeriesDefs({ series }: { series: LineSeries[] }) {
@@ -157,9 +162,14 @@ interface TooltipRow {
 }
 
 /** Series rows to list in the crosshair bubble at a given index. */
-function tooltipRows(model: WeatherModel, index: number): TooltipRow[] {
+function tooltipRows(model: WeatherModel, index: number, bandColor: string): TooltipRow[] {
   if (model.isBand && model.band) {
-    return [{ color: model.firstColor, label: "Average", value: model.band.avg[index] ?? 0 }];
+    const b = model.band;
+    return [
+      { color: "#fb7185", label: "High", value: b.max[index] ?? 0 },
+      { color: bandColor, label: "Avg", value: b.avg[index] ?? 0 },
+      { color: "#60a5fa", label: "Low", value: b.min[index] ?? 0 },
+    ];
   }
   return model.clean.map((s) => ({ color: s.color, label: s.label, value: s.data[index] ?? 0 }));
 }
@@ -260,7 +270,7 @@ function WeatherCanvas({
     [width, height, model, labels.length],
   );
   const { index, gesture } = useCrosshair(geo);
-  const rows = index != null ? tooltipRows(model, index) : [];
+  const rows = index != null ? tooltipRows(model, index, bandColor) : [];
 
   return (
     <GestureDetector gesture={gesture}>
@@ -309,27 +319,29 @@ export function WeatherChart({
   bandColor = "#fbbf24",
   unit = "",
   loading = false,
-  height = 320,
   emptyText = "No data for this period",
 }: WeatherChartProps) {
   const model = useMemo(() => buildModel(labels, series, band), [labels, series, band]);
-  const [width, setWidth] = useState(0);
-
-  if (loading) return <ChartMessage height={height} />;
-  if (!model.hasData) return <ChartMessage height={height} text={emptyText} />;
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const { showCanvas, showEmpty } = chartView(loading, model.hasData, size);
 
   return (
-    <View style={{ height }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
-      {width > 0 ? (
+    <View
+      className="w-full flex-1"
+      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+    >
+      {showCanvas ? (
         <WeatherCanvas
-          width={width}
-          height={height}
+          width={size.w}
+          height={size.h}
           model={model}
           labels={labels}
           bandColor={bandColor}
           unit={unit}
         />
-      ) : null}
+      ) : (
+        <ChartMessage text={showEmpty ? emptyText : undefined} />
+      )}
     </View>
   );
 }

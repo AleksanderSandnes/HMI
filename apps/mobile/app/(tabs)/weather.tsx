@@ -197,7 +197,7 @@ export default function Weather() {
   return (
     <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
       <ScreenBackground />
-      <ScrollView contentContainerClassName="gap-4 p-4">
+      <View className="flex-1 gap-4 p-4">
         <PageHeader
           title="Weather Station"
           subtitle="Local conditions & history"
@@ -210,7 +210,7 @@ export default function Weather() {
           }
         />
 
-        <GlassCard strong elevated className="p-[18px]">
+        <GlassCard strong elevated className="flex-1 p-[18px]">
           <MetricChips active={dataType} onSelect={setDataType} />
 
           {/* Timespan */}
@@ -233,10 +233,9 @@ export default function Weather() {
             bandColor={meta.accent}
             unit={meta.unit}
             loading={isLoading}
-            height={300}
           />
         </GlassCard>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

@@ -53,14 +53,19 @@ function SparkCanvas({
   );
 }
 
-/** Compact area sparkline for the Dashboard solar hero (reuses the chart svg helpers). */
-export function Sparkline({ values, height = 90 }: { values: number[]; height?: number }) {
-  const [width, setWidth] = useState(0);
+/** Area sparkline for the Dashboard solar hero; fills its (flex) container. */
+export function Sparkline({ values }: { values: number[] }) {
+  const [size, setSize] = useState({ w: 0, h: 0 });
   const data = values.length > 1 ? values : [0, 0];
 
   return (
-    <View style={{ height }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
-      {width > 0 ? <SparkCanvas width={width} height={height} values={data} /> : null}
+    <View
+      className="w-full flex-1"
+      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+    >
+      {size.w > 0 && size.h > 0 ? (
+        <SparkCanvas width={size.w} height={size.h} values={data} />
+      ) : null}
     </View>
   );
 }

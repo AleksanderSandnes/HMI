@@ -72,7 +72,6 @@ interface SolarChartProps {
   /** Selected ISO date — used to prefix the month name on the monthly tooltip. */
   date?: string;
   loading?: boolean;
-  height?: number;
 }
 
 interface SolarModel {
@@ -271,26 +270,22 @@ function SolarCanvas({
  * Hourly → gradient area + horizontal gradient line + peak dot. Aggregated →
  * rounded gradient bars with the peak bar highlighted.
  */
-export function SolarChart({
-  data,
-  timespan,
-  date,
-  loading = false,
-  height = 300,
-}: SolarChartProps) {
+export function SolarChart({ data, timespan, date, loading = false }: SolarChartProps) {
   const model = useMemo(() => readModel(data, timespan), [data, timespan]);
-  const [width, setWidth] = useState(0);
-
-  if (loading) return <ChartMessage height={height} />;
-  if (!model.values.length || model.values.every((v) => v === 0)) {
-    return <ChartMessage height={height} text="No production data for this period" />;
-  }
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const empty = !model.values.length || model.values.every((v) => v === 0);
+  const showCanvas = !loading && !empty && size.w > 0 && size.h > 0;
 
   return (
-    <View style={{ height }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
-      {width > 0 ? (
-        <SolarCanvas width={width} height={height} model={model} timespan={timespan} date={date} />
-      ) : null}
+    <View
+      className="w-full flex-1"
+      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+    >
+      {showCanvas ? (
+        <SolarCanvas width={size.w} height={size.h} model={model} timespan={timespan} date={date} />
+      ) : (
+        <ChartMessage text={!loading && empty ? "No production data for this period" : undefined} />
+      )}
     </View>
   );
 }

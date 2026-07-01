@@ -64,7 +64,9 @@ export function SolarHeroCard({ model }: { model: DashboardModel }) {
         ) : null}
       </View>
 
-      <Sparkline values={sparkline} height={96} />
+      <View className="mt-3 flex-1">
+        <Sparkline values={sparkline} />
+      </View>
     </GlassCard>
   );
 }

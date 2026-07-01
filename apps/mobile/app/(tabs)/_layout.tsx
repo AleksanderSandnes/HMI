@@ -18,7 +18,7 @@ function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   return (
     <View
-      style={{ backgroundColor: "#070b16", paddingBottom: insets.bottom || 8 }}
+      style={{ backgroundColor: "#070b16", paddingBottom: insets.bottom + 10 }}
       className="px-2.5 pt-1"
     >
       <View className="flex-row items-center justify-around rounded-[24px] border border-glass-border bg-glass-fill px-1.5 pb-1.5 pt-2">
