@@ -20,6 +20,7 @@ import {
 } from "../../../src/components/settings/list";
 import { Button } from "../../../src/components/ui/Button";
 import { GlassCard } from "../../../src/components/ui/GlassCard";
+import { ScreenBackground } from "../../../src/components/ui/ScreenBackground";
 import { useCore } from "../../../src/lib/useCore";
 import { useLogout } from "../../../src/lib/useLogout";
 import { usePreference } from "../../../src/lib/usePreference";
@@ -73,6 +74,7 @@ export default function SettingsHub() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
+      <ScreenBackground />
       <ScrollView contentContainerClassName="gap-3 p-4">
         <View className="mb-1">
           <Text className="text-[28px] font-extrabold tracking-[-0.6px] text-text-primary">

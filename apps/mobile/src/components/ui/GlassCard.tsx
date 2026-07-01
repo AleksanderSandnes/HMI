@@ -32,8 +32,8 @@ const ELEVATED = StyleSheet.create({
 const SCRIM = StyleSheet.create({
   iosBase: { backgroundColor: "rgba(12, 17, 32, 0.42)" },
   iosStrong: { backgroundColor: "rgba(15, 20, 38, 0.5)" },
-  androidBase: { backgroundColor: "rgba(12, 17, 32, 0.82)" },
-  androidStrong: { backgroundColor: "rgba(16, 22, 40, 0.88)" },
+  androidBase: { backgroundColor: "rgba(12, 17, 32, 0.6)" },
+  androidStrong: { backgroundColor: "rgba(16, 22, 40, 0.66)" },
 });
 
 /**

@@ -9,6 +9,7 @@ import { PageHeader } from "../../src/components/PageHeader";
 import { WeatherChart, type LineSeries } from "../../src/components/charts";
 import { DateSelector } from "../../src/components/ui/DateSelector";
 import { GlassCard } from "../../src/components/ui/GlassCard";
+import { ScreenBackground } from "../../src/components/ui/ScreenBackground";
 import { SegmentedControl } from "../../src/components/ui/SegmentedControl";
 import { cn } from "../../src/lib/cn";
 import { useCore } from "../../src/lib/useCore";
@@ -195,6 +196,7 @@ export default function Weather() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
+      <ScreenBackground />
       <ScrollView contentContainerClassName="gap-4 p-4">
         <PageHeader
           title="Weather Station"

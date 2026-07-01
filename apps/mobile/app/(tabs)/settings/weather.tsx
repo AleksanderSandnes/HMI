@@ -1,6 +1,5 @@
 import { weatherConfig, type ApiSettingsResponse } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { Text, View } from "react-native";
 
 import { SubScreen } from "../../../src/components/settings/SubScreen";
@@ -9,11 +8,12 @@ import { useCore } from "../../../src/lib/useCore";
 
 export default function WeatherCredentialsScreen() {
   const { settings } = useCore();
+  // Shares the ["api-settings"] cache with the Settings hub, which owns the
+  // realtime subscription (subscribing again here collides on the same channel).
   const { data: api, refetch } = useQuery<ApiSettingsResponse | null>({
     queryKey: ["api-settings"],
     queryFn: () => settings.getApiSettings(),
   });
-  useEffect(() => settings.subscribeSettings(() => void refetch()), [settings, refetch]);
   const wc = weatherConfig(api);
 
   return (

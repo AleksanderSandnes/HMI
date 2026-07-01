@@ -5,6 +5,8 @@ import { Pressable, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { ScreenBackground } from "../ui/ScreenBackground";
+
 /** Pushed settings sub-screen: back header + keyboard-aware scroll (design 1g–1j). */
 export function SubScreen({
   title,
@@ -18,6 +20,7 @@ export function SubScreen({
   const router = useRouter();
   return (
     <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
+      <ScreenBackground />
       <View className="flex-row items-center gap-3 px-4 pb-2 pt-1">
         <Pressable
           onPress={() => router.back()}
