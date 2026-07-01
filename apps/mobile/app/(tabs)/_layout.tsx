@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenBackground } from "../../src/components/ui/ScreenBackground";
 import { cn } from "../../src/lib/cn";
+import { useThemeColors } from "../../src/lib/theme";
 
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   index: "grid",
@@ -17,6 +18,7 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 /** Floating glass tab bar with a solar-tinted selected pill (design `.nav`). */
 function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { colors } = useThemeColors();
   return (
     <View style={{ paddingBottom: insets.bottom + 10 }} className="px-2.5 pt-1">
       <View className="flex-row items-center justify-around rounded-[24px] border border-glass-border bg-glass-fill px-1.5 pb-1.5 pt-2">
@@ -47,7 +49,7 @@ function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               <Ionicons
                 name={focused ? base : (`${base}-outline` as keyof typeof Ionicons.glyphMap)}
                 size={20}
-                color={focused ? "#fbbf24" : "#71809a"}
+                color={focused ? colors.solarTint : colors.textMuted}
               />
               <Text
                 className={cn(
