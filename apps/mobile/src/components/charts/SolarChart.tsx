@@ -58,6 +58,14 @@ function tooltipValue(timespan: string, v: number): string {
   return `${formatPeak(v)} ${peakUnit(v, unit)}`;
 }
 
+/** Y-axis label: hourly is scaled W→kW to match the tooltip; aggregated stays kWh. */
+function axisLabel(timespan: string, v: number): string {
+  if (timespan !== "hourly") return formatNum(v);
+  if (v === 0) return "0";
+  const kw = v / 1000;
+  return kw >= 10 ? `${Math.round(kw)}` : `${kw.toFixed(1)}`;
+}
+
 interface SolarChartProps {
   data: SimpleChartData;
   timespan: string;
@@ -215,7 +223,7 @@ function SolarCanvas({
             yCount={5}
             xAt={xAt}
             formatX={(i) => model.labels[i] ?? ""}
-            formatY={(v) => formatNum(v)}
+            formatY={(v) => axisLabel(timespan, v)}
           />
           {model.isArea ? (
             <SolarArea geo={geo} model={model} />
