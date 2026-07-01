@@ -1,9 +1,18 @@
 import "../global.css";
 import "../src/font";
+import {
+  Geist_400Regular,
+  Geist_500Medium,
+  Geist_600SemiBold,
+  Geist_700Bold,
+  Geist_800ExtraBold,
+  Geist_900Black,
+  useFonts,
+} from "@expo-google-fonts/geist";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -43,6 +52,28 @@ function AuthGate() {
 }
 
 export default function RootLayout() {
+  // Load Geist per-weight on native (the web build loads it via CSS in `font.ts`).
+  const [fontsLoaded, fontError] = useFonts(
+    Platform.OS === "web"
+      ? {}
+      : {
+          Geist_400Regular,
+          Geist_500Medium,
+          Geist_600SemiBold,
+          Geist_700Bold,
+          Geist_800ExtraBold,
+          Geist_900Black,
+        },
+  );
+
+  if (!fontsLoaded && !fontError) {
+    return (
+      <View className="flex-1 items-center justify-center bg-bg-base">
+        <ActivityIndicator color="#f59e0b" />
+      </View>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
