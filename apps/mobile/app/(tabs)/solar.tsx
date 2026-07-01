@@ -26,11 +26,16 @@ const EMPTY: SimpleChartData = { labels: [], datasets: [{ data: [] }] };
 function Cap({ label, value }: { label: string; value: string }) {
   return (
     <View className="min-w-0 flex-1">
-      <Text className="text-[10px] font-bold uppercase tracking-[0.4px] text-text-muted">
+      <Text
+        numberOfLines={1}
+        className="text-[10px] font-bold uppercase tracking-[0.4px] text-text-muted"
+      >
         {label}
       </Text>
       <Text
         numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
         className="mt-1 text-[18px] font-extrabold tracking-[-0.3px] text-text-primary"
       >
         {value}
@@ -39,24 +44,35 @@ function Cap({ label, value }: { label: string; value: string }) {
   );
 }
 
+const CAP_LABELS: Record<string, [string, string]> = {
+  hourly: ["Peak", "Today total"],
+  weekly: ["Peak day", "Week total"],
+  monthly: ["Peak day", "Month total"],
+  yearly: ["Best month", "Year total"],
+  total: ["Best year", "5-year total"],
+};
+
 function peakText(peak: ReturnType<typeof getPeakOutput>): string {
   if (!peak) return "—";
   const v = `${formatPeak(peak.value)} ${peakUnit(peak.value, peak.unit)}`;
   return peak.label ? `${peak.label} · ${v}` : v;
 }
 
+function totalKwh(solar: SolarData | undefined, timespan: string): number {
+  if (timespan === "hourly") return solar?.metrics.todayGeneration ?? 0;
+  const vals = solar?.chartData?.datasets?.[0]?.data ?? [];
+  return vals.reduce((a, b) => a + (b || 0), 0);
+}
+
 function capValues(solar: SolarData | undefined, timespan: string) {
   const vals = solar?.chartData?.datasets?.[0]?.data ?? [];
-  const isHourly = timespan === "hourly";
   const peak = getPeakOutput(solar?.chartData as SimpleChartData, timespan);
-  const totalKwh = isHourly
-    ? (solar?.metrics.todayGeneration ?? 0)
-    : vals.reduce((a, b) => a + (b || 0), 0);
+  const total = totalKwh(solar, timespan);
   return {
     hasData: vals.length > 0,
-    isHourly,
+    labels: CAP_LABELS[timespan] ?? ["Peak", "Total"],
     peakText: peakText(peak),
-    totalText: `${formatPeak(totalKwh)} ${peakUnit(totalKwh, "kWh")}`,
+    totalText: `${formatPeak(total)} ${peakUnit(total, "kWh")}`,
   };
 }
 
@@ -66,9 +82,9 @@ function StatCaps({ solar, timespan }: { solar?: SolarData; timespan: string }) 
   if (!c.hasData) return null;
   return (
     <GlassCard className="mt-3 flex-row items-stretch px-4 py-3.5">
-      <Cap label={c.isHourly ? "Peak" : "Peak day"} value={c.peakText} />
+      <Cap label={c.labels[0]} value={c.peakText} />
       <View className="mx-4 w-px self-stretch bg-glass-border" />
-      <Cap label={c.isHourly ? "Today total" : "Period total"} value={c.totalText} />
+      <Cap label={c.labels[1]} value={c.totalText} />
     </GlassCard>
   );
 }
@@ -117,7 +133,13 @@ export default function Solar() {
             <SegmentedControl value={timespan} onChange={setTimespan} />
           </View>
 
-          <SolarChart data={chartData} timespan={timespan} loading={isLoading} height={300} />
+          <SolarChart
+            data={chartData}
+            timespan={timespan}
+            date={pickerDate}
+            loading={isLoading}
+            height={300}
+          />
 
           {!isLoading ? <StatCaps solar={solar} timespan={timespan} /> : null}
         </GlassCard>

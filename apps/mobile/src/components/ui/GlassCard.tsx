@@ -24,31 +24,25 @@ const ELEVATED = StyleSheet.create({
   },
 }).shadow;
 
-// Dark backing tint so the card reads as a crisp dark panel like the web glass
-// surface. On iOS a light scrim sits over a real expo-blur frost; on Android we
-// skip the (buggy, washed-out / white-flashing) experimental blur entirely and
-// use a more opaque scrim so content stays sharp over the ambient background
-// glows — matching the web's CSS backdrop-filter look without its artifacts.
-const SCRIM = StyleSheet.create({
-  iosBase: { backgroundColor: "rgba(12, 17, 32, 0.42)" },
-  iosStrong: { backgroundColor: "rgba(15, 20, 38, 0.5)" },
-  androidBase: { backgroundColor: "rgba(12, 17, 32, 0.6)" },
-  androidStrong: { backgroundColor: "rgba(16, 22, 40, 0.66)" },
+// Light translucent fill (matching the web `--glass` / `--glassS` tokens) so the
+// card reads as see-through frosted glass over the ambient gsun glow rather than
+// a flat dark-blue panel. On iOS a real expo-blur frost sits behind it; on
+// Android there is no blur, so a faint dark tint under the light fill keeps text
+// legible while the gradient still bleeds through.
+const FILL = StyleSheet.create({
+  light: { backgroundColor: "rgba(255, 255, 255, 0.05)" },
+  lightStrong: { backgroundColor: "rgba(255, 255, 255, 0.08)" },
+  androidTint: { backgroundColor: "rgba(9, 13, 27, 0.34)" },
+  androidTintStrong: { backgroundColor: "rgba(9, 13, 27, 0.3)" },
 });
 
 /**
  * Frosted-glass surface — the building block of every screen. A hairline border,
- * a translucent dark fill, and an optional glow. Mirrors
- * apps/web/components/ui/GlassCard.tsx (which uses CSS backdrop-filter): on iOS a
- * real expo-blur frost sits behind a light scrim; on Android a more opaque scrim
- * stands in for blur so content stays crisp without the experimental blur's
- * washed-out / white-flash artifacts.
+ * a translucent fill, and an optional glow. Mirrors
+ * apps/web/components/ui/GlassCard.tsx (CSS backdrop-filter): on iOS a real
+ * expo-blur frost sits behind the light fill; on Android a faint dark tint under
+ * the light fill stands in for blur while staying see-through over the glow.
  */
-function scrimStyle(isIOS: boolean, strong: boolean) {
-  if (isIOS) return strong ? SCRIM.iosStrong : SCRIM.iosBase;
-  return strong ? SCRIM.androidStrong : SCRIM.androidBase;
-}
-
 export function GlassCard({
   strong = false,
   elevated = false,
@@ -59,7 +53,6 @@ export function GlassCard({
   ...rest
 }: GlassCardProps) {
   const isIOS = Platform.OS === "ios";
-  const scrim = scrimStyle(isIOS, strong);
 
   return (
     <View
@@ -73,12 +66,20 @@ export function GlassCard({
     >
       {isIOS ? (
         <BlurView
-          intensity={intensity ?? (strong ? 26 : 20)}
+          intensity={intensity ?? (strong ? 30 : 22)}
           tint="dark"
           style={StyleSheet.absoluteFill}
         />
-      ) : null}
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, scrim]} />
+      ) : (
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, strong ? FILL.androidTintStrong : FILL.androidTint]}
+        />
+      )}
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, strong ? FILL.lightStrong : FILL.light]}
+      />
       {children}
     </View>
   );

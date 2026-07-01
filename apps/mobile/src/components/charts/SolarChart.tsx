@@ -1,4 +1,4 @@
-import { barGapPercent, formatNum, type SimpleChartData } from "@hmi/core";
+import { barGapPercent, formatNum, formatPeak, peakUnit, type SimpleChartData } from "@hmi/core";
 import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
@@ -17,9 +17,52 @@ const AREA_PADDING = { left: 8, right: 8, top: 22 };
 const BAR_PADDING = { left: 16, right: 16, top: 22 };
 const MAX_BAR = 72;
 
+const WEEKDAY_FULL: Record<string, string> = {
+  Sun: "Sunday",
+  Mon: "Monday",
+  Tue: "Tuesday",
+  Wed: "Wednesday",
+  Thu: "Thursday",
+  Fri: "Friday",
+  Sat: "Saturday",
+};
+const MONTH_FULL: Record<string, string> = {
+  Jan: "January",
+  Feb: "February",
+  Mar: "March",
+  Apr: "April",
+  May: "May",
+  Jun: "June",
+  Jul: "July",
+  Aug: "August",
+  Sep: "September",
+  Oct: "October",
+  Nov: "November",
+  Dec: "December",
+};
+
+/** Expand the crosshair header to a friendly label per timespan (design tooltips). */
+function tooltipHeader(timespan: string, label: string, date?: string): string {
+  if (timespan === "weekly") return WEEKDAY_FULL[label] ?? label;
+  if (timespan === "yearly") return MONTH_FULL[label] ?? label;
+  if (timespan === "monthly" && date) {
+    const month = new Date(date).toLocaleDateString("en-US", { month: "long" });
+    return `${month} ${label}`;
+  }
+  return label;
+}
+
+/** Hourly reads in kW; aggregated totals scale kWh→MWh. */
+function tooltipValue(timespan: string, v: number): string {
+  const unit = timespan === "hourly" ? "W" : "kWh";
+  return `${formatPeak(v)} ${peakUnit(v, unit)}`;
+}
+
 interface SolarChartProps {
   data: SimpleChartData;
   timespan: string;
+  /** Selected ISO date — used to prefix the month name on the monthly tooltip. */
+  date?: string;
   loading?: boolean;
   height?: number;
 }
@@ -137,10 +180,14 @@ function SolarCanvas({
   width,
   height,
   model,
+  timespan,
+  date,
 }: {
   width: number;
   height: number;
   model: SolarModel;
+  timespan: string;
+  date?: string;
 }) {
   const geo = useMemo(
     () =>
@@ -157,7 +204,6 @@ function SolarCanvas({
   const xAt = (i: number) => (model.isArea ? geo.x(i) : barCenter(geo, BAR_PADDING.left, i));
   const { index, gesture } = useCrosshair(geo);
   const value = index != null ? model.values[index] : null;
-  const unit = model.isArea ? "W" : "kWh";
 
   return (
     <GestureDetector gesture={gesture}>
@@ -200,10 +246,10 @@ function SolarCanvas({
         {index != null && value != null ? (
           <TooltipBubble x={xAt(index)} width={width}>
             <Text className="text-[10.5px] font-bold uppercase tracking-[0.3px] text-text-muted">
-              {model.labels[index] ?? ""}
+              {tooltipHeader(timespan, model.labels[index] ?? "", date)}
             </Text>
             <Text className="mt-0.5 text-[14px] font-extrabold text-text-primary">
-              {formatNum(value)} {unit}
+              {tooltipValue(timespan, value)}
             </Text>
           </TooltipBubble>
         ) : null}
@@ -217,7 +263,13 @@ function SolarCanvas({
  * Hourly → gradient area + horizontal gradient line + peak dot. Aggregated →
  * rounded gradient bars with the peak bar highlighted.
  */
-export function SolarChart({ data, timespan, loading = false, height = 300 }: SolarChartProps) {
+export function SolarChart({
+  data,
+  timespan,
+  date,
+  loading = false,
+  height = 300,
+}: SolarChartProps) {
   const model = useMemo(() => readModel(data, timespan), [data, timespan]);
   const [width, setWidth] = useState(0);
 
@@ -228,7 +280,9 @@ export function SolarChart({ data, timespan, loading = false, height = 300 }: So
 
   return (
     <View style={{ height }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
-      {width > 0 ? <SolarCanvas width={width} height={height} model={model} /> : null}
+      {width > 0 ? (
+        <SolarCanvas width={width} height={height} model={model} timespan={timespan} date={date} />
+      ) : null}
     </View>
   );
 }
