@@ -9,6 +9,7 @@ import { NotificationsOverlay } from "../../src/components/NotificationsOverlay"
 import { DashboardTopbar } from "../../src/components/dashboard/DashboardTopbar";
 import { SolarHeroCard } from "../../src/components/dashboard/SolarHeroCard";
 import { WeatherSummaryCard } from "../../src/components/dashboard/WeatherSummaryCard";
+import { useThemeColors } from "../../src/lib/theme";
 import { useCore } from "../../src/lib/useCore";
 import { useDashboardData } from "../../src/lib/useDashboardData";
 import { useNotifications } from "../../src/lib/useNotifications";
@@ -22,9 +23,10 @@ function SectionLabel({
   text: string;
   right?: ReactNode;
 }) {
+  const { colors } = useThemeColors();
   return (
     <View className="flex-row items-center gap-2.5">
-      <Ionicons name={icon} size={14} color="#fbbf24" />
+      <Ionicons name={icon} size={14} color={colors.solarTint} />
       <Text className="text-[11.5px] font-extrabold uppercase tracking-[0.7px] text-text-secondary">
         {text}
       </Text>

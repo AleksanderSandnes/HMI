@@ -11,6 +11,7 @@ import { DateSelector } from "../../src/components/ui/DateSelector";
 import { GlassCard } from "../../src/components/ui/GlassCard";
 import { SegmentedControl } from "../../src/components/ui/SegmentedControl";
 import { cn } from "../../src/lib/cn";
+import { useThemeColors } from "../../src/lib/theme";
 import { useCore } from "../../src/lib/useCore";
 
 interface MetricMeta {
@@ -109,6 +110,7 @@ const TIME_OPTIONS = [
 ];
 
 function MetricChips({ active, onSelect }: { active: string; onSelect: (key: string) => void }) {
+  const { colors } = useThemeColors();
   return (
     <View className="mb-3 h-11">
       <ScrollView
@@ -129,7 +131,7 @@ function MetricChips({ active, onSelect }: { active: string; onSelect: (key: str
                   : "border-glass-border bg-glass-fill",
               )}
             >
-              {t.icon(on ? t.accent : "#71809a", 14)}
+              {t.icon(on ? t.accent : colors.textMuted, 14)}
               <Text
                 style={on ? { color: t.accent } : undefined}
                 className={cn("text-[13px] font-bold", !on && "text-text-muted")}

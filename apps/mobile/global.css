@@ -10,7 +10,10 @@
  * (dark, unchanged). Only chrome — backgrounds, glass fills/borders, body
  * text, positive/negative — vary by mode; solar/energy/accent/revenue
  * gradient tokens are intentionally identical in both modes and stay as
- * plain values in tailwind.config.js.
+ * plain values in tailwind.config.js. `--solar-light` is the one exception:
+ * across the app it's only ever used as a flat text/icon tint (never a
+ * gradient stop), matching the design's `--solar-l`, so it needs the same
+ * darker-on-light / lighter-on-dark treatment as positive/negative.
  */
 :root {
   --bg-base: #eaeef5;
@@ -24,6 +27,7 @@
   --text-muted: #7b8698;
   --positive: #059669;
   --negative: #e11d48;
+  --solar-light: #d97706;
 }
 
 .dark:root {
@@ -38,4 +42,5 @@
   --text-muted: #71809a;
   --positive: #34d399;
   --negative: #fb7185;
+  --solar-light: #fbbf24;
 }

@@ -1,13 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colorScheme as nwColorScheme } from "nativewind";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { Appearance } from "react-native";
 
 export type ThemeMode = "light" | "dark";
@@ -37,6 +30,18 @@ export interface ThemeColors {
   solarTint: string;
   /** Darker/lighter flat tint of the energy accent, used for label text/icons (not gradients). */
   energyTint: string;
+  /** Darker/lighter flat tint (sky blue) for precipitation-style data icons. */
+  skyTint: string;
+  /** Darker/lighter flat tint (cyan) for pressure-style data icons. */
+  cyanTint: string;
+  /** Faint disc fill behind compass/gauge dials (wind, barometer). */
+  dialFill: string;
+  /** Hairline ring stroke around compass/gauge dials. */
+  dialRing: string;
+  /** Dimming backdrop behind modals/sheets. */
+  scrim: string;
+  /** Solid (non-glass) panel background, e.g. the notifications sheet. */
+  panelBg: string;
 }
 
 const LIGHT: ThemeColors = {
@@ -53,6 +58,12 @@ const LIGHT: ThemeColors = {
   negative: "#e11d48",
   solarTint: "#d97706",
   energyTint: "#0d9488",
+  skyTint: "#0284c7",
+  cyanTint: "#0891b2",
+  dialFill: "rgba(20, 26, 41, 0.045)",
+  dialRing: "rgba(20, 26, 41, 0.14)",
+  scrim: "rgba(20, 26, 41, 0.25)",
+  panelBg: "rgba(255, 255, 255, 0.97)",
 };
 
 const DARK: ThemeColors = {
@@ -69,7 +80,24 @@ const DARK: ThemeColors = {
   negative: "#fb7185",
   solarTint: "#fbbf24",
   energyTint: "#34d399",
+  skyTint: "#38bdf8",
+  cyanTint: "#22d3ee",
+  dialFill: "rgba(255, 255, 255, 0.03)",
+  dialRing: "rgba(255, 255, 255, 0.12)",
+  scrim: "rgba(4, 7, 14, 0.5)",
+  panelBg: "#0d1320",
 };
+
+/**
+ * Ad-hoc low-alpha hairline (gauge ticks/rings, etc. not covered by a named
+ * token) — white-on-dark in dark mode, the same alpha dark-tinted-on-light in
+ * light mode. Matches how the design's own border tokens relate (`--bd`/
+ * `--bdS` use ~the same alpha as their dark equivalents, just the opposite
+ * base color).
+ */
+export function hairline(mode: ThemeMode, alpha: number): string {
+  return mode === "dark" ? `rgba(255, 255, 255, ${alpha})` : `rgba(20, 26, 41, ${alpha})`;
+}
 
 async function loadStoredMode(): Promise<ThemeMode | null> {
   const v = await AsyncStorage.getItem(STORAGE_KEY);

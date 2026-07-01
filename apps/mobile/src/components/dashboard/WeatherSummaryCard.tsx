@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { show } from "@hmi/core";
 import { Text, View } from "react-native";
 
+import { useThemeColors } from "../../lib/theme";
 import type { DashboardModel } from "../../lib/useDashboardData";
 import { WindDialFace } from "../charts/dials/WindDial";
 import { GlassCard } from "../ui/GlassCard";
@@ -69,6 +70,7 @@ function StatCol({
 
 /** Focus dashboard weather panel: wind dial + temp/precip + UV/humidity/pressure. */
 export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
+  const { colors } = useThemeColors();
   const { obs, m, wkAvg } = model;
   return (
     <GlassCard strong className="min-h-0 flex-1 justify-between gap-3 px-3.5 pb-6 pt-3.5">
@@ -86,14 +88,14 @@ export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
         <View className="flex-1 items-center gap-5">
           <BigMetric
             icon="thermometer"
-            color="#fb7185"
+            color={colors.negative}
             label="Temperature"
             value={show(m.temp)}
             unit="°C"
           />
           <BigMetric
             icon="rainy"
-            color="#38bdf8"
+            color={colors.skyTint}
             label="Precipitation"
             value={show(m.precipRate, 1)}
             unit="mm/h"
@@ -104,7 +106,7 @@ export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
       <View className="flex-row items-stretch">
         <StatCol
           icon="sunny"
-          color="#fbbf24"
+          color={colors.solarTint}
           label="UV index"
           value={show(obs?.uv)}
           sub={`avg ${show(wkAvg.uv)}`}
@@ -112,7 +114,7 @@ export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
         <View className="mx-3 w-px bg-glass-border" />
         <StatCol
           icon="water"
-          color="#34d399"
+          color={colors.energyTint}
           label="Humidity"
           value={show(obs?.humidity)}
           unit="%"
@@ -121,7 +123,7 @@ export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
         <View className="mx-3 w-px bg-glass-border" />
         <StatCol
           icon="speedometer"
-          color="#22d3ee"
+          color={colors.cyanTint}
           label="Pressure"
           value={show(m.pressure)}
           unit="hPa"

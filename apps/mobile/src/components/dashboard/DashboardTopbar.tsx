@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
 
+import { useThemeColors } from "../../lib/theme";
 import { useAvatar } from "../../lib/useAvatar";
 import { Avatar } from "../ui/Avatar";
 
@@ -24,6 +25,7 @@ export function DashboardTopbar({
   onBellPress: () => void;
 }) {
   const { uri } = useAvatar();
+  const { colors } = useThemeColors();
   return (
     <View className="flex-row items-center justify-between pt-1.5">
       <Text className="text-[21px] font-black tracking-[-0.5px] text-text-primary">HMI</Text>
@@ -33,7 +35,7 @@ export function DashboardTopbar({
           accessibilityLabel="Notifications"
           className="h-[38px] w-[38px] items-center justify-center rounded-[12px] border border-glass-border bg-glass-fill"
         >
-          <Ionicons name="notifications-outline" size={18} color="#aeb8cc" />
+          <Ionicons name="notifications-outline" size={18} color={colors.textSecondary} />
           {notifCount > 0 ? (
             <View className="absolute -right-1 -top-1 h-[17px] min-w-[17px] items-center justify-center rounded-pill bg-solar px-1">
               <Text className="text-[10px] font-black text-text-inverse">

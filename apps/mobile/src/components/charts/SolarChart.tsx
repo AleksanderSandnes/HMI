@@ -4,6 +4,8 @@ import { Text, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Svg, { Circle, Defs, Line, Path, Rect } from "react-native-svg";
 
+import { hairline, useThemeColors } from "../../lib/theme";
+
 import { ChartMessage } from "./ChartMessage";
 import { TooltipBubble } from "./Tooltip";
 import { Axes } from "./svg/Axes";
@@ -183,6 +185,26 @@ function readModel(data: SimpleChartData, timespan: string): SolarModel {
   };
 }
 
+function SolarCrosshair({
+  x,
+  dotY,
+  top,
+  bottom,
+}: {
+  x: number;
+  dotY: number;
+  top: number;
+  bottom: number;
+}) {
+  const { mode } = useThemeColors();
+  return (
+    <>
+      <Line x1={x} y1={top} x2={x} y2={bottom} stroke={hairline(mode, 0.22)} strokeWidth={1} />
+      <Circle cx={x} cy={dotY} r={4.5} fill="#fbbf24" stroke="#0a1124" strokeWidth={1.5} />
+    </>
+  );
+}
+
 function SolarCanvas({
   width,
   height,
@@ -230,24 +252,12 @@ function SolarCanvas({
             <SolarBars geo={geo} model={model} />
           )}
           {index != null && value != null ? (
-            <>
-              <Line
-                x1={xAt(index)}
-                y1={geo.bounds.top}
-                x2={xAt(index)}
-                y2={geo.bounds.bottom}
-                stroke="rgba(255,255,255,0.22)"
-                strokeWidth={1}
-              />
-              <Circle
-                cx={xAt(index)}
-                cy={geo.y(value)}
-                r={4.5}
-                fill="#fbbf24"
-                stroke="#0a1124"
-                strokeWidth={1.5}
-              />
-            </>
+            <SolarCrosshair
+              x={xAt(index)}
+              dotY={geo.y(value)}
+              top={geo.bounds.top}
+              bottom={geo.bounds.bottom}
+            />
           ) : null}
         </Svg>
         {index != null && value != null ? (

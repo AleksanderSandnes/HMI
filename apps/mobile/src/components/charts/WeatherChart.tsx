@@ -4,6 +4,8 @@ import { Text, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Svg, { Circle, Defs, Line, Path } from "react-native-svg";
 
+import { hairline, useThemeColors } from "../../lib/theme";
+
 import { ChartMessage } from "./ChartMessage";
 import { TooltipBubble } from "./Tooltip";
 import { Axes } from "./svg/Axes";
@@ -217,6 +219,7 @@ function CrosshairMarkers({
   index: number;
   rows: TooltipRow[];
 }) {
+  const { mode } = useThemeColors();
   return (
     <>
       <Line
@@ -224,7 +227,7 @@ function CrosshairMarkers({
         y1={geo.bounds.top}
         x2={geo.x(index)}
         y2={geo.bounds.bottom}
-        stroke="rgba(255,255,255,0.22)"
+        stroke={hairline(mode, 0.22)}
         strokeWidth={1}
       />
       {rows.map((r) => (

@@ -23,6 +23,7 @@ import {
 
 import { cn } from "../../lib/cn";
 import { GRADIENTS } from "../../lib/gradients";
+import { hairline, useThemeColors } from "../../lib/theme";
 
 import { GlassCard } from "./GlassCard";
 
@@ -67,6 +68,7 @@ function Header({
   onShift: (d: number) => void;
   onZoom: () => void;
 }) {
+  const { colors } = useThemeColors();
   return (
     <View className="mb-4 flex-row items-center justify-between">
       <Pressable
@@ -74,7 +76,7 @@ function Header({
         hitSlop={8}
         className="h-9 w-9 items-center justify-center rounded-md border border-glass-border bg-glass-fill-strong"
       >
-        <Ionicons name="chevron-back" size={14} color="#aeb8cc" />
+        <Ionicons name="chevron-back" size={14} color={colors.textSecondary} />
       </Pressable>
       <Pressable onPress={onZoom} hitSlop={8}>
         <Text className="text-base font-extrabold text-text-primary">{label}</Text>
@@ -84,7 +86,7 @@ function Header({
         hitSlop={8}
         className="h-9 w-9 items-center justify-center rounded-md border border-glass-border bg-glass-fill-strong"
       >
-        <Ionicons name="chevron-forward" size={14} color="#aeb8cc" />
+        <Ionicons name="chevron-forward" size={14} color={colors.textSecondary} />
       </Pressable>
     </View>
   );
@@ -103,6 +105,7 @@ function DayView({
   disableFuture: boolean;
   onPick: (d: Date) => void;
 }) {
+  const { mode } = useThemeColors();
   const month = viewDate.getMonth();
   return (
     <>
@@ -141,8 +144,9 @@ function DayView({
                   <Text
                     className={cn(
                       "text-sm font-semibold",
-                      isFuture || dim ? "text-[rgba(255,255,255,0.25)]" : "text-text-secondary",
+                      !(isFuture || dim) && "text-text-secondary",
                     )}
+                    style={isFuture || dim ? { color: hairline(mode, 0.25) } : undefined}
                   >
                     {d.getDate()}
                   </Text>
@@ -291,6 +295,7 @@ export function Calendar({
   disableFuture = true,
 }: CalendarProps) {
   const { width } = useWindowDimensions();
+  const { mode, colors } = useThemeColors();
   const { selected, view, setView, viewDate, setViewDate } = useCalendarState(value, visible);
   const today = startOfDay(new Date());
   const year = viewDate.getFullYear();
@@ -320,14 +325,13 @@ export function Calendar({
       <Pressable onPress={onClose} className="flex-1 items-center justify-center p-5">
         <BlurView
           intensity={14}
-          tint="dark"
+          tint={mode === "dark" ? "dark" : "light"}
           experimentalBlurMethod="dimezisBlurView"
           style={StyleSheet.absoluteFill}
         />
         <View
           pointerEvents="none"
-          style={StyleSheet.absoluteFill}
-          className="bg-[rgba(4,7,16,0.7)]"
+          style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }]}
         />
         <Pressable onPress={(e) => e.stopPropagation()}>
           <GlassCard strong elevated className="p-5" style={{ width: Math.min(340, width - 40) }}>

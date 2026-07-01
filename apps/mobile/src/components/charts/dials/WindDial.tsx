@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import Svg, { Circle, Defs, G, LinearGradient, Path, Stop } from "react-native-svg";
 
 import { toNum } from "../../../lib/format";
+import { useThemeColors } from "../../../lib/theme";
 import { GlassCard } from "../../ui/GlassCard";
 
 const SIZE = 100;
@@ -22,6 +23,7 @@ interface WindDialProps {
  * card (e.g. the dashboard weather summary); `WindDial` wraps it in a GlassCard.
  */
 export function WindDialFace({ degrees, speed, gust, unit = "km/h", size = SIZE }: WindDialProps) {
+  const { colors } = useThemeColors();
   const deg = toNum(degrees);
   const spd = toNum(speed);
   const gst = toNum(gust);
@@ -46,15 +48,8 @@ export function WindDialFace({ degrees, speed, gust, unit = "km/h", size = SIZE 
               <Stop offset="1" stopColor="#f59e0b" />
             </LinearGradient>
           </Defs>
-          <Circle cx={50} cy={50} r={46} fill="rgba(255,255,255,0.03)" />
-          <Circle
-            cx={50}
-            cy={50}
-            r={46}
-            fill="none"
-            stroke="rgba(255,255,255,0.12)"
-            strokeWidth={1}
-          />
+          <Circle cx={50} cy={50} r={46} fill={colors.dialFill} />
+          <Circle cx={50} cy={50} r={46} fill="none" stroke={colors.dialRing} strokeWidth={1} />
           {deg != null ? (
             <G transform={`rotate(${deg} 50 50)`}>
               <Path d={ARROW} fill="url(#wind-arrow)" />

@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 
 import { cn } from "../../lib/cn";
 import { GRADIENTS } from "../../lib/gradients";
+import { hairline, useThemeColors } from "../../lib/theme";
 
 export interface SegmentOption {
   label: string;
@@ -30,8 +31,12 @@ export function SegmentedControl({
   onChange: (value: string) => void;
   options?: SegmentOption[];
 }) {
+  const { mode } = useThemeColors();
   return (
-    <View className="flex-row gap-1 rounded-pill border border-glass-border bg-[rgba(255,255,255,0.04)] p-1">
+    <View
+      className="flex-row gap-1 rounded-pill border border-glass-border p-1"
+      style={{ backgroundColor: hairline(mode, 0.04) }}
+    >
       {options.map((opt) => {
         const active = value === opt.value;
         return (

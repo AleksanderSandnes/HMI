@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { formatPeak, peakUnit, show } from "@hmi/core";
 import { Text, View } from "react-native";
 
+import { useThemeColors } from "../../lib/theme";
 import type { DashboardModel } from "../../lib/useDashboardData";
 import { GlassCard } from "../ui/GlassCard";
 
@@ -26,6 +27,7 @@ function ProducingPill({ producing }: { producing: boolean }) {
 
 /** Focus dashboard solar hero: the one big "what am I making now" answer + curve. */
 export function SolarHeroCard({ model }: { model: DashboardModel }) {
+  const { colors } = useThemeColors();
   const { currentPower, peak, utilisation, capacityKw, todayGen, sparkline } = model;
   const producing = (currentPower ?? 0) > 0;
 
@@ -45,7 +47,7 @@ export function SolarHeroCard({ model }: { model: DashboardModel }) {
           <ProducingPill producing={producing} />
           {peak ? (
             <View className="flex-row items-center gap-1.5 rounded-pill bg-[rgba(245,158,11,0.14)] px-2.5 py-1">
-              <Ionicons name="trending-up" size={13} color="#fbbf24" />
+              <Ionicons name="trending-up" size={13} color={colors.solarTint} />
               <Text className="text-[11px] font-extrabold text-solar-light">
                 Peak {formatPeak(peak.value)} {peakUnit(peak.value, "W")}
               </Text>

@@ -2,6 +2,7 @@ import { View, Text } from "react-native";
 import Svg, { Circle, Defs, G, Line, LinearGradient, Path, Stop } from "react-native-svg";
 
 import { clamp, round, toNum } from "../../../lib/format";
+import { hairline, useThemeColors } from "../../../lib/theme";
 import { GlassCard } from "../../ui/GlassCard";
 
 // Typical sea-level pressure range (hPa) over a 270° arc — mirrors web DualBaro.
@@ -40,6 +41,7 @@ function Needle({ ang }: { ang: number }) {
 }
 
 function Gauge({ value }: { value: number | null }) {
+  const { mode } = useThemeColors();
   const frac = value != null ? clamp((value - P_MIN) / (P_MAX - P_MIN), 0, 1) : null;
   const ang = frac != null ? START + frac * SWEEP : null;
 
@@ -73,7 +75,7 @@ function Gauge({ value }: { value: number | null }) {
         <Path
           d={ARC}
           fill="none"
-          stroke="rgba(255,255,255,0.12)"
+          stroke={hairline(mode, 0.12)}
           strokeWidth={2.5}
           strokeLinecap="round"
         />
@@ -85,19 +87,12 @@ function Gauge({ value }: { value: number | null }) {
             x2={t.inr.x}
             y2={t.inr.y}
             strokeWidth={t.major ? 1.4 : 1}
-            stroke={t.major ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.16)"}
+            stroke={hairline(mode, t.major ? 0.4 : 0.16)}
           />
         ))}
         {ang != null ? <Needle ang={ang} /> : null}
         <Circle cx={50} cy={50} r={3.5} fill="#0a1124" />
-        <Circle
-          cx={50}
-          cy={50}
-          r={3.5}
-          fill="none"
-          stroke="rgba(255,255,255,0.32)"
-          strokeWidth={1}
-        />
+        <Circle cx={50} cy={50} r={3.5} fill="none" stroke={hairline(mode, 0.32)} strokeWidth={1} />
       </Svg>
     </View>
   );

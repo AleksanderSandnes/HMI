@@ -5,6 +5,7 @@ import { Modal as RNModal, Pressable, ScrollView, Text, View } from "react-nativ
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GRADIENTS } from "../lib/gradients";
+import { useThemeColors } from "../lib/theme";
 
 type Grad = readonly [string, string, string];
 
@@ -16,6 +17,7 @@ const LEVEL: Record<NotificationLevel, { grad: Grad; icon: keyof typeof Ionicons
 };
 
 function Row({ item, onDismiss }: { item: NotificationItem; onDismiss: () => void }) {
+  const { colors } = useThemeColors();
   const { grad, icon } = LEVEL[item.level] ?? LEVEL.info;
   return (
     <View>
@@ -51,7 +53,7 @@ function Row({ item, onDismiss }: { item: NotificationItem; onDismiss: () => voi
           accessibilityLabel="Dismiss"
           className="h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-glass-fill"
         >
-          <Ionicons name="close" size={15} color="#71809a" />
+          <Ionicons name="close" size={15} color={colors.textMuted} />
         </Pressable>
       </View>
       <View className="ml-16 h-px bg-glass-border" />
@@ -60,9 +62,10 @@ function Row({ item, onDismiss }: { item: NotificationItem; onDismiss: () => voi
 }
 
 function EmptyState() {
+  const { colors } = useThemeColors();
   return (
     <View className="items-center gap-2.5 px-5 py-12">
-      <Ionicons name="notifications-off-outline" size={26} color="#71809a" />
+      <Ionicons name="notifications-off-outline" size={26} color={colors.textMuted} />
       <Text className="text-[13px] font-semibold text-text-secondary">
         You&apos;re all caught up
       </Text>
@@ -85,19 +88,20 @@ export function NotificationsOverlay({
   onDismiss: (id: string) => void;
 }) {
   const insets = useSafeAreaInsets();
+  const { colors } = useThemeColors();
 
   return (
     <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable
         onPress={onClose}
-        className="flex-1 bg-[rgba(4,7,14,0.5)]"
-        style={{ paddingTop: insets.top + 6, paddingHorizontal: 14 }}
+        className="flex-1"
+        style={{ backgroundColor: colors.scrim, paddingTop: insets.top + 6, paddingHorizontal: 14 }}
       >
         <Pressable onPress={(e) => e.stopPropagation()}>
           <View
             className="max-h-[560px] overflow-hidden rounded-[20px] border border-glass-border-strong"
             style={{
-              backgroundColor: "#0d1320",
+              backgroundColor: colors.panelBg,
               shadowColor: "#000",
               shadowOpacity: 0.6,
               shadowRadius: 30,

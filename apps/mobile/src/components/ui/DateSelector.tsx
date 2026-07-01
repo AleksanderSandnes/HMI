@@ -3,6 +3,8 @@ import { parseYMD, shiftYMD, toYMD } from "@hmi/core";
 import { useState } from "react";
 import { Pressable, Text } from "react-native";
 
+import { useThemeColors } from "../../lib/theme";
+
 import { Calendar } from "./Calendar";
 import { GlassCard } from "./GlassCard";
 
@@ -23,6 +25,7 @@ function StepButton({
   onPress: () => void;
   disabled: boolean;
 }) {
+  const { colors } = useThemeColors();
   return (
     <Pressable
       onPress={onPress}
@@ -31,7 +34,7 @@ function StepButton({
       style={disabled ? { opacity: 0.4 } : undefined}
       className="h-[46px] w-[46px] items-center justify-center rounded-[14px] border border-glass-border bg-glass-fill"
     >
-      <Ionicons name={icon} size={20} color="#aeb8cc" />
+      <Ionicons name={icon} size={20} color={colors.textSecondary} />
     </Pressable>
   );
 }
@@ -43,6 +46,7 @@ function StepButton({
  */
 export function DateSelector({ selectedDate, onDateSelect, disabled = false }: DateSelectorProps) {
   const [open, setOpen] = useState(false);
+  const { colors } = useThemeColors();
   const label = parseYMD(selectedDate).toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
@@ -65,7 +69,7 @@ export function DateSelector({ selectedDate, onDateSelect, disabled = false }: D
           onPress={() => setOpen(true)}
           className="h-[46px] flex-1 flex-row items-center justify-center gap-2.5 rounded-[14px] border border-glass-border bg-glass-fill"
         >
-          <Ionicons name="calendar" size={16} color="#aeb8cc" />
+          <Ionicons name="calendar" size={16} color={colors.textSecondary} />
           <Text className="text-[15px] font-extrabold text-text-primary">{label}</Text>
         </Pressable>
         <StepButton

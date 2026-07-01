@@ -33,9 +33,10 @@ module.exports = {
         "text-muted": "var(--text-muted)",
         "text-inverse": "#0a1124",
 
-        // Solar gold
+        // Solar gold ("solar-light" is a flat text/icon tint, not a gradient
+        // stop, so — like the chrome tokens above — it varies by mode)
         solar: "#f59e0b",
-        "solar-light": "#fbbf24",
+        "solar-light": "var(--solar-light)",
         "solar-soft": "rgba(245, 158, 11, 0.14)",
 
         // Energy teal/green
