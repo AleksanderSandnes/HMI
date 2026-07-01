@@ -1,18 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
+import { parseYMD, shiftYMD, toYMD } from "@hmi/core";
 import { useState } from "react";
-import {
-  Modal as RNModal,
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  useWindowDimensions,
-} from "react-native";
-
-import { cn } from "../../lib/cn";
-import { GRADIENTS } from "../../lib/gradients";
+import { Pressable, Text } from "react-native";
 
 import { Calendar } from "./Calendar";
 import { GlassCard } from "./GlassCard";
@@ -23,230 +12,71 @@ interface DateSelectorProps {
   disabled?: boolean;
 }
 
-const QUICK = [
-  { label: "Today", daysAgo: 0 },
-  { label: "Yesterday", daysAgo: 1 },
-  { label: "7d ago", daysAgo: 7 },
-  { label: "30d ago", daysAgo: 30 },
-];
-
-const toISO = (d: Date) => d.toISOString().split("T")[0];
-
-const quickIso = (daysAgo: number) => {
-  const d = new Date();
-  d.setDate(d.getDate() - daysAgo);
-  return toISO(d);
-};
-
-function DateTrigger({
-  relative,
-  absolute,
-  disabled,
+function StepButton({
+  icon,
   onPress,
+  disabled,
 }: {
-  relative: string;
-  absolute: string;
-  disabled: boolean;
+  icon: keyof typeof Ionicons.glyphMap;
   onPress: () => void;
+  disabled: boolean;
 }) {
   return (
-    <GlassCard strong>
-      <Pressable
-        onPress={onPress}
-        disabled={disabled}
-        className="flex-row items-center gap-3.5 px-4 py-3.5"
-      >
-        <LinearGradient
-          colors={GRADIENTS.accent}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 14,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="calendar" size={18} color="#0a1124" />
-        </LinearGradient>
-        <View className="flex-1">
-          <Text className="text-base font-extrabold text-text-primary">{relative}</Text>
-          <Text className="mt-0.5 text-[12.5px] text-text-muted">{absolute}</Text>
-        </View>
-        <Ionicons name="chevron-down" size={14} color="#71809a" />
-      </Pressable>
-    </GlassCard>
-  );
-}
-
-interface QuickSheetProps {
-  visible: boolean;
-  width: number;
-  selectedDate: string;
-  onClose: () => void;
-  onPick: (daysAgo: number) => void;
-  onCustom: () => void;
-}
-
-function QuickGrid({
-  selectedDate,
-  onPick,
-}: {
-  selectedDate: string;
-  onPick: (daysAgo: number) => void;
-}) {
-  return (
-    <View className="mb-[22px] flex-row flex-wrap gap-2.5">
-      {QUICK.map((q) => {
-        const act = quickIso(q.daysAgo) === selectedDate;
-        return (
-          <Pressable
-            key={q.label}
-            onPress={() => onPick(q.daysAgo)}
-            className={cn(
-              "grow basis-[40%] items-center rounded-md border py-3",
-              act ? "border-solar bg-solar-soft" : "border-glass-border bg-glass-fill",
-            )}
-          >
-            <Text
-              className={cn("text-sm font-bold", act ? "text-solar-light" : "text-text-secondary")}
-            >
-              {q.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-function CustomDateButton({ onPress }: { onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} className="overflow-hidden rounded-md">
-      <LinearGradient
-        colors={GRADIENTS.solar}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-          paddingVertical: 15,
-        }}
-      >
-        <Ionicons name="calendar-outline" size={15} color="#0a1124" />
-        <Text className="text-[15px] font-extrabold text-text-inverse">Pick a custom date</Text>
-      </LinearGradient>
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={disabled ? { opacity: 0.4 } : undefined}
+      className="h-[46px] w-[46px] items-center justify-center rounded-[14px] border border-glass-border bg-glass-fill"
+    >
+      <Ionicons name={icon} size={20} color="#aeb8cc" />
     </Pressable>
   );
 }
 
-function QuickSheet({ visible, width, selectedDate, onClose, onPick, onCustom }: QuickSheetProps) {
-  return (
-    <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable onPress={onClose} className="flex-1 items-center justify-center p-6">
-        <BlurView
-          intensity={14}
-          tint="dark"
-          experimentalBlurMethod="dimezisBlurView"
-          style={StyleSheet.absoluteFill}
-        />
-        <View
-          pointerEvents="none"
-          style={StyleSheet.absoluteFill}
-          className="bg-[rgba(4,7,16,0.7)]"
-        />
-        <Pressable onPress={(e) => e.stopPropagation()}>
-          <GlassCard
-            strong
-            elevated
-            className="p-[22px]"
-            style={{ width: Math.min(420, width - 48) }}
-          >
-            <View className="mb-[18px] flex-row items-center justify-between">
-              <Text className="text-[19px] font-extrabold text-text-primary">Select date</Text>
-              <Pressable
-                onPress={onClose}
-                className="h-[34px] w-[34px] items-center justify-center rounded-pill border border-glass-border bg-glass-fill-strong"
-              >
-                <Ionicons name="close" size={15} color="#aeb8cc" />
-              </Pressable>
-            </View>
-
-            <Text className="mb-3 text-xs font-bold uppercase tracking-[0.5px] text-text-muted">
-              Quick select
-            </Text>
-            <QuickGrid selectedDate={selectedDate} onPick={onPick} />
-
-            <Text className="mb-3 text-xs font-bold uppercase tracking-[0.5px] text-text-muted">
-              Custom
-            </Text>
-            <CustomDateButton onPress={onCustom} />
-          </GlassCard>
-        </Pressable>
-      </Pressable>
-    </RNModal>
-  );
-}
-
+/**
+ * Inline date stepper (design 1d/1e): ‹ prev · calendar-button · next ›. The
+ * chevrons move a day at a time (next disabled at today); the centre button opens
+ * the drill-down calendar. Local-tz date math via the shared @hmi/core helpers.
+ */
 export function DateSelector({ selectedDate, onDateSelect, disabled = false }: DateSelectorProps) {
-  const { width } = useWindowDimensions();
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const selectedObj = new Date(selectedDate);
-
-  const relative = (() => {
-    const diff = Math.floor((Date.now() - selectedObj.getTime()) / (1000 * 60 * 60 * 24));
-    if (diff === 0) return "Today";
-    if (diff === 1) return "Yesterday";
-    if (diff > 1 && diff <= 7) return `${diff} days ago`;
-    return selectedObj.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  })();
-
-  const absolute = selectedObj.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
+  const [open, setOpen] = useState(false);
+  const label = parseYMD(selectedDate).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
     day: "numeric",
+    year: "numeric",
   });
-
-  const pickQuick = (daysAgo: number) => {
-    onDateSelect(quickIso(daysAgo));
-    setSheetOpen(false);
-  };
+  const atToday = selectedDate >= toYMD(new Date());
 
   return (
     <>
-      <DateTrigger
-        relative={relative}
-        absolute={absolute}
-        disabled={disabled}
-        onPress={() => setSheetOpen(true)}
-      />
-
-      <QuickSheet
-        visible={sheetOpen}
-        width={width}
-        selectedDate={selectedDate}
-        onClose={() => setSheetOpen(false)}
-        onPick={pickQuick}
-        onCustom={() => {
-          setSheetOpen(false);
-          setPickerOpen(true);
-        }}
-      />
+      <GlassCard strong className="flex-row items-center gap-2 p-[7px]">
+        <StepButton
+          icon="chevron-back"
+          disabled={disabled}
+          onPress={() => onDateSelect(shiftYMD(selectedDate, -1))}
+        />
+        <Pressable
+          disabled={disabled}
+          onPress={() => setOpen(true)}
+          className="h-[46px] flex-1 flex-row items-center justify-center gap-2.5 rounded-[14px] border border-glass-border bg-glass-fill"
+        >
+          <Ionicons name="calendar" size={16} color="#aeb8cc" />
+          <Text className="text-[15px] font-extrabold text-text-primary">{label}</Text>
+        </Pressable>
+        <StepButton
+          icon="chevron-forward"
+          disabled={disabled || atToday}
+          onPress={() => onDateSelect(shiftYMD(selectedDate, 1))}
+        />
+      </GlassCard>
 
       <Calendar
-        visible={pickerOpen}
+        visible={open}
         value={selectedDate}
-        onClose={() => setPickerOpen(false)}
+        onClose={() => setOpen(false)}
         onSelect={(iso) => {
-          setPickerOpen(false);
+          setOpen(false);
           onDateSelect(iso);
         }}
       />

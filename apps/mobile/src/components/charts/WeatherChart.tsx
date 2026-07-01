@@ -1,12 +1,13 @@
 import { formatMetric, weatherYDomain } from "@hmi/core";
 import { useMemo, useState } from "react";
-import { View } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { runOnJS } from "react-native-reanimated";
-import Svg, { Circle, Defs, Path } from "react-native-svg";
+import { Text, View } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
+import Svg, { Circle, Defs, Line, Path } from "react-native-svg";
 
 import { ChartMessage } from "./ChartMessage";
+import { TooltipBubble } from "./Tooltip";
 import { Axes } from "./svg/Axes";
+import { useCrosshair } from "./svg/crosshair";
 import { GradientDef } from "./svg/gradient";
 import { areaPath, areaRangePath, linePath, type Pt } from "./svg/paths";
 import { buildGeometry, type ChartGeometry } from "./svg/scales";
@@ -134,24 +135,86 @@ function BandLayers({
   );
 }
 
-function useCrosshair(geo: ChartGeometry) {
-  const [index, setIndex] = useState<number | null>(null);
-  const gesture = useMemo(() => {
-    const select = (px: number) => {
-      const i = Math.round(geo.invertX(px));
-      setIndex(Math.max(0, Math.min(geo.count - 1, i)));
-    };
-    return Gesture.Pan()
-      .minDistance(0)
-      .onBegin((e) => runOnJS(select)(e.x))
-      .onUpdate((e) => runOnJS(select)(e.x))
-      .onFinalize(() => runOnJS(setIndex)(null));
-  }, [geo]);
-  return { index, gesture };
+interface TooltipRow {
+  color: string;
+  label: string;
+  value: number;
 }
 
-function cursorValue(model: WeatherModel, index: number): number {
-  return model.isBand ? (model.band?.avg[index] ?? 0) : (model.clean[0]?.data[index] ?? 0);
+/** Series rows to list in the crosshair bubble at a given index. */
+function tooltipRows(model: WeatherModel, index: number): TooltipRow[] {
+  if (model.isBand && model.band) {
+    return [{ color: model.firstColor, label: "Average", value: model.band.avg[index] ?? 0 }];
+  }
+  return model.clean.map((s) => ({ color: s.color, label: s.label, value: s.data[index] ?? 0 }));
+}
+
+function CrosshairBubble({
+  rows,
+  header,
+  unit,
+  range,
+  x,
+  width,
+}: {
+  rows: TooltipRow[];
+  header: string;
+  unit: string;
+  range: number;
+  x: number;
+  width: number;
+}) {
+  return (
+    <TooltipBubble x={x} width={width}>
+      <Text className="mb-1 text-[10.5px] font-bold uppercase tracking-[0.3px] text-text-muted">
+        {header}
+      </Text>
+      {rows.map((r) => (
+        <View key={r.label} className="mt-0.5 flex-row items-center gap-1.5">
+          <View className="h-1.5 w-1.5 rounded-pill" style={{ backgroundColor: r.color }} />
+          <Text className="flex-1 text-[11px] font-medium text-text-secondary">{r.label}</Text>
+          <Text className="text-[11.5px] font-extrabold text-text-primary">
+            {formatMetric(r.value, range)}
+            {unit ? ` ${unit}` : ""}
+          </Text>
+        </View>
+      ))}
+    </TooltipBubble>
+  );
+}
+
+function CrosshairMarkers({
+  geo,
+  index,
+  rows,
+}: {
+  geo: ChartGeometry;
+  index: number;
+  rows: TooltipRow[];
+}) {
+  return (
+    <>
+      <Line
+        x1={geo.x(index)}
+        y1={geo.bounds.top}
+        x2={geo.x(index)}
+        y2={geo.bounds.bottom}
+        stroke="rgba(255,255,255,0.22)"
+        strokeWidth={1}
+      />
+      {rows.map((r) => (
+        <Circle
+          key={r.label}
+          cx={geo.x(index)}
+          cy={geo.y(r.value)}
+          r={4.5}
+          fill={r.color}
+          stroke="#0a1124"
+          strokeWidth={1.5}
+        />
+      ))}
+    </>
+  );
 }
 
 function WeatherCanvas({
@@ -160,12 +223,14 @@ function WeatherCanvas({
   model,
   labels,
   bandColor,
+  unit,
 }: {
   width: number;
   height: number;
   model: WeatherModel;
   labels: string[];
   bandColor: string;
+  unit: string;
 }) {
   const geo = useMemo(
     () =>
@@ -180,7 +245,7 @@ function WeatherCanvas({
     [width, height, model, labels.length],
   );
   const { index, gesture } = useCrosshair(geo);
-  const color = model.isBand ? bandColor : model.firstColor;
+  const rows = index != null ? tooltipRows(model, index) : [];
 
   return (
     <GestureDetector gesture={gesture}>
@@ -200,10 +265,18 @@ function WeatherCanvas({
           ) : (
             <SeriesLayers geo={geo} series={model.clean} />
           )}
-          {index != null ? (
-            <Circle cx={geo.x(index)} cy={geo.y(cursorValue(model, index))} r={5} fill={color} />
-          ) : null}
+          {index != null ? <CrosshairMarkers geo={geo} index={index} rows={rows} /> : null}
         </Svg>
+        {index != null ? (
+          <CrosshairBubble
+            rows={rows}
+            header={labels[index] ?? ""}
+            unit={unit}
+            range={model.range}
+            x={geo.x(index)}
+            width={width}
+          />
+        ) : null}
       </View>
     </GestureDetector>
   );
@@ -219,6 +292,7 @@ export function WeatherChart({
   series,
   band,
   bandColor = "#fbbf24",
+  unit = "",
   loading = false,
   height = 320,
   emptyText = "No data for this period",
@@ -238,6 +312,7 @@ export function WeatherChart({
           model={model}
           labels={labels}
           bandColor={bandColor}
+          unit={unit}
         />
       ) : null}
     </View>

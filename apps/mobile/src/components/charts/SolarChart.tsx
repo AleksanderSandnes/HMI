@@ -1,10 +1,13 @@
 import { barGapPercent, formatNum, type SimpleChartData } from "@hmi/core";
 import { useMemo, useState } from "react";
-import { View } from "react-native";
-import Svg, { Circle, Defs, Path, Rect } from "react-native-svg";
+import { Text, View } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
+import Svg, { Circle, Defs, Line, Path, Rect } from "react-native-svg";
 
 import { ChartMessage } from "./ChartMessage";
+import { TooltipBubble } from "./Tooltip";
 import { Axes } from "./svg/Axes";
+import { useCrosshair } from "./svg/crosshair";
 import { GradientDef } from "./svg/gradient";
 import { areaPath, linePath, type Pt } from "./svg/paths";
 import { buildGeometry, type ChartGeometry } from "./svg/scales";
@@ -152,19 +155,60 @@ function SolarCanvas({
     [width, height, model],
   );
   const xAt = (i: number) => (model.isArea ? geo.x(i) : barCenter(geo, BAR_PADDING.left, i));
+  const { index, gesture } = useCrosshair(geo);
+  const value = index != null ? model.values[index] : null;
+  const unit = model.isArea ? "W" : "kWh";
 
   return (
-    <Svg width={width} height={height}>
-      <Axes
-        geo={geo}
-        xCount={Math.min(6, model.values.length)}
-        yCount={5}
-        xAt={xAt}
-        formatX={(i) => model.labels[i] ?? ""}
-        formatY={(v) => formatNum(v)}
-      />
-      {model.isArea ? <SolarArea geo={geo} model={model} /> : <SolarBars geo={geo} model={model} />}
-    </Svg>
+    <GestureDetector gesture={gesture}>
+      <View style={{ width, height }}>
+        <Svg width={width} height={height}>
+          <Axes
+            geo={geo}
+            xCount={Math.min(6, model.values.length)}
+            yCount={5}
+            xAt={xAt}
+            formatX={(i) => model.labels[i] ?? ""}
+            formatY={(v) => formatNum(v)}
+          />
+          {model.isArea ? (
+            <SolarArea geo={geo} model={model} />
+          ) : (
+            <SolarBars geo={geo} model={model} />
+          )}
+          {index != null && value != null ? (
+            <>
+              <Line
+                x1={xAt(index)}
+                y1={geo.bounds.top}
+                x2={xAt(index)}
+                y2={geo.bounds.bottom}
+                stroke="rgba(255,255,255,0.22)"
+                strokeWidth={1}
+              />
+              <Circle
+                cx={xAt(index)}
+                cy={geo.y(value)}
+                r={4.5}
+                fill="#fbbf24"
+                stroke="#0a1124"
+                strokeWidth={1.5}
+              />
+            </>
+          ) : null}
+        </Svg>
+        {index != null && value != null ? (
+          <TooltipBubble x={xAt(index)} width={width}>
+            <Text className="text-[10.5px] font-bold uppercase tracking-[0.3px] text-text-muted">
+              {model.labels[index] ?? ""}
+            </Text>
+            <Text className="mt-0.5 text-[14px] font-extrabold text-text-primary">
+              {formatNum(value)} {unit}
+            </Text>
+          </TooltipBubble>
+        ) : null}
+      </View>
+    </GestureDetector>
   );
 }
 

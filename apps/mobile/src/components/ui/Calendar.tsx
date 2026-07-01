@@ -1,13 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
+import {
+  buildMonthGrid,
+  MONTH_ABBR,
+  nextZoomView,
+  parseYMD,
+  sameDay,
+  toYMD,
+  yearBlockStart,
+  type CalendarView,
+} from "@hmi/core";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
   Modal as RNModal,
-  View,
-  Text,
   Pressable,
   StyleSheet,
+  Text,
+  View,
   useWindowDimensions,
 } from "react-native";
 
@@ -22,7 +32,7 @@ interface CalendarProps {
   value: string;
   onSelect: (iso: string) => void;
   onClose: () => void;
-  /** Disable dates after today (no future production data). */
+  /** Disable dates after today (no future data). */
   disableFuture?: boolean;
 }
 
@@ -42,24 +52,21 @@ const MONTHS = [
   "December",
 ];
 
-const toISO = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(
-    2,
-    "0",
-  )}`;
-
 const startOfDay = (d: Date) => {
   const n = new Date(d);
   n.setHours(0, 0, 0, 0);
   return n;
 };
 
-const isSameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate();
-
-function MonthNav({ label, onShift }: { label: string; onShift: (delta: number) => void }) {
+function Header({
+  label,
+  onShift,
+  onZoom,
+}: {
+  label: string;
+  onShift: (d: number) => void;
+  onZoom: () => void;
+}) {
   return (
     <View className="mb-4 flex-row items-center justify-between">
       <Pressable
@@ -69,7 +76,9 @@ function MonthNav({ label, onShift }: { label: string; onShift: (delta: number) 
       >
         <Ionicons name="chevron-back" size={14} color="#aeb8cc" />
       </Pressable>
-      <Text className="text-base font-extrabold text-text-primary">{label}</Text>
+      <Pressable onPress={onZoom} hitSlop={8}>
+        <Text className="text-base font-extrabold text-text-primary">{label}</Text>
+      </Pressable>
       <Pressable
         onPress={() => onShift(1)}
         hitSlop={8}
@@ -81,66 +90,177 @@ function MonthNav({ label, onShift }: { label: string; onShift: (delta: number) 
   );
 }
 
-function WeekdayRow() {
+function DayView({
+  viewDate,
+  selected,
+  today,
+  disableFuture,
+  onPick,
+}: {
+  viewDate: Date;
+  selected: Date;
+  today: Date;
+  disableFuture: boolean;
+  onPick: (d: Date) => void;
+}) {
+  const month = viewDate.getMonth();
   return (
-    <View className="mb-1.5 flex-row">
-      {WEEKDAYS.map((w) => (
-        <View key={w} style={styles.cell}>
-          <Text className="text-[11px] font-bold tracking-[0.3px] text-text-muted">{w}</Text>
+    <>
+      <View className="mb-1.5 flex-row">
+        {WEEKDAYS.map((w) => (
+          <View key={w} style={styles.cell}>
+            <Text className="text-[11px] font-bold tracking-[0.3px] text-text-muted">{w}</Text>
+          </View>
+        ))}
+      </View>
+      <View className="flex-row flex-wrap">
+        {buildMonthGrid(viewDate).map((d) => {
+          const isSel = sameDay(d, selected);
+          const isFuture = disableFuture && d.getTime() > today.getTime();
+          const dim = d.getMonth() !== month;
+          return (
+            <View key={toYMD(d)} style={styles.cell}>
+              <Pressable
+                disabled={isFuture}
+                onPress={() => onPick(d)}
+                className={cn(
+                  "h-[38px] w-[38px] items-center justify-center rounded-md",
+                  sameDay(d, today) && !isSel && "border border-[rgba(245,158,11,0.45)]",
+                )}
+              >
+                {isSel ? (
+                  <LinearGradient
+                    colors={GRADIENTS.solar}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.selected}
+                  >
+                    <Text className="text-sm font-extrabold text-text-inverse">{d.getDate()}</Text>
+                  </LinearGradient>
+                ) : (
+                  <Text
+                    className={cn(
+                      "text-sm font-semibold",
+                      isFuture || dim ? "text-[rgba(255,255,255,0.25)]" : "text-text-secondary",
+                    )}
+                  >
+                    {d.getDate()}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          );
+        })}
+      </View>
+    </>
+  );
+}
+
+function PickerGrid({
+  items,
+  activeIndex,
+  onPick,
+}: {
+  items: { key: string; label: string }[];
+  activeIndex: number;
+  onPick: (i: number) => void;
+}) {
+  return (
+    <View className="flex-row flex-wrap">
+      {items.map((it, i) => (
+        <View key={it.key} style={styles.thirdCell}>
+          <Pressable
+            onPress={() => onPick(i)}
+            className={cn(
+              "h-12 items-center justify-center rounded-md border",
+              i === activeIndex
+                ? "border-solar bg-solar-soft"
+                : "border-glass-border bg-glass-fill",
+            )}
+          >
+            <Text
+              className={cn(
+                "text-sm font-bold",
+                i === activeIndex ? "text-solar-light" : "text-text-secondary",
+              )}
+            >
+              {it.label}
+            </Text>
+          </Pressable>
         </View>
       ))}
     </View>
   );
 }
 
-function DayCell({
-  date,
-  isSelected,
-  isToday,
-  isFuture,
-  onPick,
-}: {
-  date: Date;
-  isSelected: boolean;
-  isToday: boolean;
-  isFuture: boolean;
-  onPick: (d: Date) => void;
-}) {
+function useCalendarState(value: string, visible: boolean) {
+  const selected = startOfDay(parseYMD(value));
+  const [view, setView] = useState<CalendarView>("day");
+  const [viewDate, setViewDate] = useState(
+    () => new Date(selected.getFullYear(), selected.getMonth(), 1),
+  );
+
+  useEffect(() => {
+    if (visible) {
+      setView("day");
+      setViewDate(new Date(selected.getFullYear(), selected.getMonth(), 1));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, value]);
+
+  return { selected, view, setView, viewDate, setViewDate };
+}
+
+interface BodyProps {
+  view: CalendarView;
+  viewDate: Date;
+  selected: Date;
+  today: Date;
+  disableFuture: boolean;
+  month: number;
+  year: number;
+  blockStart: number;
+  setView: (v: CalendarView) => void;
+  setViewDate: (d: Date) => void;
+  pick: (d: Date) => void;
+}
+
+function CalendarBody(p: BodyProps) {
+  if (p.view === "day") {
+    return (
+      <DayView
+        viewDate={p.viewDate}
+        selected={p.selected}
+        today={p.today}
+        disableFuture={p.disableFuture}
+        onPick={p.pick}
+      />
+    );
+  }
+  if (p.view === "month") {
+    return (
+      <PickerGrid
+        items={MONTH_ABBR.map((m) => ({ key: m, label: m }))}
+        activeIndex={p.month}
+        onPick={(i) => {
+          p.setViewDate(new Date(p.year, i, 1));
+          p.setView("day");
+        }}
+      />
+    );
+  }
   return (
-    <View style={styles.cell}>
-      <Pressable
-        disabled={isFuture}
-        onPress={() => onPick(date)}
-        className={cn(
-          "h-[38px] w-[38px] items-center justify-center rounded-md",
-          isToday && !isSelected && "border border-[rgba(245,158,11,0.45)]",
-        )}
-      >
-        {isSelected ? (
-          <LinearGradient
-            colors={GRADIENTS.solar}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.daySelected}
-          >
-            <Text className="text-sm font-extrabold text-text-inverse">{date.getDate()}</Text>
-          </LinearGradient>
-        ) : (
-          <Text
-            className={cn(
-              "text-sm font-semibold",
-              isFuture
-                ? "text-[rgba(255,255,255,0.22)]"
-                : isToday
-                  ? "font-extrabold text-solar-light"
-                  : "text-text-secondary",
-            )}
-          >
-            {date.getDate()}
-          </Text>
-        )}
-      </Pressable>
-    </View>
+    <PickerGrid
+      items={Array.from({ length: 12 }, (_, i) => ({
+        key: `${p.blockStart + i}`,
+        label: `${p.blockStart + i}`,
+      }))}
+      activeIndex={p.year - p.blockStart}
+      onPick={(i) => {
+        p.setViewDate(new Date(p.blockStart + i, p.month, 1));
+        p.setView("month");
+      }}
+    />
   );
 }
 
@@ -171,36 +291,29 @@ export function Calendar({
   disableFuture = true,
 }: CalendarProps) {
   const { width } = useWindowDimensions();
-  const selected = startOfDay(new Date(value));
-  const [viewMonth, setViewMonth] = useState(
-    () => new Date(selected.getFullYear(), selected.getMonth(), 1),
-  );
-
-  // Keep the visible month in sync when reopened on a new date.
-  useEffect(() => {
-    if (visible) {
-      setViewMonth(new Date(selected.getFullYear(), selected.getMonth(), 1));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, value]);
-
+  const { selected, view, setView, viewDate, setViewDate } = useCalendarState(value, visible);
   const today = startOfDay(new Date());
-  const year = viewMonth.getFullYear();
-  const month = viewMonth.getMonth();
-  const firstWeekday = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const blockStart = yearBlockStart(year);
 
-  const cells: (Date | null)[] = [];
-  for (let i = 0; i < firstWeekday; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
-  while (cells.length % 7 !== 0) cells.push(null);
-
-  const shiftMonth = (delta: number) => setViewMonth(new Date(year, month + delta, 1));
+  const shift = (delta: number) => {
+    if (view === "day") setViewDate(new Date(year, month + delta, 1));
+    else if (view === "month") setViewDate(new Date(year + delta, month, 1));
+    else setViewDate(new Date(year + delta * 12, month, 1));
+  };
 
   const pick = (d: Date) => {
-    onSelect(toISO(d));
+    onSelect(toYMD(d));
     onClose();
   };
+
+  const headerLabel =
+    view === "day"
+      ? `${MONTHS[month]} ${year}`
+      : view === "month"
+        ? `${year}`
+        : `${blockStart}–${blockStart + 11}`;
 
   return (
     <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -218,24 +331,24 @@ export function Calendar({
         />
         <Pressable onPress={(e) => e.stopPropagation()}>
           <GlassCard strong elevated className="p-5" style={{ width: Math.min(340, width - 40) }}>
-            <MonthNav label={`${MONTHS[month]} ${year}`} onShift={shiftMonth} />
-            <WeekdayRow />
-            <View className="flex-row flex-wrap">
-              {cells.map((d, i) =>
-                d ? (
-                  <DayCell
-                    key={toISO(d)}
-                    date={d}
-                    isSelected={isSameDay(d, selected)}
-                    isToday={isSameDay(d, today)}
-                    isFuture={disableFuture && d.getTime() > today.getTime()}
-                    onPick={pick}
-                  />
-                ) : (
-                  <View key={`e-${i}`} style={styles.cell} />
-                ),
-              )}
-            </View>
+            <Header
+              label={headerLabel}
+              onShift={shift}
+              onZoom={() => setView(nextZoomView(view))}
+            />
+            <CalendarBody
+              view={view}
+              viewDate={viewDate}
+              selected={selected}
+              today={today}
+              disableFuture={disableFuture}
+              month={month}
+              year={year}
+              blockStart={blockStart}
+              setView={setView}
+              setViewDate={setViewDate}
+              pick={pick}
+            />
             <CalendarFooter onToday={() => pick(today)} onClose={onClose} />
           </GlassCard>
         </Pressable>
@@ -245,13 +358,9 @@ export function Calendar({
 }
 
 const styles = StyleSheet.create({
-  cell: {
-    width: `${100 / 7}%`,
-    aspectRatio: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  daySelected: {
+  cell: { width: `${100 / 7}%`, aspectRatio: 1, alignItems: "center", justifyContent: "center" },
+  thirdCell: { width: `${100 / 3}%`, padding: 5 },
+  selected: {
     width: 38,
     height: 38,
     borderRadius: 12,
