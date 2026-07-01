@@ -2,12 +2,12 @@ import { StyleSheet } from "react-native";
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from "react-native-svg";
 
 /**
- * Ambient app background — the RN port of the web `body` gradient in
- * apps/web/app/globals.css: a vertical base gradient plus three soft radial glow
- * blobs (solar top-left, teal top-right, violet bottom). Without this the glass
- * surfaces have only flat black behind them, so their backdrop blur reads as a
- * washed-out haze. Render it as the first child of a flex-1 container, with the
- * screen content layered on top.
+ * Ambient app background — a faithful port of the web design's `gsun` gradient:
+ * a vertical base gradient plus three soft **elliptical** glow blobs pinned to the
+ * corners / below the screen (solar top-left, teal top-right, violet at 102% —
+ * off-screen). Keeping the glows at the edges is what stops them domeing up into
+ * the (translucent) glass cards. Render it as the first child of a flex-1
+ * container, with the screen content layered on top.
  */
 export function ScreenBackground() {
   return (
@@ -18,17 +18,17 @@ export function ScreenBackground() {
           <Stop offset="0.55" stopColor="#080d1b" />
           <Stop offset="1" stopColor="#06080f" />
         </LinearGradient>
-        <RadialGradient id="bg-solar" cx="18%" cy="0%" r="60%">
-          <Stop offset="0" stopColor="#f59e0b" stopOpacity="0.2" />
+        <RadialGradient id="bg-solar" cx="16%" cy="0%" rx="60%" ry="46%">
+          <Stop offset="0" stopColor="#f59e0b" stopOpacity="0.22" />
           <Stop offset="0.6" stopColor="#f59e0b" stopOpacity="0" />
         </RadialGradient>
-        <RadialGradient id="bg-teal" cx="92%" cy="12%" r="55%">
-          <Stop offset="0" stopColor="#2dd4bf" stopOpacity="0.16" />
+        <RadialGradient id="bg-teal" cx="96%" cy="8%" rx="52%" ry="42%">
+          <Stop offset="0" stopColor="#2dd4bf" stopOpacity="0.17" />
           <Stop offset="0.6" stopColor="#2dd4bf" stopOpacity="0" />
         </RadialGradient>
-        <RadialGradient id="bg-violet" cx="50%" cy="100%" r="65%">
-          <Stop offset="0" stopColor="#8b5cf6" stopOpacity="0.16" />
-          <Stop offset="0.65" stopColor="#8b5cf6" stopOpacity="0" />
+        <RadialGradient id="bg-violet" cx="50%" cy="102%" rx="70%" ry="55%">
+          <Stop offset="0" stopColor="#8b5cf6" stopOpacity="0.17" />
+          <Stop offset="0.66" stopColor="#8b5cf6" stopOpacity="0" />
         </RadialGradient>
       </Defs>
       <Rect x="0" y="0" width="100%" height="100%" fill="url(#bg-base)" />

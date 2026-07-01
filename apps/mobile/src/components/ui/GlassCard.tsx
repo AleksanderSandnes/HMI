@@ -24,24 +24,21 @@ const ELEVATED = StyleSheet.create({
   },
 }).shadow;
 
-// Light translucent fill (matching the web `--glass` / `--glassS` tokens) so the
-// card reads as see-through frosted glass over the ambient gsun glow rather than
-// a flat dark-blue panel. On iOS a real expo-blur frost sits behind it; on
-// Android there is no blur, so a faint dark tint under the light fill keeps text
-// legible while the gradient still bleeds through.
+// Low-opacity WHITE fill matching the web design's `--glass` / `--glassS` tokens
+// (which use NO backdrop-filter): a plain translucent white overlay + hairline
+// border over the ambient gsun gradient reads as a uniform, subtly-lighter glass
+// panel. On iOS a real expo-blur frost sits behind the fill; Android has no blur
+// but, because the ambient glows are pinned to the screen edges (see
+// ScreenBackground), the white fill stays uniform with no glow bleed.
 const FILL = StyleSheet.create({
-  light: { backgroundColor: "rgba(255, 255, 255, 0.05)" },
-  lightStrong: { backgroundColor: "rgba(255, 255, 255, 0.08)" },
-  androidTint: { backgroundColor: "rgba(9, 13, 27, 0.34)" },
-  androidTintStrong: { backgroundColor: "rgba(9, 13, 27, 0.3)" },
+  base: { backgroundColor: "rgba(255, 255, 255, 0.05)" },
+  strong: { backgroundColor: "rgba(255, 255, 255, 0.085)" },
 });
 
 /**
- * Frosted-glass surface — the building block of every screen. A hairline border,
- * a translucent fill, and an optional glow. Mirrors
- * apps/web/components/ui/GlassCard.tsx (CSS backdrop-filter): on iOS a real
- * expo-blur frost sits behind the light fill; on Android a faint dark tint under
- * the light fill stands in for blur while staying see-through over the glow.
+ * Frosted-glass surface — the building block of every screen. A hairline border
+ * and a translucent white fill over the ambient background (design `.glass` /
+ * `.glassS`). iOS adds a real expo-blur frost behind the fill.
  */
 export function GlassCard({
   strong = false,
@@ -70,15 +67,10 @@ export function GlassCard({
           tint="dark"
           style={StyleSheet.absoluteFill}
         />
-      ) : (
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, strong ? FILL.androidTintStrong : FILL.androidTint]}
-        />
-      )}
+      ) : null}
       <View
         pointerEvents="none"
-        style={[StyleSheet.absoluteFill, strong ? FILL.lightStrong : FILL.light]}
+        style={[StyleSheet.absoluteFill, strong ? FILL.strong : FILL.base]}
       />
       {children}
     </View>

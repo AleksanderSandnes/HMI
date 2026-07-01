@@ -111,34 +111,37 @@ const TIME_OPTIONS = [
 
 function MetricChips({ active, onSelect }: { active: string; onSelect: (key: string) => void }) {
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerClassName="gap-2 pb-1"
-      className="mb-3"
-    >
-      {METRICS.map((t) => {
-        const on = t.key === active;
-        return (
-          <Pressable
-            key={t.key}
-            onPress={() => onSelect(t.key)}
-            className={cn(
-              "flex-row items-center gap-2 rounded-md border px-3.5 py-2",
-              on ? "border-transparent bg-glass-fill-strong" : "border-glass-border bg-glass-fill",
-            )}
-          >
-            {t.icon(on ? t.accent : "#71809a", 14)}
-            <Text
-              style={on ? { color: t.accent } : undefined}
-              className={cn("text-[13px] font-bold", !on && "text-text-muted")}
+    <View className="mb-3 h-11">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerClassName="items-center gap-2"
+      >
+        {METRICS.map((t) => {
+          const on = t.key === active;
+          return (
+            <Pressable
+              key={t.key}
+              onPress={() => onSelect(t.key)}
+              className={cn(
+                "h-9 flex-row items-center gap-2 rounded-md border px-3.5",
+                on
+                  ? "border-transparent bg-glass-fill-strong"
+                  : "border-glass-border bg-glass-fill",
+              )}
             >
-              {t.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
+              {t.icon(on ? t.accent : "#71809a", 14)}
+              <Text
+                style={on ? { color: t.accent } : undefined}
+                className={cn("text-[13px] font-bold", !on && "text-text-muted")}
+              >
+                {t.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 }
 

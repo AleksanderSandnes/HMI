@@ -48,7 +48,7 @@ function SparkCanvas({
         />
       </Defs>
       <Path d={areaPath(points, geo.bounds.bottom)} fill="url(#spark-area)" />
-      <Path d={linePath(points)} fill="none" stroke="url(#spark-line)" strokeWidth={3} />
+      <Path d={linePath(points)} fill="none" stroke="url(#spark-line)" strokeWidth={4} />
     </Svg>
   );
 }
