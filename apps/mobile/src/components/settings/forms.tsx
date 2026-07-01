@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 
 import { GRADIENTS, type StatGradient } from "../../lib/gradients";
 import { useAvatar } from "../../lib/useAvatar";
@@ -30,17 +30,32 @@ function deriveInitials(name?: string | null): string {
   return name.slice(0, 2).toUpperCase();
 }
 
-async function pickAvatar(setAvatar: (uri: string) => Promise<void>) {
+const PICKER_OPTS = { allowsEditing: true, aspect: [1, 1] as [number, number], quality: 0.6 };
+
+type SetAvatar = (uri: string) => Promise<void>;
+
+async function fromLibrary(setAvatar: SetAvatar) {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) return;
-  const res = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ["images"],
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.6,
-  });
+  const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], ...PICKER_OPTS });
   const uri = res.canceled ? null : res.assets[0]?.uri;
   if (uri) await setAvatar(uri);
+}
+
+async function fromCamera(setAvatar: SetAvatar) {
+  const perm = await ImagePicker.requestCameraPermissionsAsync();
+  if (!perm.granted) return;
+  const res = await ImagePicker.launchCameraAsync(PICKER_OPTS);
+  const uri = res.canceled ? null : res.assets[0]?.uri;
+  if (uri) await setAvatar(uri);
+}
+
+function chooseAvatar(setAvatar: SetAvatar) {
+  Alert.alert("Profile picture", undefined, [
+    { text: "Take photo", onPress: () => void fromCamera(setAvatar) },
+    { text: "Choose from library", onPress: () => void fromLibrary(setAvatar) },
+    { text: "Cancel", style: "cancel" },
+  ]);
 }
 
 export function ConfiguredBadge({ on }: { on: boolean }) {
@@ -130,7 +145,7 @@ export function AccountForm({
   return (
     <>
       <View className="items-center">
-        <Pressable onPress={() => void pickAvatar(setAvatar)} accessibilityLabel="Change photo">
+        <Pressable onPress={() => chooseAvatar(setAvatar)} accessibilityLabel="Change photo">
           <Avatar initials={deriveInitials(username)} uri={uri} size={84} />
           <View className="absolute -bottom-0.5 -right-0.5 h-7 w-7 items-center justify-center rounded-pill border-[3px] border-bg-base bg-solar">
             <Ionicons name="pencil" size={13} color="#0a1124" />
