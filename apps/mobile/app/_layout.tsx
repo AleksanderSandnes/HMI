@@ -14,6 +14,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import PushRegistrar from "../src/components/PushRegistrar";
@@ -76,15 +77,17 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <QueryProvider>
-          <AuthProvider>
-            <StatusBar style="light" backgroundColor="#070b16" />
-            <PushRegistrar />
-            <AuthGate />
-          </AuthProvider>
-        </QueryProvider>
-      </SafeAreaProvider>
+      <KeyboardProvider>
+        <SafeAreaProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <StatusBar style="light" backgroundColor="#070b16" />
+              <PushRegistrar />
+              <AuthGate />
+            </AuthProvider>
+          </QueryProvider>
+        </SafeAreaProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

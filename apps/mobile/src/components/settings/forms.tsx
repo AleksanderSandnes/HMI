@@ -1,24 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  growattConfig,
-  weatherConfig,
-  type ApiSettingsResponse,
-  type UserProfile,
-} from "@hmi/core";
-import { useQuery } from "@tanstack/react-query";
-import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState, type ReactNode } from "react";
-import { ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useState } from "react";
+import { Text, View } from "react-native";
 
-import { Button } from "../../src/components/ui/Button";
-import { Field } from "../../src/components/ui/Field";
-import { GlassCard } from "../../src/components/ui/GlassCard";
-import { StatusBanner } from "../../src/components/ui/StatusBanner";
-import type { IconRender } from "../../src/components/ui/types";
-import { GRADIENTS, type StatGradient } from "../../src/lib/gradients";
-import { useCore } from "../../src/lib/useCore";
-import { useLogout } from "../../src/lib/useLogout";
+import type { useCore } from "../../lib/useCore";
+import { Button } from "../ui/Button";
+import { Field } from "../ui/Field";
+import { StatusBanner } from "../ui/StatusBanner";
+import type { IconRender } from "../ui/types";
 
 type Core = ReturnType<typeof useCore>;
 type Banner = { kind: "success" | "error"; message: string } | null;
@@ -29,132 +17,31 @@ const keyIc: IconRender = (p) => <Ionicons name="key-outline" {...p} />;
 const pin: IconRender = (p) => <Ionicons name="location-outline" {...p} />;
 const sun: IconRender = (p) => <Ionicons name="sunny-outline" {...p} />;
 
-function Section({
-  title,
-  icon,
-  gradient,
-  children,
-}: {
-  title: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  gradient: StatGradient;
-  children: ReactNode;
-}) {
-  return (
-    <GlassCard strong className="p-5">
-      <View className="mb-4 flex-row items-center gap-2.5">
-        <LinearGradient
-          colors={GRADIENTS[gradient]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name={icon} size={16} color="#0a1124" />
-        </LinearGradient>
-        <Text className="text-base font-extrabold text-text-primary">{title}</Text>
-      </View>
-      {children}
-    </GlassCard>
-  );
-}
-
-function ConfiguredBadge({ on }: { on: boolean }) {
+export function ConfiguredBadge({ on }: { on: boolean }) {
   return (
     <View
-      className={`ml-2 rounded-pill px-2.5 py-1 ${on ? "bg-[rgba(52,211,153,0.13)]" : "bg-glass-fill"}`}
+      className={`rounded-pill px-2.5 py-1 ${on ? "bg-[rgba(52,211,153,0.13)]" : "bg-glass-fill"}`}
     >
       <Text className={`text-[11px] font-bold ${on ? "text-positive" : "text-text-muted"}`}>
-        {on ? "Configured" : "Not set"}
+        {on ? "Connected" : "Not set"}
       </Text>
     </View>
   );
 }
 
-export default function Settings() {
-  const core = useCore();
-  const { account, settings } = core;
-  const logout = useLogout();
-
-  const { data: profile } = useQuery<UserProfile>({
-    queryKey: ["profile"],
-    queryFn: () => account.getUserProfile(),
-  });
-
-  const { data: api, refetch: refetchApi } = useQuery<ApiSettingsResponse | null>({
-    queryKey: ["api-settings"],
-    queryFn: () => settings.getApiSettings(),
-  });
-
-  useEffect(() => settings.subscribeSettings(() => void refetchApi()), [settings, refetchApi]);
-
-  const gc = growattConfig(api);
-  const wc = weatherConfig(api);
-
-  return (
-    <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
-      <ScrollView contentContainerClassName="gap-4 p-4">
-        <View>
-          <Text className="text-[28px] font-extrabold tracking-[-0.6px] text-text-primary">
-            Settings
-          </Text>
-          <Text className="mt-1 text-[14px] font-medium text-text-muted">
-            Account & integration credentials
-          </Text>
-        </View>
-
-        <Section title="Growatt solar" icon="sunny" gradient="energy">
-          <GrowattForm
-            key={gc.key}
-            initialEmail={gc.email}
-            configured={gc.configured}
-            settings={settings}
-            onSaved={refetchApi}
-          />
-        </Section>
-
-        <Section title="Weather.com station" icon="cloud" gradient="solar">
-          <WeatherForm
-            key={wc.key}
-            initialStationId={wc.station}
-            configured={wc.configured}
-            settings={settings}
-            onSaved={refetchApi}
-          />
-        </Section>
-
-        <Section title="Account" icon="person" gradient="accent">
-          <AccountForm key={profile?.id ?? "loading"} profile={profile} account={account} />
-        </Section>
-
-        <Section title="Password" icon="shield-checkmark" gradient="revenue">
-          <PasswordForm account={account} />
-        </Section>
-
-        <Button label="Sign out" variant="danger" onPress={logout} className="w-full" />
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-function AccountForm({
-  profile,
+export function AccountForm({
+  username: initialUsername,
+  email: initialEmail,
   account,
 }: {
-  profile: UserProfile | undefined;
+  username: string;
+  email: string;
   account: Core["account"];
 }) {
-  const [username, setUsername] = useState(profile?.username ?? "");
-  const [email, setEmail] = useState(profile?.email ?? "");
+  const [username, setUsername] = useState(initialUsername);
+  const [email, setEmail] = useState(initialEmail);
   const [banner, setBanner] = useState<Banner>(null);
   const [saving, setSaving] = useState(false);
-
-  if (!profile) return <Text className="text-sm text-text-muted">Loading…</Text>;
 
   async function save() {
     setBanner(null);
@@ -163,10 +50,7 @@ function AccountForm({
       await account.updateUserProfile({ username, email });
       setBanner({ kind: "success", message: "Profile updated." });
     } catch (e) {
-      setBanner({
-        kind: "error",
-        message: e instanceof Error ? e.message : "Could not update profile.",
-      });
+      setBanner({ kind: "error", message: e instanceof Error ? e.message : "Could not update." });
     } finally {
       setSaving(false);
     }
@@ -195,7 +79,7 @@ function AccountForm({
   );
 }
 
-function PasswordForm({ account }: { account: Core["account"] }) {
+export function PasswordForm({ account }: { account: Core["account"] }) {
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
   const [banner, setBanner] = useState<Banner>(null);
@@ -213,10 +97,7 @@ function PasswordForm({ account }: { account: Core["account"] }) {
       setPw("");
       setConfirm("");
     } catch (e) {
-      setBanner({
-        kind: "error",
-        message: e instanceof Error ? e.message : "Could not change password.",
-      });
+      setBanner({ kind: "error", message: e instanceof Error ? e.message : "Could not change." });
     } finally {
       setSaving(false);
     }
@@ -233,19 +114,20 @@ function PasswordForm({ account }: { account: Core["account"] }) {
         value={confirm}
         onChangeText={setConfirm}
       />
+      <Text className="mb-3 -mt-1 text-[11.5px] text-text-muted">
+        Use at least 4 characters. Choose something you don&apos;t use elsewhere.
+      </Text>
       <Button label="Change password" onPress={save} loading={saving} className="w-full" />
     </>
   );
 }
 
-function GrowattForm({
+export function GrowattForm({
   initialEmail,
-  configured,
   settings,
   onSaved,
 }: {
   initialEmail: string;
-  configured: boolean;
   settings: Core["settings"];
   onSaved: () => void;
 }) {
@@ -263,10 +145,7 @@ function GrowattForm({
       setPassword("");
       onSaved();
     } catch (e) {
-      setBanner({
-        kind: "error",
-        message: e instanceof Error ? e.message : "Could not save credentials.",
-      });
+      setBanner({ kind: "error", message: e instanceof Error ? e.message : "Could not save." });
     } finally {
       setSaving(false);
     }
@@ -274,12 +153,6 @@ function GrowattForm({
 
   return (
     <>
-      <View className="mb-4 -mt-1 flex-row items-center">
-        <Text className="text-sm text-text-muted">
-          Used by the server to fetch your solar data.
-        </Text>
-        <ConfiguredBadge on={configured} />
-      </View>
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
       <Field
         label="ACCOUNT (EMAIL)"
@@ -308,14 +181,12 @@ function GrowattForm({
   );
 }
 
-function WeatherForm({
+export function WeatherForm({
   initialStationId,
-  configured,
   settings,
   onSaved,
 }: {
   initialStationId: string;
-  configured: boolean;
   settings: Core["settings"];
   onSaved: () => void;
 }) {
@@ -333,10 +204,7 @@ function WeatherForm({
       setApiKey("");
       onSaved();
     } catch (e) {
-      setBanner({
-        kind: "error",
-        message: e instanceof Error ? e.message : "Could not save credentials.",
-      });
+      setBanner({ kind: "error", message: e instanceof Error ? e.message : "Could not save." });
     } finally {
       setSaving(false);
     }
@@ -344,10 +212,6 @@ function WeatherForm({
 
   return (
     <>
-      <View className="mb-4 -mt-1 flex-row items-center">
-        <Text className="text-sm text-text-muted">Personal weather station data source.</Text>
-        <ConfiguredBadge on={configured} />
-      </View>
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
       <Field
         label="WEATHER STATION ID"
