@@ -26,9 +26,9 @@ export function ScreenBackground() {
           <Stop offset="0" stopColor="#2dd4bf" stopOpacity="0.17" />
           <Stop offset="0.6" stopColor="#2dd4bf" stopOpacity="0" />
         </RadialGradient>
-        <RadialGradient id="bg-violet" cx="50%" cy="102%" rx="70%" ry="55%">
-          <Stop offset="0" stopColor="#8b5cf6" stopOpacity="0.17" />
-          <Stop offset="0.66" stopColor="#8b5cf6" stopOpacity="0" />
+        <RadialGradient id="bg-violet" cx="50%" cy="104%" rx="65%" ry="42%">
+          <Stop offset="0" stopColor="#8b5cf6" stopOpacity="0.09" />
+          <Stop offset="0.6" stopColor="#8b5cf6" stopOpacity="0" />
         </RadialGradient>
       </Defs>
       <Rect x="0" y="0" width="100%" height="100%" fill="url(#bg-base)" />
