@@ -6,8 +6,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GRADIENTS } from "../lib/gradients";
 
-import { GlassCard } from "./ui/GlassCard";
-
 type Grad = readonly [string, string, string];
 
 const LEVEL: Record<NotificationLevel, { grad: Grad; icon: keyof typeof Ionicons.glyphMap }> = {
@@ -96,7 +94,17 @@ export function NotificationsOverlay({
         style={{ paddingTop: insets.top + 6, paddingHorizontal: 14 }}
       >
         <Pressable onPress={(e) => e.stopPropagation()}>
-          <GlassCard strong elevated intensity={40} className="max-h-[560px] overflow-hidden">
+          <View
+            className="max-h-[560px] overflow-hidden rounded-[20px] border border-glass-border-strong"
+            style={{
+              backgroundColor: "#0d1320",
+              shadowColor: "#000",
+              shadowOpacity: 0.6,
+              shadowRadius: 30,
+              shadowOffset: { width: 0, height: 20 },
+              elevation: 24,
+            }}
+          >
             <View className="flex-row items-center justify-between border-b border-glass-border px-4 py-3">
               <Text className="text-[15.5px] font-extrabold text-text-primary">Notifications</Text>
               {items.length > 0 ? (
@@ -114,7 +122,7 @@ export function NotificationsOverlay({
                 ))}
               </ScrollView>
             )}
-          </GlassCard>
+          </View>
         </Pressable>
       </Pressable>
     </RNModal>

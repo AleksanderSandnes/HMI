@@ -32,3 +32,6 @@ export function useCore() {
     };
   }, []);
 }
+
+/** The @hmi/core API bundle returned by {@link useCore}. */
+export type CoreApis = ReturnType<typeof useCore>;

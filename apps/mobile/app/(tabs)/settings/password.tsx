@@ -5,7 +5,7 @@ import { useCore } from "../../../src/lib/useCore";
 export default function PasswordScreen() {
   const { account } = useCore();
   return (
-    <SubScreen title="Change password" subtitle="Set a new password for your account">
+    <SubScreen title="Change password" subtitle="Update your password">
       <PasswordForm account={account} />
     </SubScreen>
   );

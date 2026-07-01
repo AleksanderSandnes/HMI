@@ -74,7 +74,13 @@ export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
     <GlassCard strong className="min-h-0 flex-1 justify-between gap-3 p-3.5">
       <View className="flex-row items-center gap-3">
         <View className="items-center">
-          <WindDialFace degrees={obs?.winddir} speed={m.windSpeed} gust={m.windGust} unit="km/h" />
+          <WindDialFace
+            degrees={obs?.winddir}
+            speed={m.windSpeed}
+            gust={m.windGust}
+            unit="km/h"
+            size={150}
+          />
         </View>
         <View className="mx-1 w-px self-stretch bg-glass-border" />
         <View className="flex-1 items-center gap-5">

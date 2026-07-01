@@ -39,7 +39,7 @@ export function SubScreen({
       </View>
       <KeyboardAwareScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16, gap: 16 }}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 16, gap: 16 }}
         bottomOffset={24}
         keyboardShouldPersistTaps="handled"
       >

@@ -14,7 +14,7 @@ export default function ProfileScreen() {
   });
 
   return (
-    <SubScreen title="Profile" subtitle="Your account details">
+    <SubScreen title="Account" subtitle="Your profile">
       {profile ? (
         <AccountForm username={profile.username} email={profile.email} account={account} />
       ) : (

@@ -13,22 +13,26 @@ interface WindDialProps {
   speed?: number | null;
   gust?: number | null;
   unit?: string;
+  /** Diameter in px (default 100). */
+  size?: number;
 }
 
 /**
  * Wind compass dial + direction caption, without a surface. Embed inside any
  * card (e.g. the dashboard weather summary); `WindDial` wraps it in a GlassCard.
  */
-export function WindDialFace({ degrees, speed, gust, unit = "km/h" }: WindDialProps) {
+export function WindDialFace({ degrees, speed, gust, unit = "km/h", size = SIZE }: WindDialProps) {
   const deg = toNum(degrees);
   const spd = toNum(speed);
   const gst = toNum(gust);
   const dir = deg != null ? windCompass(deg) : null;
+  const bigFont = Math.round(size * 0.29);
+  const unitFont = Math.round(size * 0.1);
 
   return (
     <View className="items-center gap-2">
-      <View style={{ width: SIZE, height: SIZE }}>
-        <Svg width={SIZE} height={SIZE} viewBox="0 0 100 100">
+      <View style={{ width: size, height: size }}>
+        <Svg width={size} height={size} viewBox="0 0 100 100">
           <Defs>
             <LinearGradient
               id="wind-arrow"
@@ -76,10 +80,15 @@ export function WindDialFace({ degrees, speed, gust, unit = "km/h" }: WindDialPr
 
         {/* Centre speed */}
         <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
-          <Text className="text-[26px] font-extrabold leading-none text-text-primary">
+          <Text
+            style={{ fontSize: bigFont }}
+            className="font-extrabold leading-none text-text-primary"
+          >
             {spd != null ? Math.round(spd) : "—"}
           </Text>
-          <Text className="text-[10px] font-bold text-text-muted">{unit}</Text>
+          <Text style={{ fontSize: unitFont }} className="font-bold text-text-muted">
+            {unit}
+          </Text>
         </View>
       </View>
 
