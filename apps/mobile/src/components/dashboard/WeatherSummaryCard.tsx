@@ -71,7 +71,7 @@ function StatCol({
 export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
   const { obs, m, wkAvg } = model;
   return (
-    <GlassCard strong className="min-h-0 flex-1 justify-between gap-3 p-3.5">
+    <GlassCard strong className="min-h-0 flex-1 justify-between gap-3 px-3.5 pb-6 pt-3.5">
       <View className="flex-row items-center gap-3">
         <View className="items-center">
           <WindDialFace

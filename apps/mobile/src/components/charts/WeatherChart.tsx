@@ -12,8 +12,8 @@ import { GradientDef } from "./svg/gradient";
 import { areaPath, areaRangePath, linePath, type Pt } from "./svg/paths";
 import { buildGeometry, type ChartGeometry } from "./svg/scales";
 
-const MARGINS = { top: 8, right: 14, bottom: 24, left: 44 };
-const DOMAIN_PADDING = { left: 10, right: 10, top: 22 };
+const MARGINS = { top: 8, right: 8, bottom: 24, left: 34 };
+const DOMAIN_PADDING = { left: 3, right: 3, top: 22 };
 
 const WEEKDAY_FULL: Record<string, string> = {
   Sun: "Sunday",

@@ -33,9 +33,9 @@ function SparkCanvas({
         <GradientDef
           id="spark-area"
           stops={[
-            { offset: 0, color: "rgba(52,211,153,0.5)" },
-            { offset: 0.6, color: "rgba(16,185,129,0.12)" },
-            { offset: 1, color: "rgba(16,185,129,0)" },
+            { offset: 0, color: "#34d399", opacity: 0.5 },
+            { offset: 0.6, color: "#10b981", opacity: 0.12 },
+            { offset: 1, color: "#10b981", opacity: 0 },
           ]}
         />
         <GradientDef

@@ -96,9 +96,9 @@ function SolarArea({ geo, model }: { geo: ChartGeometry; model: SolarModel }) {
         <GradientDef
           id="solar-area"
           stops={[
-            { offset: 0, color: "rgba(52,211,153,0.55)" },
-            { offset: 0.55, color: "rgba(16,185,129,0.10)" },
-            { offset: 1, color: "rgba(16,185,129,0)" },
+            { offset: 0, color: "#34d399", opacity: 0.55 },
+            { offset: 0.55, color: "#10b981", opacity: 0.1 },
+            { offset: 1, color: "#10b981", opacity: 0 },
           ]}
         />
         <GradientDef
@@ -139,8 +139,8 @@ function SolarBars({ geo, model }: { geo: ChartGeometry; model: SolarModel }) {
         <GradientDef
           id="bar-normal"
           stops={[
-            { offset: 0, color: "rgba(129,140,248,0.95)" },
-            { offset: 1, color: "rgba(99,102,241,0.65)" },
+            { offset: 0, color: "#818cf8", opacity: 0.95 },
+            { offset: 1, color: "#6366f1", opacity: 0.65 },
           ]}
         />
         <GradientDef
