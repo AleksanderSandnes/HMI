@@ -4,7 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Formik, type FormikProps } from "formik";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { Button } from "../../src/components/ui/Button";
 import { Field } from "../../src/components/ui/Field";
@@ -105,14 +106,17 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-bg-base"
-    >
+    <View className="flex-1 bg-bg-base">
       <ScreenBackground />
-      <ScrollView
-        contentContainerClassName="flex-grow items-center justify-center p-6"
+      <KeyboardAwareScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+        }}
         keyboardShouldPersistTaps="handled"
+        bottomOffset={24}
       >
         <GlassCard strong elevated className="w-full max-w-[430px] p-8">
           <LoginHeader />
@@ -146,7 +150,7 @@ export default function Login() {
             </Pressable>
           </View>
         </GlassCard>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 }

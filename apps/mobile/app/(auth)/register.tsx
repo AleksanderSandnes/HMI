@@ -3,7 +3,8 @@ import { registerAccountSchema } from "@hmi/core";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import * as Yup from "yup";
 
 import { Button } from "../../src/components/ui/Button";
@@ -43,7 +44,7 @@ const HEADERS: Record<
     icon: "partly-sunny",
     gradient: "solar",
     title: "Connect Weather.com",
-    subtitle: "Optional — add your weather station",
+    subtitle: "Optional — add your weather credentials",
   },
 };
 
@@ -271,26 +272,27 @@ function StepDots({ step }: { step: number }) {
 
 function RegisterHeader({ header }: { header: (typeof HEADERS)[number] }) {
   return (
-    <View className="mb-5 items-center">
+    <View className="mb-5 flex-row items-center gap-3.5">
       <LinearGradient
         colors={GRADIENTS[header.gradient]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
-          width: 56,
-          height: 56,
-          borderRadius: 18,
+          width: 52,
+          height: 52,
+          borderRadius: 16,
           alignItems: "center",
           justifyContent: "center",
-          marginBottom: 16,
         }}
       >
         <Ionicons name={header.icon} size={20} color="#0a1124" />
       </LinearGradient>
-      <Text className="text-[25px] font-extrabold tracking-tight text-text-primary">
-        {header.title}
-      </Text>
-      <Text className="mt-1.5 text-sm font-medium text-text-muted">{header.subtitle}</Text>
+      <View className="flex-1">
+        <Text className="text-[22px] font-extrabold tracking-tight text-text-primary">
+          {header.title}
+        </Text>
+        <Text className="mt-1 text-[13px] font-medium text-text-muted">{header.subtitle}</Text>
+      </View>
     </View>
   );
 }
@@ -450,14 +452,17 @@ export default function Register() {
   const header = HEADERS[step];
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-bg-base"
-    >
+    <View className="flex-1 bg-bg-base">
       <ScreenBackground />
-      <ScrollView
-        contentContainerClassName="flex-grow items-center justify-center p-6"
+      <KeyboardAwareScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+        }}
         keyboardShouldPersistTaps="handled"
+        bottomOffset={24}
       >
         <GlassCard strong elevated className="w-full max-w-[460px] p-8">
           <StepDots step={step} />
@@ -478,7 +483,7 @@ export default function Register() {
             </View>
           ) : null}
         </GlassCard>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 }

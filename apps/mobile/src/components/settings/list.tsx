@@ -5,6 +5,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { cn } from "../../lib/cn";
 import { GRADIENTS, type StatGradient } from "../../lib/gradients";
+import { GlassCard } from "../ui/GlassCard";
 
 export function GroupLabel({ children }: { children: ReactNode }) {
   return (
@@ -18,14 +19,14 @@ export function GroupLabel({ children }: { children: ReactNode }) {
 export function SettingsGroup({ children }: { children: ReactNode }) {
   const rows = Children.toArray(children);
   return (
-    <View className="overflow-hidden rounded-lg border border-glass-border-strong bg-glass-fill-strong">
+    <GlassCard strong>
       {rows.map((row, i) => (
         <View key={i}>
           {row}
           {i < rows.length - 1 ? <View className="ml-[62px] h-px bg-glass-border" /> : null}
         </View>
       ))}
-    </View>
+    </GlassCard>
   );
 }
 

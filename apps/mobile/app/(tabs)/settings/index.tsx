@@ -19,6 +19,7 @@ import {
   Toggle,
 } from "../../../src/components/settings/list";
 import { Button } from "../../../src/components/ui/Button";
+import { GlassCard } from "../../../src/components/ui/GlassCard";
 import { useCore } from "../../../src/lib/useCore";
 import { useLogout } from "../../../src/lib/useLogout";
 import { usePreference } from "../../../src/lib/usePreference";
@@ -32,22 +33,21 @@ function initials(name?: string | null): string {
 
 function ProfileCard({ profile, onPress }: { profile?: UserProfile; onPress: () => void }) {
   return (
-    <Pressable
-      onPress={onPress}
-      className="flex-row items-center gap-3.5 rounded-lg border border-glass-border-strong bg-glass-fill-strong p-3.5"
-    >
-      <View className="h-[52px] w-[52px] items-center justify-center rounded-pill border border-glass-border-strong bg-[#1a2036]">
-        <Text className="text-[17px] font-extrabold text-[#c9d2e6]">
-          {initials(profile?.username)}
-        </Text>
-      </View>
-      <View className="min-w-0 flex-1">
-        <Text className="text-[16px] font-extrabold text-text-primary">
-          {profile?.username ?? "Your profile"}
-        </Text>
-        <Text className="mt-0.5 text-[12.5px] text-text-muted">{profile?.email ?? "—"}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color="#71809a" />
+    <Pressable onPress={onPress}>
+      <GlassCard strong className="flex-row items-center gap-3.5 p-3.5">
+        <View className="h-[52px] w-[52px] items-center justify-center rounded-pill border border-glass-border-strong bg-[#1a2036]">
+          <Text className="text-[17px] font-extrabold text-[#c9d2e6]">
+            {initials(profile?.username)}
+          </Text>
+        </View>
+        <View className="min-w-0 flex-1">
+          <Text className="text-[16px] font-extrabold text-text-primary">
+            {profile?.username ?? "Your profile"}
+          </Text>
+          <Text className="mt-0.5 text-[12.5px] text-text-muted">{profile?.email ?? "—"}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#71809a" />
+      </GlassCard>
     </Pressable>
   );
 }
