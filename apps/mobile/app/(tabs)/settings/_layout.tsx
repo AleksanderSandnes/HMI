@@ -7,7 +7,7 @@ export default function SettingsLayout() {
       screenOptions={{
         headerShown: false,
         animation: "slide_from_right",
-        contentStyle: { backgroundColor: "#070b16" },
+        contentStyle: { backgroundColor: "transparent" },
       }}
     />
   );

@@ -4,6 +4,7 @@ import { Tabs } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ScreenBackground } from "../../src/components/ui/ScreenBackground";
 import { cn } from "../../src/lib/cn";
 
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -17,10 +18,7 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   return (
-    <View
-      style={{ backgroundColor: "#070b16", paddingBottom: insets.bottom + 10 }}
-      className="px-2.5 pt-1"
-    >
+    <View style={{ paddingBottom: insets.bottom + 10 }} className="px-2.5 pt-1">
       <View className="flex-row items-center justify-around rounded-[24px] border border-glass-border bg-glass-fill px-1.5 pb-1.5 pt-2">
         {state.routes.map((route, i) => {
           const focused = state.index === i;
@@ -69,14 +67,17 @@ function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
 export default function TabsLayout() {
   return (
-    <Tabs
-      tabBar={(props) => <GlassTabBar {...props} />}
-      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: "#070b16" } }}
-    >
-      <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
-      <Tabs.Screen name="solar" options={{ title: "Solar" }} />
-      <Tabs.Screen name="weather" options={{ title: "Weather" }} />
-      <Tabs.Screen name="settings" options={{ title: "Settings" }} />
-    </Tabs>
+    <View className="flex-1 bg-bg-base">
+      <ScreenBackground />
+      <Tabs
+        tabBar={(props) => <GlassTabBar {...props} />}
+        screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: "transparent" } }}
+      >
+        <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
+        <Tabs.Screen name="solar" options={{ title: "Solar" }} />
+        <Tabs.Screen name="weather" options={{ title: "Weather" }} />
+        <Tabs.Screen name="settings" options={{ title: "Settings" }} />
+      </Tabs>
+    </View>
   );
 }

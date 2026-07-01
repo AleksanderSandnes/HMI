@@ -21,7 +21,6 @@ import {
 import { Avatar } from "../../../src/components/ui/Avatar";
 import { Button } from "../../../src/components/ui/Button";
 import { GlassCard } from "../../../src/components/ui/GlassCard";
-import { ScreenBackground } from "../../../src/components/ui/ScreenBackground";
 import { useAvatar } from "../../../src/lib/useAvatar";
 import { useCore } from "../../../src/lib/useCore";
 import { useLogout } from "../../../src/lib/useLogout";
@@ -72,8 +71,7 @@ export default function SettingsHub() {
   const wc = weatherConfig(api);
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
-      <ScreenBackground />
+    <SafeAreaView className="flex-1" edges={["top"]}>
       <ScrollView contentContainerClassName="gap-3 p-4">
         <View className="mb-1">
           <Text className="text-[28px] font-extrabold tracking-[-0.6px] text-text-primary">

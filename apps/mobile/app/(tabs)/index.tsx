@@ -9,7 +9,6 @@ import { NotificationsOverlay } from "../../src/components/NotificationsOverlay"
 import { DashboardTopbar } from "../../src/components/dashboard/DashboardTopbar";
 import { SolarHeroCard } from "../../src/components/dashboard/SolarHeroCard";
 import { WeatherSummaryCard } from "../../src/components/dashboard/WeatherSummaryCard";
-import { ScreenBackground } from "../../src/components/ui/ScreenBackground";
 import { useCore } from "../../src/lib/useCore";
 import { useDashboardData } from "../../src/lib/useDashboardData";
 import { useNotifications } from "../../src/lib/useNotifications";
@@ -54,8 +53,7 @@ export default function Dashboard() {
   const updated = obs?.obsTimeLocal ? `updated ${obs.obsTimeLocal.split(" ")[1] ?? ""}` : undefined;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
-      <ScreenBackground />
+    <SafeAreaView className="flex-1" edges={["top"]}>
       <View className="flex-1 gap-3 px-4 pb-3 pt-1">
         <DashboardTopbar
           username={profile?.username}

@@ -17,7 +17,6 @@ import { PageHeader } from "../../src/components/PageHeader";
 import { SolarChart } from "../../src/components/charts";
 import { DateSelector } from "../../src/components/ui/DateSelector";
 import { GlassCard } from "../../src/components/ui/GlassCard";
-import { ScreenBackground } from "../../src/components/ui/ScreenBackground";
 import { SegmentedControl } from "../../src/components/ui/SegmentedControl";
 import { useCore } from "../../src/lib/useCore";
 
@@ -106,8 +105,7 @@ export default function Solar() {
   const chartData = solar?.chartData ?? EMPTY;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base" edges={["top"]}>
-      <ScreenBackground />
+    <SafeAreaView className="flex-1" edges={["top"]}>
       <View className="flex-1 gap-4 p-4">
         <PageHeader
           title="Solar Production"
