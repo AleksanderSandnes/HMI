@@ -70,9 +70,8 @@ public class SecurityConfig {
         // so a wildcard is the only maintainable way to cover them — and patterns
         // are the only form Spring permits alongside allowCredentials(true).
         configuration.setAllowedOriginPatterns(Arrays.asList(
-            // Production aliases.
+            // Production alias.
             "https://hmi-six.vercel.app",
-            "https://hmi-seven.vercel.app",
             // Any preview deployment under this project's Vercel scope (covers the
             // test branch deploy and per-commit previews).
             "https://hmi-*-aleksander-sandnes-projects.vercel.app",
