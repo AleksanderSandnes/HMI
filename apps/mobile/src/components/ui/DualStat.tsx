@@ -26,13 +26,19 @@ function Module({
       {loading ? (
         <Skeleton className="mt-2 h-7 w-16" />
       ) : (
-        <Text
-          numberOfLines={1}
-          className="mt-1 text-[27px] font-extrabold leading-tight tracking-[-0.5px] text-text-primary"
-        >
-          {value}
-          {unit ? <Text className="text-[12px] font-bold text-text-muted"> {unit}</Text> : null}
-        </Text>
+        <View className="mt-1 flex-row items-baseline">
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+            className="shrink text-[22px] font-extrabold leading-tight tracking-[-0.5px] text-text-primary"
+          >
+            {value}
+          </Text>
+          {unit ? (
+            <Text className="ml-1 shrink-0 text-[12px] font-bold text-text-muted">{unit}</Text>
+          ) : null}
+        </View>
       )}
     </View>
   );

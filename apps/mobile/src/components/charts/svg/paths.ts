@@ -1,16 +1,18 @@
-import { area, curveNatural, line } from "d3-shape";
+import { area, curveMonotoneX, line } from "d3-shape";
 
 export interface Pt {
   x: number;
   y: number;
 }
 
+// Monotone-x (matching the web charts) keeps curves smooth without the
+// natural-cubic overshoot that let areas dip below the zero baseline.
 const lineGen = line<Pt>()
   .x((d) => d.x)
   .y((d) => d.y)
-  .curve(curveNatural);
+  .curve(curveMonotoneX);
 
-/** Smooth (natural-cubic) line through pre-scaled pixel points. */
+/** Smooth line through pre-scaled pixel points. */
 export function linePath(points: Pt[]): string {
   return lineGen(points) ?? "";
 }
@@ -21,7 +23,7 @@ export function areaPath(points: Pt[], baseline: number): string {
     .x((d) => d.x)
     .y0(baseline)
     .y1((d) => d.y)
-    .curve(curveNatural);
+    .curve(curveMonotoneX);
   return gen(points) ?? "";
 }
 
@@ -35,6 +37,6 @@ export function areaRangePath(upper: Pt[], lower: Pt[]): string {
     .x((_, i) => upper[i].x)
     .y0((_, i) => lower[i].y)
     .y1((_, i) => upper[i].y)
-    .curve(curveNatural);
+    .curve(curveMonotoneX);
   return gen(upper.map((_, i) => i)) ?? "";
 }

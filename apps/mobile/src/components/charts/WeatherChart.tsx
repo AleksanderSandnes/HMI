@@ -189,7 +189,7 @@ function WeatherCanvas({
           {!model.isBand ? <SeriesDefs series={model.clean} /> : null}
           <Axes
             geo={geo}
-            xCount={Math.min(7, labels.length)}
+            xCount={Math.min(5, labels.length)}
             yCount={5}
             xAt={geo.x}
             formatX={(i) => labels[i] ?? ""}

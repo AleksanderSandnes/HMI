@@ -92,6 +92,8 @@ export function buildGeometry({
 /** Evenly spaced data indices for the x axis, deduped and clamped to range. */
 export function xTickIndices(count: number, desired: number): number[] {
   if (count <= 1) return [0];
+  // Small ranges (e.g. a 7-bar week) show every label so none — like "Sat" — is dropped.
+  if (count <= 8) return Array.from({ length: count }, (_, i) => i);
   const n = Math.max(2, Math.min(desired, count));
   const seen = new Set<number>();
   for (let i = 0; i < n; i++) {

@@ -16,6 +16,22 @@ export interface AxesProps {
 }
 
 const TEXT = axisTextProps();
+/** Minimum horizontal gap (px) between x labels so `HH:MM` values never touch. */
+const MIN_X_GAP = 38;
+
+/** Drop x ticks that would render closer than `MIN_X_GAP` to the previous one. */
+function spacedXTicks(indices: number[], xAt: (i: number) => number): number[] {
+  const kept: number[] = [];
+  let lastX = -Infinity;
+  for (const i of indices) {
+    const px = xAt(i);
+    if (px - lastX >= MIN_X_GAP) {
+      kept.push(i);
+      lastX = px;
+    }
+  }
+  return kept;
+}
 
 /**
  * Horizontal grid lines + x/y tick labels for the SVG charts. Y ticks are spread
@@ -25,7 +41,7 @@ const TEXT = axisTextProps();
 export function Axes({ geo, xCount, yCount, xAt, formatX, formatY }: AxesProps) {
   const { bounds, count, yDomain } = geo;
   const yTicks = yTickValues(yDomain, yCount);
-  const xTicks = xTickIndices(count, xCount);
+  const xTicks = spacedXTicks(xTickIndices(count, xCount), xAt);
 
   return (
     <>
