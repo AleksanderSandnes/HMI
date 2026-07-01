@@ -62,7 +62,7 @@ function StatusBadge({ online }: { online: boolean | null | undefined }) {
       className={`flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-1 text-[11px] font-bold ${online ? "bg-[rgba(52,211,153,0.13)] text-positive" : "bg-[rgba(251,113,133,0.13)] text-negative"}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${online ? "bg-positive" : "bg-negative"}`} />
-      {online ? "Online" : "Offline"}
+      {online ? "Inverter online" : "Inverter offline"}
     </span>
   );
 }
