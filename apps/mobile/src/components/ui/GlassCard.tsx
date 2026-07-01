@@ -24,21 +24,28 @@ const ELEVATED = StyleSheet.create({
   },
 }).shadow;
 
-// Low-opacity WHITE fill matching the web design's `--glass` / `--glassS` tokens
-// (which use NO backdrop-filter): a plain translucent white overlay + hairline
-// border over the ambient gsun gradient reads as a uniform, subtly-lighter glass
-// panel. On iOS a real expo-blur frost sits behind the fill; Android has no blur
-// but, because the ambient glows are pinned to the screen edges (see
-// ScreenBackground), the white fill stays uniform with no glow bleed.
+// Card fill. iOS gets a real expo-blur frost + a translucent white sheen (true
+// frosted glass). Android has NO backdrop blur, so a translucent fill would just
+// let the ambient gradient bleed through unevenly — instead we use an OPAQUE
+// glass-toned slate a few shades LIGHTER than the background (= the colour a
+// frosted card resolves to), which reads as a raised glass panel and is perfectly
+// uniform with zero bleed.
 const FILL = StyleSheet.create({
-  base: { backgroundColor: "rgba(255, 255, 255, 0.05)" },
-  strong: { backgroundColor: "rgba(255, 255, 255, 0.085)" },
+  iosBase: { backgroundColor: "rgba(255, 255, 255, 0.05)" },
+  iosStrong: { backgroundColor: "rgba(255, 255, 255, 0.085)" },
+  androidBase: { backgroundColor: "#161d30" },
+  androidStrong: { backgroundColor: "#1d2740" },
 });
+
+function fillStyle(isIOS: boolean, strong: boolean) {
+  if (isIOS) return strong ? FILL.iosStrong : FILL.iosBase;
+  return strong ? FILL.androidStrong : FILL.androidBase;
+}
 
 /**
  * Frosted-glass surface — the building block of every screen. A hairline border
- * and a translucent white fill over the ambient background (design `.glass` /
- * `.glassS`). iOS adds a real expo-blur frost behind the fill.
+ * over a frosted fill: real expo-blur on iOS, an opaque glass-toned slate on
+ * Android (no blur available), so cards are always uniform.
  */
 export function GlassCard({
   strong = false,
@@ -50,6 +57,7 @@ export function GlassCard({
   ...rest
 }: GlassCardProps) {
   const isIOS = Platform.OS === "ios";
+  const fill = fillStyle(isIOS, strong);
 
   return (
     <View
@@ -68,10 +76,7 @@ export function GlassCard({
           style={StyleSheet.absoluteFill}
         />
       ) : null}
-      <View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, strong ? FILL.strong : FILL.base]}
-      />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, fill]} />
       {children}
     </View>
   );
