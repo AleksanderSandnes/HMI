@@ -1,9 +1,22 @@
 import { Platform } from "react-native";
 
+import type { ThemeMode } from "../../lib/theme";
+
 // Shared styling tokens for the SVG solar + weather charts
-// (mobile equivalent of apps/web/components/charts/chartTheme.ts).
-export const AXIS_LABEL_COLOR = "#71809a"; // text-muted
-export const GRID_COLOR = "rgba(255,255,255,0.07)";
+// (mobile equivalent of apps/web/components/charts/chartTheme.ts). Mode-aware —
+// callers are React components, so read the active mode via useThemeColors()
+// and pass it through rather than reading a module-level constant.
+const AXIS_LABEL_COLOR: Record<ThemeMode, string> = {
+  dark: "#71809a", // text-muted (dark)
+  light: "#7b8698", // text-muted (light)
+};
+
+const GRID_COLOR: Record<ThemeMode, string> = {
+  dark: "rgba(255,255,255,0.07)",
+  light: "rgba(20,26,41,0.09)",
+};
+
+export const gridColor = (mode: ThemeMode): string => GRID_COLOR[mode];
 
 export const AXIS_FONT_FAMILY = Platform.select({
   ios: "Helvetica Neue",
@@ -22,8 +35,8 @@ export interface AxisTextProps {
 }
 
 /** Plain font props for axis `<SvgText>` labels (no Skia SkFont required). */
-export const axisTextProps = (size = AXIS_FONT_SIZE): AxisTextProps => ({
-  fill: AXIS_LABEL_COLOR,
+export const axisTextProps = (mode: ThemeMode, size = AXIS_FONT_SIZE): AxisTextProps => ({
+  fill: AXIS_LABEL_COLOR[mode],
   fontFamily: AXIS_FONT_FAMILY,
   fontSize: size,
   fontWeight: AXIS_FONT_WEIGHT,

@@ -2,6 +2,7 @@ import { BlurView } from "expo-blur";
 import { View, StyleSheet, Platform, type ViewProps } from "react-native";
 
 import { cn } from "../../lib/cn";
+import { useThemeColors } from "../../lib/theme";
 
 interface GlassCardProps extends ViewProps {
   /** Stronger fill + border for primary surfaces. */
@@ -24,22 +25,31 @@ const ELEVATED = StyleSheet.create({
   },
 }).shadow;
 
-// Card fill. iOS gets a real expo-blur frost + a translucent white sheen (true
-// frosted glass). Android has NO backdrop blur, so a translucent fill would just
-// let the ambient gradient bleed through unevenly — instead we use an OPAQUE
-// glass-toned slate a few shades LIGHTER than the background (= the colour a
-// frosted card resolves to), which reads as a raised glass panel and is perfectly
-// uniform with zero bleed.
+// Card fill. iOS gets a real expo-blur frost + a translucent sheen (true frosted
+// glass) — white-on-dark in dark mode, denser white-on-light in light mode (the
+// design's light glass surfaces read as near-solid white). Android has NO
+// backdrop blur, so a translucent fill would just let the ambient gradient bleed
+// through unevenly — instead we use an OPAQUE glass-toned surface a few shades
+// off the background (= the colour a frosted card resolves to), which reads as a
+// raised glass panel and is perfectly uniform with zero bleed.
 const FILL = StyleSheet.create({
-  iosBase: { backgroundColor: "rgba(255, 255, 255, 0.05)" },
-  iosStrong: { backgroundColor: "rgba(255, 255, 255, 0.085)" },
-  androidBase: { backgroundColor: "#161d30" },
-  androidStrong: { backgroundColor: "#1d2740" },
+  iosBaseDark: { backgroundColor: "rgba(255, 255, 255, 0.05)" },
+  iosStrongDark: { backgroundColor: "rgba(255, 255, 255, 0.085)" },
+  iosBaseLight: { backgroundColor: "rgba(255, 255, 255, 0.5)" },
+  iosStrongLight: { backgroundColor: "rgba(255, 255, 255, 0.78)" },
+  androidBaseDark: { backgroundColor: "#161d30" },
+  androidStrongDark: { backgroundColor: "#1d2740" },
+  androidBaseLight: { backgroundColor: "#f4f6fb" },
+  androidStrongLight: { backgroundColor: "#ffffff" },
 });
 
-function fillStyle(isIOS: boolean, strong: boolean) {
-  if (isIOS) return strong ? FILL.iosStrong : FILL.iosBase;
-  return strong ? FILL.androidStrong : FILL.androidBase;
+function fillStyle(isIOS: boolean, isDark: boolean, strong: boolean) {
+  if (isIOS) {
+    if (isDark) return strong ? FILL.iosStrongDark : FILL.iosBaseDark;
+    return strong ? FILL.iosStrongLight : FILL.iosBaseLight;
+  }
+  if (isDark) return strong ? FILL.androidStrongDark : FILL.androidBaseDark;
+  return strong ? FILL.androidStrongLight : FILL.androidBaseLight;
 }
 
 /**
@@ -57,7 +67,9 @@ export function GlassCard({
   ...rest
 }: GlassCardProps) {
   const isIOS = Platform.OS === "ios";
-  const fill = fillStyle(isIOS, strong);
+  const { mode } = useThemeColors();
+  const isDark = mode === "dark";
+  const fill = fillStyle(isIOS, isDark, strong);
 
   return (
     <View
@@ -72,7 +84,7 @@ export function GlassCard({
       {isIOS ? (
         <BlurView
           intensity={intensity ?? (strong ? 30 : 22)}
-          tint="dark"
+          tint={isDark ? "dark" : "light"}
           style={StyleSheet.absoluteFill}
         />
       ) : null}

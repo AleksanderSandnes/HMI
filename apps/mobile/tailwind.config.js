@@ -2,33 +2,35 @@
  * HMI mobile design tokens — mirror the web @theme tokens in
  * apps/web/app/globals.css VERBATIM so className strings stay portable between
  * web (Tailwind v4) and mobile (NativeWind v4 / Tailwind v3). globals.css is the
- * source of truth; keep these values in sync.
+ * source of truth; keep these values in sync. Chrome tokens (bg/glass/text/
+ * positive/negative) are CSS variables defined in ./global.css — light under
+ * `:root`, dark under `.dark:root` — so a single className works in both
+ * modes; see src/lib/theme.tsx for the runtime mode switch. Gradient tokens
+ * (solar/energy/accent/revenue) are intentionally mode-independent.
  *
  * @type {import('tailwindcss').Config}
  */
 module.exports = {
   content: ["./app/**/*.{js,jsx,ts,tsx}", "./src/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        // Backgrounds
-        "bg-base": "#070b16",
-        "bg-grad-1": "#0a1124",
-        "bg-grad-2": "#080d1b",
-        "bg-grad-3": "#06080f",
+        // Backgrounds (see global.css for the light/dark values)
+        "bg-base": "var(--bg-base)",
 
         // Glass surfaces (native uses translucent fills; real blur via expo-blur)
-        "glass-fill": "rgba(255, 255, 255, 0.045)",
-        "glass-fill-strong": "rgba(255, 255, 255, 0.075)",
-        "glass-fill-subtle": "rgba(255, 255, 255, 0.025)",
-        "glass-border": "rgba(255, 255, 255, 0.09)",
-        "glass-border-strong": "rgba(255, 255, 255, 0.16)",
+        "glass-fill": "var(--glass-fill)",
+        "glass-fill-strong": "var(--glass-fill-strong)",
+        "glass-fill-subtle": "var(--glass-fill-subtle)",
+        "glass-border": "var(--glass-border)",
+        "glass-border-strong": "var(--glass-border-strong)",
 
         // Text
-        "text-primary": "#f6f8fc",
-        "text-secondary": "#aeb8cc",
-        "text-muted": "#71809a",
+        "text-primary": "var(--text-primary)",
+        "text-secondary": "var(--text-secondary)",
+        "text-muted": "var(--text-muted)",
         "text-inverse": "#0a1124",
 
         // Solar gold
@@ -52,8 +54,8 @@ module.exports = {
         "revenue-soft": "rgba(234, 179, 8, 0.14)",
 
         // Status
-        positive: "#34d399",
-        negative: "#fb7185",
+        positive: "var(--positive)",
+        negative: "var(--negative)",
       },
       borderRadius: {
         sm: "12px",

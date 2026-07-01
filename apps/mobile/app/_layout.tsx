@@ -20,6 +20,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import PushRegistrar from "../src/components/PushRegistrar";
 import { AuthProvider, useAuth } from "../src/lib/auth";
 import { QueryProvider } from "../src/lib/query";
+import { ThemeProvider, useThemeBootstrap, useThemeColors } from "../src/lib/theme";
 
 /**
  * Auth gate (replaces the old Redux AppWrapper). Redirects between the `(auth)`
@@ -52,6 +53,12 @@ function AuthGate() {
   return <Slot />;
 }
 
+/** Reads the active theme to drive the native status bar chrome. */
+function ThemedStatusBar() {
+  const { mode, colors } = useThemeColors();
+  return <StatusBar style={mode === "dark" ? "light" : "dark"} backgroundColor={colors.bgBase} />;
+}
+
 export default function RootLayout() {
   // Load Geist per-weight on native (the web build loads it via CSS in `font.ts`).
   const [fontsLoaded, fontError] = useFonts(
@@ -66,8 +73,9 @@ export default function RootLayout() {
           Geist_900Black,
         },
   );
+  const { mode: themeMode, ready: themeReady } = useThemeBootstrap();
 
-  if (!fontsLoaded && !fontError) {
+  if ((!fontsLoaded && !fontError) || !themeReady) {
     return (
       <View className="flex-1 items-center justify-center bg-bg-base">
         <ActivityIndicator color="#f59e0b" />
@@ -79,13 +87,15 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
         <SafeAreaProvider>
-          <QueryProvider>
-            <AuthProvider>
-              <StatusBar style="light" backgroundColor="#070b16" />
-              <PushRegistrar />
-              <AuthGate />
-            </AuthProvider>
-          </QueryProvider>
+          <ThemeProvider mode={themeMode}>
+            <QueryProvider>
+              <AuthProvider>
+                <ThemedStatusBar />
+                <PushRegistrar />
+                <AuthGate />
+              </AuthProvider>
+            </QueryProvider>
+          </ThemeProvider>
         </SafeAreaProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>

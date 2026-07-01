@@ -1,6 +1,7 @@
 import { Line, Text as SvgText } from "react-native-svg";
 
-import { axisTextProps, GRID_COLOR } from "../chartTheme";
+import { useThemeColors } from "../../../lib/theme";
+import { axisTextProps, gridColor } from "../chartTheme";
 
 import { xTickIndices, yTickValues, type ChartGeometry } from "./scales";
 
@@ -15,7 +16,6 @@ export interface AxesProps {
   formatY: (v: number) => string;
 }
 
-const TEXT = axisTextProps();
 /** Minimum horizontal gap (px) between x labels so `HH:MM` values never touch. */
 const MIN_X_GAP = 38;
 
@@ -39,6 +39,8 @@ function spacedXTicks(indices: number[], xAt: (i: number) => number): number[] {
  * produced by the caller's formatters (reusing the same helpers as the web).
  */
 export function Axes({ geo, xCount, yCount, xAt, formatX, formatY }: AxesProps) {
+  const { mode } = useThemeColors();
+  const TEXT = axisTextProps(mode);
   const { bounds, count, yDomain } = geo;
   const yTicks = yTickValues(yDomain, yCount);
   const xTicks = spacedXTicks(xTickIndices(count, xCount), xAt);
@@ -54,7 +56,7 @@ export function Axes({ geo, xCount, yCount, xAt, formatX, formatY }: AxesProps) 
             y1={py}
             x2={bounds.right}
             y2={py}
-            stroke={GRID_COLOR}
+            stroke={gridColor(mode)}
             strokeWidth={1}
           />
         );

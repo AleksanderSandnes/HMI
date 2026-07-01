@@ -1,3 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Light/dark chrome tokens — light is the default (`:root`), dark overrides
+ * under `.dark:root` per NativeWind v4's CSS-variable theming pattern (see
+ * src/lib/theme.tsx for the runtime switch). Values mirror
+ * "HMI Mobile Redesign Light.dc.html" (light) and today's existing palette
+ * (dark, unchanged). Only chrome — backgrounds, glass fills/borders, body
+ * text, positive/negative — vary by mode; solar/energy/accent/revenue
+ * gradient tokens are intentionally identical in both modes and stay as
+ * plain values in tailwind.config.js.
+ */
+:root {
+  --bg-base: #eaeef5;
+  --glass-fill: rgba(255, 255, 255, 0.66);
+  --glass-fill-strong: rgba(255, 255, 255, 0.92);
+  --glass-fill-subtle: rgba(255, 255, 255, 0.42);
+  --glass-border: rgba(20, 26, 41, 0.1);
+  --glass-border-strong: rgba(20, 26, 41, 0.14);
+  --text-primary: #141a29;
+  --text-secondary: #45506a;
+  --text-muted: #7b8698;
+  --positive: #059669;
+  --negative: #e11d48;
+}
+
+.dark:root {
+  --bg-base: #070b16;
+  --glass-fill: rgba(255, 255, 255, 0.045);
+  --glass-fill-strong: rgba(255, 255, 255, 0.075);
+  --glass-fill-subtle: rgba(255, 255, 255, 0.025);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-border-strong: rgba(255, 255, 255, 0.16);
+  --text-primary: #f6f8fc;
+  --text-secondary: #aeb8cc;
+  --text-muted: #71809a;
+  --positive: #34d399;
+  --negative: #fb7185;
+}
