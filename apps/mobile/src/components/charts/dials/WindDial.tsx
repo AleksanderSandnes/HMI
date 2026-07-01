@@ -1,6 +1,6 @@
 import { windCompass } from "@hmi/core";
-import { Canvas, Circle, Group, Path, LinearGradient, vec } from "@shopify/react-native-skia";
 import { View, Text } from "react-native";
+import Svg, { Circle, Defs, G, LinearGradient, Path, Stop } from "react-native-svg";
 
 import { toNum } from "../../../lib/format";
 import { GlassCard } from "../../ui/GlassCard";
@@ -9,10 +9,10 @@ const SIZE = 100;
 const ARROW = "M50 4 L44 18 L50 14.5 L56 18 Z M48.4 14 L51.6 14 L51.6 28 L48.4 28 Z";
 
 /**
- * Circular wind compass (Skia port of web ui/WindDial): a dial whose arrow
- * rotates to the wind direction (points toward where the wind comes FROM), the
- * speed in the centre, and the cardinal + gust below. Cardinal letters and the
- * centre value are RN text overlays (matching web's HTML-over-SVG approach).
+ * Circular wind compass (react-native-svg port of web ui/WindDial): a dial whose
+ * arrow rotates to the wind direction (points toward where the wind comes FROM),
+ * the speed in the centre, and the cardinal + gust below. Cardinal letters and
+ * the centre value are RN text overlays (matching web's HTML-over-SVG approach).
  */
 export function WindDial({
   degrees,
@@ -33,28 +33,35 @@ export function WindDial({
   return (
     <GlassCard strong className="h-full min-w-0 flex-1 items-center justify-center gap-2 p-3.5">
       <View style={{ width: SIZE, height: SIZE }}>
-        <Canvas style={{ flex: 1 }}>
-          <Circle cx={50} cy={50} r={46} color="rgba(255,255,255,0.03)" />
+        <Svg width={SIZE} height={SIZE} viewBox="0 0 100 100">
+          <Defs>
+            <LinearGradient
+              id="wind-arrow"
+              gradientUnits="userSpaceOnUse"
+              x1="50"
+              y1="4"
+              x2="50"
+              y2="28"
+            >
+              <Stop offset="0" stopColor="#fde047" />
+              <Stop offset="1" stopColor="#f59e0b" />
+            </LinearGradient>
+          </Defs>
+          <Circle cx={50} cy={50} r={46} fill="rgba(255,255,255,0.03)" />
           <Circle
             cx={50}
             cy={50}
             r={46}
-            style="stroke"
+            fill="none"
+            stroke="rgba(255,255,255,0.12)"
             strokeWidth={1}
-            color="rgba(255,255,255,0.12)"
           />
           {deg != null ? (
-            <Group origin={vec(50, 50)} transform={[{ rotate: (deg * Math.PI) / 180 }]}>
-              <Path path={ARROW}>
-                <LinearGradient
-                  start={vec(50, 4)}
-                  end={vec(50, 28)}
-                  colors={["#fde047", "#f59e0b"]}
-                />
-              </Path>
-            </Group>
+            <G transform={`rotate(${deg} 50 50)`}>
+              <Path d={ARROW} fill="url(#wind-arrow)" />
+            </G>
           ) : null}
-        </Canvas>
+        </Svg>
 
         {/* Cardinal letters */}
         <View pointerEvents="none" className="absolute inset-0">

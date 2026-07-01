@@ -1,5 +1,5 @@
 import { BlurView } from "expo-blur";
-import { View, StyleSheet, type ViewProps } from "react-native";
+import { View, StyleSheet, Platform, type ViewProps } from "react-native";
 
 import { cn } from "../../lib/cn";
 
@@ -24,12 +24,31 @@ const ELEVATED = StyleSheet.create({
   },
 }).shadow;
 
+// Dark backing tint so the card reads as a crisp dark panel like the web glass
+// surface. On iOS a light scrim sits over a real expo-blur frost; on Android we
+// skip the (buggy, washed-out / white-flashing) experimental blur entirely and
+// use a more opaque scrim so content stays sharp over the ambient background
+// glows — matching the web's CSS backdrop-filter look without its artifacts.
+const SCRIM = StyleSheet.create({
+  iosBase: { backgroundColor: "rgba(12, 17, 32, 0.42)" },
+  iosStrong: { backgroundColor: "rgba(15, 20, 38, 0.5)" },
+  androidBase: { backgroundColor: "rgba(12, 17, 32, 0.82)" },
+  androidStrong: { backgroundColor: "rgba(16, 22, 40, 0.88)" },
+});
+
 /**
- * Frosted-glass surface — the building block of every screen. Real backdrop blur
- * via expo-blur (native + web), a translucent fill tint, a hairline border, and
- * an optional glow. Mirrors apps/web/components/ui/GlassCard.tsx (which uses CSS
- * backdrop-filter); here the blur is a separate absolute layer behind content.
+ * Frosted-glass surface — the building block of every screen. A hairline border,
+ * a translucent dark fill, and an optional glow. Mirrors
+ * apps/web/components/ui/GlassCard.tsx (which uses CSS backdrop-filter): on iOS a
+ * real expo-blur frost sits behind a light scrim; on Android a more opaque scrim
+ * stands in for blur so content stays crisp without the experimental blur's
+ * washed-out / white-flash artifacts.
  */
+function scrimStyle(isIOS: boolean, strong: boolean) {
+  if (isIOS) return strong ? SCRIM.iosStrong : SCRIM.iosBase;
+  return strong ? SCRIM.androidStrong : SCRIM.androidBase;
+}
+
 export function GlassCard({
   strong = false,
   elevated = false,
@@ -39,6 +58,9 @@ export function GlassCard({
   style,
   ...rest
 }: GlassCardProps) {
+  const isIOS = Platform.OS === "ios";
+  const scrim = scrimStyle(isIOS, strong);
+
   return (
     <View
       style={[elevated && ELEVATED, style]}
@@ -49,16 +71,14 @@ export function GlassCard({
       )}
       {...rest}
     >
-      <BlurView
-        intensity={intensity ?? (strong ? 30 : 20)}
-        tint="dark"
-        experimentalBlurMethod="dimezisBlurView"
-        style={StyleSheet.absoluteFill}
-      />
-      <View
-        pointerEvents="none"
-        className={cn("absolute inset-0", strong ? "bg-glass-fill-strong" : "bg-glass-fill")}
-      />
+      {isIOS ? (
+        <BlurView
+          intensity={intensity ?? (strong ? 26 : 20)}
+          tint="dark"
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, scrim]} />
       {children}
     </View>
   );

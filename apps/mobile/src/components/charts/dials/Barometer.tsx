@@ -1,13 +1,5 @@
-import {
-  Canvas,
-  Group,
-  Path,
-  Line as SkiaLine,
-  Circle,
-  LinearGradient,
-  vec,
-} from "@shopify/react-native-skia";
 import { View, Text } from "react-native";
+import Svg, { Circle, Defs, G, Line, LinearGradient, Path, Stop } from "react-native-svg";
 
 import { clamp, round, toNum } from "../../../lib/format";
 import { GlassCard } from "../../ui/GlassCard";
@@ -18,7 +10,6 @@ const P_MAX = 1060;
 const START = -135;
 const SWEEP = 270;
 const SIZE = 92;
-const SCALE = SIZE / 100;
 
 function pointAt(angleDeg: number, r: number, cx = 50, cy = 50) {
   const rad = (angleDeg * Math.PI) / 180;
@@ -36,8 +27,17 @@ const TICKS = Array.from({ length: 11 }, (_, i) => {
   const major = i % 5 === 0;
   const o = pointAt(ang, 42);
   const inr = pointAt(ang, major ? 33 : 37);
-  return { p1: vec(o.x, o.y), p2: vec(inr.x, inr.y), major };
+  return { o, inr, major };
 });
+
+function Needle({ ang }: { ang: number }) {
+  return (
+    <G transform={`rotate(${ang} 50 50)`}>
+      <Path d="M50 53 L50 16" stroke="url(#baro-needle)" strokeWidth={3} strokeLinecap="round" />
+      <Path d="M50 10 L45 23 L50 19 L55 23 Z" fill="url(#baro-head)" />
+    </G>
+  );
+}
 
 function Gauge({ value }: { value: number | null }) {
   const frac = value != null ? clamp((value - P_MIN) / (P_MAX - P_MIN), 0, 1) : null;
@@ -45,53 +45,60 @@ function Gauge({ value }: { value: number | null }) {
 
   return (
     <View style={{ width: SIZE, height: SIZE }}>
-      <Canvas style={{ flex: 1 }}>
-        <Group transform={[{ scale: SCALE }]}>
-          <Path
-            path={ARC}
-            style="stroke"
-            strokeWidth={2.5}
-            strokeCap="round"
-            color="rgba(255,255,255,0.12)"
+      <Svg width={SIZE} height={SIZE} viewBox="0 0 100 100">
+        <Defs>
+          <LinearGradient
+            id="baro-needle"
+            gradientUnits="userSpaceOnUse"
+            x1="50"
+            y1="16"
+            x2="50"
+            y2="53"
+          >
+            <Stop offset="0" stopColor="#fde047" />
+            <Stop offset="1" stopColor="#f59e0b" />
+          </LinearGradient>
+          <LinearGradient
+            id="baro-head"
+            gradientUnits="userSpaceOnUse"
+            x1="50"
+            y1="10"
+            x2="50"
+            y2="23"
+          >
+            <Stop offset="0" stopColor="#fde047" />
+            <Stop offset="1" stopColor="#f59e0b" />
+          </LinearGradient>
+        </Defs>
+        <Path
+          d={ARC}
+          fill="none"
+          stroke="rgba(255,255,255,0.12)"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+        />
+        {TICKS.map((t, i) => (
+          <Line
+            key={i}
+            x1={t.o.x}
+            y1={t.o.y}
+            x2={t.inr.x}
+            y2={t.inr.y}
+            strokeWidth={t.major ? 1.4 : 1}
+            stroke={t.major ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.16)"}
           />
-          {TICKS.map((t, i) => (
-            <SkiaLine
-              key={i}
-              p1={t.p1}
-              p2={t.p2}
-              strokeWidth={t.major ? 1.4 : 1}
-              color={t.major ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.16)"}
-            />
-          ))}
-          {ang != null ? (
-            <Group origin={vec(50, 50)} transform={[{ rotate: (ang * Math.PI) / 180 }]}>
-              <Path path="M50 53 L50 16" style="stroke" strokeWidth={3} strokeCap="round">
-                <LinearGradient
-                  start={vec(50, 16)}
-                  end={vec(50, 53)}
-                  colors={["#fde047", "#f59e0b"]}
-                />
-              </Path>
-              <Path path="M50 10 L45 23 L50 19 L55 23 Z">
-                <LinearGradient
-                  start={vec(50, 10)}
-                  end={vec(50, 23)}
-                  colors={["#fde047", "#f59e0b"]}
-                />
-              </Path>
-            </Group>
-          ) : null}
-          <Circle cx={50} cy={50} r={3.5} color="#0a1124" />
-          <Circle
-            cx={50}
-            cy={50}
-            r={3.5}
-            style="stroke"
-            strokeWidth={1}
-            color="rgba(255,255,255,0.32)"
-          />
-        </Group>
-      </Canvas>
+        ))}
+        {ang != null ? <Needle ang={ang} /> : null}
+        <Circle cx={50} cy={50} r={3.5} fill="#0a1124" />
+        <Circle
+          cx={50}
+          cy={50}
+          r={3.5}
+          fill="none"
+          stroke="rgba(255,255,255,0.32)"
+          strokeWidth={1}
+        />
+      </Svg>
     </View>
   );
 }
@@ -123,7 +130,7 @@ function Module({
 
 /**
  * Pressure tile with two barometer gauges side by side — Now and Week average —
- * split by a divider (Skia port of web ui/DualBaro).
+ * split by a divider (react-native-svg port of web ui/DualBaro).
  */
 export function DualBaro({
   now,

@@ -1,6 +1,6 @@
-// Pure chart-geometry helpers shared by the web (Recharts) and mobile (Victory
-// Native XL) Solar/Weather charts. Kept out of the components so the (non-obvious)
-// axis/bar math can be unit-tested once and reused on both platforms.
+// Pure chart-geometry helpers shared by the web (Recharts) and mobile
+// (react-native-svg) Solar/Weather charts. Kept out of the components so the
+// (non-obvious) axis/bar math can be unit-tested once and reused on both platforms.
 
 export interface YDomain {
   min: number;
@@ -36,8 +36,8 @@ export function weatherYDomain(values: number[]): YDomain {
  * Bar-category gap (%) for the solar bar chart, scaled to the bar count so dense
  * views (a month of days) stay readable while sparse views (a 5-year total) keep
  * chunky bars. Stays strictly below 50 — Recharts collapses bars to zero width at
- * exactly barCategoryGap="50%". On mobile (Victory Native XL) divide by 100 to
- * get the equivalent `innerPadding` fraction.
+ * exactly barCategoryGap="50%". On mobile divide by 100 to get the equivalent
+ * inner-padding fraction of each bar's category band.
  */
 export function barGapPercent(count: number): number {
   return count > 24 ? 34 : count > 12 ? 42 : 46;

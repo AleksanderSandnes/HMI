@@ -1,14 +1,18 @@
 import { formatMetric, weatherYDomain } from "@hmi/core";
-import { Circle, LinearGradient, vec } from "@shopify/react-native-skia";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { View } from "react-native";
-import { CartesianChart, Line, Area, AreaRange, useChartPressState } from "victory-native";
-import type { ChartBounds, PointsArray } from "victory-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
+import Svg, { Circle, Defs, Path } from "react-native-svg";
 
 import { ChartMessage } from "./ChartMessage";
-import { AXIS_LABEL_COLOR, GRID_COLOR, axisFont } from "./chartTheme";
+import { Axes } from "./svg/Axes";
+import { GradientDef } from "./svg/gradient";
+import { areaPath, areaRangePath, linePath, type Pt } from "./svg/paths";
+import { buildGeometry, type ChartGeometry } from "./svg/scales";
 
-const FONT = axisFont(12);
+const MARGINS = { top: 8, right: 14, bottom: 24, left: 44 };
+const DOMAIN_PADDING = { left: 10, right: 10, top: 22 };
 
 export interface LineSeries {
   data: number[];
@@ -36,39 +40,16 @@ interface WeatherChartProps {
   emptyText?: string;
 }
 
-type ChartPoints = Record<string, PointsArray>;
-
 interface WeatherModel {
   isBand: boolean;
   clean: LineSeries[];
+  band?: WeatherBand;
   yMin: number;
   yMax: number;
   range: number;
-  yKeys: string[];
-  rows: Record<string, number>[];
+  count: number;
   hasData: boolean;
   firstColor: string;
-}
-
-function buildRows(
-  labels: string[],
-  clean: LineSeries[],
-  band: WeatherBand | undefined,
-  isBand: boolean,
-): Record<string, number>[] {
-  if (isBand && band) {
-    return labels.map((_, i) => ({
-      x: i,
-      min: band.min[i] ?? 0,
-      max: band.max[i] ?? 0,
-      avg: band.avg[i] ?? 0,
-    }));
-  }
-  return labels.map((_, i) => {
-    const row: Record<string, number> = { x: i };
-    clean.forEach((s, si) => (row[`s${si}`] = s.data[i] ?? 0));
-    return row;
-  });
 }
 
 function buildModel(
@@ -80,79 +61,158 @@ function buildModel(
   const clean = (series || []).filter((s) => s.data && s.data.length > 0);
   const allValues = isBand && band ? [...band.min, ...band.max] : clean.flatMap((s) => s.data);
   const { min: yMin, max: yMax, range } = weatherYDomain(allValues);
-  const yKeys = isBand ? ["min", "max", "avg"] : clean.map((_, i) => `s${i}`);
-  const rows = buildRows(labels, clean, band, isBand);
-  const hasData = isBand || (clean.length > 0 && rows.length > 0);
+  const hasData = isBand || clean.length > 0;
   const firstColor = clean[0]?.color ?? "#fbbf24";
-  return { isBand, clean, yMin, yMax, range, yKeys, rows, hasData, firstColor };
+  return { isBand, clean, band, yMin, yMax, range, count: labels.length, hasData, firstColor };
 }
 
-function BandLayers({
-  points,
-  color,
-  cursor,
-}: {
-  points: ChartPoints;
-  color: string;
-  cursor: ReactNode;
-}) {
+function toPoints(geo: ChartGeometry, data: number[]): Pt[] {
+  return Array.from({ length: geo.count }, (_, i) => ({ x: geo.x(i), y: geo.y(data[i] ?? 0) }));
+}
+
+function SeriesDefs({ series }: { series: LineSeries[] }) {
   return (
-    <>
-      <AreaRange
-        upperPoints={points.max}
-        lowerPoints={points.min}
-        curveType="natural"
-        color={color}
-        opacity={0.16}
-      />
-      <Line points={points.avg} color={color} strokeWidth={2.6} curveType="natural" />
-      {cursor}
-    </>
+    <Defs>
+      {series.map((s, si) => (
+        <GradientDef
+          key={si}
+          id={`wx-${si}`}
+          stops={[
+            { offset: 0, color: s.color, opacity: 0.32 },
+            { offset: 0.5, color: s.color, opacity: 0.08 },
+            { offset: 1, color: s.color, opacity: 0 },
+          ]}
+        />
+      ))}
+    </Defs>
   );
 }
 
-function SeriesLayers({
-  points,
-  chartBounds,
-  series,
-  cursor,
-}: {
-  points: ChartPoints;
-  chartBounds: ChartBounds;
-  series: LineSeries[];
-  cursor: ReactNode;
-}) {
+function SeriesLayers({ geo, series }: { geo: ChartGeometry; series: LineSeries[] }) {
   // Render last series first so the primary series sits on top.
   const ordered = series.map((s, si) => ({ s, si })).reverse();
   return (
     <>
       {ordered.map(({ s, si }) => (
-        <Area key={`a${si}`} points={points[`s${si}`]} y0={chartBounds.bottom} curveType="natural">
-          <LinearGradient
-            start={vec(0, chartBounds.top)}
-            end={vec(0, chartBounds.bottom)}
-            colors={[`${s.color}52`, `${s.color}14`, `${s.color}00`]}
-          />
-        </Area>
-      ))}
-      {ordered.map(({ s, si }) => (
-        <Line
-          key={`l${si}`}
-          points={points[`s${si}`]}
-          color={s.color}
-          strokeWidth={2.6}
-          curveType="natural"
+        <Path
+          key={`a${si}`}
+          d={areaPath(toPoints(geo, s.data), geo.bounds.bottom)}
+          fill={`url(#wx-${si})`}
         />
       ))}
-      {cursor}
+      {ordered.map(({ s, si }) => (
+        <Path
+          key={`l${si}`}
+          d={linePath(toPoints(geo, s.data))}
+          fill="none"
+          stroke={s.color}
+          strokeWidth={2.6}
+        />
+      ))}
     </>
   );
 }
 
+function BandLayers({
+  geo,
+  band,
+  color,
+}: {
+  geo: ChartGeometry;
+  band: WeatherBand;
+  color: string;
+}) {
+  return (
+    <>
+      <Path
+        d={areaRangePath(toPoints(geo, band.max), toPoints(geo, band.min))}
+        fill={color}
+        fillOpacity={0.16}
+      />
+      <Path d={linePath(toPoints(geo, band.avg))} fill="none" stroke={color} strokeWidth={2.6} />
+    </>
+  );
+}
+
+function useCrosshair(geo: ChartGeometry) {
+  const [index, setIndex] = useState<number | null>(null);
+  const gesture = useMemo(() => {
+    const select = (px: number) => {
+      const i = Math.round(geo.invertX(px));
+      setIndex(Math.max(0, Math.min(geo.count - 1, i)));
+    };
+    return Gesture.Pan()
+      .minDistance(0)
+      .onBegin((e) => runOnJS(select)(e.x))
+      .onUpdate((e) => runOnJS(select)(e.x))
+      .onFinalize(() => runOnJS(setIndex)(null));
+  }, [geo]);
+  return { index, gesture };
+}
+
+function cursorValue(model: WeatherModel, index: number): number {
+  return model.isBand ? (model.band?.avg[index] ?? 0) : (model.clean[0]?.data[index] ?? 0);
+}
+
+function WeatherCanvas({
+  width,
+  height,
+  model,
+  labels,
+  bandColor,
+}: {
+  width: number;
+  height: number;
+  model: WeatherModel;
+  labels: string[];
+  bandColor: string;
+}) {
+  const geo = useMemo(
+    () =>
+      buildGeometry({
+        width,
+        height,
+        margins: MARGINS,
+        count: labels.length,
+        yDomain: [model.yMin, model.yMax],
+        domainPadding: DOMAIN_PADDING,
+      }),
+    [width, height, model, labels.length],
+  );
+  const { index, gesture } = useCrosshair(geo);
+  const color = model.isBand ? bandColor : model.firstColor;
+
+  return (
+    <GestureDetector gesture={gesture}>
+      <View style={{ width, height }}>
+        <Svg width={width} height={height}>
+          {!model.isBand ? <SeriesDefs series={model.clean} /> : null}
+          <Axes
+            geo={geo}
+            xCount={Math.min(7, labels.length)}
+            yCount={5}
+            xAt={geo.x}
+            formatX={(i) => labels[i] ?? ""}
+            formatY={(v) => formatMetric(v, model.range)}
+          />
+          {model.isBand && model.band ? (
+            <BandLayers geo={geo} band={model.band} color={bandColor} />
+          ) : (
+            <SeriesLayers geo={geo} series={model.clean} />
+          )}
+          {index != null ? (
+            <Circle cx={geo.x(index)} cy={geo.y(cursorValue(model, index))} r={5} fill={color} />
+          ) : null}
+        </Svg>
+      </View>
+    </GestureDetector>
+  );
+}
+
 /**
- * Multi-series weather chart (Victory Native XL / Skia port of the web
- * WeatherChart). `series` → smooth areas + lines with a shared press crosshair;
- * `band` → a min–max area band + average line (phone weekly view).
+ * Multi-series weather chart (react-native-svg port of the web WeatherChart).
+ * `series` → smooth areas + lines with a shared press crosshair; `band` → a
+ * min–max area band + average line (phone weekly view).
  */
 export function WeatherChart({
   labels,
@@ -163,59 +223,23 @@ export function WeatherChart({
   height = 320,
   emptyText = "No data for this period",
 }: WeatherChartProps) {
-  const { isBand, clean, yMin, yMax, range, yKeys, rows, hasData, firstColor } = useMemo(
-    () => buildModel(labels, series, band),
-    [labels, series, band],
-  );
-
-  // Press state keyed on the avg (band) or first series for the crosshair.
-  const pressKey = isBand ? "avg" : "s0";
-  const { state, isActive } = useChartPressState({ x: 0, y: { [pressKey]: 0 } });
-  const cursorColor = isBand ? bandColor : firstColor;
+  const model = useMemo(() => buildModel(labels, series, band), [labels, series, band]);
+  const [width, setWidth] = useState(0);
 
   if (loading) return <ChartMessage height={height} />;
-  if (!hasData) return <ChartMessage height={height} text={emptyText} />;
+  if (!model.hasData) return <ChartMessage height={height} text={emptyText} />;
 
   return (
-    <View style={{ height }}>
-      <CartesianChart
-        data={rows}
-        xKey="x"
-        yKeys={yKeys as string[]}
-        domain={{ y: [yMin, yMax] }}
-        domainPadding={{ left: 10, right: 10, top: 22 }}
-        chartPressState={state}
-        axisOptions={{
-          font: FONT,
-          lineColor: GRID_COLOR,
-          labelColor: AXIS_LABEL_COLOR,
-          tickCount: { x: Math.min(7, labels.length), y: 5 },
-          formatXLabel: (i) => labels[Math.round(Number(i))] ?? "",
-          formatYLabel: (v) => formatMetric(Number(v), range),
-        }}
-      >
-        {({ points, chartBounds }) => {
-          const cursor =
-            isActive && state.y[pressKey] ? (
-              <Circle
-                cx={state.x.position}
-                cy={state.y[pressKey].position}
-                r={5}
-                color={cursorColor}
-              />
-            ) : null;
-          return isBand ? (
-            <BandLayers points={points} color={bandColor} cursor={cursor} />
-          ) : (
-            <SeriesLayers
-              points={points}
-              chartBounds={chartBounds}
-              series={clean}
-              cursor={cursor}
-            />
-          );
-        }}
-      </CartesianChart>
+    <View style={{ height }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+      {width > 0 ? (
+        <WeatherCanvas
+          width={width}
+          height={height}
+          model={model}
+          labels={labels}
+          bandColor={bandColor}
+        />
+      ) : null}
     </View>
   );
 }
