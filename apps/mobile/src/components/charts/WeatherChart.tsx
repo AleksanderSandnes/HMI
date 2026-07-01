@@ -15,6 +15,21 @@ import { buildGeometry, type ChartGeometry } from "./svg/scales";
 const MARGINS = { top: 8, right: 14, bottom: 24, left: 44 };
 const DOMAIN_PADDING = { left: 10, right: 10, top: 22 };
 
+const WEEKDAY_FULL: Record<string, string> = {
+  Sun: "Sunday",
+  Mon: "Monday",
+  Tue: "Tuesday",
+  Wed: "Wednesday",
+  Thu: "Thursday",
+  Fri: "Friday",
+  Sat: "Saturday",
+};
+
+/** Expand a weekday abbreviation (weekly view) to its full name for the tooltip. */
+function expandLabel(label: string): string {
+  return WEEKDAY_FULL[label] ?? label;
+}
+
 export interface LineSeries {
   data: number[];
   color: string;
@@ -270,7 +285,7 @@ function WeatherCanvas({
         {index != null ? (
           <CrosshairBubble
             rows={rows}
-            header={labels[index] ?? ""}
+            header={expandLabel(labels[index] ?? "")}
             unit={unit}
             range={model.range}
             x={geo.x(index)}
