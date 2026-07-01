@@ -8,30 +8,25 @@ import { GlassCard } from "../../ui/GlassCard";
 const SIZE = 100;
 const ARROW = "M50 4 L44 18 L50 14.5 L56 18 Z M48.4 14 L51.6 14 L51.6 28 L48.4 28 Z";
 
-/**
- * Circular wind compass (react-native-svg port of web ui/WindDial): a dial whose
- * arrow rotates to the wind direction (points toward where the wind comes FROM),
- * the speed in the centre, and the cardinal + gust below. Cardinal letters and
- * the centre value are RN text overlays (matching web's HTML-over-SVG approach).
- */
-export function WindDial({
-  degrees,
-  speed,
-  gust,
-  unit = "km/h",
-}: {
+interface WindDialProps {
   degrees?: number | null;
   speed?: number | null;
   gust?: number | null;
   unit?: string;
-}) {
+}
+
+/**
+ * Wind compass dial + direction caption, without a surface. Embed inside any
+ * card (e.g. the dashboard weather summary); `WindDial` wraps it in a GlassCard.
+ */
+export function WindDialFace({ degrees, speed, gust, unit = "km/h" }: WindDialProps) {
   const deg = toNum(degrees);
   const spd = toNum(speed);
   const gst = toNum(gust);
   const dir = deg != null ? windCompass(deg) : null;
 
   return (
-    <GlassCard strong className="h-full min-w-0 flex-1 items-center justify-center gap-2 p-3.5">
+    <View className="items-center gap-2">
       <View style={{ width: SIZE, height: SIZE }}>
         <Svg width={SIZE} height={SIZE} viewBox="0 0 100 100">
           <Defs>
@@ -92,6 +87,15 @@ export function WindDial({
         {dir ? `from ${dir}` : "Direction n/a"}
         {gst != null ? ` · gust ${Math.round(gst)}` : ""}
       </Text>
+    </View>
+  );
+}
+
+/** Wind compass as a standalone glass tile (dashboard grid / legacy use). */
+export function WindDial(props: WindDialProps) {
+  return (
+    <GlassCard strong className="h-full min-w-0 flex-1 items-center justify-center gap-2 p-3.5">
+      <WindDialFace {...props} />
     </GlassCard>
   );
 }
