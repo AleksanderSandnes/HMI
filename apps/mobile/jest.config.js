@@ -11,7 +11,7 @@ module.exports = {
   testMatch: ["**/__tests__/**/*.test.[jt]s?(x)", "**/?(*.)+(test).[jt]s?(x)"],
   testPathIgnorePatterns: ["/node_modules/", "/backend/", "/.expo/", "/dist/"],
   transformIgnorePatterns: [
-    "node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@reduxjs/toolkit|react-redux|redux|reselect|immer|expo-modules-core))",
+    "node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|d3-.*|internmap|@reduxjs/toolkit|react-redux|redux|reselect|immer|expo-modules-core))",
   ],
   collectCoverageFrom: [
     "app/**/*.{js,jsx,ts,tsx}",

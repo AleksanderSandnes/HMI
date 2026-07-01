@@ -14,10 +14,12 @@ interface DateSelectorProps {
 
 function StepButton({
   icon,
+  label,
   onPress,
   disabled,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
+  label: string;
   onPress: () => void;
   disabled: boolean;
 }) {
@@ -25,6 +27,7 @@ function StepButton({
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      accessibilityLabel={label}
       style={disabled ? { opacity: 0.4 } : undefined}
       className="h-[46px] w-[46px] items-center justify-center rounded-[14px] border border-glass-border bg-glass-fill"
     >
@@ -53,6 +56,7 @@ export function DateSelector({ selectedDate, onDateSelect, disabled = false }: D
       <GlassCard strong className="flex-row items-center gap-2 p-[7px]">
         <StepButton
           icon="chevron-back"
+          label="Previous day"
           disabled={disabled}
           onPress={() => onDateSelect(shiftYMD(selectedDate, -1))}
         />
@@ -66,6 +70,7 @@ export function DateSelector({ selectedDate, onDateSelect, disabled = false }: D
         </Pressable>
         <StepButton
           icon="chevron-forward"
+          label="Next day"
           disabled={disabled || atToday}
           onPress={() => onDateSelect(shiftYMD(selectedDate, 1))}
         />
