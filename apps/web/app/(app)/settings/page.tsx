@@ -6,8 +6,9 @@ import {
   type ApiSettingsResponse,
   type UserProfile,
 } from "@hmi/core";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Camera,
   CloudSun,
   KeyRound,
   type LucideIcon,
@@ -19,8 +20,9 @@ import {
   User,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -179,6 +181,111 @@ function ConfiguredBadge({ on }: { on: boolean }) {
   );
 }
 
+/** First letters of the first two words, else the first two characters. */
+function deriveInitials(name?: string | null): string {
+  if (!name) return "·";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.trim().slice(0, 2).toUpperCase();
+}
+
+/** Best-effort file extension from the filename, falling back to the mime type. */
+function extractExtension(file: File): string {
+  const dot = file.name.lastIndexOf(".");
+  if (dot > 0 && dot < file.name.length - 1) {
+    return file.name.slice(dot + 1).toLowerCase();
+  }
+  return file.type.split("/")[1] || "jpg";
+}
+
+/** Upload/remove avatar state + handlers, keeping the profile query cache in sync. */
+function useAvatarActions(account: Core["account"]) {
+  const queryClient = useQueryClient();
+  const [banner, setBanner] = useState<Banner>(null);
+  const [busy, setBusy] = useState(false);
+
+  function syncProfile(updated: UserProfile) {
+    queryClient.setQueryData(["profile"], updated);
+    return queryClient.invalidateQueries({ queryKey: ["profile"] });
+  }
+
+  async function run(action: () => Promise<UserProfile>, failure: string) {
+    setBanner(null);
+    setBusy(true);
+    try {
+      await syncProfile(await action());
+    } catch (err) {
+      setBanner({ kind: "error", message: err instanceof Error ? err.message : failure });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // let the same file be re-picked later
+    if (!file) return;
+    await run(
+      () =>
+        account.uploadAvatar({
+          data: file,
+          contentType: file.type || "image/jpeg",
+          extension: extractExtension(file),
+        }),
+      "Could not upload photo.",
+    );
+  }
+
+  const remove = () => run(() => account.removeAvatar(), "Could not remove photo.");
+
+  return { banner, busy, onFile, remove };
+}
+
+function AvatarPicker({ profile, account }: { profile: UserProfile; account: Core["account"] }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { banner, busy, onFile, remove } = useAvatarActions(account);
+
+  return (
+    <div className="mb-4 flex flex-col items-center gap-2">
+      {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={busy}
+          aria-label="Change photo"
+          className="block rounded-full transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Avatar initials={deriveInitials(profile.username)} url={profile.avatarUrl} size={84} />
+          <span
+            className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-bg-base"
+            style={{ backgroundImage: SECTION_GRADIENTS.accent }}
+          >
+            <Camera size={13} className="text-text-inverse" />
+          </span>
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          className="hidden"
+          onChange={(e) => void onFile(e)}
+        />
+      </div>
+      {profile.avatarUrl ? (
+        <button
+          type="button"
+          onClick={() => void remove()}
+          disabled={busy}
+          className="text-[13px] font-bold text-text-muted transition hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Remove photo
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function AccountForm({
   profile,
   account,
@@ -213,6 +320,7 @@ function AccountForm({
 
   return (
     <>
+      <AvatarPicker profile={profile} account={account} />
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
       <Field
         label="USERNAME"

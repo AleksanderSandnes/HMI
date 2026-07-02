@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import type { AvatarUpload } from "@hmi/core";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
@@ -33,22 +34,39 @@ function deriveInitials(name?: string | null): string {
 
 const PICKER_OPTS = { allowsEditing: true, aspect: [1, 1] as [number, number], quality: 0.6 };
 
-type SetAvatar = (uri: string) => Promise<void>;
+type SetAvatar = (upload: AvatarUpload) => Promise<void>;
+
+/** Map a file extension to its image MIME type. */
+function mimeFromExtension(ext: string): string {
+  if (ext === "png") return "image/png";
+  if (ext === "webp") return "image/webp";
+  return "image/jpeg";
+}
+
+/** Convert a picked expo-image-picker asset into an `AvatarUpload`. */
+async function assetToUpload(asset: ImagePicker.ImagePickerAsset): Promise<AvatarUpload> {
+  const source = asset.fileName ?? asset.uri;
+  const rawExt = source.split(".").pop()?.split("?")[0]?.toLowerCase() ?? "";
+  const extension = rawExt === "jpeg" ? "jpg" : rawExt || "jpg";
+  const contentType = asset.mimeType ?? mimeFromExtension(extension);
+  const arrayBuffer = await (await fetch(asset.uri)).arrayBuffer();
+  return { data: new Uint8Array(arrayBuffer), contentType, extension };
+}
 
 async function fromLibrary(setAvatar: SetAvatar) {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) return;
   const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], ...PICKER_OPTS });
-  const uri = res.canceled ? null : res.assets[0]?.uri;
-  if (uri) await setAvatar(uri);
+  const asset = res.canceled ? null : res.assets[0];
+  if (asset) await setAvatar(await assetToUpload(asset));
 }
 
 async function fromCamera(setAvatar: SetAvatar) {
   const perm = await ImagePicker.requestCameraPermissionsAsync();
   if (!perm.granted) return;
   const res = await ImagePicker.launchCameraAsync(PICKER_OPTS);
-  const uri = res.canceled ? null : res.assets[0]?.uri;
-  if (uri) await setAvatar(uri);
+  const asset = res.canceled ? null : res.assets[0];
+  if (asset) await setAvatar(await assetToUpload(asset));
 }
 
 function chooseAvatar(setAvatar: SetAvatar) {
