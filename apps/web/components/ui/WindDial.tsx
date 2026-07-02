@@ -6,6 +6,14 @@ import { GlassCard } from "./GlassCard";
 
 import { toNum } from "@/lib/format";
 
+/** Cardinal rim labels; N is solar-tinted, the rest muted. */
+const CARDINALS = [
+  { label: "N", x: 50, y: 14.5, size: 8.5, fill: "var(--color-solar-light)" },
+  { label: "E", x: 88, y: 53, size: 7.5, fill: "var(--color-text-muted)" },
+  { label: "S", x: 50, y: 91, size: 7.5, fill: "var(--color-text-muted)" },
+  { label: "W", x: 12, y: 53, size: 7.5, fill: "var(--color-text-muted)" },
+];
+
 /**
  * Circular wind compass as a single centered object: a dial with an arrow that
  * rotates to the wind direction (points toward where the wind comes FROM), the
@@ -44,22 +52,23 @@ export function WindDial({
             cx="50"
             cy="50"
             r="46"
-            fill="rgba(255,255,255,0.03)"
-            stroke="rgba(255,255,255,0.12)"
+            fill="var(--color-dial-fill)"
+            stroke="var(--color-dial-ring)"
             strokeWidth="1"
           />
-          <text x="50" y="14.5" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#fbbf24">
-            N
-          </text>
-          <text x="88" y="53" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#71809a">
-            E
-          </text>
-          <text x="50" y="91" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#71809a">
-            S
-          </text>
-          <text x="12" y="53" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#71809a">
-            W
-          </text>
+          {CARDINALS.map((c) => (
+            <text
+              key={c.label}
+              x={c.x}
+              y={c.y}
+              textAnchor="middle"
+              fontSize={c.size}
+              fontWeight="700"
+              fill={c.fill}
+            >
+              {c.label}
+            </text>
+          ))}
           {/* Arrow on the rim only, so the centre stays clear for the speed. */}
           {deg != null && (
             <g

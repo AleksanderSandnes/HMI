@@ -7,7 +7,13 @@ import { test, expect } from "@playwright/test";
  * To compare against the previous (Expo-web) UI, capture references from the live
  * build (https://hmi-six.vercel.app) and diff manually; authenticated dashboard
  * snapshots require a seeded test session and are added once that fixture exists.
+ *
+ * Pinned to the dark scheme: the app is now theme-aware (light by default, dark
+ * via next-themes' system preference), and these baselines were captured in dark.
+ * Forcing prefers-color-scheme: dark keeps them deterministic without a refresh.
  */
+test.use({ colorScheme: "dark" });
+
 const PAGES = [
   { name: "landing", path: "/" },
   { name: "login", path: "/login" },

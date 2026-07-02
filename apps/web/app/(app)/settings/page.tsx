@@ -13,16 +13,19 @@ import {
   type LucideIcon,
   Mail,
   MapPin,
+  Moon,
   ShieldCheck,
   SunMedium,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBanner } from "@/components/ui/StatusBanner";
+import { Toggle } from "@/components/ui/Toggle";
 import { useCore } from "@/lib/hooks/useCore";
 
 type Core = ReturnType<typeof useCore>;
@@ -33,6 +36,7 @@ const SECTION_GRADIENTS: Record<string, string> = {
   revenue: "linear-gradient(135deg,#fde68a,#facc15,#eab308)",
   energy: "linear-gradient(135deg,#5eead4,#2dd4bf,#10b981)",
   solar: "linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)",
+  preferences: "linear-gradient(135deg,#818cf8,#6366f1,#4f46e5)",
 };
 
 function Section({
@@ -122,6 +126,43 @@ export default function SettingsPage() {
           <PasswordForm account={account} />
         </Section>
       </div>
+
+      <Section title="Preferences" icon={Moon} gradient="preferences">
+        <PreferencesForm />
+      </Section>
+    </div>
+  );
+}
+
+const noopSubscribe = () => () => {};
+
+/** True only after client hydration; false during SSR and the first paint. */
+function useHydrated() {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
+}
+
+function PreferencesForm() {
+  const { resolvedTheme, setTheme } = useTheme();
+  // next-themes resolves the theme only on the client; gate on hydration so the
+  // toggle renders a stable value during SSR and avoids a hydration mismatch.
+  const hydrated = useHydrated();
+  const isDark = hydrated && resolvedTheme === "dark";
+
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <p className="text-sm font-semibold text-text-primary">Dark theme</p>
+        <p className="text-[13px] text-text-muted">{isDark ? "Dark" : "Light"}</p>
+      </div>
+      <Toggle
+        value={isDark}
+        disabled={!hydrated}
+        onChange={(v) => setTheme(v ? "dark" : "light")}
+      />
     </div>
   );
 }

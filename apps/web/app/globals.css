@@ -1,33 +1,43 @@
 @import "tailwindcss";
 
 /*
- * HMI premium theme — sleek dark + glassmorphism with vibrant solar gradients.
- * Ported from mobile src/theme/premiumTheme.ts so colour/gradient/radius decisions
- * carry over verbatim. Web gets real backdrop blur (native used opaque fills).
+ * HMI premium theme — glassmorphism with vibrant solar gradients, light default
+ * with a .dark override. Chrome tokens (bg/glass/text/positive/negative/dial)
+ * mirror apps/mobile/global.css + src/lib/theme.tsx verbatim; gradient/accent
+ * tokens below stay mode-independent, same as mobile's tailwind.config.js.
  */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Backgrounds */
-  --color-bg-base: #070b16;
-  --color-bg-grad-1: #0a1124;
-  --color-bg-grad-2: #080d1b;
-  --color-bg-grad-3: #06080f;
+  --color-bg-base: #eaeef5;
+  --color-bg-grad-1: #f5f8fd;
+  --color-bg-grad-2: #eef3fa;
+  --color-bg-grad-3: #e6edf7;
 
   /* Glass surfaces (web: translucent white fills + backdrop blur) */
-  --color-glass-fill: rgba(255, 255, 255, 0.045);
-  --color-glass-fill-strong: rgba(255, 255, 255, 0.075);
-  --color-glass-fill-subtle: rgba(255, 255, 255, 0.025);
-  --color-glass-border: rgba(255, 255, 255, 0.09);
-  --color-glass-border-strong: rgba(255, 255, 255, 0.16);
+  --color-glass-fill: rgba(255, 255, 255, 0.66);
+  --color-glass-fill-strong: rgba(255, 255, 255, 0.92);
+  --color-glass-fill-subtle: rgba(255, 255, 255, 0.42);
+  --color-glass-border: rgba(20, 26, 41, 0.1);
+  --color-glass-border-strong: rgba(20, 26, 41, 0.14);
 
   /* Text */
-  --color-text-primary: #f6f8fc;
-  --color-text-secondary: #aeb8cc;
-  --color-text-muted: #71809a;
+  --color-text-primary: #141a29;
+  --color-text-secondary: #45506a;
+  --color-text-muted: #7b8698;
   --color-text-inverse: #0a1124;
+
+  /* Dial (WindDial/DualBaro) hairlines */
+  --color-dial-fill: rgba(20, 26, 41, 0.03);
+  --color-dial-ring: rgba(20, 26, 41, 0.12);
+  --color-dial-tick-major: rgba(20, 26, 41, 0.4);
+  --color-dial-tick-minor: rgba(20, 26, 41, 0.16);
+  --color-dial-hub-ring: rgba(20, 26, 41, 0.32);
 
   /* Solar gold */
   --color-solar: #f59e0b;
-  --color-solar-light: #fbbf24;
+  --color-solar-light: #d97706;
   --color-solar-soft: rgba(245, 158, 11, 0.14);
 
   /* Energy teal/green */
@@ -46,8 +56,8 @@
   --color-revenue-soft: rgba(234, 179, 8, 0.14);
 
   /* Status */
-  --color-positive: #34d399;
-  --color-negative: #fb7185;
+  --color-positive: #059669;
+  --color-negative: #e11d48;
 
   /* Radii (px → rem-ish, kept as px to match RN tokens) */
   --radius-sm: 12px;
@@ -60,6 +70,39 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
+/*
+ * Dark overrides for the chrome tokens above — matches apps/mobile/global.css's
+ * `.dark:root` split (NativeWind) via Tailwind v4's class-based dark variant.
+ * Gradient/accent tokens declared in @theme stay mode-independent.
+ */
+.dark {
+  --color-bg-base: #070b16;
+  --color-bg-grad-1: #0a1124;
+  --color-bg-grad-2: #080d1b;
+  --color-bg-grad-3: #06080f;
+
+  --color-glass-fill: rgba(255, 255, 255, 0.045);
+  --color-glass-fill-strong: rgba(255, 255, 255, 0.075);
+  --color-glass-fill-subtle: rgba(255, 255, 255, 0.025);
+  --color-glass-border: rgba(255, 255, 255, 0.09);
+  --color-glass-border-strong: rgba(255, 255, 255, 0.16);
+
+  --color-text-primary: #f6f8fc;
+  --color-text-secondary: #aeb8cc;
+  --color-text-muted: #71809a;
+
+  --color-dial-fill: rgba(255, 255, 255, 0.03);
+  --color-dial-ring: rgba(255, 255, 255, 0.12);
+  --color-dial-tick-major: rgba(255, 255, 255, 0.4);
+  --color-dial-tick-minor: rgba(255, 255, 255, 0.16);
+  --color-dial-hub-ring: rgba(255, 255, 255, 0.32);
+
+  --color-solar-light: #fbbf24;
+
+  --color-positive: #34d399;
+  --color-negative: #fb7185;
+}
+
 html,
 body {
   min-height: 100%;
@@ -70,9 +113,9 @@ body {
   background-color: var(--color-bg-base);
   /* Vertical page gradient + ambient solar/energy/violet glow blobs. */
   background-image:
-    radial-gradient(60% 50% at 18% 0%, rgba(245, 158, 11, 0.2) 0%, transparent 60%),
-    radial-gradient(50% 45% at 92% 12%, rgba(45, 212, 191, 0.16) 0%, transparent 60%),
-    radial-gradient(60% 60% at 50% 100%, rgba(139, 92, 246, 0.16) 0%, transparent 65%),
+    radial-gradient(60% 50% at 18% 0%, rgba(245, 158, 11, 0.16) 0%, transparent 60%),
+    radial-gradient(50% 45% at 92% 12%, rgba(13, 148, 136, 0.13) 0%, transparent 60%),
+    radial-gradient(60% 60% at 50% 100%, rgba(99, 102, 241, 0.12) 0%, transparent 65%),
     linear-gradient(
       180deg,
       var(--color-bg-grad-1) 0%,
@@ -82,6 +125,19 @@ body {
   background-attachment: fixed;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+.dark body {
+  background-image:
+    radial-gradient(60% 50% at 18% 0%, rgba(245, 158, 11, 0.2) 0%, transparent 60%),
+    radial-gradient(50% 45% at 92% 12%, rgba(45, 212, 191, 0.16) 0%, transparent 60%),
+    radial-gradient(60% 60% at 50% 100%, rgba(139, 92, 246, 0.16) 0%, transparent 65%),
+    linear-gradient(
+      180deg,
+      var(--color-bg-grad-1) 0%,
+      var(--color-bg-grad-2) 55%,
+      var(--color-bg-grad-3) 100%
+    );
 }
 
 /*

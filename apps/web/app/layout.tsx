@@ -20,7 +20,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#070b16",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#eaeef5" },
+    { media: "(prefers-color-scheme: dark)", color: "#070b16" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
@@ -31,7 +34,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
       </body>

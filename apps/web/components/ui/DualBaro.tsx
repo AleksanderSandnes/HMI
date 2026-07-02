@@ -44,7 +44,7 @@ function Gauge({ value }: { value: number | null }) {
       <path
         d={ARC}
         fill="none"
-        stroke="rgba(255,255,255,0.12)"
+        stroke="var(--color-dial-ring)"
         strokeWidth="2.5"
         strokeLinecap="round"
       />
@@ -55,7 +55,7 @@ function Gauge({ value }: { value: number | null }) {
           y1={t.y1}
           x2={t.x2}
           y2={t.y2}
-          stroke={t.major ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.16)"}
+          stroke={t.major ? "var(--color-dial-tick-major)" : "var(--color-dial-tick-minor)"}
           strokeWidth={t.major ? 1.4 : 1}
         />
       ))}
@@ -81,7 +81,7 @@ function Gauge({ value }: { value: number | null }) {
         cy="50"
         r="3.5"
         fill="#0a1124"
-        stroke="rgba(255,255,255,0.32)"
+        stroke="var(--color-dial-hub-ring)"
         strokeWidth="1"
       />
     </svg>
