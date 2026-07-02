@@ -52,7 +52,7 @@ function StatCol({
   sub: string;
 }) {
   return (
-    <View className="min-w-0 flex-1">
+    <View className="min-w-0 flex-1 items-center">
       <View className="flex-row items-center gap-1.5">
         <Ionicons name={icon} size={13} color={color} />
         <Text className="text-[11px] font-bold text-text-secondary">{label}</Text>

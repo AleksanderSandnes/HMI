@@ -106,7 +106,7 @@ export default function RootLayout() {
           Geist_900Black,
         },
   );
-  const { mode: themeMode, ready: themeReady } = useThemeBootstrap();
+  const { preference: themePreference, ready: themeReady } = useThemeBootstrap();
 
   if ((!fontsLoaded && !fontError) || !themeReady) {
     return (
@@ -120,7 +120,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
         <SafeAreaProvider>
-          <ThemeProvider mode={themeMode}>
+          <ThemeProvider preference={themePreference}>
             <AppNavigationTheme>
               <QueryProvider>
                 <AuthProvider>

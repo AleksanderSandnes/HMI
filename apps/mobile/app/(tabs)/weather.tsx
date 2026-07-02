@@ -213,7 +213,7 @@ export default function Weather() {
           }
         />
 
-        <GlassCard strong elevated className="flex-1 p-[18px]">
+        <GlassCard strong className="flex-1 p-[18px]">
           <MetricChips active={dataType} onSelect={setDataType} />
 
           {/* Timespan */}

@@ -5,7 +5,9 @@ import {
   type ApiSettingsResponse,
   type UserProfile,
 } from "@hmi/core";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useQuery } from "@tanstack/react-query";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -21,7 +23,9 @@ import {
 import { Avatar } from "../../../src/components/ui/Avatar";
 import { Button } from "../../../src/components/ui/Button";
 import { GlassCard } from "../../../src/components/ui/GlassCard";
-import { useThemeColors } from "../../../src/lib/theme";
+import { cn } from "../../../src/lib/cn";
+import { GRADIENTS } from "../../../src/lib/gradients";
+import { useThemeColors, type ThemePreference } from "../../../src/lib/theme";
 import { useAvatar } from "../../../src/lib/useAvatar";
 import { useCore } from "../../../src/lib/useCore";
 import { useLogout } from "../../../src/lib/useLogout";
@@ -53,6 +57,60 @@ function ProfileCard({ profile, onPress }: { profile?: UserProfile; onPress: () 
   );
 }
 
+const APPEARANCE_OPTIONS: {
+  value: ThemePreference;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { value: "light", label: "Light", icon: "sunny" },
+  { value: "system", label: "System", icon: "desktop-outline" },
+  { value: "dark", label: "Dark", icon: "moon" },
+];
+
+function appearanceSubtitle(preference: ThemePreference, mode: "light" | "dark"): string {
+  if (preference === "system") {
+    return `System · ${mode === "dark" ? "Dark" : "Light"} right now`;
+  }
+  return preference === "dark" ? "Dark" : "Light";
+}
+
+function AppearanceSegmented() {
+  const { preference, setPreference, colors } = useThemeColors();
+  return (
+    <View className="flex-row gap-[3px] overflow-hidden rounded-[12px] border border-glass-border bg-glass-fill-subtle p-[3px]">
+      {APPEARANCE_OPTIONS.map(({ value, label, icon }) => {
+        const active = preference === value;
+        return (
+          <Pressable
+            key={value}
+            onPress={() => setPreference(value)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            className={cn(
+              "flex-1 flex-row items-center justify-center gap-1.5 rounded-[9px] border py-2",
+              active ? "border-glass-border-strong bg-glass-fill-strong" : "border-transparent",
+            )}
+          >
+            <Ionicons
+              name={icon}
+              size={14}
+              color={active ? colors.textPrimary : colors.textSecondary}
+            />
+            <Text
+              className={cn(
+                "text-xs font-bold",
+                active ? "text-text-primary" : "text-text-secondary",
+              )}
+            >
+              {label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 function PreferencesGroup({
   pushOn,
   setPushOn,
@@ -60,7 +118,7 @@ function PreferencesGroup({
   pushOn: boolean;
   setPushOn: (v: boolean) => void;
 }) {
-  const { mode, setMode } = useThemeColors();
+  const { preference, mode } = useThemeColors();
   return (
     <SettingsGroup>
       <SettingsRow
@@ -70,13 +128,31 @@ function PreferencesGroup({
         subtitle="Alerts on this device"
         right={<Toggle value={pushOn} onChange={setPushOn} />}
       />
-      <SettingsRow
-        icon="moon"
-        gradient="energy"
-        title="Dark theme"
-        subtitle={mode === "dark" ? "Dark" : "Light"}
-        right={<Toggle value={mode === "dark"} onChange={(v) => setMode(v ? "dark" : "light")} />}
-      />
+      <View className="gap-2.5 px-3.5 py-3">
+        <View className="flex-row items-center gap-3">
+          <LinearGradient
+            colors={GRADIENTS.preferences}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 11,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="contrast" size={18} color="#0a1124" />
+          </LinearGradient>
+          <View className="min-w-0 flex-1">
+            <Text className="text-[14.5px] font-bold text-text-primary">Appearance</Text>
+            <Text className="mt-0.5 text-[11.5px] text-text-muted">
+              {appearanceSubtitle(preference, mode)}
+            </Text>
+          </View>
+        </View>
+        <AppearanceSegmented />
+      </View>
     </SettingsGroup>
   );
 }
@@ -85,6 +161,7 @@ export default function SettingsHub() {
   const router = useRouter();
   const { account, settings } = useCore();
   const logout = useLogout();
+  const tabBarHeight = useBottomTabBarHeight();
   const [pushOn, setPushOn] = usePreference("pref.push", true);
 
   const { data: profile } = useQuery<UserProfile>({
@@ -102,7 +179,10 @@ export default function SettingsHub() {
 
   return (
     <SafeAreaView className="flex-1" edges={["top"]}>
-      <ScrollView contentContainerClassName="gap-3 p-4">
+      <ScrollView
+        contentContainerClassName="gap-3 px-4 pt-4"
+        contentContainerStyle={{ paddingBottom: tabBarHeight + 16 }}
+      >
         <View className="mb-1">
           <Text className="text-[28px] font-extrabold tracking-[-0.6px] text-text-primary">
             Settings
@@ -113,6 +193,16 @@ export default function SettingsHub() {
         </View>
 
         <ProfileCard profile={profile} onPress={() => router.push("/settings/profile")} />
+
+        <GroupLabel>Account</GroupLabel>
+        <SettingsGroup>
+          <SettingsRow
+            icon="lock-closed"
+            gradient="revenue"
+            title="Change password"
+            onPress={() => router.push("/settings/password")}
+          />
+        </SettingsGroup>
 
         <GroupLabel>Integrations</GroupLabel>
         <SettingsGroup>
@@ -137,17 +227,13 @@ export default function SettingsHub() {
         <GroupLabel>Preferences</GroupLabel>
         <PreferencesGroup pushOn={pushOn} setPushOn={setPushOn} />
 
-        <GroupLabel>Account</GroupLabel>
-        <SettingsGroup>
-          <SettingsRow
-            icon="lock-closed"
-            gradient="revenue"
-            title="Change password"
-            onPress={() => router.push("/settings/password")}
-          />
-        </SettingsGroup>
-
-        <Button label="Sign out" variant="danger" onPress={logout} className="mt-1 w-full" />
+        <Button
+          label="Sign out"
+          icon={({ color, size }) => <Ionicons name="log-out" size={size} color={color} />}
+          variant="danger"
+          onPress={logout}
+          className="mt-1 w-full"
+        />
       </ScrollView>
     </SafeAreaView>
   );

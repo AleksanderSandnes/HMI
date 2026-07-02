@@ -4,7 +4,7 @@
  * selected calendar day — use these arrays). Values mirror the web GRADIENTS in
  * apps/web/components/ui/StatTile.tsx / Button.tsx verbatim.
  */
-export type StatGradient = "energy" | "revenue" | "solar" | "co2" | "accent";
+export type StatGradient = "energy" | "revenue" | "solar" | "co2" | "accent" | "preferences";
 
 export const GRADIENTS: Record<StatGradient, readonly [string, string, string]> = {
   energy: ["#5eead4", "#2dd4bf", "#10b981"],
@@ -12,6 +12,7 @@ export const GRADIENTS: Record<StatGradient, readonly [string, string, string]> 
   solar: ["#fde047", "#fbbf24", "#f59e0b"],
   co2: ["#86efac", "#4ade80", "#16a34a"],
   accent: ["#a78bfa", "#818cf8", "#6366f1"],
+  preferences: ["#818cf8", "#6366f1", "#4f46e5"],
 } as const;
 
 /** Button gradient choices (primary variant). */

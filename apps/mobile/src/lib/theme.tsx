@@ -3,9 +3,19 @@ import { colorScheme as nwColorScheme } from "nativewind";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { Appearance } from "react-native";
 
+/** Resolved, always-concrete mode — what every color/branch in the app renders against. */
 export type ThemeMode = "light" | "dark";
+/** Raw user preference, including "system" — only the Appearance control cares about this. */
+export type ThemePreference = "light" | "dark" | "system";
 
 const STORAGE_KEY = "pref.theme";
+
+function resolvePreference(preference: ThemePreference): ThemeMode {
+  if (preference === "system") {
+    return Appearance.getColorScheme() === "light" ? "light" : "dark";
+  }
+  return preference;
+}
 
 /**
  * Chrome colors for non-className consumers (Ionicons `color=`, raw SVG
@@ -107,45 +117,54 @@ export function hairline(mode: ThemeMode, alpha: number): string {
   return mode === "dark" ? `rgba(255, 255, 255, ${alpha})` : `rgba(20, 26, 41, ${alpha})`;
 }
 
-async function loadStoredMode(): Promise<ThemeMode | null> {
+async function loadStoredPreference(): Promise<ThemePreference | null> {
   const v = await AsyncStorage.getItem(STORAGE_KEY);
-  return v === "light" || v === "dark" ? v : null;
+  return v === "light" || v === "dark" || v === "system" ? v : null;
 }
 
 interface ThemeContextValue {
+  /** Always concrete — what every existing color/branch in the app should keep using. */
   mode: ThemeMode;
-  setMode: (mode: ThemeMode) => void;
+  /** Raw preference (incl. "system") — only the Appearance control's active state needs this. */
+  preference: ThemePreference;
+  setPreference: (preference: ThemePreference) => void;
   colors: ThemeColors;
 }
 
-// Default (no-op setMode, dark colors) for components rendered outside
+// Default (no-op setPreference, dark colors) for components rendered outside
 // `ThemeProvider` — e.g. unit tests that mount a single component directly
 // via react-test-renderer with no provider tree. The real app always mounts
 // `ThemeProvider` in the root layout, so this default is test-only in practice.
-const DEFAULT_CONTEXT: ThemeContextValue = { mode: "dark", setMode: () => {}, colors: DARK };
+const DEFAULT_CONTEXT: ThemeContextValue = {
+  mode: "dark",
+  preference: "system",
+  setPreference: () => {},
+  colors: DARK,
+};
 
 const ThemeContext = createContext<ThemeContextValue>(DEFAULT_CONTEXT);
 
 /**
- * Resolves the boot mode (stored preference, else system) and applies it to
- * NativeWind's colorScheme before first paint. Mirrors the font-loading gate
- * in app/_layout.tsx — render a spinner until `ready`, then mount
- * `ThemeProvider` with the resolved `mode`, so there's no flash of the wrong
- * theme.
+ * Resolves the boot preference (stored, else "system") and applies it to
+ * NativeWind's colorScheme before first paint — NativeWind natively supports
+ * "system" as a colorScheme value (it defers to the OS Appearance API).
+ * Mirrors the font-loading gate in app/_layout.tsx — render a spinner until
+ * `ready`, then mount `ThemeProvider` with the resolved `preference`, so
+ * there's no flash of the wrong theme.
  */
-export function useThemeBootstrap(): { mode: ThemeMode; ready: boolean } {
-  const [state, setState] = useState<{ mode: ThemeMode; ready: boolean }>({
-    mode: "dark",
+export function useThemeBootstrap(): { preference: ThemePreference; ready: boolean } {
+  const [state, setState] = useState<{ preference: ThemePreference; ready: boolean }>({
+    preference: "system",
     ready: false,
   });
 
   useEffect(() => {
     let alive = true;
     void (async () => {
-      const stored = await loadStoredMode();
-      const initial = stored ?? (Appearance.getColorScheme() === "light" ? "light" : "dark");
+      const stored = await loadStoredPreference();
+      const initial = stored ?? "system";
       nwColorScheme.set(initial);
-      if (alive) setState({ mode: initial, ready: true });
+      if (alive) setState({ preference: initial, ready: true });
     })();
     return () => {
       alive = false;
@@ -156,30 +175,44 @@ export function useThemeBootstrap(): { mode: ThemeMode; ready: boolean } {
 }
 
 export function ThemeProvider({
-  mode: initialMode,
+  preference: initialPreference,
   children,
 }: {
-  mode: ThemeMode;
+  preference: ThemePreference;
   children: ReactNode;
 }) {
-  const [mode, setModeState] = useState<ThemeMode>(initialMode);
+  const [preference, setPreferenceState] = useState<ThemePreference>(initialPreference);
+  const [mode, setResolvedMode] = useState<ThemeMode>(() => resolvePreference(initialPreference));
 
-  const setMode = useCallback((next: ThemeMode) => {
+  // Live-follow OS appearance changes while the user has "system" selected.
+  useEffect(() => {
+    if (preference !== "system") return;
+    const sub = Appearance.addChangeListener(({ colorScheme }) => {
+      setResolvedMode(colorScheme === "light" ? "light" : "dark");
+    });
+    return () => sub.remove();
+  }, [preference]);
+
+  const setPreference = useCallback((next: ThemePreference) => {
     nwColorScheme.set(next);
-    setModeState(next);
+    setPreferenceState(next);
+    setResolvedMode(resolvePreference(next));
     void AsyncStorage.setItem(STORAGE_KEY, next);
   }, []);
 
   const colors = mode === "dark" ? DARK : LIGHT;
 
   return (
-    <ThemeContext.Provider value={{ mode, setMode, colors }}>{children}</ThemeContext.Provider>
+    <ThemeContext.Provider value={{ mode, preference, setPreference, colors }}>
+      {children}
+    </ThemeContext.Provider>
   );
 }
 
 /**
- * Current mode + colors + setter. Falls back to dark/no-op outside
- * `ThemeProvider` (see `DEFAULT_CONTEXT`) rather than throwing.
+ * Current resolved mode + colors + raw preference/setter. Falls back to
+ * dark/no-op outside `ThemeProvider` (see `DEFAULT_CONTEXT`) rather than
+ * throwing.
  */
 export function useThemeColors(): ThemeContextValue {
   return useContext(ThemeContext);

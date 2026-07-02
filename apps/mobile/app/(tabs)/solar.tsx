@@ -119,7 +119,7 @@ export default function Solar() {
           }
         />
 
-        <GlassCard strong elevated className="flex-1 p-[18px]">
+        <GlassCard strong className="flex-1 p-[18px]">
           <View className="mb-3">
             <Text className="text-[19px] font-extrabold text-text-primary">Power Generation</Text>
             <Text className="mt-0.5 text-[13px] font-medium text-text-muted">
