@@ -7,6 +7,7 @@ import {
   type SimpleChartData,
   type SolarData,
   type SolarTimespan,
+  type TranslationKey,
 } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -18,6 +19,7 @@ import { SolarChart } from "../../src/components/charts";
 import { DateSelector } from "../../src/components/ui/DateSelector";
 import { GlassCard } from "../../src/components/ui/GlassCard";
 import { SegmentedControl } from "../../src/components/ui/SegmentedControl";
+import { useI18n } from "../../src/lib/i18n";
 import { useCore } from "../../src/lib/useCore";
 
 const EMPTY: SimpleChartData = { labels: [], datasets: [{ data: [] }] };
@@ -43,12 +45,12 @@ function Cap({ label, value }: { label: string; value: string }) {
   );
 }
 
-const CAP_LABELS: Record<string, [string, string]> = {
-  hourly: ["Peak", "Today total"],
-  weekly: ["Peak day", "Week total"],
-  monthly: ["Peak day", "Month total"],
-  yearly: ["Best month", "Year total"],
-  total: ["Best year", "5-year total"],
+const CAP_LABELS: Record<string, [TranslationKey, TranslationKey]> = {
+  hourly: ["solar.cap.peak", "solar.cap.todayTotal"],
+  weekly: ["solar.cap.peakDay", "solar.cap.weekTotal"],
+  monthly: ["solar.cap.peakDay", "solar.cap.monthTotal"],
+  yearly: ["solar.cap.bestMonth", "solar.cap.yearTotal"],
+  total: ["solar.cap.bestYear", "solar.cap.fiveYearTotal"],
 };
 
 function peakText(peak: ReturnType<typeof getPeakOutput>): string {
@@ -69,7 +71,7 @@ function capValues(solar: SolarData | undefined, timespan: string) {
   const total = totalKwh(solar, timespan);
   return {
     hasData: vals.length > 0,
-    labels: CAP_LABELS[timespan] ?? ["Peak", "Total"],
+    labels: CAP_LABELS[timespan] ?? (["solar.cap.peak", "solar.cap.total"] as const),
     peakText: peakText(peak),
     totalText: `${formatPeak(total)} ${peakUnit(total, "kWh")}`,
   };
@@ -77,19 +79,21 @@ function capValues(solar: SolarData | undefined, timespan: string) {
 
 /** Peak + period-total captions under the chart (design 1d). */
 function StatCaps({ solar, timespan }: { solar?: SolarData; timespan: string }) {
+  const { t } = useI18n();
   const c = capValues(solar, timespan);
   if (!c.hasData) return null;
   return (
     <View className="mt-3 flex-row items-stretch rounded-md border border-glass-border px-4 py-3.5">
-      <Cap label={c.labels[0]} value={c.peakText} />
+      <Cap label={t(c.labels[0])} value={c.peakText} />
       <View className="mx-4 w-px self-stretch bg-glass-border" />
-      <Cap label={c.labels[1]} value={c.totalText} />
+      <Cap label={t(c.labels[1])} value={c.totalText} />
     </View>
   );
 }
 
 export default function Solar() {
   const { growatt } = useCore();
+  const { locale, t } = useI18n();
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -108,8 +112,8 @@ export default function Solar() {
     <SafeAreaView className="flex-1" edges={["top"]}>
       <View className="flex-1 gap-4 p-4">
         <PageHeader
-          title="Solar Production"
-          subtitle="Real-time photovoltaic intelligence"
+          title={t("solar.title")}
+          subtitle={t("solar.subtitle")}
           right={
             <DateSelector
               selectedDate={pickerDate}
@@ -121,9 +125,11 @@ export default function Solar() {
 
         <GlassCard strong className="flex-1 p-[18px]">
           <View className="mb-3">
-            <Text className="text-[19px] font-extrabold text-text-primary">Power Generation</Text>
+            <Text className="text-[19px] font-extrabold text-text-primary">
+              {t("solar.powerGeneration")}
+            </Text>
             <Text className="mt-0.5 text-[13px] font-medium text-text-muted">
-              {chartSubtitle(timespan, pickerDate)}
+              {chartSubtitle(timespan, pickerDate, locale)}
             </Text>
           </View>
 

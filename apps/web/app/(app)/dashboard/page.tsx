@@ -33,6 +33,7 @@ import { DualBaro } from "@/components/ui/DualBaro";
 import { DualStat } from "@/components/ui/DualStat";
 import { WindDial } from "@/components/ui/WindDial";
 import { useCore } from "@/lib/hooks/useCore";
+import { useI18n } from "@/lib/i18n";
 
 function SectionLabel({
   icon: Icon,
@@ -56,13 +57,14 @@ function SectionLabel({
 }
 
 function StatusBadge({ online }: { online: boolean | null | undefined }) {
+  const { t } = useI18n();
   if (online == null) return null;
   return (
     <span
       className={`flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-1 text-[11px] font-bold ${online ? "bg-[rgba(52,211,153,0.13)] text-positive" : "bg-[rgba(251,113,133,0.13)] text-negative"}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${online ? "bg-positive" : "bg-negative"}`} />
-      {online ? "Inverter online" : "Inverter offline"}
+      {online ? t("dashboard.inverterOnline") : t("dashboard.inverterOffline")}
     </span>
   );
 }
@@ -122,17 +124,18 @@ function useDashboardData() {
 type DashboardModel = ReturnType<typeof useDashboardData>;
 
 function SolarSection({ model }: { model: DashboardModel }) {
+  const { t } = useI18n();
   const { todayGen, weekGen, lifetime, currentPower, peak, utilisation, capacityKw, solarLoading } =
     model;
   return (
     <>
       <SectionLabel
         icon={Sun}
-        text="Solar"
+        text={t("dashboard.solar")}
         right={
           capacityKw != null ? (
             <span className="text-[11px] font-semibold text-text-muted">
-              {capacityKw} kW system
+              {capacityKw} {t("dashboard.kwSystem")}
             </span>
           ) : null
         }
@@ -141,11 +144,11 @@ function SolarSection({ model }: { model: DashboardModel }) {
         <DualStat
           icon={Zap}
           gradient="solar"
-          label="Generation"
-          aLabel="Today"
+          label={t("dashboard.generation")}
+          aLabel={t("dashboard.today")}
           aValue={show(todayGen, 1)}
           aUnit="kWh"
-          bLabel="This week"
+          bLabel={t("dashboard.thisWeek")}
           bValue={show(weekGen, 1)}
           bUnit="kWh"
           loading={solarLoading}
@@ -153,11 +156,11 @@ function SolarSection({ model }: { model: DashboardModel }) {
         <DualStat
           icon={TrendingUp}
           gradient="energy"
-          label="Power"
-          aLabel="Current"
+          label={t("dashboard.power")}
+          aLabel={t("dashboard.current")}
           aValue={show(currentPower)}
           aUnit="W"
-          bLabel="Peak today"
+          bLabel={t("dashboard.peakToday")}
           bValue={peak ? formatPeak(peak.value) : "—"}
           bUnit={peak ? peakUnit(peak.value, "W") : "W"}
           loading={solarLoading}
@@ -165,11 +168,11 @@ function SolarSection({ model }: { model: DashboardModel }) {
         <DualStat
           icon={Gauge}
           gradient="revenue"
-          label="Utilisation"
-          aLabel="Now"
+          label={t("dashboard.utilisation")}
+          aLabel={t("dashboard.now")}
           aValue={utilisation != null ? `${utilisation}` : "—"}
           aUnit="%"
-          bLabel="System"
+          bLabel={t("dashboard.system")}
           bValue={capacityKw != null ? `${capacityKw}` : "—"}
           bUnit="kW"
           loading={solarLoading}
@@ -177,11 +180,11 @@ function SolarSection({ model }: { model: DashboardModel }) {
         <DualStat
           icon={Mountain}
           gradient="solar"
-          label="Lifetime"
-          aLabel="Total"
+          label={t("dashboard.lifetime")}
+          aLabel={t("dashboard.total")}
           aValue={show(lifetime, 0)}
           aUnit="kWh"
-          bLabel="Today"
+          bLabel={t("dashboard.today")}
           bValue={show(todayGen, 1)}
           bUnit="kWh"
           loading={solarLoading}
@@ -192,6 +195,7 @@ function SolarSection({ model }: { model: DashboardModel }) {
 }
 
 function WeatherTilesA({ model }: { model: DashboardModel }) {
+  const { t } = useI18n();
   const { obs, m, wkAvg, wxLoading } = model;
   return (
     <>
@@ -199,11 +203,11 @@ function WeatherTilesA({ model }: { model: DashboardModel }) {
       <DualStat
         icon={Thermometer}
         gradient="solar"
-        label="Temperature"
-        aLabel="Now"
+        label={t("dashboard.temperature")}
+        aLabel={t("dashboard.now")}
         aValue={show(m.temp)}
         aUnit="°C"
-        bLabel="Week average"
+        bLabel={t("dashboard.weekAverage")}
         bValue={show(wkAvg.temp)}
         bUnit="°C"
         loading={wxLoading}
@@ -211,11 +215,11 @@ function WeatherTilesA({ model }: { model: DashboardModel }) {
       <DualStat
         icon={Droplets}
         gradient="co2"
-        label="Humidity"
-        aLabel="Now"
+        label={t("dashboard.humidity")}
+        aLabel={t("dashboard.now")}
         aValue={show(obs?.humidity)}
         aUnit="%"
-        bLabel="Week average"
+        bLabel={t("dashboard.weekAverage")}
         bValue={show(wkAvg.humidity)}
         bUnit="%"
         loading={wxLoading}
@@ -226,17 +230,18 @@ function WeatherTilesA({ model }: { model: DashboardModel }) {
 }
 
 function WeatherTilesB({ model }: { model: DashboardModel }) {
+  const { t } = useI18n();
   const { obs, m, feelsLike, wkAvg, wxLoading } = model;
   return (
     <>
       <DualStat
         icon={SunMedium}
         gradient="solar"
-        label="Solar radiation"
-        aLabel="Now"
+        label={t("dashboard.solarRadiation")}
+        aLabel={t("dashboard.now")}
         aValue={show(obs?.solarRadiation)}
         aUnit="W/m²"
-        bLabel="Week average"
+        bLabel={t("dashboard.weekAverage")}
         bValue={show(wkAvg.solar)}
         bUnit="W/m²"
         loading={wxLoading}
@@ -244,21 +249,21 @@ function WeatherTilesB({ model }: { model: DashboardModel }) {
       <DualStat
         icon={Sun}
         gradient="revenue"
-        label="UV index"
-        aLabel="Now"
+        label={t("dashboard.uvIndex")}
+        aLabel={t("dashboard.now")}
         aValue={show(obs?.uv)}
-        bLabel="Week average"
+        bLabel={t("dashboard.weekAverage")}
         bValue={show(wkAvg.uv)}
         loading={wxLoading}
       />
       <DualStat
         icon={CloudRain}
         gradient="energy"
-        label="Precipitation"
-        aLabel="Rate"
+        label={t("dashboard.precipitation")}
+        aLabel={t("dashboard.rate")}
         aValue={show(m.precipRate, 1)}
         aUnit="mm/h"
-        bLabel="Today"
+        bLabel={t("dashboard.today")}
         bValue={show(m.precipTotal, 1)}
         bUnit="mm"
         loading={wxLoading}
@@ -266,11 +271,11 @@ function WeatherTilesB({ model }: { model: DashboardModel }) {
       <DualStat
         icon={Thermometer}
         gradient="accent"
-        label="Feels like"
-        aLabel="Now"
+        label={t("dashboard.feelsLike")}
+        aLabel={t("dashboard.now")}
         aValue={show(feelsLike)}
         aUnit="°C"
-        bLabel="Wind chill"
+        bLabel={t("dashboard.windChill")}
         bValue={show(m.windChill)}
         bUnit="°C"
         loading={wxLoading}
@@ -280,16 +285,17 @@ function WeatherTilesB({ model }: { model: DashboardModel }) {
 }
 
 function WeatherSection({ model }: { model: DashboardModel }) {
+  const { t } = useI18n();
   const { obs } = model;
   return (
     <>
       <SectionLabel
         icon={CloudRain}
-        text="Weather"
+        text={t("dashboard.weather")}
         right={
           obs?.obsTimeLocal ? (
             <span className="text-[11px] font-semibold text-text-muted">
-              updated {obs.obsTimeLocal.split(" ")[1] ?? ""}
+              {t("dashboard.updated")} {obs.obsTimeLocal.split(" ")[1] ?? ""}
             </span>
           ) : null
         }
@@ -304,15 +310,15 @@ function WeatherSection({ model }: { model: DashboardModel }) {
 
 export default function DashboardPage() {
   const model = useDashboardData();
+  const { t } = useI18n();
   const { device } = model;
 
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 md:h-full">
       <PageHeader
-        title="Home Production"
+        title={t("dashboard.title")}
         subtitle={
-          [device?.plantName, device?.model].filter(Boolean).join(" · ") ||
-          "Solar & weather overview"
+          [device?.plantName, device?.model].filter(Boolean).join(" · ") || t("dashboard.subtitle")
         }
         right={<StatusBadge online={device?.online} />}
       />

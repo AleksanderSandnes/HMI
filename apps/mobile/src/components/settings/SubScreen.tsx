@@ -5,6 +5,7 @@ import { Pressable, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useI18n } from "../../lib/i18n";
 import { useThemeColors } from "../../lib/theme";
 
 /** Pushed settings sub-screen: back header + keyboard-aware scroll (design 1g–1j). */
@@ -19,13 +20,14 @@ export function SubScreen({
 }) {
   const router = useRouter();
   const { colors } = useThemeColors();
+  const { t } = useI18n();
   return (
     <SafeAreaView className="flex-1" edges={["top"]}>
       <View className="flex-row items-center gap-3 px-4 pb-2 pt-1">
         <Pressable
           onPress={() => router.back()}
           hitSlop={8}
-          accessibilityLabel="Back"
+          accessibilityLabel={t("a11y.back")}
           className="h-9 w-9 items-center justify-center rounded-[12px] border border-glass-border bg-glass-fill"
         >
           <Ionicons name="chevron-back" size={18} color={colors.textSecondary} />

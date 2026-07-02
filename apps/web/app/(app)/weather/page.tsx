@@ -1,6 +1,6 @@
 "use client";
 
-import { buildWeatherSeries, toISO } from "@hmi/core";
+import { buildWeatherSeries, toISO, type TranslationKey } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import {
   CloudRain,
@@ -20,119 +20,121 @@ import { DateSelector } from "@/components/ui/DateSelector";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { useCore } from "@/lib/hooks/useCore";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface MetricMeta {
   key: string;
-  label: string;
+  labelKey: TranslationKey;
   icon: LucideIcon;
   unit: string;
-  title: string;
+  titleKey: TranslationKey;
   accent: string;
-  series: { label: string; color: string }[];
+  series: { labelKey: TranslationKey; color: string }[];
 }
 
 const METRICS: MetricMeta[] = [
   {
     key: "temperature",
-    label: "Temp",
+    labelKey: "weather.chip.temp",
     icon: Thermometer,
     unit: "°C",
-    title: "Temperature",
+    titleKey: "weather.temperature",
     accent: "#fb7185",
     series: [
-      { label: "Temperature", color: "#fb7185" },
-      { label: "Dew point", color: "#34d399" },
+      { labelKey: "weather.temperature", color: "#fb7185" },
+      { labelKey: "weather.dewPoint", color: "#34d399" },
     ],
   },
   {
     key: "windSpeed",
-    label: "Wind",
+    labelKey: "weather.chip.wind",
     icon: Wind,
     unit: "km/h",
-    title: "Wind",
+    titleKey: "weather.wind",
     accent: "#60a5fa",
     series: [
-      { label: "Wind speed", color: "#60a5fa" },
-      { label: "Wind gust", color: "#fbbf24" },
+      { labelKey: "weather.windSpeed", color: "#60a5fa" },
+      { labelKey: "weather.windGust", color: "#fbbf24" },
     ],
   },
   {
     key: "precip",
-    label: "Rain",
+    labelKey: "weather.chip.rain",
     icon: CloudRain,
     unit: "mm",
-    title: "Precipitation",
+    titleKey: "weather.precipitation",
     accent: "#38bdf8",
     series: [
-      { label: "Accum. total", color: "#38bdf8" },
-      { label: "Rate", color: "#34d399" },
+      { labelKey: "weather.accumTotal", color: "#38bdf8" },
+      { labelKey: "weather.rate", color: "#34d399" },
     ],
   },
   {
     key: "humidity",
-    label: "Humidity",
+    labelKey: "weather.chip.humidity",
     icon: Droplets,
     unit: "%",
-    title: "Humidity",
+    titleKey: "weather.humidity",
     accent: "#22d3ee",
-    series: [{ label: "Humidity", color: "#22d3ee" }],
+    series: [{ labelKey: "weather.humidity", color: "#22d3ee" }],
   },
   {
     key: "pressure",
-    label: "Press",
+    labelKey: "weather.chip.pressure",
     icon: Gauge,
     unit: "hPa",
-    title: "Pressure",
+    titleKey: "weather.pressure",
     accent: "#a78bfa",
-    series: [{ label: "Pressure", color: "#a78bfa" }],
+    series: [{ labelKey: "weather.pressure", color: "#a78bfa" }],
   },
   {
     key: "solarRadiation",
-    label: "Solar",
+    labelKey: "weather.chip.solar",
     icon: SunMedium,
     unit: "W/m²",
-    title: "Solar radiation",
+    titleKey: "weather.solarRadiation",
     accent: "#fbbf24",
-    series: [{ label: "Solar radiation", color: "#fbbf24" }],
+    series: [{ labelKey: "weather.solarRadiation", color: "#fbbf24" }],
   },
   {
     key: "uvIndex",
-    label: "UV",
+    labelKey: "weather.chip.uv",
     icon: Sun,
     unit: "UV",
-    title: "UV index",
+    titleKey: "weather.uvIndex",
     accent: "#c084fc",
-    series: [{ label: "UV index", color: "#c084fc" }],
+    series: [{ labelKey: "weather.uvIndex", color: "#c084fc" }],
   },
 ];
 
-const TIME_OPTIONS = [
-  { label: "Hourly", value: "hourly" },
-  { label: "Weekly", value: "weekly" },
+const TIME_OPTION_KEYS: { labelKey: TranslationKey; value: string }[] = [
+  { labelKey: "timespan.hourly", value: "hourly" },
+  { labelKey: "timespan.weekly", value: "weekly" },
 ];
 
 function MetricChips({ active, onSelect }: { active: string; onSelect: (key: string) => void }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-1 gap-2 overflow-x-auto pb-1">
-      {METRICS.map((t) => {
-        const on = t.key === active;
-        const Icon = t.icon;
+      {METRICS.map((m) => {
+        const on = m.key === active;
+        const Icon = m.icon;
         return (
           <button
-            key={t.key}
+            key={m.key}
             type="button"
-            onClick={() => onSelect(t.key)}
+            onClick={() => onSelect(m.key)}
             className={cn(
               "flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] border px-3.5 py-2 text-[13px] font-bold transition",
               on
                 ? "border-transparent bg-glass-fill-strong"
                 : "border-glass-border bg-glass-fill text-text-muted hover:text-text-secondary",
             )}
-            style={on ? { color: t.accent } : undefined}
+            style={on ? { color: m.accent } : undefined}
           >
             <Icon size={14} />
-            {t.label}
+            {t(m.labelKey)}
           </button>
         );
       })}
@@ -142,6 +144,7 @@ function MetricChips({ active, onSelect }: { active: string; onSelect: (key: str
 
 export default function WeatherPage() {
   const { weather } = useCore();
+  const { t } = useI18n();
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -169,17 +172,21 @@ export default function WeatherPage() {
     [observations, dataType, timespan],
   );
 
-  const chartSeries: LineSeries[] = series.map((data, i) => ({
-    data,
-    color: meta.series[i]?.color ?? meta.accent,
-    label: meta.series[i]?.label ?? `Series ${i + 1}`,
-  }));
+  const seriesMeta = meta.series;
+  const chartSeries: LineSeries[] = series.map((data, i) => {
+    const sm = seriesMeta[i];
+    return {
+      data,
+      color: sm?.color ?? meta.accent,
+      label: sm ? t(sm.labelKey) : `Series ${i + 1}`,
+    };
+  });
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[1480px] flex-col gap-4">
       <PageHeader
-        title="Weather Station"
-        subtitle="Local conditions &amp; history"
+        title={t("weather.title")}
+        subtitle={t("weather.subtitle")}
         right={
           <DateSelector
             selectedDate={pickerDate}
@@ -195,12 +202,19 @@ export default function WeatherPage() {
         <div className="mb-4 flex shrink-0 items-center gap-3">
           <MetricChips active={dataType} onSelect={setDataType} />
           <div className="w-[220px] shrink-0">
-            <SegmentedControl value={timespan} onChange={setTimespan} options={TIME_OPTIONS} />
+            <SegmentedControl
+              value={timespan}
+              onChange={setTimespan}
+              options={TIME_OPTION_KEYS.map(({ labelKey, value }) => ({
+                label: t(labelKey),
+                value,
+              }))}
+            />
           </div>
         </div>
 
         <h2 className="mb-[14px] shrink-0 text-[19px] font-extrabold text-text-primary">
-          {meta.title}
+          {t(meta.titleKey)}
         </h2>
 
         <div className="min-h-[220px] flex-1">

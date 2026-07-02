@@ -1,9 +1,10 @@
-import { formatMetric, weatherYDomain } from "@hmi/core";
+import { formatMetric, weatherYDomain, weekdayName, WEEKDAY_ABBR, type Locale } from "@hmi/core";
 import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Svg, { Circle, Defs, Line, Path } from "react-native-svg";
 
+import { useI18n } from "../../lib/i18n";
 import { hairline, useThemeColors } from "../../lib/theme";
 
 import { ChartMessage } from "./ChartMessage";
@@ -17,19 +18,10 @@ import { buildGeometry, type ChartGeometry } from "./svg/scales";
 const MARGINS = { top: 8, right: 8, bottom: 24, left: 34 };
 const DOMAIN_PADDING = { left: 3, right: 3, top: 22 };
 
-const WEEKDAY_FULL: Record<string, string> = {
-  Sun: "Sunday",
-  Mon: "Monday",
-  Tue: "Tuesday",
-  Wed: "Wednesday",
-  Thu: "Thursday",
-  Fri: "Friday",
-  Sat: "Saturday",
-};
-
-/** Expand a weekday abbreviation (weekly view) to its full name for the tooltip. */
-function expandLabel(label: string): string {
-  return WEEKDAY_FULL[label] ?? label;
+/** Expand a weekday abbreviation (weekly view) to its localized full name. */
+function expandLabel(label: string, locale: Locale): string {
+  const idx = (WEEKDAY_ABBR as readonly string[]).indexOf(label);
+  return idx >= 0 ? weekdayName(locale, idx) : label;
 }
 
 export interface LineSeries {
@@ -260,6 +252,7 @@ function WeatherCanvas({
   bandColor: string;
   unit: string;
 }) {
+  const { locale } = useI18n();
   const geo = useMemo(
     () =>
       buildGeometry({
@@ -298,7 +291,7 @@ function WeatherCanvas({
         {index != null ? (
           <CrosshairBubble
             rows={rows}
-            header={expandLabel(labels[index] ?? "")}
+            header={expandLabel(labels[index] ?? "", locale)}
             unit={unit}
             range={model.range}
             x={geo.x(index)}
@@ -322,8 +315,9 @@ export function WeatherChart({
   bandColor = "#fbbf24",
   unit = "",
   loading = false,
-  emptyText = "No data for this period",
+  emptyText,
 }: WeatherChartProps) {
+  const { t } = useI18n();
   const model = useMemo(() => buildModel(labels, series, band), [labels, series, band]);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const { showCanvas, showEmpty } = chartView(loading, model.hasData, size);
@@ -343,7 +337,7 @@ export function WeatherChart({
           unit={unit}
         />
       ) : (
-        <ChartMessage text={showEmpty ? emptyText : undefined} />
+        <ChartMessage text={showEmpty ? (emptyText ?? t("chart.noDataPeriod")) : undefined} />
       )}
     </View>
   );

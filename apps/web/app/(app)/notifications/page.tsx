@@ -7,6 +7,7 @@ import { useEffect } from "react";
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useCore } from "@/lib/hooks/useCore";
+import { useI18n } from "@/lib/i18n";
 
 const LEVEL: Record<NotificationLevel, { icon: LucideIcon; className: string }> = {
   success: { icon: CheckCircle2, className: "text-positive" },
@@ -16,16 +17,18 @@ const LEVEL: Record<NotificationLevel, { icon: LucideIcon; className: string }> 
 };
 
 function EmptyState() {
+  const { t } = useI18n();
   return (
     <GlassCard className="flex flex-col items-center gap-3 p-12 text-center">
       <Bell size={32} className="text-text-muted" />
-      <p className="text-sm font-semibold text-text-secondary">You&apos;re all caught up</p>
-      <p className="text-sm text-text-muted">Solar &amp; weather sync alerts will appear here.</p>
+      <p className="text-sm font-semibold text-text-secondary">{t("notifications.allCaughtUp")}</p>
+      <p className="text-sm text-text-muted">{t("notifications.emptyHint")}</p>
     </GlassCard>
   );
 }
 
 function NotificationRow({ item, onDismiss }: { item: NotificationItem; onDismiss: () => void }) {
+  const { locale, t } = useI18n();
   const { icon: Icon, className } = LEVEL[item.level] ?? LEVEL.info;
   return (
     <GlassCard className="flex items-start gap-3.5 p-4">
@@ -34,14 +37,14 @@ function NotificationRow({ item, onDismiss }: { item: NotificationItem; onDismis
         <div className="flex items-center justify-between gap-2">
           <p className="truncate font-bold text-text-primary">{item.title}</p>
           <span className="shrink-0 text-xs font-medium text-text-muted">
-            {timeAgo(item.createdAt)}
+            {timeAgo(item.createdAt, locale)}
           </span>
         </div>
         {item.message ? <p className="mt-1 text-sm text-text-secondary">{item.message}</p> : null}
       </div>
       <button
         onClick={onDismiss}
-        aria-label="Dismiss"
+        aria-label={t("a11y.dismiss")}
         className="shrink-0 rounded-md p-1 text-text-muted transition hover:text-text-primary"
       >
         <X size={16} />
@@ -52,6 +55,7 @@ function NotificationRow({ item, onDismiss }: { item: NotificationItem; onDismis
 
 export default function NotificationsPage() {
   const { notifications } = useCore();
+  const { t, tp } = useI18n();
 
   const { data, refetch, isLoading } = useQuery<NotificationItem[]>({
     queryKey: ["notifications"],
@@ -71,10 +75,10 @@ export default function NotificationsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[30px] font-extrabold tracking-[-0.8px] text-text-primary">
-            Notifications
+            {t("notifications.title")}
           </h1>
           <p className="mt-1 text-[14.5px] font-medium text-text-muted">
-            {items.length} {items.length === 1 ? "notification" : "notifications"}
+            {tp("notifications.count", items.length)}
           </p>
         </div>
         {items.length > 0 ? (
@@ -86,13 +90,15 @@ export default function NotificationsPage() {
             className="flex items-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-3.5 py-2 text-sm font-bold text-text-muted transition hover:text-negative"
           >
             <Trash2 size={15} />
-            Clear all
+            {t("notifications.clearAll")}
           </button>
         ) : null}
       </div>
 
       {isLoading ? (
-        <GlassCard className="p-8 text-center text-sm text-text-muted">Loading…</GlassCard>
+        <GlassCard className="p-8 text-center text-sm text-text-muted">
+          {t("common.loading")}
+        </GlassCard>
       ) : items.length === 0 ? (
         <EmptyState />
       ) : (

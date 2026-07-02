@@ -1,17 +1,18 @@
 "use client";
 
-import { loginSchema } from "@hmi/core";
+import { createLoginSchema } from "@hmi/core";
 import { Formik, type FormikProps } from "formik";
 import { ArrowRight, Lock, Mail, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBanner } from "@/components/ui/StatusBanner";
 import { useCore } from "@/lib/hooks/useCore";
+import { useI18n } from "@/lib/i18n";
 
 interface LoginValues {
   email: string;
@@ -19,13 +20,16 @@ interface LoginValues {
 }
 
 function LoginHeader() {
+  const { t } = useI18n();
   return (
     <div className="mb-6 flex flex-col items-center text-center">
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)]">
         <Zap size={20} className="text-text-inverse" fill="currentColor" />
       </div>
-      <h1 className="text-[26px] font-extrabold tracking-tight text-text-primary">Welcome back</h1>
-      <p className="mt-1.5 text-sm font-medium text-text-muted">Sign in to your energy dashboard</p>
+      <h1 className="text-[26px] font-extrabold tracking-tight text-text-primary">
+        {t("auth.login.title")}
+      </h1>
+      <p className="mt-1.5 text-sm font-medium text-text-muted">{t("auth.login.subtitle")}</p>
     </div>
   );
 }
@@ -39,15 +43,16 @@ function LoginFields({
   handleSubmit,
   isSubmitting,
 }: FormikProps<LoginValues>) {
+  const { t } = useI18n();
   return (
     <form onSubmit={handleSubmit} noValidate>
       <Field
-        label="EMAIL ADDRESS"
+        label={t("auth.emailAddressLabel")}
         icon={Mail}
         name="email"
         inputMode="email"
         autoComplete="email"
-        placeholder="you@domain.com"
+        placeholder={t("auth.emailPlaceholder")}
         value={values.email}
         onChange={handleChange}
         onBlur={handleBlur}
@@ -55,12 +60,12 @@ function LoginFields({
         disabled={isSubmitting}
       />
       <Field
-        label="PASSWORD"
+        label={t("settings.passwordLabel")}
         icon={Lock}
         secure
         name="password"
         autoComplete="current-password"
-        placeholder="Enter your password"
+        placeholder={t("auth.passwordPlaceholder")}
         value={values.password}
         onChange={handleChange}
         onBlur={handleBlur}
@@ -69,7 +74,7 @@ function LoginFields({
       />
       <Button
         type="submit"
-        label="Sign In"
+        label={t("auth.login.signIn")}
         icon={ArrowRight}
         loading={isSubmitting}
         className="mt-1.5"
@@ -80,10 +85,12 @@ function LoginFields({
 
 function LoginForm() {
   const { auth } = useCore();
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/dashboard";
   const [error, setError] = useState<string | null>(null);
+  const schema = useMemo(() => createLoginSchema(t), [t]);
 
   return (
     <GlassCard strong elevated className="w-full max-w-[430px] p-8 sm:p-9">
@@ -92,7 +99,7 @@ function LoginForm() {
 
       <Formik
         initialValues={{ email: "", password: "" }}
-        validationSchema={loginSchema}
+        validationSchema={schema}
         onSubmit={async (values, { setSubmitting }) => {
           setError(null);
           try {
@@ -100,11 +107,7 @@ function LoginForm() {
             router.replace(redirectTo);
             router.refresh();
           } catch (e) {
-            setError(
-              e instanceof Error
-                ? e.message
-                : "Login failed. Check your credentials and try again.",
-            );
+            setError(e instanceof Error ? e.message : t("auth.login.failed"));
           } finally {
             setSubmitting(false);
           }
@@ -114,9 +117,9 @@ function LoginForm() {
       </Formik>
 
       <div className="mt-6 flex items-center justify-center gap-1.5 border-t border-glass-border pt-5">
-        <span className="text-sm font-medium text-text-muted">Don&apos;t have an account?</span>
+        <span className="text-sm font-medium text-text-muted">{t("auth.login.noAccount")}</span>
         <Link href="/register" className="text-sm font-extrabold text-solar-light">
-          Create one
+          {t("auth.login.createOne")}
         </Link>
       </div>
     </GlassCard>

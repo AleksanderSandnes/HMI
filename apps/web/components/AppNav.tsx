@@ -6,12 +6,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useCore } from "@/lib/hooks/useCore";
+import { useI18n } from "@/lib/i18n";
 import { useNavStats } from "@/lib/nav-stats";
 import { cn } from "@/lib/utils";
 
 /** Temp · location chip, plus the Solar page's generation/peak when present. */
 function NavWeatherWidget() {
   const { weather } = useCore();
+  const { t } = useI18n();
   const { solarStats } = useNavStats();
   const { data } = useQuery({
     queryKey: ["weather-current"],
@@ -33,9 +35,9 @@ function NavWeatherWidget() {
       {solarStats ? (
         <>
           <span className="h-5 w-px bg-glass-border" />
-          <NavStat label="Gen" value={solarStats.generation} unit={solarStats.genUnit} />
+          <NavStat label={t("nav.gen")} value={solarStats.generation} unit={solarStats.genUnit} />
           <span className="h-5 w-px bg-glass-border" />
-          <NavStat label="Peak" value={solarStats.peak} unit={solarStats.peakUnit} />
+          <NavStat label={t("nav.peak")} value={solarStats.peak} unit={solarStats.peakUnit} />
         </>
       ) : null}
     </div>
@@ -57,11 +59,11 @@ function NavStat({ label, value, unit }: { label: string; value: string; unit: s
 }
 
 const NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/solar", label: "Solar", icon: Sun },
-  { href: "/weather", label: "Weather", icon: CloudSun },
-  { href: "/notifications", label: "Notifications", icon: Bell },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { href: "/solar", labelKey: "nav.solar", icon: Sun },
+  { href: "/weather", labelKey: "nav.weather", icon: CloudSun },
+  { href: "/notifications", labelKey: "nav.notifications", icon: Bell },
+  { href: "/settings", labelKey: "nav.settings", icon: Settings },
 ] as const;
 
 /**
@@ -70,6 +72,7 @@ const NAV = [
  */
 export function AppNav() {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
     <>
@@ -80,7 +83,11 @@ export function AppNav() {
       <header className="sticky top-0 z-30 hidden border-b border-glass-border bg-[var(--color-panel-bg)] px-5 backdrop-blur-xl md:block md:px-8">
         <div className="mx-auto flex w-full max-w-[1480px] items-center justify-between py-2.5">
           <div className="flex items-center gap-3.5">
-            <Link href="/dashboard" className="flex items-center gap-2.5" aria-label="HMI home">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2.5"
+              aria-label={t("a11y.hmiHome")}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/icon.png"
@@ -93,7 +100,7 @@ export function AppNav() {
           </div>
 
           <nav className="flex items-center gap-1">
-            {NAV.map(({ href, label, icon: Icon }) => {
+            {NAV.map(({ href, labelKey, icon: Icon }) => {
               const active = pathname.startsWith(href);
               return (
                 <Link
@@ -107,7 +114,7 @@ export function AppNav() {
                   )}
                 >
                   <Icon size={17} />
-                  {label}
+                  {t(labelKey)}
                 </Link>
               );
             })}
@@ -117,7 +124,7 @@ export function AppNav() {
 
       {/* Mobile bottom tab bar */}
       <nav className="glass fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-glass-border px-2 py-2 md:hidden">
-        {NAV.map(({ href, label, icon: Icon }) => {
+        {NAV.map(({ href, labelKey, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
             <Link
@@ -129,7 +136,7 @@ export function AppNav() {
               )}
             >
               <Icon size={20} />
-              {label}
+              {t(labelKey)}
             </Link>
           );
         })}

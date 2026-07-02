@@ -1,14 +1,23 @@
 "use client";
 
+import type { Locale } from "@hmi/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useState } from "react";
 
+import { LocaleProvider } from "@/lib/i18n";
+
 /**
- * Client providers (theme + React Query). Auth/session is read from Supabase SSR cookies,
- * so there is no global auth store provider here (replaces the RN Redux setup).
+ * Client providers (theme + locale + React Query). Auth/session is read from Supabase SSR
+ * cookies, so there is no global auth store provider here (replaces the RN Redux setup).
  */
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  initialLocale,
+  children,
+}: {
+  initialLocale: Locale;
+  children: React.ReactNode;
+}) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -24,7 +33,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <LocaleProvider initialLocale={initialLocale}>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </LocaleProvider>
     </ThemeProvider>
   );
 }

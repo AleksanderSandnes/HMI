@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { AvatarUpload } from "@hmi/core";
+import type { AvatarUpload, Translator } from "@hmi/core";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 
 import { GRADIENTS, type StatGradient } from "../../lib/gradients";
+import { useI18n } from "../../lib/i18n";
 import { hairline, useThemeColors } from "../../lib/theme";
 import { useAvatar } from "../../lib/useAvatar";
 import type { CoreApis } from "../../lib/useCore";
@@ -69,21 +70,22 @@ async function fromCamera(setAvatar: SetAvatar) {
   if (asset) await setAvatar(await assetToUpload(asset));
 }
 
-function chooseAvatar(setAvatar: SetAvatar) {
-  Alert.alert("Profile picture", undefined, [
-    { text: "Take photo", onPress: () => void fromCamera(setAvatar) },
-    { text: "Choose from library", onPress: () => void fromLibrary(setAvatar) },
-    { text: "Cancel", style: "cancel" },
+function chooseAvatar(setAvatar: SetAvatar, t: Translator) {
+  Alert.alert(t("settings.profilePicture"), undefined, [
+    { text: t("settings.takePhoto"), onPress: () => void fromCamera(setAvatar) },
+    { text: t("settings.chooseFromLibrary"), onPress: () => void fromLibrary(setAvatar) },
+    { text: t("common.cancel"), style: "cancel" },
   ]);
 }
 
 export function ConfiguredBadge({ on }: { on: boolean }) {
+  const { t } = useI18n();
   return (
     <View
       className={`rounded-pill px-2.5 py-1 ${on ? "bg-[rgba(52,211,153,0.13)]" : "bg-glass-fill"}`}
     >
       <Text className={`text-[10.5px] font-extrabold ${on ? "text-positive" : "text-text-muted"}`}>
-        {on ? "Connected" : "Not set"}
+        {on ? t("settings.connected") : t("settings.notSet")}
       </Text>
     </View>
   );
@@ -128,6 +130,7 @@ function IdentityRow({
 }
 
 function useSaver(run: () => Promise<void>) {
+  const { t } = useI18n();
   const [banner, setBanner] = useState<Banner>(null);
   const [saving, setSaving] = useState(false);
   const save = async () => {
@@ -135,9 +138,12 @@ function useSaver(run: () => Promise<void>) {
     setSaving(true);
     try {
       await run();
-      setBanner({ kind: "success", message: "Saved." });
+      setBanner({ kind: "success", message: t("settings.saved") });
     } catch (e) {
-      setBanner({ kind: "error", message: e instanceof Error ? e.message : "Could not save." });
+      setBanner({
+        kind: "error",
+        message: e instanceof Error ? e.message : t("settings.couldNotSave"),
+      });
     } finally {
       setSaving(false);
     }
@@ -154,6 +160,7 @@ export function AccountForm({
   email: string;
   account: Core["account"];
 }) {
+  const { t } = useI18n();
   const [username, setUsername] = useState(initialUsername);
   const [email, setEmail] = useState(initialEmail);
   const { uri, setAvatar } = useAvatar();
@@ -164,7 +171,10 @@ export function AccountForm({
   return (
     <>
       <View className="items-center">
-        <Pressable onPress={() => chooseAvatar(setAvatar)} accessibilityLabel="Change photo">
+        <Pressable
+          onPress={() => chooseAvatar(setAvatar, t)}
+          accessibilityLabel={t("a11y.changePhoto")}
+        >
           <Avatar initials={deriveInitials(username)} uri={uri} size={84} />
           <View className="absolute -bottom-0.5 -right-0.5 h-7 w-7 items-center justify-center rounded-pill border-[3px] border-bg-base bg-solar">
             <Ionicons name="pencil" size={13} color="#0a1124" />
@@ -175,14 +185,14 @@ export function AccountForm({
       <GlassCard strong className="gap-1 p-[18px]">
         {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
         <Field
-          label="USERNAME"
+          label={t("settings.usernameLabel")}
           icon={user}
           autoCapitalize="none"
           value={username}
           onChangeText={setUsername}
         />
         <Field
-          label="EMAIL"
+          label={t("settings.emailLabel")}
           icon={mail}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -192,7 +202,7 @@ export function AccountForm({
       </GlassCard>
 
       <Button
-        label="Save profile"
+        label={t("settings.saveProfile")}
         gradient="accent"
         onPress={save}
         loading={saving}
@@ -213,9 +223,16 @@ function pwStrength(pw: string): number {
 
 function StrengthMeter({ pw }: { pw: string }) {
   const { mode, colors } = useThemeColors();
+  const { t } = useI18n();
   if (!pw) return null;
   const s = pwStrength(pw);
-  const label = ["", "Weak", "Fair", "Good", "Strong"][s];
+  const label = [
+    "",
+    t("settings.pwWeak"),
+    t("settings.pwFair"),
+    t("settings.pwGood"),
+    t("settings.pwStrong"),
+  ][s];
   const color = s >= 3 ? colors.energyTint : colors.solarTint;
   return (
     <View className="-mt-2 mb-3">
@@ -236,11 +253,12 @@ function StrengthMeter({ pw }: { pw: string }) {
 }
 
 export function PasswordForm({ account }: { account: Core["account"] }) {
+  const { t } = useI18n();
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
   const { banner, saving, save } = useSaver(async () => {
-    if (pw.length < 4) throw new Error("Password must be at least 4 characters.");
-    if (pw !== confirm) throw new Error("Passwords do not match.");
+    if (pw.length < 4) throw new Error(t("validation.passwordMin"));
+    if (pw !== confirm) throw new Error(t("settings.passwordsDoNotMatch"));
     await account.updateUserPassword({ currentPassword: "", newPassword: pw });
     setPw("");
     setConfirm("");
@@ -252,14 +270,20 @@ export function PasswordForm({ account }: { account: Core["account"] }) {
         <IdentityRow
           gradient="revenue"
           icon="shield-checkmark"
-          name="New password"
-          desc="Use one you don't reuse elsewhere"
+          name={t("settings.newPassword")}
+          desc={t("settings.newPasswordDesc")}
         />
         {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
-        <Field label="NEW PASSWORD" icon={keyIc} secure value={pw} onChangeText={setPw} />
+        <Field
+          label={t("settings.newPasswordLabel")}
+          icon={keyIc}
+          secure
+          value={pw}
+          onChangeText={setPw}
+        />
         <StrengthMeter pw={pw} />
         <Field
-          label="CONFIRM PASSWORD"
+          label={t("settings.confirmPasswordLabel")}
           icon={keyIc}
           secure
           value={confirm}
@@ -267,7 +291,7 @@ export function PasswordForm({ account }: { account: Core["account"] }) {
         />
       </GlassCard>
       <Button
-        label="Update password"
+        label={t("settings.updatePassword")}
         gradient="revenue"
         onPress={save}
         loading={saving}
@@ -288,6 +312,7 @@ export function GrowattForm({
   settings: Core["settings"];
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const { banner, saving, save } = useSaver(async () => {
@@ -302,13 +327,13 @@ export function GrowattForm({
         <IdentityRow
           gradient="energy"
           icon="sunny"
-          name="Growatt account"
-          desc="Used to fetch your solar data"
+          name={t("settings.growattAccount")}
+          desc={t("settings.growattAccountDesc")}
           connected={connected}
         />
         {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
         <Field
-          label="ACCOUNT (EMAIL)"
+          label={t("settings.accountEmailLabel")}
           icon={mail}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -316,16 +341,16 @@ export function GrowattForm({
           onChangeText={setEmail}
         />
         <Field
-          label="PASSWORD"
+          label={t("settings.passwordLabel")}
           icon={keyIc}
           secure
-          placeholder="Enter to update"
+          placeholder={t("settings.enterToUpdate")}
           value={password}
           onChangeText={setPassword}
         />
       </GlassCard>
       <Button
-        label="Save credentials"
+        label={t("settings.saveCredentials")}
         gradient="energy"
         onPress={save}
         loading={saving}
@@ -346,6 +371,7 @@ export function WeatherForm({
   settings: Core["settings"];
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [stationId, setStationId] = useState(initialStationId);
   const [apiKey, setApiKey] = useState("");
   const { banner, saving, save } = useSaver(async () => {
@@ -360,30 +386,30 @@ export function WeatherForm({
         <IdentityRow
           gradient="solar"
           icon="cloud"
-          name="Weather station"
-          desc="Personal weather data source"
+          name={t("settings.weatherStationName")}
+          desc={t("settings.weatherStationDesc")}
           connected={connected}
         />
         {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
         <Field
-          label="WEATHER STATION ID"
+          label={t("settings.stationIdLabel")}
           icon={pin}
           autoCapitalize="characters"
-          placeholder="e.g. ISANDN24"
+          placeholder={t("settings.stationIdPlaceholder")}
           value={stationId}
           onChangeText={setStationId}
         />
         <Field
-          label="API KEY"
+          label={t("settings.apiKeyLabel")}
           icon={sun}
           secure
-          placeholder="Enter to update"
+          placeholder={t("settings.enterToUpdate")}
           value={apiKey}
           onChangeText={setApiKey}
         />
       </GlassCard>
       <Button
-        label="Save credentials"
+        label={t("settings.saveCredentials")}
         gradient="solar"
         onPress={save}
         loading={saving}

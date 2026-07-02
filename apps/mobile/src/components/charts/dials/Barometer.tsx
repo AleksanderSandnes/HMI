@@ -2,6 +2,7 @@ import { View, Text } from "react-native";
 import Svg, { Circle, Defs, G, Line, LinearGradient, Path, Stop } from "react-native-svg";
 
 import { clamp, round, toNum } from "../../../lib/format";
+import { useI18n } from "../../../lib/i18n";
 import { hairline, useThemeColors } from "../../../lib/theme";
 import { GlassCard } from "../../ui/GlassCard";
 
@@ -136,11 +137,12 @@ export function DualBaro({
   avg?: number | null;
   unit?: string;
 }) {
+  const { t } = useI18n();
   return (
     <GlassCard strong className="h-full min-w-0 flex-1 flex-row items-stretch p-4">
-      <Module label="Now" value={now} unit={unit} />
+      <Module label={t("dashboard.now")} value={now} unit={unit} />
       <View className="mx-3 w-px self-stretch bg-glass-border" />
-      <Module label="Week average" value={avg} unit={unit} />
+      <Module label={t("dashboard.weekAverage")} value={avg} unit={unit} />
     </GlassCard>
   );
 }

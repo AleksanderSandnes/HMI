@@ -1,8 +1,12 @@
+import { DEFAULT_LOCALE, isLocale } from "@hmi/core";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 
 import "./globals.css";
 import { Providers } from "./providers";
+
+import { LOCALE_COOKIE } from "@/lib/locale-cookie";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,19 +32,21 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const raw = (await cookies()).get(LOCALE_COOKIE)?.value;
+  const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        <Providers initialLocale={locale}>{children}</Providers>
       </body>
     </html>
   );

@@ -1,5 +1,15 @@
 // Pure solar dashboard stat/label helpers (ported from mobile
 // src/utils/solarStats.ts). No platform imports.
+import { MONTH_ABBR, WEEKDAY_ABBR } from "../constants";
+import {
+  DEFAULT_LOCALE,
+  formatDayMonth,
+  formatDayMonthLong,
+  monthName,
+  translate,
+  weekdayName,
+  type Locale,
+} from "../i18n";
 
 export const CO2_PER_KWH = 0.4; // kg CO₂ avoided per kWh of solar (grid average)
 
@@ -38,31 +48,39 @@ export function previousPeriodDate(timespan: string, dateStr: string): string {
   return toISO(d);
 }
 
-export function periodLabel(timespan: string): string {
-  if (timespan === "hourly") return "Today";
-  if (timespan === "weekly") return "This week";
-  if (timespan === "monthly") return "This month";
-  if (timespan === "total") return "Last 5 years";
-  return "This year";
+export function periodLabel(timespan: string, locale: Locale = DEFAULT_LOCALE): string {
+  if (timespan === "hourly") return translate(locale, "solar.period.today");
+  if (timespan === "weekly") return translate(locale, "solar.period.thisWeek");
+  if (timespan === "monthly") return translate(locale, "solar.period.thisMonth");
+  if (timespan === "total") return translate(locale, "solar.period.last5Years");
+  return translate(locale, "solar.period.thisYear");
 }
 
-export function comparisonLabel(timespan: string): string {
-  if (timespan === "hourly") return "vs yesterday";
-  if (timespan === "weekly") return "vs last week";
-  if (timespan === "monthly") return "vs last month";
-  if (timespan === "total") return "vs prior 5 years";
-  return "vs last year";
+export function comparisonLabel(timespan: string, locale: Locale = DEFAULT_LOCALE): string {
+  if (timespan === "hourly") return translate(locale, "solar.compare.vsYesterday");
+  if (timespan === "weekly") return translate(locale, "solar.compare.vsLastWeek");
+  if (timespan === "monthly") return translate(locale, "solar.compare.vsLastMonth");
+  if (timespan === "total") return translate(locale, "solar.compare.vsPrior5Years");
+  return translate(locale, "solar.compare.vsLastYear");
 }
 
-export function chartSubtitle(timespan: string, dateStr: string): string {
+export function chartSubtitle(
+  timespan: string,
+  dateStr: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
   const d = new Date(dateStr);
-  const month = d.toLocaleString("en-US", { month: "long" });
   if (timespan === "hourly")
-    return `Power output · ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
-  if (timespan === "weekly") return `7-day output from ${month} ${d.getDate()}`;
-  if (timespan === "monthly") return `Daily output · ${month} ${d.getFullYear()}`;
-  if (timespan === "total") return `Yearly output · last 5 years`;
-  return `Monthly output · ${d.getFullYear()}`;
+    return translate(locale, "solar.chart.powerOutput", { date: formatDayMonth(locale, d) });
+  if (timespan === "weekly")
+    return translate(locale, "solar.chart.weekOutput", { date: formatDayMonthLong(locale, d) });
+  if (timespan === "monthly")
+    return translate(locale, "solar.chart.dailyOutput", {
+      month: monthName(locale, d.getMonth()),
+      year: d.getFullYear(),
+    });
+  if (timespan === "total") return translate(locale, "solar.chart.yearlyOutput");
+  return translate(locale, "solar.chart.monthlyOutput", { year: d.getFullYear() });
 }
 
 export function formatCO2(kg: number): { value: string; unit: string } {
@@ -86,39 +104,32 @@ export function peakUnit(value: number, unit: string): string {
   return unit;
 }
 
-const DAY_NAMES: Record<string, string> = {
-  Mon: "Monday",
-  Tue: "Tuesday",
-  Wed: "Wednesday",
-  Thu: "Thursday",
-  Fri: "Friday",
-  Sat: "Saturday",
-  Sun: "Sunday",
-};
+// Chart data labels arrive as the English abbreviations from WEEKDAY_ABBR /
+// MONTH_ABBR (they double as data keys); display names localize via the
+// i18n date tables.
+function fullDayName(label: string, locale: Locale): string {
+  const idx = (WEEKDAY_ABBR as readonly string[]).indexOf(label);
+  return idx >= 0 ? weekdayName(locale, idx) : label;
+}
 
-const MONTH_NAMES: Record<string, string> = {
-  Jan: "January",
-  Feb: "February",
-  Mar: "March",
-  Apr: "April",
-  May: "May",
-  Jun: "June",
-  Jul: "July",
-  Aug: "August",
-  Sep: "September",
-  Oct: "October",
-  Nov: "November",
-  Dec: "December",
-};
+function fullMonthName(label: string, locale: Locale): string {
+  const idx = (MONTH_ABBR as readonly string[]).indexOf(label);
+  return idx >= 0 ? monthName(locale, idx) : label;
+}
 
 /** Human-friendly "when" for the peak-output tile. */
-export function peakSublabel(timespan: string, label: string): string {
-  if (!label) return "No data";
-  if (timespan === "hourly") return `at ${label}`;
-  if (timespan === "weekly") return `on ${DAY_NAMES[label] ?? label}`;
-  if (timespan === "monthly") return `on day ${label}`;
-  if (timespan === "total") return `in ${label}`;
-  return `in ${MONTH_NAMES[label] ?? label}`;
+export function peakSublabel(
+  timespan: string,
+  label: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  if (!label) return translate(locale, "solar.peak.noData");
+  if (timespan === "hourly") return translate(locale, "solar.peak.atTime", { label });
+  if (timespan === "weekly")
+    return translate(locale, "solar.peak.onDay", { label: fullDayName(label, locale) });
+  if (timespan === "monthly") return translate(locale, "solar.peak.onDayNumber", { label });
+  if (timespan === "total") return translate(locale, "solar.peak.inPeriod", { label });
+  return translate(locale, "solar.peak.inPeriod", { label: fullMonthName(label, locale) });
 }
 
 export function getPeakOutput(data: SimpleChartData, timespan: string): PeakOutput | null {

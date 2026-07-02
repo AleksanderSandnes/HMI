@@ -1,8 +1,10 @@
+import type { TranslationKey } from "@hmi/core";
 import { LinearGradient } from "expo-linear-gradient";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 
 import { cn } from "../../lib/cn";
 import { GRADIENTS } from "../../lib/gradients";
+import { useI18n } from "../../lib/i18n";
 import { hairline, useThemeColors } from "../../lib/theme";
 
 export interface SegmentOption {
@@ -10,12 +12,12 @@ export interface SegmentOption {
   value: string;
 }
 
-const DEFAULT_OPTIONS: SegmentOption[] = [
-  { label: "Hourly", value: "hourly" },
-  { label: "Weekly", value: "weekly" },
-  { label: "Monthly", value: "monthly" },
-  { label: "Yearly", value: "yearly" },
-  { label: "5-Year", value: "total" },
+const DEFAULT_OPTION_KEYS: { labelKey: TranslationKey; value: string }[] = [
+  { labelKey: "timespan.hourly", value: "hourly" },
+  { labelKey: "timespan.weekly", value: "weekly" },
+  { labelKey: "timespan.monthly", value: "monthly" },
+  { labelKey: "timespan.yearly", value: "yearly" },
+  { labelKey: "timespan.fiveYear", value: "total" },
 ];
 
 /**
@@ -25,19 +27,23 @@ const DEFAULT_OPTIONS: SegmentOption[] = [
 export function SegmentedControl({
   value,
   onChange,
-  options = DEFAULT_OPTIONS,
+  options,
 }: {
   value: string;
   onChange: (value: string) => void;
   options?: SegmentOption[];
 }) {
   const { mode } = useThemeColors();
+  const { t } = useI18n();
+  const resolved =
+    options ??
+    DEFAULT_OPTION_KEYS.map(({ labelKey, value: v }) => ({ label: t(labelKey), value: v }));
   return (
     <View
       className="flex-row gap-1 rounded-pill border border-glass-border p-1"
       style={{ backgroundColor: hairline(mode, 0.04) }}
     >
-      {options.map((opt) => {
+      {resolved.map((opt) => {
         const active = value === opt.value;
         return (
           <Pressable

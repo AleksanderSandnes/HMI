@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { parseYMD, shiftYMD, toYMD } from "@hmi/core";
+import { formatDayMonth, parseYMD, shiftYMD, toYMD, weekdayAbbr } from "@hmi/core";
 import { useState } from "react";
 import { Pressable, Text } from "react-native";
 
+import { useI18n } from "../../lib/i18n";
 import { useThemeColors } from "../../lib/theme";
 
 import { Calendar } from "./Calendar";
@@ -47,12 +48,9 @@ function StepButton({
 export function DateSelector({ selectedDate, onDateSelect, disabled = false }: DateSelectorProps) {
   const [open, setOpen] = useState(false);
   const { colors } = useThemeColors();
-  const label = parseYMD(selectedDate).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const { locale, t } = useI18n();
+  const selected = parseYMD(selectedDate);
+  const label = `${weekdayAbbr(locale, selected.getDay())}, ${formatDayMonth(locale, selected)}, ${selected.getFullYear()}`;
   const atToday = selectedDate >= toYMD(new Date());
 
   return (
@@ -60,7 +58,7 @@ export function DateSelector({ selectedDate, onDateSelect, disabled = false }: D
       <GlassCard strong className="flex-row items-center gap-2 p-[7px]">
         <StepButton
           icon="chevron-back"
-          label="Previous day"
+          label={t("a11y.previousDay")}
           disabled={disabled}
           onPress={() => onDateSelect(shiftYMD(selectedDate, -1))}
         />
@@ -74,7 +72,7 @@ export function DateSelector({ selectedDate, onDateSelect, disabled = false }: D
         </Pressable>
         <StepButton
           icon="chevron-forward"
-          label="Next day"
+          label={t("a11y.nextDay")}
           disabled={disabled || atToday}
           onPress={() => onDateSelect(shiftYMD(selectedDate, 1))}
         />

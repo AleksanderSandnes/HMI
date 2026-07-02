@@ -27,6 +27,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import PushRegistrar from "../src/components/PushRegistrar";
 import { SplashLoading } from "../src/components/SplashLoading";
 import { AuthProvider, useAuth } from "../src/lib/auth";
+import { I18nProvider, useI18nBootstrap } from "../src/lib/i18n";
 import { QueryProvider } from "../src/lib/query";
 import { ThemeProvider, useThemeBootstrap, useThemeColors } from "../src/lib/theme";
 
@@ -110,6 +111,7 @@ export default function RootLayout() {
         },
   );
   const { preference: themePreference, ready: themeReady } = useThemeBootstrap();
+  const { locale, ready: i18nReady } = useI18nBootstrap();
 
   // Fires once after this component's first commit, whatever that first paint
   // turns out to be (SplashLoading or the full app tree) — hiding the native
@@ -118,7 +120,7 @@ export default function RootLayout() {
     void SplashScreen.hideAsync();
   }, []);
 
-  if ((!fontsLoaded && !fontError) || !themeReady) {
+  if ((!fontsLoaded && !fontError) || !themeReady || !i18nReady) {
     return <SplashLoading />;
   }
 
@@ -127,15 +129,17 @@ export default function RootLayout() {
       <KeyboardProvider>
         <SafeAreaProvider>
           <ThemeProvider preference={themePreference}>
-            <AppNavigationTheme>
-              <QueryProvider>
-                <AuthProvider>
-                  <ThemedStatusBar />
-                  <PushRegistrar />
-                  <AuthGate />
-                </AuthProvider>
-              </QueryProvider>
-            </AppNavigationTheme>
+            <I18nProvider locale={locale}>
+              <AppNavigationTheme>
+                <QueryProvider>
+                  <AuthProvider>
+                    <ThemedStatusBar />
+                    <PushRegistrar />
+                    <AuthGate />
+                  </AuthProvider>
+                </QueryProvider>
+              </AppNavigationTheme>
+            </I18nProvider>
           </ThemeProvider>
         </SafeAreaProvider>
       </KeyboardProvider>

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
 
+import { useI18n } from "../../lib/i18n";
 import { useThemeColors } from "../../lib/theme";
 import { useAvatar } from "../../lib/useAvatar";
 import { Avatar } from "../ui/Avatar";
@@ -26,13 +27,14 @@ export function DashboardTopbar({
 }) {
   const { uri } = useAvatar();
   const { colors } = useThemeColors();
+  const { t } = useI18n();
   return (
     <View className="flex-row items-center justify-between pt-1.5">
       <Text className="text-[21px] font-black tracking-[-0.5px] text-text-primary">HMI</Text>
       <View className="flex-row items-center gap-3">
         <Pressable
           onPress={onBellPress}
-          accessibilityLabel="Notifications"
+          accessibilityLabel={t("a11y.notifications")}
           className="h-[38px] w-[38px] items-center justify-center rounded-[12px] border border-glass-border bg-glass-fill"
         >
           <Ionicons name="notifications-outline" size={18} color={colors.textSecondary} />

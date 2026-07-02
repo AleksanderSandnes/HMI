@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { show } from "@hmi/core";
 import { Text, View } from "react-native";
 
+import { useI18n } from "../../lib/i18n";
 import { useThemeColors } from "../../lib/theme";
 import type { DashboardModel } from "../../lib/useDashboardData";
 import { WindDialFace } from "../charts/dials/WindDial";
@@ -71,6 +72,7 @@ function StatCol({
 /** Focus dashboard weather panel: wind dial + temp/precip + UV/humidity/pressure. */
 export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
   const { colors } = useThemeColors();
+  const { t } = useI18n();
   const { obs, m, wkAvg } = model;
   return (
     <GlassCard strong className="min-h-0 flex-1 justify-between gap-3 px-3.5 pb-6 pt-3.5">
@@ -89,14 +91,14 @@ export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
           <BigMetric
             icon="thermometer"
             color={colors.negative}
-            label="Temperature"
+            label={t("dashboard.temperature")}
             value={show(m.temp)}
             unit="°C"
           />
           <BigMetric
             icon="rainy"
             color={colors.skyTint}
-            label="Precipitation"
+            label={t("dashboard.precipitation")}
             value={show(m.precipRate, 1)}
             unit="mm/h"
           />
@@ -107,27 +109,27 @@ export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
         <StatCol
           icon="sunny"
           color={colors.solarTint}
-          label="UV index"
+          label={t("dashboard.uvIndex")}
           value={show(obs?.uv)}
-          sub={`avg ${show(wkAvg.uv)}`}
+          sub={t("dashboard.avg", { value: show(wkAvg.uv) })}
         />
         <View className="mx-3 w-px bg-glass-border" />
         <StatCol
           icon="water"
           color={colors.energyTint}
-          label="Humidity"
+          label={t("dashboard.humidity")}
           value={show(obs?.humidity)}
           unit="%"
-          sub={`avg ${show(wkAvg.humidity)}%`}
+          sub={t("dashboard.avg", { value: `${show(wkAvg.humidity)}%` })}
         />
         <View className="mx-3 w-px bg-glass-border" />
         <StatCol
           icon="speedometer"
           color={colors.cyanTint}
-          label="Pressure"
+          label={t("dashboard.pressure")}
           value={show(m.pressure)}
           unit="hPa"
-          sub={`avg ${show(wkAvg.pressure)}`}
+          sub={t("dashboard.avg", { value: show(wkAvg.pressure) })}
         />
       </View>
     </GlassCard>

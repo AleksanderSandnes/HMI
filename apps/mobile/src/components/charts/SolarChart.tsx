@@ -1,9 +1,21 @@
-import { barGapPercent, formatNum, formatPeak, peakUnit, type SimpleChartData } from "@hmi/core";
+import {
+  barGapPercent,
+  DATE_NAMES,
+  formatNum,
+  formatPeak,
+  monthName,
+  MONTH_ABBR,
+  peakUnit,
+  WEEKDAY_ABBR,
+  type Locale,
+  type SimpleChartData,
+} from "@hmi/core";
 import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Svg, { Circle, Defs, Line, Path, Rect } from "react-native-svg";
 
+import { useI18n } from "../../lib/i18n";
 import { hairline, useThemeColors } from "../../lib/theme";
 
 import { ChartMessage } from "./ChartMessage";
@@ -19,37 +31,24 @@ const AREA_PADDING = { left: 8, right: 8, top: 22 };
 const BAR_PADDING = { left: 16, right: 16, top: 22 };
 const MAX_BAR = 72;
 
-const WEEKDAY_FULL: Record<string, string> = {
-  Sun: "Sunday",
-  Mon: "Monday",
-  Tue: "Tuesday",
-  Wed: "Wednesday",
-  Thu: "Thursday",
-  Fri: "Friday",
-  Sat: "Saturday",
-};
-const MONTH_FULL: Record<string, string> = {
-  Jan: "January",
-  Feb: "February",
-  Mar: "March",
-  Apr: "April",
-  May: "May",
-  Jun: "June",
-  Jul: "July",
-  Aug: "August",
-  Sep: "September",
-  Oct: "October",
-  Nov: "November",
-  Dec: "December",
-};
+// Chart data labels arrive as the English WEEKDAY_ABBR / MONTH_ABBR data keys;
+// the display names come from the locale date tables (Hermes Intl is partial).
+function fullDayName(label: string, locale: Locale): string {
+  const idx = (WEEKDAY_ABBR as readonly string[]).indexOf(label);
+  return idx >= 0 ? DATE_NAMES[locale].weekdays[idx] : label;
+}
+
+function fullMonthName(label: string, locale: Locale): string {
+  const idx = (MONTH_ABBR as readonly string[]).indexOf(label);
+  return idx >= 0 ? monthName(locale, idx) : label;
+}
 
 /** Expand the crosshair header to a friendly label per timespan (design tooltips). */
-function tooltipHeader(timespan: string, label: string, date?: string): string {
-  if (timespan === "weekly") return WEEKDAY_FULL[label] ?? label;
-  if (timespan === "yearly") return MONTH_FULL[label] ?? label;
+function tooltipHeader(timespan: string, label: string, locale: Locale, date?: string): string {
+  if (timespan === "weekly") return fullDayName(label, locale);
+  if (timespan === "yearly") return fullMonthName(label, locale);
   if (timespan === "monthly" && date) {
-    const month = new Date(date).toLocaleDateString("en-US", { month: "long" });
-    return `${month} ${label}`;
+    return `${monthName(locale, new Date(date).getMonth())} ${label}`;
   }
   return label;
 }
@@ -231,6 +230,7 @@ function SolarCanvas({
     [width, height, model],
   );
   const xAt = (i: number) => (model.isArea ? geo.x(i) : barCenter(geo, BAR_PADDING.left, i));
+  const { locale } = useI18n();
   const { index, gesture } = useCrosshair(geo);
   const value = index != null ? model.values[index] : null;
 
@@ -263,7 +263,7 @@ function SolarCanvas({
         {index != null && value != null ? (
           <TooltipBubble x={xAt(index)} width={width}>
             <Text className="text-[10.5px] font-bold uppercase tracking-[0.3px] text-text-muted">
-              {tooltipHeader(timespan, model.labels[index] ?? "", date)}
+              {tooltipHeader(timespan, model.labels[index] ?? "", locale, date)}
             </Text>
             <Text className="mt-0.5 text-[14px] font-extrabold text-text-primary">
               {tooltipValue(timespan, value)}

@@ -9,6 +9,7 @@ import { NotificationsOverlay } from "../../src/components/NotificationsOverlay"
 import { DashboardTopbar } from "../../src/components/dashboard/DashboardTopbar";
 import { SolarHeroCard } from "../../src/components/dashboard/SolarHeroCard";
 import { WeatherSummaryCard } from "../../src/components/dashboard/WeatherSummaryCard";
+import { useI18n } from "../../src/lib/i18n";
 import { useThemeColors } from "../../src/lib/theme";
 import { useCore } from "../../src/lib/useCore";
 import { useDashboardData } from "../../src/lib/useDashboardData";
@@ -38,6 +39,7 @@ function SectionLabel({
 
 export default function Dashboard() {
   const { account } = useCore();
+  const { t } = useI18n();
   const model = useDashboardData();
   const { items, count, clearAll, dismiss } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -52,7 +54,9 @@ export default function Dashboard() {
   const solarRight = [device?.model, capacityKw != null ? `${capacityKw} kW` : null]
     .filter(Boolean)
     .join(" · ");
-  const updated = obs?.obsTimeLocal ? `updated ${obs.obsTimeLocal.split(" ")[1] ?? ""}` : undefined;
+  const updated = obs?.obsTimeLocal
+    ? `${t("dashboard.updated")} ${obs.obsTimeLocal.split(" ")[1] ?? ""}`
+    : undefined;
 
   return (
     <SafeAreaView className="flex-1" edges={["top"]}>
@@ -64,10 +68,10 @@ export default function Dashboard() {
           onBellPress={() => setNotifOpen(true)}
         />
 
-        <SectionLabel icon="sunny" text="Solar" right={solarRight || undefined} />
+        <SectionLabel icon="sunny" text={t("dashboard.solar")} right={solarRight || undefined} />
         <SolarHeroCard model={model} />
 
-        <SectionLabel icon="partly-sunny" text="Weather" right={updated} />
+        <SectionLabel icon="partly-sunny" text={t("dashboard.weather")} right={updated} />
         <WeatherSummaryCard model={model} />
       </View>
 

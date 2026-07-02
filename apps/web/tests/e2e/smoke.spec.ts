@@ -24,3 +24,11 @@ test("protected routes redirect unauthenticated users to /login", async ({ page 
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/login\?redirectTo=%2Fdashboard/);
 });
+
+test("hmi.locale cookie renders the landing page in Norwegian", async ({ page, context }) => {
+  const base = new URL(test.info().project.use.baseURL ?? "http://localhost:3000");
+  await context.addCookies([{ name: "hmi.locale", value: "nb", domain: base.hostname, path: "/" }]);
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "Logg inn" })).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "nb");
+});

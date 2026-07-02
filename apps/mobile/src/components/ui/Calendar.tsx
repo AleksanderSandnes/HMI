@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
   buildMonthGrid,
-  MONTH_ABBR,
+  DATE_NAMES,
+  monthName,
   nextZoomView,
   parseYMD,
   sameDay,
@@ -23,6 +24,7 @@ import {
 
 import { cn } from "../../lib/cn";
 import { GRADIENTS } from "../../lib/gradients";
+import { useI18n } from "../../lib/i18n";
 import { hairline, useThemeColors } from "../../lib/theme";
 
 import { GlassCard } from "./GlassCard";
@@ -36,22 +38,6 @@ interface CalendarProps {
   /** Disable dates after today (no future data). */
   disableFuture?: boolean;
 }
-
-const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 const startOfDay = (d: Date) => {
   const n = new Date(d);
@@ -106,11 +92,13 @@ function DayView({
   onPick: (d: Date) => void;
 }) {
   const { mode } = useThemeColors();
+  const { locale } = useI18n();
+  const weekdays = DATE_NAMES[locale].weekdaysShort.map((w) => w.slice(0, 2));
   const month = viewDate.getMonth();
   return (
     <>
       <View className="mb-1.5 flex-row">
-        {WEEKDAYS.map((w) => (
+        {weekdays.map((w) => (
           <View key={w} style={styles.cell}>
             <Text className="text-[11px] font-bold tracking-[0.3px] text-text-muted">{w}</Text>
           </View>
@@ -224,6 +212,7 @@ interface BodyProps {
   month: number;
   year: number;
   blockStart: number;
+  monthsShort: readonly string[];
   setView: (v: CalendarView) => void;
   setViewDate: (d: Date) => void;
   pick: (d: Date) => void;
@@ -244,7 +233,7 @@ function CalendarBody(p: BodyProps) {
   if (p.view === "month") {
     return (
       <PickerGrid
-        items={MONTH_ABBR.map((m) => ({ key: m, label: m }))}
+        items={p.monthsShort.map((m) => ({ key: m, label: m }))}
         activeIndex={p.month}
         onPick={(i) => {
           p.setViewDate(new Date(p.year, i, 1));
@@ -269,19 +258,20 @@ function CalendarBody(p: BodyProps) {
 }
 
 function CalendarFooter({ onToday, onClose }: { onToday: () => void; onClose: () => void }) {
+  const { t } = useI18n();
   return (
     <View className="mt-4 flex-row gap-2.5">
       <Pressable
         onPress={onToday}
         className="flex-1 items-center rounded-md border border-solar bg-solar-soft py-3"
       >
-        <Text className="text-sm font-extrabold text-solar-light">Today</Text>
+        <Text className="text-sm font-extrabold text-solar-light">{t("date.today")}</Text>
       </Pressable>
       <Pressable
         onPress={onClose}
         className="flex-1 items-center rounded-md border border-glass-border bg-glass-fill py-3"
       >
-        <Text className="text-sm font-bold text-text-secondary">Close</Text>
+        <Text className="text-sm font-bold text-text-secondary">{t("date.close")}</Text>
       </Pressable>
     </View>
   );
@@ -296,6 +286,7 @@ export function Calendar({
 }: CalendarProps) {
   const { width } = useWindowDimensions();
   const { mode, colors } = useThemeColors();
+  const { locale } = useI18n();
   const { selected, view, setView, viewDate, setViewDate } = useCalendarState(value, visible);
   const today = startOfDay(new Date());
   const year = viewDate.getFullYear();
@@ -315,7 +306,7 @@ export function Calendar({
 
   const headerLabel =
     view === "day"
-      ? `${MONTHS[month]} ${year}`
+      ? `${monthName(locale, month)} ${year}`
       : view === "month"
         ? `${year}`
         : `${blockStart}–${blockStart + 11}`;
@@ -349,6 +340,7 @@ export function Calendar({
               month={month}
               year={year}
               blockStart={blockStart}
+              monthsShort={DATE_NAMES[locale].monthsShort}
               setView={setView}
               setViewDate={setViewDate}
               pick={pick}

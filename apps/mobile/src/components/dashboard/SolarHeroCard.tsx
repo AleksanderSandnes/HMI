@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { formatPeak, peakUnit, show } from "@hmi/core";
 import { Text, View } from "react-native";
 
+import { useI18n } from "../../lib/i18n";
 import { useThemeColors } from "../../lib/theme";
 import type { DashboardModel } from "../../lib/useDashboardData";
 import { GlassCard } from "../ui/GlassCard";
@@ -15,11 +16,12 @@ function kwLabel(watts: number | null | undefined): string {
 }
 
 function ProducingPill({ producing }: { producing: boolean }) {
+  const { t } = useI18n();
   return (
     <View className="flex-row items-center gap-2">
       <View className={`h-1.5 w-1.5 rounded-pill ${producing ? "bg-positive" : "bg-text-muted"}`} />
       <Text className="text-[11px] font-bold uppercase tracking-[0.3px] text-text-secondary">
-        {producing ? "Producing now" : "Idle"}
+        {producing ? t("dashboard.producingNow") : t("dashboard.idle")}
       </Text>
     </View>
   );
@@ -28,14 +30,15 @@ function ProducingPill({ producing }: { producing: boolean }) {
 /** Focus dashboard solar hero: the one big "what am I making now" answer + curve. */
 export function SolarHeroCard({ model }: { model: DashboardModel }) {
   const { colors } = useThemeColors();
+  const { t } = useI18n();
   const { currentPower, peak, utilisation, capacityKw, todayGen, sparkline } = model;
   const producing = (currentPower ?? 0) > 0;
 
   const subline = [
     utilisation != null && capacityKw != null
-      ? `${utilisation}% of ${capacityKw} kW capacity`
+      ? t("dashboard.capacityLine", { utilisation, capacityKw })
       : null,
-    todayGen != null ? `${show(todayGen, 1)} kWh so far today` : null,
+    todayGen != null ? t("dashboard.soFarToday", { kwh: show(todayGen, 1) }) : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -49,7 +52,10 @@ export function SolarHeroCard({ model }: { model: DashboardModel }) {
             <View className="flex-row items-center gap-1.5 rounded-pill bg-[rgba(245,158,11,0.14)] px-2.5 py-1">
               <Ionicons name="trending-up" size={13} color={colors.solarTint} />
               <Text className="text-[11px] font-extrabold text-solar-light">
-                Peak {formatPeak(peak.value)} {peakUnit(peak.value, "W")}
+                {t("dashboard.peakBadge", {
+                  value: formatPeak(peak.value),
+                  unit: peakUnit(peak.value, "W"),
+                })}
               </Text>
             </View>
           ) : null}

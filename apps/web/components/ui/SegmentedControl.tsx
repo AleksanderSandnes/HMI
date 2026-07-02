@@ -1,5 +1,8 @@
 "use client";
 
+import type { TranslationKey } from "@hmi/core";
+
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface Option {
@@ -7,27 +10,31 @@ interface Option {
   value: string;
 }
 
-const DEFAULT_OPTIONS: Option[] = [
-  { label: "Hourly", value: "hourly" },
-  { label: "Weekly", value: "weekly" },
-  { label: "Monthly", value: "monthly" },
-  { label: "Yearly", value: "yearly" },
-  { label: "5-Year", value: "total" },
+const DEFAULT_OPTION_KEYS: { labelKey: TranslationKey; value: string }[] = [
+  { labelKey: "timespan.hourly", value: "hourly" },
+  { labelKey: "timespan.weekly", value: "weekly" },
+  { labelKey: "timespan.monthly", value: "monthly" },
+  { labelKey: "timespan.yearly", value: "yearly" },
+  { labelKey: "timespan.fiveYear", value: "total" },
 ];
 
 /** iOS-style segmented control with a solar-gradient pill (web port). */
 export function SegmentedControl({
   value,
   onChange,
-  options = DEFAULT_OPTIONS,
+  options,
 }: {
   value: string;
   onChange: (value: string) => void;
   options?: Option[];
 }) {
+  const { t } = useI18n();
+  const resolved =
+    options ??
+    DEFAULT_OPTION_KEYS.map(({ labelKey, value: v }) => ({ label: t(labelKey), value: v }));
   return (
     <div className="flex gap-1 rounded-[var(--radius-pill)] border border-glass-border bg-[var(--color-segment-track)] p-1">
-      {options.map((opt) => {
+      {resolved.map((opt) => {
         const active = value === opt.value;
         return (
           <button

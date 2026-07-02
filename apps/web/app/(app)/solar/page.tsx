@@ -17,6 +17,7 @@ import { DateSelector } from "@/components/ui/DateSelector";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { useCore } from "@/lib/hooks/useCore";
+import { useI18n } from "@/lib/i18n";
 import { useNavStats } from "@/lib/nav-stats";
 
 const ZERO = {
@@ -28,6 +29,7 @@ const ZERO = {
 
 export default function SolarPage() {
   const { growatt } = useCore();
+  const { locale, t } = useI18n();
   const { setSolarStats } = useNavStats();
 
   const yesterday = new Date();
@@ -62,8 +64,8 @@ export default function SolarPage() {
   return (
     <div className="mx-auto flex h-full w-full max-w-[1480px] flex-col gap-4">
       <PageHeader
-        title="Solar Production"
-        subtitle="Real-time photovoltaic intelligence"
+        title={t("solar.title")}
+        subtitle={t("solar.subtitle")}
         right={
           <DateSelector
             selectedDate={pickerDate}
@@ -76,9 +78,11 @@ export default function SolarPage() {
       <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[22px]">
         <div className="mb-[18px] flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-[19px] font-extrabold text-text-primary">Power Generation</h2>
+            <h2 className="text-[19px] font-extrabold text-text-primary">
+              {t("solar.powerGeneration")}
+            </h2>
             <p className="mt-0.5 text-[13px] font-medium text-text-muted">
-              {chartSubtitle(timespan, pickerDate)}
+              {chartSubtitle(timespan, pickerDate, locale)}
             </p>
           </div>
           <div className="w-full sm:w-[460px]">

@@ -4,6 +4,7 @@ import { GlassCard } from "./GlassCard";
 import { Skeleton } from "./Skeleton";
 
 import { clamp, round, toNum } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 // Typical sea-level pressure range (hPa) over a 270° arc.
 const P_MIN = 960;
@@ -134,11 +135,12 @@ export function DualBaro({
   unit?: string;
   loading?: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <GlassCard strong className="flex h-full min-w-0 flex-1 items-stretch p-4">
-      <Module label="Now" value={now} unit={unit} loading={loading} />
+      <Module label={t("dashboard.now")} value={now} unit={unit} loading={loading} />
       <div className="mx-3 w-px self-stretch bg-glass-border" />
-      <Module label="Week average" value={avg} unit={unit} loading={loading} />
+      <Module label={t("dashboard.weekAverage")} value={avg} unit={unit} loading={loading} />
     </GlassCard>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { DATE_NAMES, formatDayMonth, monthName, weekdayAbbr, type Locale } from "@hmi/core";
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -16,37 +17,8 @@ import {
   yearBlockStart,
   type CalendarView as View,
 } from "@/lib/date";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-const MONTHS_SHORT = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
 
 const POPOVER_W = 300;
 const POPOVER_H = 360;
@@ -54,8 +26,8 @@ const POPOVER_H = 360;
 const GRID_BTN =
   "flex h-11 items-center justify-center rounded-[var(--radius-md)] text-[13px] font-bold transition";
 
-function headerLabelFor(view: View, viewDate: Date, yearStart: number): string {
-  if (view === "day") return `${MONTHS[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
+function headerLabelFor(view: View, viewDate: Date, yearStart: number, locale: Locale): string {
+  if (view === "day") return `${monthName(locale, viewDate.getMonth())} ${viewDate.getFullYear()}`;
   if (view === "month") return `${viewDate.getFullYear()}`;
   return `${yearStart} – ${yearStart + 11}`;
 }
@@ -73,10 +45,12 @@ function DayGrid({
   today: Date;
   onPick: (d: Date) => void;
 }) {
+  const { locale } = useI18n();
+  const weekdays = DATE_NAMES[locale].weekdaysShort.map((w) => w.slice(0, 2));
   return (
     <>
       <div className="mb-1 grid grid-cols-7 gap-1">
-        {WEEKDAYS.map((w) => (
+        {weekdays.map((w) => (
           <span
             key={w}
             className="flex h-7 items-center justify-center text-[11px] font-bold uppercase text-text-muted"
@@ -123,9 +97,11 @@ function MonthGrid({
   selectedMonth: number | null;
   onSelect: (monthIndex: number) => void;
 }) {
+  const { locale } = useI18n();
+  const monthsShort = DATE_NAMES[locale].monthsShort;
   return (
     <div className="grid grid-cols-3 gap-2">
-      {MONTHS_SHORT.map((mo, i) => (
+      {monthsShort.map((mo, i) => (
         <button
           key={mo}
           type="button"
@@ -278,11 +254,12 @@ function CalendarPopover({
   onZoom: () => void;
   children: React.ReactNode;
 }) {
+  const { t } = useI18n();
   return createPortal(
     <div
       ref={popRef}
       role="dialog"
-      aria-label="Choose date"
+      aria-label={t("date.chooseDate")}
       style={{
         position: "fixed",
         left: pos.left,
@@ -295,7 +272,7 @@ function CalendarPopover({
         <button
           type="button"
           onClick={() => onStep(-1)}
-          aria-label="Previous"
+          aria-label={t("date.previous")}
           className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong"
         >
           <ChevronLeft size={16} />
@@ -303,7 +280,7 @@ function CalendarPopover({
         <button
           type="button"
           onClick={onZoom}
-          title="Switch to month / year view"
+          title={t("date.zoomTitle")}
           className="flex flex-1 items-center justify-center gap-1 rounded-[var(--radius-sm)] py-1 text-sm font-extrabold text-text-primary transition hover:bg-glass-fill"
         >
           {headerLabel}
@@ -312,7 +289,7 @@ function CalendarPopover({
         <button
           type="button"
           onClick={() => onStep(1)}
-          aria-label="Next"
+          aria-label={t("date.next")}
           className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong"
         >
           <ChevronRight size={16} />
@@ -342,13 +319,14 @@ function TriggerRow({
   onShift: (days: number) => void;
   onToggle: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div ref={rootRef} className="flex items-center gap-1.5">
       <button
         type="button"
         disabled={disabled}
         onClick={() => onShift(-1)}
-        aria-label="Previous day"
+        aria-label={t("a11y.previousDay")}
         className={STEP_BTN}
       >
         <ChevronLeft size={18} />
@@ -368,7 +346,7 @@ function TriggerRow({
         type="button"
         disabled={disabled}
         onClick={() => onShift(1)}
-        aria-label="Next day"
+        aria-label={t("a11y.nextDay")}
         className={STEP_BTN}
       >
         <ChevronRight size={18} />
@@ -429,6 +407,7 @@ export function DateSelector({
   onDateSelect: (date: string) => void;
   disabled?: boolean;
 }) {
+  const { locale } = useI18n();
   const rootRef = useRef<HTMLDivElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
   const pop = useDatePopover(selectedDate, rootRef, popRef);
@@ -446,12 +425,7 @@ export function DateSelector({
     pop.close();
   };
 
-  const pretty = selected.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const pretty = `${weekdayAbbr(locale, selected.getDay())}, ${formatDayMonth(locale, selected)}, ${selected.getFullYear()}`;
 
   return (
     <GlassCard strong className="flex w-fit items-center p-1.5">
@@ -467,7 +441,7 @@ export function DateSelector({
         <CalendarPopover
           pos={pos}
           popRef={popRef}
-          headerLabel={headerLabelFor(view, viewDate, yearStart)}
+          headerLabel={headerLabelFor(view, viewDate, yearStart, locale)}
           showZoom={view !== "year"}
           onStep={pop.step}
           onZoom={pop.zoomOut}

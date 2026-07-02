@@ -1,10 +1,10 @@
 "use client";
 
-import { registerAccountSchema } from "@hmi/core";
+import { createRegisterAccountSchema, type TranslationKey, type Translator } from "@hmi/core";
 import { ArrowLeft, ArrowRight, Check, Key, Lock, Mail, MapPin, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import * as Yup from "yup";
 
 import { Button } from "@/components/ui/Button";
@@ -12,26 +12,27 @@ import { Field } from "@/components/ui/Field";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBanner } from "@/components/ui/StatusBanner";
 import { useCore } from "@/lib/hooks/useCore";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
-  { key: "account", label: "Account" },
-  { key: "solar", label: "Solar" },
-  { key: "weather", label: "Weather" },
+  { key: "account", labelKey: "auth.register.stepAccount" },
+  { key: "solar", labelKey: "auth.register.stepSolar" },
+  { key: "weather", labelKey: "auth.register.stepWeather" },
 ] as const;
 
-const HEADERS: Record<number, { title: string; subtitle: string }> = {
+const HEADERS: Record<number, { titleKey: TranslationKey; subtitleKey: TranslationKey }> = {
   0: {
-    title: "Create account",
-    subtitle: "Join your energy monitoring dashboard",
+    titleKey: "auth.register.createAccountTitle",
+    subtitleKey: "auth.register.createAccountSubtitle",
   },
   1: {
-    title: "Connect Growatt",
-    subtitle: "Optional — add your solar credentials",
+    titleKey: "auth.register.growattTitle",
+    subtitleKey: "auth.register.growattSubtitle",
   },
   2: {
-    title: "Connect Weather.com",
-    subtitle: "Optional — add your weather station",
+    titleKey: "auth.register.weatherTitle",
+    subtitleKey: "auth.register.weatherSubtitle",
   },
 };
 
@@ -45,9 +46,12 @@ interface AccountState {
   confirmPassword: string;
 }
 
-function validateAccount(account: AccountState): Record<string, string> {
+function validateAccount(
+  account: AccountState,
+  schema: ReturnType<typeof createRegisterAccountSchema>,
+): Record<string, string> {
   try {
-    registerAccountSchema.validateSync(account, { abortEarly: false });
+    schema.validateSync(account, { abortEarly: false });
     return {};
   } catch (err) {
     const map: Record<string, string> = {};
@@ -63,6 +67,8 @@ function validateAccount(account: AccountState): Record<string, string> {
 interface CreateAccountDeps {
   auth: Core["auth"];
   account: AccountState;
+  schema: ReturnType<typeof createRegisterAccountSchema>;
+  t: Translator;
   setStep: Setter<number>;
   setSaving: Setter<boolean>;
   setStepError: Setter<string | null>;
@@ -73,7 +79,7 @@ interface CreateAccountDeps {
 async function runCreateAccount(d: CreateAccountDeps) {
   d.setStepError(null);
   d.setAccountError(null);
-  const errs = validateAccount(d.account);
+  const errs = validateAccount(d.account, d.schema);
   d.setAccountErrors(errs);
   if (Object.keys(errs).length) return;
   d.setSaving(true);
@@ -85,7 +91,7 @@ async function runCreateAccount(d: CreateAccountDeps) {
     });
     d.setStep(1);
   } catch (e) {
-    d.setAccountError(e instanceof Error ? e.message : "Registration failed. Please try again.");
+    d.setAccountError(e instanceof Error ? e.message : d.t("auth.register.failed"));
   } finally {
     d.setSaving(false);
   }
@@ -94,6 +100,7 @@ async function runCreateAccount(d: CreateAccountDeps) {
 interface SaveGrowattDeps {
   settings: Core["settings"];
   growatt: { email: string; password: string };
+  t: Translator;
   setStep: Setter<number>;
   setSaving: Setter<boolean>;
   setStepError: Setter<string | null>;
@@ -104,15 +111,14 @@ async function runSaveGrowatt(d: SaveGrowattDeps) {
   const email = d.growatt.email.trim();
   const password = d.growatt.password.trim();
   if (!email && !password) return d.setStep(2);
-  if (!email || !password)
-    return d.setStepError("Enter both account and password, or skip this step.");
-  if (!email.includes("@")) return d.setStepError("Please enter a valid email address.");
+  if (!email || !password) return d.setStepError(d.t("auth.register.growattBothOrSkip"));
+  if (!email.includes("@")) return d.setStepError(d.t("auth.register.invalidEmail"));
   d.setSaving(true);
   try {
     await d.settings.saveGrowattApiSettings({ growatt: { email, password } });
     d.setStep(2);
   } catch {
-    d.setStepError("Could not save Growatt credentials. You can add them later in Settings.");
+    d.setStepError(d.t("auth.register.growattSaveFailed"));
   } finally {
     d.setSaving(false);
   }
@@ -121,6 +127,7 @@ async function runSaveGrowatt(d: SaveGrowattDeps) {
 interface FinishDeps {
   settings: Core["settings"];
   weather: { stationId: string; apiKey: string };
+  t: Translator;
   done: () => void;
   setSaving: Setter<boolean>;
   setStepError: Setter<string | null>;
@@ -131,14 +138,13 @@ async function runFinish(d: FinishDeps) {
   const stationId = d.weather.stationId.trim();
   const apiKey = d.weather.apiKey.trim();
   if (!stationId && !apiKey) return d.done();
-  if (!stationId || !apiKey)
-    return d.setStepError("Enter both station ID and API key, or skip this step.");
+  if (!stationId || !apiKey) return d.setStepError(d.t("auth.register.weatherBothOrSkip"));
   d.setSaving(true);
   try {
     await d.settings.saveWeatherApiSettings({ weather: { apiKey, stationId } });
     d.done();
   } catch {
-    d.setStepError("Could not save weather credentials. You can add them later in Settings.");
+    d.setStepError(d.t("auth.register.weatherSaveFailed"));
   } finally {
     d.setSaving(false);
   }
@@ -146,7 +152,9 @@ async function runFinish(d: FinishDeps) {
 
 function useRegisterFlow() {
   const { auth, settings } = useCore();
+  const { t } = useI18n();
   const router = useRouter();
+  const schema = useMemo(() => createRegisterAccountSchema(t), [t]);
   const [step, setStep] = useState(0);
   const [account, setAccount] = useState<AccountState>({
     email: "",
@@ -184,14 +192,16 @@ function useRegisterFlow() {
       runCreateAccount({
         auth,
         account,
+        schema,
+        t,
         setStep,
         setSaving,
         setStepError,
         setAccountError,
         setAccountErrors,
       }),
-    saveGrowatt: () => runSaveGrowatt({ settings, growatt, setStep, setSaving, setStepError }),
-    finish: () => runFinish({ settings, weather, done: finalize, setSaving, setStepError }),
+    saveGrowatt: () => runSaveGrowatt({ settings, growatt, t, setStep, setSaving, setStepError }),
+    finish: () => runFinish({ settings, weather, t, done: finalize, setSaving, setStepError }),
   };
 }
 
@@ -203,61 +213,63 @@ const setField =
     setter((s) => ({ ...s, [key]: e.target.value }));
 
 function RegisterHeader({ header }: { header: (typeof HEADERS)[number] }) {
+  const { t } = useI18n();
   return (
     <div className="mb-5 flex flex-col items-center text-center">
       <h1 className="text-[25px] font-extrabold tracking-tight text-text-primary">
-        {header.title}
+        {t(header.titleKey)}
       </h1>
-      <p className="mt-1.5 text-sm font-medium text-text-muted">{header.subtitle}</p>
+      <p className="mt-1.5 text-sm font-medium text-text-muted">{t(header.subtitleKey)}</p>
     </div>
   );
 }
 
 function AccountStep({ flow }: { flow: RegisterFlow }) {
+  const { t } = useI18n();
   const { account, setAccount, accountErrors, saving, createAccount } = flow;
   return (
     <div>
       <Field
-        label="EMAIL ADDRESS"
+        label={t("auth.emailAddressLabel")}
         icon={Mail}
         inputMode="email"
-        placeholder="you@domain.com"
+        placeholder={t("auth.emailPlaceholder")}
         value={account.email}
         onChange={setField(setAccount, "email")}
         error={accountErrors.email}
         disabled={saving}
       />
       <Field
-        label="USERNAME"
+        label={t("settings.usernameLabel")}
         icon={User}
-        placeholder="Choose a username"
+        placeholder={t("auth.register.usernamePlaceholder")}
         value={account.username}
         onChange={setField(setAccount, "username")}
         error={accountErrors.username}
         disabled={saving}
       />
       <Field
-        label="PASSWORD"
+        label={t("settings.passwordLabel")}
         icon={Lock}
         secure
-        placeholder="Create a secure password"
+        placeholder={t("auth.register.passwordPlaceholder")}
         value={account.password}
         onChange={setField(setAccount, "password")}
         error={accountErrors.password}
         disabled={saving}
       />
       <Field
-        label="CONFIRM PASSWORD"
+        label={t("settings.confirmPasswordLabel")}
         icon={Lock}
         secure
-        placeholder="Re-enter your password"
+        placeholder={t("auth.register.confirmPasswordPlaceholder")}
         value={account.confirmPassword}
         onChange={setField(setAccount, "confirmPassword")}
         error={accountErrors.confirmPassword}
         disabled={saving}
       />
       <Button
-        label="Create account"
+        label={t("auth.register.createAccountTitle")}
         icon={ArrowRight}
         onClick={createAccount}
         loading={saving}
@@ -268,33 +280,34 @@ function AccountStep({ flow }: { flow: RegisterFlow }) {
 }
 
 function GrowattStep({ flow }: { flow: RegisterFlow }) {
+  const { t } = useI18n();
   const { growatt, setGrowatt, saving, setStep, setStepError, saveGrowatt } = flow;
   return (
     <div>
       <Field
-        label="ACCOUNT (EMAIL)"
+        label={t("settings.accountEmailLabel")}
         icon={Mail}
         inputMode="email"
-        placeholder="your-email@domain.com"
+        placeholder={t("auth.register.growattEmailPlaceholder")}
         value={growatt.email}
         onChange={setField(setGrowatt, "email")}
         disabled={saving}
       />
       <Field
-        label="PASSWORD"
+        label={t("settings.passwordLabel")}
         icon={Key}
         secure
-        placeholder="Enter your Growatt password"
+        placeholder={t("auth.register.growattPasswordPlaceholder")}
         value={growatt.password}
         onChange={setField(setGrowatt, "password")}
         disabled={saving}
       />
       <p className="mb-4 mt-0.5 text-center text-[12.5px] font-medium leading-[18px] text-text-muted">
-        Optional — you can add or change this anytime in Settings.
+        {t("auth.register.optionalHint")}
       </p>
       <div className="flex gap-3">
         <Button
-          label="Skip"
+          label={t("auth.register.skip")}
           variant="ghost"
           onClick={() => {
             setStepError(null);
@@ -302,7 +315,7 @@ function GrowattStep({ flow }: { flow: RegisterFlow }) {
           }}
         />
         <Button
-          label="Continue"
+          label={t("auth.register.continue")}
           icon={ArrowRight}
           gradient="energy"
           onClick={saveGrowatt}
@@ -314,30 +327,31 @@ function GrowattStep({ flow }: { flow: RegisterFlow }) {
 }
 
 function WeatherStep({ flow }: { flow: RegisterFlow }) {
+  const { t } = useI18n();
   const { weather, setWeather, saving, setStep, setStepError, finish } = flow;
   return (
     <div>
       <Field
-        label="WEATHER STATION ID"
+        label={t("settings.stationIdLabel")}
         icon={MapPin}
-        placeholder="e.g. ISANDN24"
-        hint="Find your local station ID at weather.com/weather/map"
+        placeholder={t("settings.stationIdPlaceholder")}
+        hint={t("auth.register.stationIdHint")}
         value={weather.stationId}
         onChange={setField(setWeather, "stationId")}
         disabled={saving}
       />
       <Field
-        label="API KEY"
+        label={t("settings.apiKeyLabel")}
         icon={Key}
         secure
-        placeholder="Enter your Weather.com API key"
-        hint="Get your API key from the weather.com developer portal"
+        placeholder={t("auth.register.apiKeyPlaceholder")}
+        hint={t("auth.register.apiKeyHint")}
         value={weather.apiKey}
         onChange={setField(setWeather, "apiKey")}
         disabled={saving}
       />
       <p className="mb-4 mt-0.5 text-center text-[12.5px] font-medium leading-[18px] text-text-muted">
-        Optional — you can add or change this anytime in Settings.
+        {t("auth.register.optionalHint")}
       </p>
       <div className="flex gap-3">
         <Button
@@ -349,13 +363,14 @@ function WeatherStep({ flow }: { flow: RegisterFlow }) {
             setStep(1);
           }}
         />
-        <Button label="Finish" icon={Check} onClick={finish} loading={saving} />
+        <Button label={t("auth.register.finish")} icon={Check} onClick={finish} loading={saving} />
       </div>
     </div>
   );
 }
 
 export default function RegisterPage() {
+  const { t } = useI18n();
   const flow = useRegisterFlow();
   const { step, accountError, stepError } = flow;
   const header = HEADERS[step];
@@ -374,9 +389,11 @@ export default function RegisterPage() {
 
       {step === 0 ? (
         <div className="mt-6 flex items-center justify-center gap-1.5 border-t border-glass-border pt-5">
-          <span className="text-sm font-medium text-text-muted">Already have an account?</span>
+          <span className="text-sm font-medium text-text-muted">
+            {t("auth.register.haveAccount")}
+          </span>
           <Link href="/login" className="text-sm font-extrabold text-solar-light">
-            Sign in
+            {t("auth.register.signIn")}
           </Link>
         </div>
       ) : null}
@@ -385,6 +402,7 @@ export default function RegisterPage() {
 }
 
 function StepIndicator({ step }: { step: number }) {
+  const { t } = useI18n();
   return (
     <div className="mb-5 flex items-center justify-center">
       {STEPS.map((s, i) => {
@@ -409,7 +427,7 @@ function StepIndicator({ step }: { step: number }) {
                   active ? "text-text-secondary" : "text-text-muted",
                 )}
               >
-                {s.label}
+                {t(s.labelKey)}
               </span>
             </div>
             {i < STEPS.length - 1 ? (

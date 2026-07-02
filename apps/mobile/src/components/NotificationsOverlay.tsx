@@ -5,6 +5,7 @@ import { Modal as RNModal, Pressable, ScrollView, Text, View } from "react-nativ
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GRADIENTS } from "../lib/gradients";
+import { useI18n } from "../lib/i18n";
 import { useThemeColors } from "../lib/theme";
 
 type Grad = readonly [string, string, string];
@@ -18,6 +19,7 @@ const LEVEL: Record<NotificationLevel, { grad: Grad; icon: keyof typeof Ionicons
 
 function Row({ item, onDismiss }: { item: NotificationItem; onDismiss: () => void }) {
   const { colors } = useThemeColors();
+  const { locale, t } = useI18n();
   const { grad, icon } = LEVEL[item.level] ?? LEVEL.info;
   return (
     <View>
@@ -45,12 +47,14 @@ function Row({ item, onDismiss }: { item: NotificationItem; onDismiss: () => voi
               {item.message}
             </Text>
           ) : null}
-          <Text className="mt-0.5 text-[10.5px] text-text-muted">{timeAgo(item.createdAt)}</Text>
+          <Text className="mt-0.5 text-[10.5px] text-text-muted">
+            {timeAgo(item.createdAt, locale)}
+          </Text>
         </View>
         <Pressable
           onPress={onDismiss}
           hitSlop={8}
-          accessibilityLabel="Dismiss"
+          accessibilityLabel={t("a11y.dismiss")}
           className="h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-glass-fill"
         >
           <Ionicons name="close" size={15} color={colors.textMuted} />
@@ -63,11 +67,12 @@ function Row({ item, onDismiss }: { item: NotificationItem; onDismiss: () => voi
 
 function EmptyState() {
   const { colors } = useThemeColors();
+  const { t } = useI18n();
   return (
     <View className="items-center gap-2.5 px-5 py-12">
       <Ionicons name="notifications-off-outline" size={26} color={colors.textMuted} />
       <Text className="text-[13px] font-semibold text-text-secondary">
-        You&apos;re all caught up
+        {t("notifications.allCaughtUp")}
       </Text>
     </View>
   );
@@ -89,6 +94,7 @@ export function NotificationsOverlay({
 }) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeColors();
+  const { t } = useI18n();
 
   return (
     <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -110,10 +116,14 @@ export function NotificationsOverlay({
             }}
           >
             <View className="flex-row items-center justify-between border-b border-glass-border px-4 py-3">
-              <Text className="text-[15.5px] font-extrabold text-text-primary">Notifications</Text>
+              <Text className="text-[15.5px] font-extrabold text-text-primary">
+                {t("notifications.title")}
+              </Text>
               {items.length > 0 ? (
                 <Pressable onPress={onClear}>
-                  <Text className="text-[12px] font-extrabold text-solar-light">Clear all</Text>
+                  <Text className="text-[12px] font-extrabold text-solar-light">
+                    {t("notifications.clearAll")}
+                  </Text>
                 </Pressable>
               ) : null}
             </View>

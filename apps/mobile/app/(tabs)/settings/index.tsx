@@ -2,17 +2,21 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   growattConfig,
   weatherConfig,
+  LANGUAGES,
   type ApiSettingsResponse,
+  type TranslationKey,
+  type Translator,
   type UserProfile,
 } from "@hmi/core";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { LanguageSelectSheet } from "../../../src/components/settings/LanguageSelectSheet";
 import { ConfiguredBadge } from "../../../src/components/settings/forms";
 import {
   GroupLabel,
@@ -25,6 +29,7 @@ import { Button } from "../../../src/components/ui/Button";
 import { GlassCard } from "../../../src/components/ui/GlassCard";
 import { cn } from "../../../src/lib/cn";
 import { GRADIENTS } from "../../../src/lib/gradients";
+import { useI18n } from "../../../src/lib/i18n";
 import { useThemeColors, type ThemePreference } from "../../../src/lib/theme";
 import { useAvatar } from "../../../src/lib/useAvatar";
 import { useCore } from "../../../src/lib/useCore";
@@ -41,13 +46,14 @@ function initials(name?: string | null): string {
 function ProfileCard({ profile, onPress }: { profile?: UserProfile; onPress: () => void }) {
   const { uri } = useAvatar();
   const { colors } = useThemeColors();
+  const { t } = useI18n();
   return (
     <Pressable onPress={onPress}>
       <GlassCard strong className="flex-row items-center gap-3.5 p-3.5">
         <Avatar initials={initials(profile?.username)} uri={uri} size={52} />
         <View className="min-w-0 flex-1">
           <Text className="text-[16px] font-extrabold text-text-primary">
-            {profile?.username ?? "Your profile"}
+            {profile?.username ?? t("settings.yourProfile")}
           </Text>
           <Text className="mt-0.5 text-[12.5px] text-text-muted">{profile?.email ?? "—"}</Text>
         </View>
@@ -59,26 +65,32 @@ function ProfileCard({ profile, onPress }: { profile?: UserProfile; onPress: () 
 
 const APPEARANCE_OPTIONS: {
   value: ThemePreference;
-  label: string;
+  labelKey: TranslationKey;
   icon: keyof typeof Ionicons.glyphMap;
 }[] = [
-  { value: "light", label: "Light", icon: "sunny" },
-  { value: "system", label: "System", icon: "desktop-outline" },
-  { value: "dark", label: "Dark", icon: "moon" },
+  { value: "light", labelKey: "settings.light", icon: "sunny" },
+  { value: "system", labelKey: "settings.system", icon: "desktop-outline" },
+  { value: "dark", labelKey: "settings.dark", icon: "moon" },
 ];
 
-function appearanceSubtitle(preference: ThemePreference, mode: "light" | "dark"): string {
+function appearanceSubtitle(
+  preference: ThemePreference,
+  mode: "light" | "dark",
+  t: Translator,
+): string {
+  const modeLabel = mode === "dark" ? t("settings.dark") : t("settings.light");
   if (preference === "system") {
-    return `System · ${mode === "dark" ? "Dark" : "Light"} right now`;
+    return t("settings.systemRightNow", { mode: modeLabel });
   }
-  return preference === "dark" ? "Dark" : "Light";
+  return preference === "dark" ? t("settings.dark") : t("settings.light");
 }
 
 function AppearanceSegmented() {
   const { preference, setPreference, colors } = useThemeColors();
+  const { t } = useI18n();
   return (
     <View className="flex-row gap-[3px] overflow-hidden rounded-[12px] border border-glass-border bg-glass-fill-subtle p-[3px]">
-      {APPEARANCE_OPTIONS.map(({ value, label, icon }) => {
+      {APPEARANCE_OPTIONS.map(({ value, labelKey, icon }) => {
         const active = preference === value;
         return (
           <Pressable
@@ -102,7 +114,7 @@ function AppearanceSegmented() {
                 active ? "text-text-primary" : "text-text-secondary",
               )}
             >
-              {label}
+              {t(labelKey)}
             </Text>
           </Pressable>
         );
@@ -119,46 +131,65 @@ function PreferencesGroup({
   setPushOn: (v: boolean) => void;
 }) {
   const { preference, mode } = useThemeColors();
+  const { locale, t } = useI18n();
+  const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
+  const currentLanguage = LANGUAGES.find((l) => l.code === locale)?.label ?? locale;
   return (
-    <SettingsGroup>
-      <SettingsRow
-        icon="notifications"
-        gradient="accent"
-        title="Push notifications"
-        subtitle="Alerts on this device"
-        right={<Toggle value={pushOn} onChange={setPushOn} />}
-      />
-      <View className="gap-2.5 px-3.5 py-3">
-        <View className="flex-row items-center gap-3">
-          <LinearGradient
-            colors={GRADIENTS.preferences}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 11,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="contrast" size={18} color="#0a1124" />
-          </LinearGradient>
-          <View className="min-w-0 flex-1">
-            <Text className="text-[14.5px] font-bold text-text-primary">Appearance</Text>
-            <Text className="mt-0.5 text-[11.5px] text-text-muted">
-              {appearanceSubtitle(preference, mode)}
-            </Text>
+    <>
+      <SettingsGroup>
+        <SettingsRow
+          icon="notifications"
+          gradient="accent"
+          title={t("settings.pushNotifications")}
+          subtitle={t("settings.pushSubtitle")}
+          right={<Toggle value={pushOn} onChange={setPushOn} />}
+        />
+        <SettingsRow
+          icon="language"
+          gradient="preferences"
+          title={t("common.language")}
+          subtitle={currentLanguage}
+          onPress={() => setLanguageSheetOpen(true)}
+        />
+        <View className="gap-2.5 px-3.5 py-3">
+          <View className="flex-row items-center gap-3">
+            <LinearGradient
+              colors={GRADIENTS.preferences}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 11,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="contrast" size={18} color="#0a1124" />
+            </LinearGradient>
+            <View className="min-w-0 flex-1">
+              <Text className="text-[14.5px] font-bold text-text-primary">
+                {t("settings.appearance")}
+              </Text>
+              <Text className="mt-0.5 text-[11.5px] text-text-muted">
+                {appearanceSubtitle(preference, mode, t)}
+              </Text>
+            </View>
           </View>
+          <AppearanceSegmented />
         </View>
-        <AppearanceSegmented />
-      </View>
-    </SettingsGroup>
+      </SettingsGroup>
+      <LanguageSelectSheet
+        visible={languageSheetOpen}
+        onClose={() => setLanguageSheetOpen(false)}
+      />
+    </>
   );
 }
 
 export default function SettingsHub() {
   const router = useRouter();
+  const { t } = useI18n();
   const { account, settings } = useCore();
   const logout = useLogout();
   const tabBarHeight = useBottomTabBarHeight();
@@ -185,50 +216,50 @@ export default function SettingsHub() {
       >
         <View className="mb-1">
           <Text className="text-[28px] font-extrabold tracking-[-0.6px] text-text-primary">
-            Settings
+            {t("settings.title")}
           </Text>
           <Text className="mt-1 text-[14px] font-medium text-text-muted">
-            Account & integrations
+            {t("settings.subtitle")}
           </Text>
         </View>
 
         <ProfileCard profile={profile} onPress={() => router.push("/settings/profile")} />
 
-        <GroupLabel>Account</GroupLabel>
+        <GroupLabel>{t("settings.account")}</GroupLabel>
         <SettingsGroup>
           <SettingsRow
             icon="lock-closed"
             gradient="revenue"
-            title="Change password"
+            title={t("settings.changePassword")}
             onPress={() => router.push("/settings/password")}
           />
         </SettingsGroup>
 
-        <GroupLabel>Integrations</GroupLabel>
+        <GroupLabel>{t("settings.integrations")}</GroupLabel>
         <SettingsGroup>
           <SettingsRow
             icon="sunny"
             gradient="energy"
-            title="Growatt solar"
-            subtitle="Production data source"
+            title={t("settings.growatt")}
+            subtitle={t("settings.growattSubtitle")}
             right={<ConfiguredBadge on={gc.configured} />}
             onPress={() => router.push("/settings/growatt")}
           />
           <SettingsRow
             icon="cloud"
             gradient="solar"
-            title="Weather.com station"
-            subtitle="Local conditions source"
+            title={t("settings.weatherStation")}
+            subtitle={t("settings.weatherSubtitle")}
             right={<ConfiguredBadge on={wc.configured} />}
             onPress={() => router.push("/settings/weather")}
           />
         </SettingsGroup>
 
-        <GroupLabel>Preferences</GroupLabel>
+        <GroupLabel>{t("settings.preferences")}</GroupLabel>
         <PreferencesGroup pushOn={pushOn} setPushOn={setPushOn} />
 
         <Button
-          label="Sign out"
+          label={t("settings.signOut")}
           icon={({ color, size }) => <Ionicons name="log-out" size={size} color={color} />}
           variant="danger"
           onPress={logout}

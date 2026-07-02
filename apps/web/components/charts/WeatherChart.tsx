@@ -16,6 +16,7 @@ import { Frame } from "./chartFrame";
 import { AXIS_TICK, CURSOR, GRID_STROKE } from "./chartTheme";
 
 import { weatherYDomain } from "@/lib/chart";
+import { useI18n } from "@/lib/i18n";
 
 export interface LineSeries {
   data: number[];
@@ -169,17 +170,18 @@ export function WeatherChart({
   unit = "",
   loading = false,
   height = 340,
-  emptyText = "No data for this period",
+  emptyText,
   ticks,
   heightClass,
 }: WeatherChartProps) {
+  const { t } = useI18n();
   const { clean, n, all } = readClean(series);
 
   if (loading || !n || all.length === 0) {
     return (
       <StateView
         loading={loading}
-        emptyText={emptyText}
+        emptyText={emptyText ?? t("chart.noDataPeriod")}
         heightClass={heightClass}
         height={height}
       />

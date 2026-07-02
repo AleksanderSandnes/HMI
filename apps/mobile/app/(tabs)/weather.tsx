@@ -1,5 +1,11 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { buildWeatherSeries, buildWeatherDailyBands, isPhoneWeekly, toISO } from "@hmi/core";
+import {
+  buildWeatherSeries,
+  buildWeatherDailyBands,
+  isPhoneWeekly,
+  toISO,
+  type TranslationKey,
+} from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState, type ReactNode } from "react";
 import { ScrollView, Text, View, Pressable, useWindowDimensions } from "react-native";
@@ -11,17 +17,18 @@ import { DateSelector } from "../../src/components/ui/DateSelector";
 import { GlassCard } from "../../src/components/ui/GlassCard";
 import { SegmentedControl } from "../../src/components/ui/SegmentedControl";
 import { cn } from "../../src/lib/cn";
+import { useI18n } from "../../src/lib/i18n";
 import { useThemeColors } from "../../src/lib/theme";
 import { useCore } from "../../src/lib/useCore";
 
 interface MetricMeta {
   key: string;
-  label: string;
+  labelKey: TranslationKey;
   icon: (color: string, size: number) => ReactNode;
   unit: string;
-  title: string;
+  titleKey: TranslationKey;
   accent: string;
-  series: { label: string; color: string }[];
+  series: { labelKey: TranslationKey; color: string }[];
 }
 
 const io =
@@ -32,85 +39,86 @@ const io =
 const METRICS: MetricMeta[] = [
   {
     key: "temperature",
-    label: "Temp",
+    labelKey: "weather.chip.temp",
     icon: io("thermometer"),
     unit: "°C",
-    title: "Temperature",
+    titleKey: "weather.temperature",
     accent: "#fb7185",
     series: [
-      { label: "Temperature", color: "#fb7185" },
-      { label: "Dew point", color: "#34d399" },
+      { labelKey: "weather.temperature", color: "#fb7185" },
+      { labelKey: "weather.dewPoint", color: "#34d399" },
     ],
   },
   {
     key: "windSpeed",
-    label: "Wind",
+    labelKey: "weather.chip.wind",
     icon: (c, s) => <MaterialCommunityIcons name="weather-windy" color={c} size={s} />,
     unit: "km/h",
-    title: "Wind",
+    titleKey: "weather.wind",
     accent: "#60a5fa",
     series: [
-      { label: "Wind speed", color: "#60a5fa" },
-      { label: "Wind gust", color: "#fbbf24" },
+      { labelKey: "weather.windSpeed", color: "#60a5fa" },
+      { labelKey: "weather.windGust", color: "#fbbf24" },
     ],
   },
   {
     key: "precip",
-    label: "Rain",
+    labelKey: "weather.chip.rain",
     icon: io("rainy"),
     unit: "mm",
-    title: "Precipitation",
+    titleKey: "weather.precipitation",
     accent: "#38bdf8",
     series: [
-      { label: "Accum. total", color: "#38bdf8" },
-      { label: "Rate", color: "#34d399" },
+      { labelKey: "weather.accumTotal", color: "#38bdf8" },
+      { labelKey: "weather.rate", color: "#34d399" },
     ],
   },
   {
     key: "humidity",
-    label: "Humidity",
+    labelKey: "weather.chip.humidity",
     icon: io("water"),
     unit: "%",
-    title: "Humidity",
+    titleKey: "weather.humidity",
     accent: "#22d3ee",
-    series: [{ label: "Humidity", color: "#22d3ee" }],
+    series: [{ labelKey: "weather.humidity", color: "#22d3ee" }],
   },
   {
     key: "pressure",
-    label: "Press",
+    labelKey: "weather.chip.pressure",
     icon: io("speedometer"),
     unit: "hPa",
-    title: "Pressure",
+    titleKey: "weather.pressure",
     accent: "#a78bfa",
-    series: [{ label: "Pressure", color: "#a78bfa" }],
+    series: [{ labelKey: "weather.pressure", color: "#a78bfa" }],
   },
   {
     key: "solarRadiation",
-    label: "Solar",
+    labelKey: "weather.chip.solar",
     icon: io("sunny"),
     unit: "W/m²",
-    title: "Solar radiation",
+    titleKey: "weather.solarRadiation",
     accent: "#fbbf24",
-    series: [{ label: "Solar radiation", color: "#fbbf24" }],
+    series: [{ labelKey: "weather.solarRadiation", color: "#fbbf24" }],
   },
   {
     key: "uvIndex",
-    label: "UV",
+    labelKey: "weather.chip.uv",
     icon: io("sunny-outline"),
     unit: "UV",
-    title: "UV index",
+    titleKey: "weather.uvIndex",
     accent: "#c084fc",
-    series: [{ label: "UV index", color: "#c084fc" }],
+    series: [{ labelKey: "weather.uvIndex", color: "#c084fc" }],
   },
 ];
 
-const TIME_OPTIONS = [
-  { label: "Hourly", value: "hourly" },
-  { label: "Weekly", value: "weekly" },
+const TIME_OPTION_KEYS: { labelKey: TranslationKey; value: string }[] = [
+  { labelKey: "timespan.hourly", value: "hourly" },
+  { labelKey: "timespan.weekly", value: "weekly" },
 ];
 
 function MetricChips({ active, onSelect }: { active: string; onSelect: (key: string) => void }) {
   const { colors } = useThemeColors();
+  const { t } = useI18n();
   return (
     <View className="mb-3 h-11">
       <ScrollView
@@ -118,12 +126,12 @@ function MetricChips({ active, onSelect }: { active: string; onSelect: (key: str
         showsHorizontalScrollIndicator={false}
         contentContainerClassName="items-center gap-2"
       >
-        {METRICS.map((t) => {
-          const on = t.key === active;
+        {METRICS.map((m) => {
+          const on = m.key === active;
           return (
             <Pressable
-              key={t.key}
-              onPress={() => onSelect(t.key)}
+              key={m.key}
+              onPress={() => onSelect(m.key)}
               className={cn(
                 "h-9 flex-row items-center gap-2 rounded-md border px-3.5",
                 on
@@ -131,12 +139,12 @@ function MetricChips({ active, onSelect }: { active: string; onSelect: (key: str
                   : "border-glass-border bg-glass-fill",
               )}
             >
-              {t.icon(on ? t.accent : colors.textMuted, 14)}
+              {m.icon(on ? m.accent : colors.textMuted, 14)}
               <Text
-                style={on ? { color: t.accent } : undefined}
+                style={on ? { color: m.accent } : undefined}
                 className={cn("text-[13px] font-bold", !on && "text-text-muted")}
               >
-                {t.label}
+                {t(m.labelKey)}
               </Text>
             </Pressable>
           );
@@ -148,6 +156,7 @@ function MetricChips({ active, onSelect }: { active: string; onSelect: (key: str
 
 function useWeatherChartData(dataType: string, timespan: string, ymd: string, meta: MetricMeta) {
   const { weather } = useCore();
+  const { t } = useI18n();
   const { data: observations, isLoading } = useQuery({
     queryKey: ["wx-hist", timespan, ymd],
     queryFn: async () => {
@@ -167,17 +176,21 @@ function useWeatherChartData(dataType: string, timespan: string, ymd: string, me
     () => buildWeatherDailyBands(observations ?? [], dataType),
     [observations, dataType],
   );
-  const chartSeries: LineSeries[] = series.series.map((data, i) => ({
-    data,
-    color: meta.series[i]?.color ?? meta.accent,
-    label: meta.series[i]?.label ?? `Series ${i + 1}`,
-  }));
+  const chartSeries: LineSeries[] = series.series.map((data, i) => {
+    const sm = meta.series[i];
+    return {
+      data,
+      color: sm?.color ?? meta.accent,
+      label: sm ? t(sm.labelKey) : `Series ${i + 1}`,
+    };
+  });
 
   return { isLoading, series, bands, chartSeries };
 }
 
 export default function Weather() {
   const { width } = useWindowDimensions();
+  const { t } = useI18n();
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -202,8 +215,8 @@ export default function Weather() {
     <SafeAreaView className="flex-1" edges={["top"]}>
       <View className="flex-1 gap-4 p-4">
         <PageHeader
-          title="Weather Station"
-          subtitle="Local conditions & history"
+          title={t("weather.title")}
+          subtitle={t("weather.subtitle")}
           right={
             <DateSelector
               selectedDate={pickerDate}
@@ -218,13 +231,23 @@ export default function Weather() {
 
           {/* Timespan */}
           <View className="mb-4 w-full max-w-[260px]">
-            <SegmentedControl value={timespan} onChange={setTimespan} options={TIME_OPTIONS} />
+            <SegmentedControl
+              value={timespan}
+              onChange={setTimespan}
+              options={TIME_OPTION_KEYS.map(({ labelKey, value }) => ({
+                label: t(labelKey),
+                value,
+              }))}
+            />
           </View>
 
           <Text className="mb-3 text-[19px] font-extrabold text-text-primary">
-            {meta.title}
+            {t(meta.titleKey)}
             {phoneWeekly ? (
-              <Text className="text-[13px] font-semibold text-text-muted"> · daily range</Text>
+              <Text className="text-[13px] font-semibold text-text-muted">
+                {" "}
+                · {t("weather.dailyRange")}
+              </Text>
             ) : null}
           </Text>
 

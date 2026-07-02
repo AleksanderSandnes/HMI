@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { registerAccountSchema } from "@hmi/core";
+import { createRegisterAccountSchema, type TranslationKey, type Translator } from "@hmi/core";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import * as Yup from "yup";
@@ -14,6 +14,7 @@ import { ScreenBackground } from "../../src/components/ui/ScreenBackground";
 import { StatusBanner } from "../../src/components/ui/StatusBanner";
 import type { IconRender } from "../../src/components/ui/types";
 import { GRADIENTS, type StatGradient } from "../../src/lib/gradients";
+import { useI18n } from "../../src/lib/i18n";
 import { useCore } from "../../src/lib/useCore";
 
 const mail: IconRender = (p) => <Ionicons name="mail-outline" {...p} />;
@@ -23,28 +24,37 @@ const key: IconRender = (p) => <Ionicons name="key-outline" {...p} />;
 const pin: IconRender = (p) => <Ionicons name="location-outline" {...p} />;
 const arrow: IconRender = (p) => <Ionicons name="arrow-forward" {...p} />;
 
-const STEPS = ["Account", "Solar", "Weather"] as const;
+const STEPS = [
+  "auth.register.stepAccount",
+  "auth.register.stepSolar",
+  "auth.register.stepWeather",
+] as const;
 const HEADERS: Record<
   number,
-  { icon: keyof typeof Ionicons.glyphMap; gradient: StatGradient; title: string; subtitle: string }
+  {
+    icon: keyof typeof Ionicons.glyphMap;
+    gradient: StatGradient;
+    titleKey: TranslationKey;
+    subtitleKey: TranslationKey;
+  }
 > = {
   0: {
     icon: "person-add",
     gradient: "accent",
-    title: "Create account",
-    subtitle: "Join your energy monitoring dashboard",
+    titleKey: "auth.register.createAccountTitle",
+    subtitleKey: "auth.register.createAccountSubtitle",
   },
   1: {
     icon: "sunny",
     gradient: "energy",
-    title: "Connect Growatt",
-    subtitle: "Optional — add your solar credentials",
+    titleKey: "auth.register.growattTitle",
+    subtitleKey: "auth.register.growattSubtitle",
   },
   2: {
     icon: "partly-sunny",
     gradient: "solar",
-    title: "Connect Weather.com",
-    subtitle: "Optional — add your weather credentials",
+    titleKey: "auth.register.weatherTitle",
+    subtitleKey: "auth.register.weatherSubtitleMobile",
   },
 };
 
@@ -55,9 +65,12 @@ interface AccountState {
   confirmPassword: string;
 }
 
-function validateAccount(account: AccountState): Record<string, string> {
+function validateAccount(
+  account: AccountState,
+  schema: ReturnType<typeof createRegisterAccountSchema>,
+): Record<string, string> {
   try {
-    registerAccountSchema.validateSync(account, { abortEarly: false });
+    schema.validateSync(account, { abortEarly: false });
     return {};
   } catch (err) {
     const map: Record<string, string> = {};
@@ -76,6 +89,8 @@ type Setter<T> = (v: T) => void;
 interface CreateAccountDeps {
   auth: Core["auth"];
   account: AccountState;
+  schema: ReturnType<typeof createRegisterAccountSchema>;
+  t: Translator;
   setStep: Setter<number>;
   setSaving: Setter<boolean>;
   setStepError: Setter<string | null>;
@@ -86,7 +101,7 @@ interface CreateAccountDeps {
 async function runCreateAccount(d: CreateAccountDeps) {
   d.setStepError(null);
   d.setAccountError(null);
-  const errs = validateAccount(d.account);
+  const errs = validateAccount(d.account, d.schema);
   d.setAccountErrors(errs);
   if (Object.keys(errs).length) return;
   d.setSaving(true);
@@ -98,7 +113,7 @@ async function runCreateAccount(d: CreateAccountDeps) {
     });
     d.setStep(1);
   } catch (e) {
-    d.setAccountError(e instanceof Error ? e.message : "Registration failed. Please try again.");
+    d.setAccountError(e instanceof Error ? e.message : d.t("auth.register.failed"));
   } finally {
     d.setSaving(false);
   }
@@ -107,6 +122,7 @@ async function runCreateAccount(d: CreateAccountDeps) {
 interface SaveGrowattDeps {
   settings: Core["settings"];
   growatt: { email: string; password: string };
+  t: Translator;
   setStep: Setter<number>;
   setSaving: Setter<boolean>;
   setStepError: Setter<string | null>;
@@ -117,14 +133,13 @@ async function runSaveGrowatt(d: SaveGrowattDeps) {
   const email = d.growatt.email.trim();
   const password = d.growatt.password.trim();
   if (!email && !password) return d.setStep(2);
-  if (!email || !password)
-    return d.setStepError("Enter both account and password, or skip this step.");
+  if (!email || !password) return d.setStepError(d.t("auth.register.growattBothOrSkip"));
   d.setSaving(true);
   try {
     await d.settings.saveGrowattApiSettings({ growatt: { email, password } });
     d.setStep(2);
   } catch {
-    d.setStepError("Could not save Growatt credentials. You can add them later in Settings.");
+    d.setStepError(d.t("auth.register.growattSaveFailed"));
   } finally {
     d.setSaving(false);
   }
@@ -133,6 +148,7 @@ async function runSaveGrowatt(d: SaveGrowattDeps) {
 interface FinishDeps {
   settings: Core["settings"];
   weather: { stationId: string; apiKey: string };
+  t: Translator;
   done: () => void;
   setSaving: Setter<boolean>;
   setStepError: Setter<string | null>;
@@ -143,14 +159,13 @@ async function runFinish(d: FinishDeps) {
   const stationId = d.weather.stationId.trim();
   const apiKey = d.weather.apiKey.trim();
   if (!stationId && !apiKey) return d.done();
-  if (!stationId || !apiKey)
-    return d.setStepError("Enter both station ID and API key, or skip this step.");
+  if (!stationId || !apiKey) return d.setStepError(d.t("auth.register.weatherBothOrSkip"));
   d.setSaving(true);
   try {
     await d.settings.saveWeatherApiSettings({ weather: { apiKey, stationId } });
     d.done();
   } catch {
-    d.setStepError("Could not save weather credentials. You can add them later in Settings.");
+    d.setStepError(d.t("auth.register.weatherSaveFailed"));
   } finally {
     d.setSaving(false);
   }
@@ -158,7 +173,9 @@ async function runFinish(d: FinishDeps) {
 
 function useRegisterFlow() {
   const { auth, settings } = useCore();
+  const { t } = useI18n();
   const router = useRouter();
+  const schema = useMemo(() => createRegisterAccountSchema(t), [t]);
   const [step, setStep] = useState(0);
   const [account, setAccount] = useState<AccountState>({
     email: "",
@@ -177,17 +194,21 @@ function useRegisterFlow() {
     runCreateAccount({
       auth,
       account,
+      schema,
+      t,
       setStep,
       setSaving,
       setStepError,
       setAccountError,
       setAccountErrors,
     });
-  const saveGrowatt = () => runSaveGrowatt({ settings, growatt, setStep, setSaving, setStepError });
+  const saveGrowatt = () =>
+    runSaveGrowatt({ settings, growatt, t, setStep, setSaving, setStepError });
   const finish = () =>
     runFinish({
       settings,
       weather,
+      t,
       done: () => router.replace("/(tabs)"),
       setSaving,
       setStepError,
@@ -217,13 +238,14 @@ function useRegisterFlow() {
 type RegisterFlow = ReturnType<typeof useRegisterFlow>;
 
 function StepDots({ step }: { step: number }) {
+  const { t } = useI18n();
   return (
     <View className="mb-5 flex-row items-center justify-center">
-      {STEPS.map((label, i) => {
+      {STEPS.map((labelKey, i) => {
         const done = i < step;
         const active = i === step;
         return (
-          <View key={label} className="flex-row items-center">
+          <View key={labelKey} className="flex-row items-center">
             <View className="w-16 items-center">
               <View
                 className={
@@ -255,7 +277,7 @@ function StepDots({ step }: { step: number }) {
                     : "mt-1.5 text-[11px] font-bold text-text-muted"
                 }
               >
-                {label}
+                {t(labelKey)}
               </Text>
             </View>
             {i < STEPS.length - 1 ? (
@@ -271,6 +293,7 @@ function StepDots({ step }: { step: number }) {
 }
 
 function RegisterHeader({ header }: { header: (typeof HEADERS)[number] }) {
+  const { t } = useI18n();
   return (
     <View className="mb-5 flex-row items-center gap-3.5">
       <LinearGradient
@@ -289,62 +312,65 @@ function RegisterHeader({ header }: { header: (typeof HEADERS)[number] }) {
       </LinearGradient>
       <View className="flex-1">
         <Text className="text-[22px] font-extrabold tracking-tight text-text-primary">
-          {header.title}
+          {t(header.titleKey)}
         </Text>
-        <Text className="mt-1 text-[13px] font-medium text-text-muted">{header.subtitle}</Text>
+        <Text className="mt-1 text-[13px] font-medium text-text-muted">
+          {t(header.subtitleKey)}
+        </Text>
       </View>
     </View>
   );
 }
 
 function AccountStep({ flow }: { flow: RegisterFlow }) {
+  const { t } = useI18n();
   const { account, setAccount, accountErrors, saving, createAccount } = flow;
   const set = (k: keyof AccountState) => (t: string) => setAccount((s) => ({ ...s, [k]: t }));
   return (
     <View>
       <Field
-        label="EMAIL ADDRESS"
+        label={t("auth.emailAddressLabel")}
         icon={mail}
         keyboardType="email-address"
         autoCapitalize="none"
-        placeholder="you@domain.com"
+        placeholder={t("auth.emailPlaceholder")}
         value={account.email}
         onChangeText={set("email")}
         error={accountErrors.email}
         editable={!saving}
       />
       <Field
-        label="USERNAME"
+        label={t("settings.usernameLabel")}
         icon={user}
         autoCapitalize="none"
-        placeholder="Choose a username"
+        placeholder={t("auth.register.usernamePlaceholder")}
         value={account.username}
         onChangeText={set("username")}
         error={accountErrors.username}
         editable={!saving}
       />
       <Field
-        label="PASSWORD"
+        label={t("settings.passwordLabel")}
         icon={lock}
         secure
-        placeholder="Create a secure password"
+        placeholder={t("auth.register.passwordPlaceholder")}
         value={account.password}
         onChangeText={set("password")}
         error={accountErrors.password}
         editable={!saving}
       />
       <Field
-        label="CONFIRM PASSWORD"
+        label={t("settings.confirmPasswordLabel")}
         icon={lock}
         secure
-        placeholder="Re-enter your password"
+        placeholder={t("auth.register.confirmPasswordPlaceholder")}
         value={account.confirmPassword}
         onChangeText={set("confirmPassword")}
         error={accountErrors.confirmPassword}
         editable={!saving}
       />
       <Button
-        label="Create account"
+        label={t("auth.register.createAccountTitle")}
         icon={arrow}
         onPress={createAccount}
         loading={saving}
@@ -355,34 +381,35 @@ function AccountStep({ flow }: { flow: RegisterFlow }) {
 }
 
 function GrowattStep({ flow }: { flow: RegisterFlow }) {
+  const { t } = useI18n();
   const { growatt, setGrowatt, saving, setStep, setStepError, saveGrowatt } = flow;
   return (
     <View>
       <Field
-        label="ACCOUNT (EMAIL)"
+        label={t("settings.accountEmailLabel")}
         icon={mail}
         keyboardType="email-address"
         autoCapitalize="none"
-        placeholder="your-email@domain.com"
+        placeholder={t("auth.register.growattEmailPlaceholder")}
         value={growatt.email}
         onChangeText={(t) => setGrowatt((s) => ({ ...s, email: t }))}
         editable={!saving}
       />
       <Field
-        label="PASSWORD"
+        label={t("settings.passwordLabel")}
         icon={key}
         secure
-        placeholder="Enter your Growatt password"
+        placeholder={t("auth.register.growattPasswordPlaceholder")}
         value={growatt.password}
         onChangeText={(t) => setGrowatt((s) => ({ ...s, password: t }))}
         editable={!saving}
       />
       <Text className="mb-4 mt-0.5 text-center text-[12.5px] font-medium leading-[18px] text-text-muted">
-        Optional — you can add or change this anytime in Settings.
+        {t("auth.register.optionalHint")}
       </Text>
       <View className="flex-row gap-3">
         <Button
-          label="Skip"
+          label={t("auth.register.skip")}
           variant="ghost"
           onPress={() => {
             setStepError(null);
@@ -391,7 +418,7 @@ function GrowattStep({ flow }: { flow: RegisterFlow }) {
           className="flex-1"
         />
         <Button
-          label="Continue"
+          label={t("auth.register.continue")}
           icon={arrow}
           gradient="energy"
           onPress={saveGrowatt}
@@ -404,35 +431,36 @@ function GrowattStep({ flow }: { flow: RegisterFlow }) {
 }
 
 function WeatherStep({ flow }: { flow: RegisterFlow }) {
+  const { t } = useI18n();
   const { weather, setWeather, saving, setStep, setStepError, finish } = flow;
   return (
     <View>
       <Field
-        label="WEATHER STATION ID"
+        label={t("settings.stationIdLabel")}
         icon={pin}
         autoCapitalize="characters"
-        placeholder="e.g. ISANDN24"
-        hint="Find your local station ID at weather.com/weather/map"
+        placeholder={t("settings.stationIdPlaceholder")}
+        hint={t("auth.register.stationIdHint")}
         value={weather.stationId}
         onChangeText={(t) => setWeather((s) => ({ ...s, stationId: t }))}
         editable={!saving}
       />
       <Field
-        label="API KEY"
+        label={t("settings.apiKeyLabel")}
         icon={key}
         secure
-        placeholder="Enter your Weather.com API key"
-        hint="Get your API key from the weather.com developer portal"
+        placeholder={t("auth.register.apiKeyPlaceholder")}
+        hint={t("auth.register.apiKeyHint")}
         value={weather.apiKey}
         onChangeText={(t) => setWeather((s) => ({ ...s, apiKey: t }))}
         editable={!saving}
       />
       <Text className="mb-4 mt-0.5 text-center text-[12.5px] font-medium leading-[18px] text-text-muted">
-        Optional — you can add or change this anytime in Settings.
+        {t("auth.register.optionalHint")}
       </Text>
       <View className="flex-row gap-3">
         <Button
-          label="Back"
+          label={t("auth.register.back")}
           variant="ghost"
           onPress={() => {
             setStepError(null);
@@ -440,13 +468,19 @@ function WeatherStep({ flow }: { flow: RegisterFlow }) {
           }}
           className="flex-1"
         />
-        <Button label="Finish" onPress={finish} loading={saving} className="flex-1" />
+        <Button
+          label={t("auth.register.finish")}
+          onPress={finish}
+          loading={saving}
+          className="flex-1"
+        />
       </View>
     </View>
   );
 }
 
 export default function Register() {
+  const { t } = useI18n();
   const flow = useRegisterFlow();
   const { step, accountError, stepError, router } = flow;
   const header = HEADERS[step];
@@ -476,9 +510,13 @@ export default function Register() {
 
           {step === 0 ? (
             <View className="mt-6 flex-row items-center justify-center gap-1.5 border-t border-glass-border pt-5">
-              <Text className="text-sm font-medium text-text-muted">Already have an account?</Text>
+              <Text className="text-sm font-medium text-text-muted">
+                {t("auth.register.haveAccount")}
+              </Text>
               <Pressable onPress={() => router.replace("/(auth)/login")}>
-                <Text className="text-sm font-extrabold text-solar-light">Sign in</Text>
+                <Text className="text-sm font-extrabold text-solar-light">
+                  {t("auth.register.signIn")}
+                </Text>
               </Pressable>
             </View>
           ) : null}

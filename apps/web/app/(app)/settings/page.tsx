@@ -3,16 +3,21 @@
 import {
   growattConfig,
   weatherConfig,
+  LANGUAGES,
   type ApiSettingsResponse,
+  type Locale,
+  type Translator,
   type UserProfile,
 } from "@hmi/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Camera,
+  Check,
   ChevronRight,
   CloudSun,
   Contrast,
   KeyRound,
+  Languages,
   LogOut,
   Mail,
   MapPin,
@@ -34,6 +39,7 @@ import { Field } from "@/components/ui/Field";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBanner } from "@/components/ui/StatusBanner";
 import { useCore } from "@/lib/hooks/useCore";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type Core = ReturnType<typeof useCore>;
@@ -78,6 +84,7 @@ function extractExtension(file: File): string {
 }
 
 function ConfiguredBadge({ on }: { on: boolean }) {
+  const { t } = useI18n();
   return (
     <span
       className={cn(
@@ -85,7 +92,7 @@ function ConfiguredBadge({ on }: { on: boolean }) {
         on ? "bg-[rgba(52,211,153,0.13)] text-positive" : "bg-glass-fill text-text-muted",
       )}
     >
-      {on ? "Connected" : "Not set"}
+      {on ? t("settings.connected") : t("settings.notSet")}
     </span>
   );
 }
@@ -145,6 +152,7 @@ function ProfileHubRow({
   active: boolean;
   onClick: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <button
       type="button"
@@ -159,7 +167,7 @@ function ProfileHubRow({
       <Avatar initials={deriveInitials(profile?.username)} url={profile?.avatarUrl} size={48} />
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] font-extrabold text-text-primary">
-          {profile?.username ?? "Your profile"}
+          {profile?.username ?? t("settings.yourProfile")}
         </span>
         <span className="mt-0.5 block truncate text-xs text-text-muted">
           {profile?.email ?? "—"}
@@ -182,26 +190,28 @@ function appearanceLabel(
   hydrated: boolean,
   theme: string | undefined,
   resolvedTheme: string | undefined,
+  t: Translator,
 ): string {
   if (!hydrated) return "—";
-  if (theme === "system")
-    return `System · ${resolvedTheme === "dark" ? "Dark" : "Light"} right now`;
-  return resolvedTheme === "dark" ? "Dark" : "Light";
+  const mode = resolvedTheme === "dark" ? t("settings.dark") : t("settings.light");
+  if (theme === "system") return t("settings.systemRightNow", { mode });
+  return mode;
 }
 
 const APPEARANCE_OPTIONS = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "system", label: "System", icon: Monitor },
-  { value: "dark", label: "Dark", icon: Moon },
+  { value: "light", labelKey: "settings.light", icon: Sun },
+  { value: "system", labelKey: "settings.system", icon: Monitor },
+  { value: "dark", labelKey: "settings.dark", icon: Moon },
 ] as const;
 
 function AppearanceCard() {
   const { theme, resolvedTheme, setTheme } = useTheme();
+  const { t } = useI18n();
   const hydrated = useHydrated();
 
   return (
     <>
-      <GroupLabel>Preferences</GroupLabel>
+      <GroupLabel>{t("settings.preferences")}</GroupLabel>
       <div className="overflow-hidden rounded-[18px] border border-glass-border-strong bg-glass-fill-strong backdrop-blur-xl">
         <div className="flex flex-col gap-2.5 px-3.5 py-3">
           <div className="flex items-center gap-3">
@@ -212,14 +222,16 @@ function AppearanceCard() {
               <Contrast size={18} className="text-text-inverse" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13.5px] font-bold text-text-primary">Appearance</span>
+              <span className="block text-[13.5px] font-bold text-text-primary">
+                {t("settings.appearance")}
+              </span>
               <span className="mt-px block text-[11px] text-text-muted">
-                {appearanceLabel(hydrated, theme, resolvedTheme)}
+                {appearanceLabel(hydrated, theme, resolvedTheme, t)}
               </span>
             </span>
           </div>
           <div className="flex gap-[3px] rounded-xl border border-glass-border bg-glass-fill-subtle p-[3px]">
-            {APPEARANCE_OPTIONS.map(({ value, label, icon: Icon }) => {
+            {APPEARANCE_OPTIONS.map(({ value, labelKey, icon: Icon }) => {
               const active = hydrated && theme === value;
               return (
                 <button
@@ -236,7 +248,7 @@ function AppearanceCard() {
                   )}
                 >
                   <Icon size={14} />
-                  {label}
+                  {t(labelKey)}
                 </button>
               );
             })}
@@ -244,6 +256,118 @@ function AppearanceCard() {
         </div>
       </div>
     </>
+  );
+}
+
+function LanguageListbox({
+  locale,
+  label,
+  onPick,
+}: {
+  locale: string;
+  label: string;
+  onPick: (code: Locale) => void;
+}) {
+  return (
+    <div
+      role="listbox"
+      aria-label={label}
+      className="absolute left-3.5 right-3.5 top-full z-20 mt-1.5 overflow-hidden rounded-[14px] border border-glass-border-strong bg-glass-fill-strong shadow-[0_10px_36px_rgba(0,0,0,0.28)] backdrop-blur-xl"
+    >
+      {LANGUAGES.map((lang) => {
+        const active = lang.code === locale;
+        return (
+          <button
+            key={lang.code}
+            type="button"
+            role="option"
+            aria-selected={active}
+            onClick={() => onPick(lang.code)}
+            className={cn(
+              "flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] transition",
+              active
+                ? "bg-glass-fill font-bold text-text-primary"
+                : "text-text-secondary hover:bg-glass-fill hover:text-text-primary",
+            )}
+          >
+            <span className="flex-1">{lang.label}</span>
+            {active ? <Check size={15} /> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Language row in the Preferences group — opens a small popover listing the
+ * supported languages; picking one re-renders every translation instantly. */
+function LanguageCard() {
+  const { locale, setLocale, t } = useI18n();
+  const hydrated = useHydrated();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const current = LANGUAGES.find((l) => l.code === locale);
+
+  return (
+    <div
+      ref={rootRef}
+      className="relative overflow-visible rounded-[18px] border border-glass-border-strong bg-glass-fill-strong backdrop-blur-xl"
+    >
+      <button
+        type="button"
+        disabled={!hydrated}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition hover:bg-glass-fill"
+      >
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px]"
+          style={{ backgroundImage: GRADIENTS.preferences }}
+        >
+          <Languages size={18} className="text-text-inverse" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[13.5px] font-bold text-text-primary">
+            {t("common.language")}
+          </span>
+          <span className="mt-px block text-[11px] text-text-muted">
+            {hydrated ? (current?.label ?? locale) : "—"}
+          </span>
+        </span>
+        <ChevronRight
+          size={17}
+          className={cn("shrink-0 text-text-muted transition-transform", open && "rotate-90")}
+        />
+      </button>
+      {open ? (
+        <LanguageListbox
+          locale={locale}
+          label={t("common.language")}
+          onPick={(code) => {
+            setLocale(code);
+            setOpen(false);
+          }}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -285,6 +409,7 @@ function PanelHeader({
 
 /** Upload/remove avatar state + handlers, keeping the profile query cache in sync. */
 function useAvatarActions(account: Core["account"]) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [banner, setBanner] = useState<Banner>(null);
   const [busy, setBusy] = useState(false);
@@ -317,17 +442,18 @@ function useAvatarActions(account: Core["account"]) {
           contentType: file.type || "image/jpeg",
           extension: extractExtension(file),
         }),
-      "Could not upload photo.",
+      t("settings.couldNotUploadPhoto"),
     );
   }
 
-  const remove = () => run(() => account.removeAvatar(), "Could not remove photo.");
+  const remove = () => run(() => account.removeAvatar(), t("settings.couldNotRemovePhoto"));
 
   return { banner, busy, onFile, remove };
 }
 
 function AvatarPicker({ profile, account }: { profile: UserProfile; account: Core["account"] }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n();
   const { banner, busy, onFile, remove } = useAvatarActions(account);
 
   return (
@@ -338,7 +464,7 @@ function AvatarPicker({ profile, account }: { profile: UserProfile; account: Cor
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          aria-label="Change photo"
+          aria-label={t("a11y.changePhoto")}
           className="block rounded-full transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Avatar initials={deriveInitials(profile.username)} url={profile.avatarUrl} size={84} />
@@ -364,7 +490,7 @@ function AvatarPicker({ profile, account }: { profile: UserProfile; account: Cor
           disabled={busy}
           className="text-[13px] font-bold text-text-muted transition hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Remove photo
+          {t("settings.removePhoto")}
         </button>
       ) : null}
     </div>
@@ -378,6 +504,7 @@ function ProfilePanel({
   profile: UserProfile | undefined;
   account: Core["account"];
 }) {
+  const { t } = useI18n();
   const [username, setUsername] = useState(profile?.username ?? "");
   const [email, setEmail] = useState(profile?.email ?? "");
   const [banner, setBanner] = useState<Banner>(null);
@@ -388,11 +515,11 @@ function ProfilePanel({
     setSaving(true);
     try {
       await account.updateUserProfile({ username, email });
-      setBanner({ kind: "success", message: "Profile updated." });
+      setBanner({ kind: "success", message: t("settings.profileUpdated") });
     } catch (e) {
       setBanner({
         kind: "error",
-        message: e instanceof Error ? e.message : "Could not update profile.",
+        message: e instanceof Error ? e.message : t("settings.couldNotUpdateProfile"),
       });
     } finally {
       setSaving(false);
@@ -401,20 +528,25 @@ function ProfilePanel({
 
   return (
     <GlassCard strong className="p-7">
-      <PanelHeader icon={User} gradient="accent" title="Profile" subtitle="Avatar, name & email" />
+      <PanelHeader
+        icon={User}
+        gradient="accent"
+        title={t("settings.profile")}
+        subtitle={t("settings.profileSubtitle")}
+      />
       {profile ? (
         <>
           <AvatarPicker profile={profile} account={account} />
           {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
           <div className="grid grid-cols-2 gap-4">
             <Field
-              label="USERNAME"
+              label={t("settings.usernameLabel")}
               icon={User}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
             <Field
-              label="EMAIL"
+              label={t("settings.emailLabel")}
               icon={Mail}
               inputMode="email"
               value={email}
@@ -422,17 +554,23 @@ function ProfilePanel({
             />
           </div>
           <div className="flex justify-end">
-            <Button label="Save profile" onClick={save} loading={saving} className="w-auto px-6" />
+            <Button
+              label={t("settings.saveProfile")}
+              onClick={save}
+              loading={saving}
+              className="w-auto px-6"
+            />
           </div>
         </>
       ) : (
-        <p className="text-sm text-text-muted">Loading…</p>
+        <p className="text-sm text-text-muted">{t("common.loading")}</p>
       )}
     </GlassCard>
   );
 }
 
 function PasswordPanel({ account }: { account: Core["account"] }) {
+  const { t } = useI18n();
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
   const [banner, setBanner] = useState<Banner>(null);
@@ -440,19 +578,19 @@ function PasswordPanel({ account }: { account: Core["account"] }) {
 
   async function save() {
     setBanner(null);
-    if (pw.length < 4)
-      return setBanner({ kind: "error", message: "Password must be at least 4 characters." });
-    if (pw !== confirm) return setBanner({ kind: "error", message: "Passwords do not match." });
+    if (pw.length < 4) return setBanner({ kind: "error", message: t("validation.passwordMin") });
+    if (pw !== confirm)
+      return setBanner({ kind: "error", message: t("settings.passwordsDoNotMatch") });
     setSaving(true);
     try {
       await account.updateUserPassword({ currentPassword: "", newPassword: pw });
-      setBanner({ kind: "success", message: "Password changed." });
+      setBanner({ kind: "success", message: t("settings.passwordChanged") });
       setPw("");
       setConfirm("");
     } catch (e) {
       setBanner({
         kind: "error",
-        message: e instanceof Error ? e.message : "Could not change password.",
+        message: e instanceof Error ? e.message : t("settings.couldNotChangePassword"),
       });
     } finally {
       setSaving(false);
@@ -464,20 +602,20 @@ function PasswordPanel({ account }: { account: Core["account"] }) {
       <PanelHeader
         icon={ShieldCheck}
         gradient="revenue"
-        title="Change password"
-        subtitle="Pick something you don't use elsewhere"
+        title={t("settings.changePassword")}
+        subtitle={t("settings.changePasswordSubtitle")}
       />
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
       <div className="grid grid-cols-2 gap-4">
         <Field
-          label="NEW PASSWORD"
+          label={t("settings.newPasswordLabel")}
           icon={KeyRound}
           secure
           value={pw}
           onChange={(e) => setPw(e.target.value)}
         />
         <Field
-          label="CONFIRM PASSWORD"
+          label={t("settings.confirmPasswordLabel")}
           icon={KeyRound}
           secure
           value={confirm}
@@ -486,7 +624,7 @@ function PasswordPanel({ account }: { account: Core["account"] }) {
       </div>
       <div className="flex justify-end">
         <Button
-          label="Change password"
+          label={t("settings.changePassword")}
           gradient="revenue"
           onClick={save}
           loading={saving}
@@ -508,6 +646,7 @@ function GrowattPanel({
   settings: Core["settings"];
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [banner, setBanner] = useState<Banner>(null);
@@ -518,13 +657,13 @@ function GrowattPanel({
     setSaving(true);
     try {
       await settings.saveGrowattApiSettings({ growatt: { email, password } });
-      setBanner({ kind: "success", message: "Growatt credentials saved." });
+      setBanner({ kind: "success", message: t("settings.growattSaved") });
       setPassword("");
       onSaved();
     } catch (e) {
       setBanner({
         kind: "error",
-        message: e instanceof Error ? e.message : "Could not save credentials.",
+        message: e instanceof Error ? e.message : t("settings.couldNotSaveCredentials"),
       });
     } finally {
       setSaving(false);
@@ -536,31 +675,31 @@ function GrowattPanel({
       <PanelHeader
         icon={SunMedium}
         gradient="energy"
-        title="Growatt solar"
-        subtitle="Used by the server to fetch your solar data"
+        title={t("settings.growatt")}
+        subtitle={t("settings.growattPanelSubtitle")}
         badge={<ConfiguredBadge on={configured} />}
       />
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
       <div className="grid grid-cols-2 gap-4">
         <Field
-          label="ACCOUNT (EMAIL)"
+          label={t("settings.accountEmailLabel")}
           icon={Mail}
           inputMode="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <Field
-          label="PASSWORD"
+          label={t("settings.passwordLabel")}
           icon={KeyRound}
           secure
-          placeholder="Enter to update"
+          placeholder={t("settings.enterToUpdate")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>
       <div className="flex justify-end">
         <Button
-          label="Save credentials"
+          label={t("settings.saveCredentials")}
           gradient="energy"
           onClick={save}
           loading={saving}
@@ -582,6 +721,7 @@ function WeatherPanel({
   settings: Core["settings"];
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [stationId, setStationId] = useState(initialStationId);
   const [apiKey, setApiKey] = useState("");
   const [banner, setBanner] = useState<Banner>(null);
@@ -592,13 +732,13 @@ function WeatherPanel({
     setSaving(true);
     try {
       await settings.saveWeatherApiSettings({ weather: { stationId, apiKey } });
-      setBanner({ kind: "success", message: "Weather credentials saved." });
+      setBanner({ kind: "success", message: t("settings.weatherSaved") });
       setApiKey("");
       onSaved();
     } catch (e) {
       setBanner({
         kind: "error",
-        message: e instanceof Error ? e.message : "Could not save credentials.",
+        message: e instanceof Error ? e.message : t("settings.couldNotSaveCredentials"),
       });
     } finally {
       setSaving(false);
@@ -610,30 +750,35 @@ function WeatherPanel({
       <PanelHeader
         icon={CloudSun}
         gradient="solar"
-        title="Weather.com station"
-        subtitle="Personal weather station data source"
+        title={t("settings.weatherStation")}
+        subtitle={t("settings.weatherPanelSubtitle")}
         badge={<ConfiguredBadge on={configured} />}
       />
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
       <div className="grid grid-cols-2 gap-4">
         <Field
-          label="WEATHER STATION ID"
+          label={t("settings.stationIdLabel")}
           icon={MapPin}
-          placeholder="e.g. ISANDN24"
+          placeholder={t("settings.stationIdPlaceholder")}
           value={stationId}
           onChange={(e) => setStationId(e.target.value)}
         />
         <Field
-          label="API KEY"
+          label={t("settings.apiKeyLabel")}
           icon={SunMedium}
           secure
-          placeholder="Enter to update"
+          placeholder={t("settings.enterToUpdate")}
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
         />
       </div>
       <div className="flex justify-end">
-        <Button label="Save credentials" onClick={save} loading={saving} className="w-auto px-6" />
+        <Button
+          label={t("settings.saveCredentials")}
+          onClick={save}
+          loading={saving}
+          className="w-auto px-6"
+        />
       </div>
     </GlassCard>
   );
@@ -654,6 +799,7 @@ function SettingsList({
   wc: ReturnType<typeof weatherConfig>;
   onSignOut: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="flex w-[370px] shrink-0 flex-col gap-2.5">
       <ProfileHubRow
@@ -662,24 +808,24 @@ function SettingsList({
         onClick={() => onSelect("profile")}
       />
 
-      <GroupLabel>Account</GroupLabel>
+      <GroupLabel>{t("settings.account")}</GroupLabel>
       <div className="overflow-hidden rounded-[18px] border border-glass-border-strong bg-glass-fill-strong backdrop-blur-xl">
         <HubRow
           icon={ShieldCheck}
           gradient="revenue"
-          title="Change password"
+          title={t("settings.changePassword")}
           active={section === "password"}
           onClick={() => onSelect("password")}
         />
       </div>
 
-      <GroupLabel>Integrations</GroupLabel>
+      <GroupLabel>{t("settings.integrations")}</GroupLabel>
       <div className="overflow-hidden rounded-[18px] border border-glass-border-strong bg-glass-fill-strong backdrop-blur-xl">
         <HubRow
           icon={SunMedium}
           gradient="energy"
-          title="Growatt solar"
-          subtitle="Production data source"
+          title={t("settings.growatt")}
+          subtitle={t("settings.growattSubtitle")}
           badge={<ConfiguredBadge on={gc.configured} />}
           active={section === "growatt"}
           onClick={() => onSelect("growatt")}
@@ -688,8 +834,8 @@ function SettingsList({
         <HubRow
           icon={CloudSun}
           gradient="solar"
-          title="Weather.com station"
-          subtitle={wc.station ? `${wc.station} · Sandnes` : "Not configured"}
+          title={t("settings.weatherStation")}
+          subtitle={wc.station ? `${wc.station} · Sandnes` : t("settings.notConfigured")}
           badge={<ConfiguredBadge on={wc.configured} />}
           active={section === "weather"}
           onClick={() => onSelect("weather")}
@@ -697,9 +843,10 @@ function SettingsList({
       </div>
 
       <AppearanceCard />
+      <LanguageCard />
 
       <Button
-        label="Sign out"
+        label={t("settings.signOut")}
         icon={LogOut}
         variant="danger"
         onClick={onSignOut}
@@ -710,6 +857,7 @@ function SettingsList({
 }
 
 export default function SettingsPage() {
+  const { t } = useI18n();
   const [section, setSection] = useState<Section>("profile");
   const { account, settings, auth } = useCore();
   const router = useRouter();
@@ -739,8 +887,10 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-[22px]">
       <div>
-        <h1 className="text-[28px] font-extrabold tracking-[-0.8px] text-text-primary">Settings</h1>
-        <p className="mt-1 text-sm font-medium text-text-muted">Account & integrations</p>
+        <h1 className="text-[28px] font-extrabold tracking-[-0.8px] text-text-primary">
+          {t("settings.title")}
+        </h1>
+        <p className="mt-1 text-sm font-medium text-text-muted">{t("settings.subtitle")}</p>
       </div>
 
       <div className="flex items-start gap-6">

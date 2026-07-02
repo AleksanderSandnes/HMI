@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenBackground } from "../../src/components/ui/ScreenBackground";
 import { cn } from "../../src/lib/cn";
+import { useI18n } from "../../src/lib/i18n";
 import { useThemeColors } from "../../src/lib/theme";
 
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -68,6 +69,7 @@ function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 }
 
 export default function TabsLayout() {
+  const { t } = useI18n();
   return (
     <View className="flex-1 bg-bg-base">
       <ScreenBackground />
@@ -75,10 +77,10 @@ export default function TabsLayout() {
         tabBar={(props) => <GlassTabBar {...props} />}
         screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: "transparent" } }}
       >
-        <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
-        <Tabs.Screen name="solar" options={{ title: "Solar" }} />
-        <Tabs.Screen name="weather" options={{ title: "Weather" }} />
-        <Tabs.Screen name="settings" options={{ title: "Settings" }} />
+        <Tabs.Screen name="index" options={{ title: t("nav.dashboard") }} />
+        <Tabs.Screen name="solar" options={{ title: t("nav.solar") }} />
+        <Tabs.Screen name="weather" options={{ title: t("nav.weather") }} />
+        <Tabs.Screen name="settings" options={{ title: t("nav.settings") }} />
       </Tabs>
     </View>
   );
