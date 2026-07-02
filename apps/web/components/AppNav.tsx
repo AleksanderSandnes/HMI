@@ -1,9 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Bell, CloudSun, LayoutDashboard, LogOut, Settings, Sun } from "lucide-react";
+import { Bell, CloudSun, LayoutDashboard, Settings, Sun } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 import { useCore } from "@/lib/hooks/useCore";
 import { useNavStats } from "@/lib/nav-stats";
@@ -70,20 +70,13 @@ const NAV = [
  */
 export function AppNav() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { auth } = useCore();
-
-  async function handleLogout() {
-    await auth.logout();
-    router.replace("/login");
-    router.refresh();
-  }
 
   return (
     <>
       {/* Desktop / web top bar. Inner content is constrained to the same
           max-width + padding as the page content so the brand aligns with the
-          page title (left) and Sign out aligns with the content's right edge. */}
+          page title (left) and the nav links align with the content's right
+          edge. Sign out lives at the bottom of the Settings list, not here. */}
       <header className="sticky top-0 z-30 hidden border-b border-glass-border bg-[var(--color-panel-bg)] px-5 backdrop-blur-xl md:block md:px-8">
         <div className="mx-auto flex w-full max-w-[1480px] items-center justify-between py-2.5">
           <div className="flex items-center gap-3.5">
@@ -118,13 +111,6 @@ export function AppNav() {
                 </Link>
               );
             })}
-            <button
-              onClick={handleLogout}
-              className="ml-1 flex items-center gap-2 rounded-[var(--radius-md)] px-3.5 py-2 text-sm font-semibold text-text-muted transition hover:bg-glass-fill hover:text-negative"
-            >
-              <LogOut size={17} />
-              Sign out
-            </button>
           </nav>
         </div>
       </header>
