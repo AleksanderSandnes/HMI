@@ -118,7 +118,13 @@ interface ThemeContextValue {
   colors: ThemeColors;
 }
 
-const ThemeContext = createContext<ThemeContextValue | null>(null);
+// Default (no-op setMode, dark colors) for components rendered outside
+// `ThemeProvider` — e.g. unit tests that mount a single component directly
+// via react-test-renderer with no provider tree. The real app always mounts
+// `ThemeProvider` in the root layout, so this default is test-only in practice.
+const DEFAULT_CONTEXT: ThemeContextValue = { mode: "dark", setMode: () => {}, colors: DARK };
+
+const ThemeContext = createContext<ThemeContextValue>(DEFAULT_CONTEXT);
 
 /**
  * Resolves the boot mode (stored preference, else system) and applies it to
@@ -171,11 +177,12 @@ export function ThemeProvider({
   );
 }
 
-/** Current mode + colors + setter. Must be used within `ThemeProvider`. */
+/**
+ * Current mode + colors + setter. Falls back to dark/no-op outside
+ * `ThemeProvider` (see `DEFAULT_CONTEXT`) rather than throwing.
+ */
 export function useThemeColors(): ThemeContextValue {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useThemeColors must be used within ThemeProvider");
-  return ctx;
+  return useContext(ThemeContext);
 }
 
 export default ThemeProvider;

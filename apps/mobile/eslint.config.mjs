@@ -1,4 +1,5 @@
 import expoConfig from "eslint-config-expo/flat.js";
+import globals from "globals";
 
 import { appPlugins, importSettings, sharedRules, prettier } from "../../eslint.config.base.mjs";
 
@@ -16,6 +17,12 @@ export default [
     ],
   },
   ...expoConfig,
+  // jest.setup.js runs under the Jest runtime (outside the src/app TS glob
+  // below), so it needs the `jest` global explicitly.
+  {
+    files: ["jest.setup.js"],
+    languageOptions: { globals: { ...globals.jest } },
+  },
   // Shared monorepo rules + type-aware linting, scoped to the app source.
   {
     files: ["app/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
