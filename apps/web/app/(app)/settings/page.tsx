@@ -273,7 +273,7 @@ function LanguageListbox({
     <div
       role="listbox"
       aria-label={label}
-      className="absolute left-3.5 right-3.5 top-full z-20 mt-1.5 overflow-hidden rounded-[14px] border border-glass-border-strong bg-glass-fill-strong shadow-[0_10px_36px_rgba(0,0,0,0.28)] backdrop-blur-xl"
+      className="absolute left-3.5 right-3.5 top-full z-20 mt-1.5 overflow-hidden rounded-[14px] border border-glass-border-strong bg-[var(--color-panel-bg)] shadow-[0_10px_36px_rgba(0,0,0,0.28)] backdrop-blur-xl"
     >
       {LANGUAGES.map((lang) => {
         const active = lang.code === locale;
