@@ -1,4 +1,5 @@
 export * from "./context";
+export * from "./errors";
 export * from "./auth";
 export * from "./growatt";
 export * from "./weather";

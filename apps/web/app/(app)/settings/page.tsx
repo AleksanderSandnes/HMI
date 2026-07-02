@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  coreErrorMessage,
   growattConfig,
   weatherConfig,
   LANGUAGES,
@@ -425,7 +426,7 @@ function useAvatarActions(account: Core["account"]) {
     try {
       await syncProfile(await action());
     } catch (err) {
-      setBanner({ kind: "error", message: err instanceof Error ? err.message : failure });
+      setBanner({ kind: "error", message: coreErrorMessage(err, t, failure) });
     } finally {
       setBusy(false);
     }
@@ -519,7 +520,7 @@ function ProfilePanel({
     } catch (e) {
       setBanner({
         kind: "error",
-        message: e instanceof Error ? e.message : t("settings.couldNotUpdateProfile"),
+        message: coreErrorMessage(e, t, t("settings.couldNotUpdateProfile")),
       });
     } finally {
       setSaving(false);
@@ -590,7 +591,7 @@ function PasswordPanel({ account }: { account: Core["account"] }) {
     } catch (e) {
       setBanner({
         kind: "error",
-        message: e instanceof Error ? e.message : t("settings.couldNotChangePassword"),
+        message: coreErrorMessage(e, t, t("settings.couldNotChangePassword")),
       });
     } finally {
       setSaving(false);
@@ -663,7 +664,7 @@ function GrowattPanel({
     } catch (e) {
       setBanner({
         kind: "error",
-        message: e instanceof Error ? e.message : t("settings.couldNotSaveCredentials"),
+        message: coreErrorMessage(e, t, t("settings.couldNotSaveCredentials")),
       });
     } finally {
       setSaving(false);
@@ -738,7 +739,7 @@ function WeatherPanel({
     } catch (e) {
       setBanner({
         kind: "error",
-        message: e instanceof Error ? e.message : t("settings.couldNotSaveCredentials"),
+        message: coreErrorMessage(e, t, t("settings.couldNotSaveCredentials")),
       });
     } finally {
       setSaving(false);

@@ -1,5 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { createRegisterAccountSchema, type TranslationKey, type Translator } from "@hmi/core";
+import {
+  coreErrorMessage,
+  createRegisterAccountSchema,
+  type TranslationKey,
+  type Translator,
+} from "@hmi/core";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -113,7 +118,7 @@ async function runCreateAccount(d: CreateAccountDeps) {
     });
     d.setStep(1);
   } catch (e) {
-    d.setAccountError(e instanceof Error ? e.message : d.t("auth.register.failed"));
+    d.setAccountError(coreErrorMessage(e, d.t, d.t("auth.register.failed")));
   } finally {
     d.setSaving(false);
   }

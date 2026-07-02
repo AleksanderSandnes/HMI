@@ -8,6 +8,7 @@ import type {
 } from "../types/account";
 
 import type { CoreApiContext } from "./context";
+import { CoreError } from "./errors";
 
 const AVATAR_BUCKET = "avatars";
 const PROFILE_COLS = "id, username, email, avatar_url, created_at, updated_at";
@@ -38,7 +39,7 @@ export function createAccountApi(ctx: CoreApiContext) {
   async function requireUserId(): Promise<string> {
     const { data } = await supabase.auth.getUser();
     if (!data.user) {
-      throw new Error("Authentication required. Please log in again.");
+      throw new CoreError("error.authRequired");
     }
     return data.user.id;
   }

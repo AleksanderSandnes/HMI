@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { AvatarUpload, Translator } from "@hmi/core";
+import { coreErrorMessage, type AvatarUpload, type Translator } from "@hmi/core";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
@@ -142,7 +142,7 @@ function useSaver(run: () => Promise<void>) {
     } catch (e) {
       setBanner({
         kind: "error",
-        message: e instanceof Error ? e.message : t("settings.couldNotSave"),
+        message: coreErrorMessage(e, t, t("settings.couldNotSave")),
       });
     } finally {
       setSaving(false);

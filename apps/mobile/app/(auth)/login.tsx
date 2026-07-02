@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { createLoginSchema } from "@hmi/core";
+import { coreErrorMessage, createLoginSchema } from "@hmi/core";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Formik, type FormikProps } from "formik";
@@ -133,7 +133,7 @@ export default function Login() {
                 await auth.loginUser(values);
                 router.replace("/(tabs)");
               } catch (e) {
-                setError(e instanceof Error ? e.message : t("auth.login.failed"));
+                setError(coreErrorMessage(e, t, t("auth.login.failed")));
               } finally {
                 setSubmitting(false);
               }

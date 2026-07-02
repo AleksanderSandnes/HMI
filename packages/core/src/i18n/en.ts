@@ -287,6 +287,10 @@ export const en = {
   "settings.solarProductionSource": "Solar production source",
   "settings.personalWeatherStation": "Personal weather station",
 
+  // API errors (thrown as CoreError keys, translated at display time)
+  "error.authRequired": "Authentication required. Please log in again.",
+  "error.registrationNoUser": "Registration failed: no user returned.",
+
   // Validation (core yup schemas)
   "validation.emailRequired": "Email is required",
   "validation.emailInvalid": "Email must be a valid email",

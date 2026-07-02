@@ -1,6 +1,11 @@
 "use client";
 
-import { createRegisterAccountSchema, type TranslationKey, type Translator } from "@hmi/core";
+import {
+  coreErrorMessage,
+  createRegisterAccountSchema,
+  type TranslationKey,
+  type Translator,
+} from "@hmi/core";
 import { ArrowLeft, ArrowRight, Check, Key, Lock, Mail, MapPin, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -91,7 +96,7 @@ async function runCreateAccount(d: CreateAccountDeps) {
     });
     d.setStep(1);
   } catch (e) {
-    d.setAccountError(e instanceof Error ? e.message : d.t("auth.register.failed"));
+    d.setAccountError(coreErrorMessage(e, d.t, d.t("auth.register.failed")));
   } finally {
     d.setSaving(false);
   }

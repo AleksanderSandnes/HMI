@@ -4,6 +4,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import type { AuthUser } from "../types/account";
 
 import type { CoreApiContext } from "./context";
+import { CoreError } from "./errors";
 
 /** Build the UI auth payload from a Supabase session + user. */
 function toUser(session: Session | null, user: User): AuthUser {
@@ -48,21 +49,9 @@ export function createAuthApi(ctx: CoreApiContext) {
     });
     if (error) throw error;
 
-    // With email confirmation disabled, signUp returns a session immediately.
-    // If it doesn't (confirmation enabled), try an immediate sign-in.
-    let session = data.session;
-    if (!session) {
-      const signIn = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-      if (signIn.error) {
-        throw new Error("Account created. Please confirm your email, then sign in.");
-      }
-      session = signIn.data.session;
-    }
-    if (!data.user) throw new Error("Registration failed: no user returned.");
-    return toUser(session, data.user);
+    if (!data.user) throw new CoreError("error.registrationNoUser");
+    // Email confirmation is disabled, so signUp returns a session immediately.
+    return toUser(data.session, data.user);
   }
 
   async function logout(): Promise<void> {

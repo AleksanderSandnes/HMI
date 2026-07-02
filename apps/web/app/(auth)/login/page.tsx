@@ -1,6 +1,6 @@
 "use client";
 
-import { createLoginSchema } from "@hmi/core";
+import { coreErrorMessage, createLoginSchema } from "@hmi/core";
 import { Formik, type FormikProps } from "formik";
 import { ArrowRight, Lock, Mail, Zap } from "lucide-react";
 import Link from "next/link";
@@ -107,7 +107,7 @@ function LoginForm() {
             router.replace(redirectTo);
             router.refresh();
           } catch (e) {
-            setError(e instanceof Error ? e.message : t("auth.login.failed"));
+            setError(coreErrorMessage(e, t, t("auth.login.failed")));
           } finally {
             setSubmitting(false);
           }

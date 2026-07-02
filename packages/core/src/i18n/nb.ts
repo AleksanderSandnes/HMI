@@ -290,6 +290,10 @@ export const nb: Record<TranslationKey, string> = {
   "settings.solarProductionSource": "Kilde for solproduksjon",
   "settings.personalWeatherStation": "Personlig værstasjon",
 
+  // API errors (thrown as CoreError keys, translated at display time)
+  "error.authRequired": "Innlogging kreves. Logg inn på nytt.",
+  "error.registrationNoUser": "Registreringen mislyktes: ingen bruker ble returnert.",
+
   // Validation
   "validation.emailRequired": "E-post er påkrevd",
   "validation.emailInvalid": "E-post må være en gyldig e-postadresse",

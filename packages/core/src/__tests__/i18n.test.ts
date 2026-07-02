@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDayMonth, formatDayMonthLong, isLocale, translate, weekdayAbbr } from "../i18n";
+import { CoreError, coreErrorMessage } from "../api/errors";
+import {
+  formatDayMonth,
+  formatDayMonthLong,
+  getTranslator,
+  isLocale,
+  translate,
+  weekdayAbbr,
+} from "../i18n";
 import { en } from "../i18n/en";
 import { nb } from "../i18n/nb";
 import { timeAgo } from "../utils/datetime";
@@ -62,5 +70,21 @@ describe("localized helpers", () => {
   it("timeAgo translates to nb", () => {
     const iso = new Date(Date.now() - 5 * 60_000).toISOString();
     expect(timeAgo(iso, "nb")).toBe("5 min siden");
+  });
+});
+
+describe("CoreError", () => {
+  it("keeps the English message but translates through coreErrorMessage", () => {
+    const err = new CoreError("error.authRequired");
+    expect(err.message).toBe("Authentication required. Please log in again.");
+    expect(coreErrorMessage(err, getTranslator("nb"), "fallback")).toBe(
+      "Innlogging kreves. Logg inn på nytt.",
+    );
+  });
+
+  it("passes plain Error messages through and falls back otherwise", () => {
+    const t = getTranslator("nb");
+    expect(coreErrorMessage(new Error("supabase says no"), t, "fallback")).toBe("supabase says no");
+    expect(coreErrorMessage("weird", t, "fallback")).toBe("fallback");
   });
 });
