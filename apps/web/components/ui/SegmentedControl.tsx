@@ -26,7 +26,7 @@ export function SegmentedControl({
   options?: Option[];
 }) {
   return (
-    <div className="flex gap-1 rounded-[var(--radius-pill)] border border-glass-border bg-[rgba(255,255,255,0.04)] p-1">
+    <div className="flex gap-1 rounded-[var(--radius-pill)] border border-glass-border bg-[var(--color-segment-track)] p-1">
       {options.map((opt) => {
         const active = value === opt.value;
         return (

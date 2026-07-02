@@ -84,7 +84,7 @@ export function AppNav() {
       {/* Desktop / web top bar. Inner content is constrained to the same
           max-width + padding as the page content so the brand aligns with the
           page title (left) and Sign out aligns with the content's right edge. */}
-      <header className="sticky top-0 z-30 hidden border-b border-glass-border bg-[rgba(8,12,24,0.92)] px-5 backdrop-blur-xl md:block md:px-8">
+      <header className="sticky top-0 z-30 hidden border-b border-glass-border bg-[var(--color-panel-bg)] px-5 backdrop-blur-xl md:block md:px-8">
         <div className="mx-auto flex w-full max-w-[1480px] items-center justify-between py-2.5">
           <div className="flex items-center gap-3.5">
             <Link href="/dashboard" className="flex items-center gap-2.5" aria-label="HMI home">

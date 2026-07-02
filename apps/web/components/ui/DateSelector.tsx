@@ -289,7 +289,7 @@ function CalendarPopover({
         top: pos.top,
         transform: pos.up ? "translate(-50%, -100%)" : "translate(-50%, 0)",
       }}
-      className="z-[100] w-[300px] rounded-[var(--radius-lg)] border border-glass-border-strong bg-[rgba(10,17,36,0.98)] p-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+      className="z-[100] w-[300px] rounded-[var(--radius-lg)] border border-glass-border-strong bg-[var(--color-panel-bg)] p-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl"
     >
       <div className="mb-3 flex items-center justify-between gap-1">
         <button

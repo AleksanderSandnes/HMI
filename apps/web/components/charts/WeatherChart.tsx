@@ -48,7 +48,7 @@ function buildTooltip(clean: LineSeries[], range: number, unit: string) {
       content={({ active, payload, label }) => {
         if (!active || !payload?.length) return null;
         return (
-          <div className="min-w-[120px] rounded-xl border border-glass-border-strong bg-[rgba(10,17,36,0.94)] px-3 py-2.5">
+          <div className="min-w-[120px] rounded-xl border border-glass-border-strong bg-[var(--color-panel-bg)] px-3 py-2.5">
             <p className="mb-1.5 text-[11px] font-bold text-text-muted">{label}</p>
             {payload.map((p, i) => {
               const s = clean[Number(p.dataKey?.toString().slice(1))];

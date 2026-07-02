@@ -48,7 +48,7 @@ function buildTooltip(isArea: boolean, unit: string) {
         if (!active || !payload?.length) return null;
         const p = payload[0];
         return (
-          <div className="rounded-xl border border-glass-border-strong bg-[rgba(10,17,36,0.92)] px-3 py-2 text-center">
+          <div className="rounded-xl border border-glass-border-strong bg-[var(--color-panel-bg)] px-3 py-2 text-center">
             <p className="text-[15px] font-extrabold text-text-primary">
               {formatNum(Number(p.value))} {unit}
             </p>

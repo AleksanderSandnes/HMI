@@ -35,6 +35,17 @@
   --color-dial-tick-minor: rgba(20, 26, 41, 0.16);
   --color-dial-hub-ring: rgba(20, 26, 41, 0.32);
 
+  /* Solid backdrop panel — chart tooltips, sticky nav bar, calendar popover
+     (over backdrop-blur; not the translucent "glass" sheen). */
+  --color-panel-bg: rgba(255, 255, 255, 0.97);
+
+  /* Chart grid lines + hover crosshair (mirrors mobile chartTheme.ts). */
+  --color-grid-stroke: rgba(20, 26, 41, 0.09);
+  --color-chart-cursor: rgba(20, 26, 41, 0.18);
+
+  /* SegmentedControl track fill. */
+  --color-segment-track: rgba(20, 26, 41, 0.04);
+
   /* Solar gold */
   --color-solar: #f59e0b;
   --color-solar-light: #d97706;
@@ -96,6 +107,13 @@
   --color-dial-tick-major: rgba(255, 255, 255, 0.4);
   --color-dial-tick-minor: rgba(255, 255, 255, 0.16);
   --color-dial-hub-ring: rgba(255, 255, 255, 0.32);
+
+  --color-panel-bg: rgba(10, 17, 36, 0.92);
+
+  --color-grid-stroke: rgba(255, 255, 255, 0.07);
+  --color-chart-cursor: rgba(255, 255, 255, 0.18);
+
+  --color-segment-track: rgba(255, 255, 255, 0.04);
 
   --color-solar-light: #fbbf24;
 
