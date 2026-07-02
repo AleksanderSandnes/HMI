@@ -16,17 +16,24 @@ import {
   type Theme as NavigationTheme,
 } from "@react-navigation/native";
 import { Slot, useRouter, useSegments } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, type ReactNode } from "react";
-import { ActivityIndicator, Platform, View } from "react-native";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import PushRegistrar from "../src/components/PushRegistrar";
+import { SplashLoading } from "../src/components/SplashLoading";
 import { AuthProvider, useAuth } from "../src/lib/auth";
 import { QueryProvider } from "../src/lib/query";
 import { ThemeProvider, useThemeBootstrap, useThemeColors } from "../src/lib/theme";
+
+// Keep the native splash up through the JS bundle's first paint — our
+// SplashLoading component (same gold/navy brand look) takes over seamlessly
+// instead of a blank white frame flashing between native splash and JS.
+void SplashScreen.preventAutoHideAsync();
 
 /**
  * Auth gate (replaces the old Redux AppWrapper). Redirects between the `(auth)`
@@ -49,11 +56,7 @@ function AuthGate() {
   }, [session, isLoading, segments, router]);
 
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-bg-base">
-        <ActivityIndicator color="#f59e0b" />
-      </View>
-    );
+    return <SplashLoading />;
   }
 
   return <Slot />;
@@ -108,12 +111,15 @@ export default function RootLayout() {
   );
   const { preference: themePreference, ready: themeReady } = useThemeBootstrap();
 
+  // Fires once after this component's first commit, whatever that first paint
+  // turns out to be (SplashLoading or the full app tree) — hiding the native
+  // splash right then, with no gap where a bare white frame could show through.
+  useEffect(() => {
+    void SplashScreen.hideAsync();
+  }, []);
+
   if ((!fontsLoaded && !fontError) || !themeReady) {
-    return (
-      <View className="flex-1 items-center justify-center bg-bg-base">
-        <ActivityIndicator color="#f59e0b" />
-      </View>
-    );
+    return <SplashLoading />;
   }
 
   return (

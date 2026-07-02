@@ -4,8 +4,8 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "start:dev": "cross-env EXPO_PUBLIC_DATA_MODE=development expo start",
     "web:dev": "cross-env EXPO_PUBLIC_DATA_MODE=development expo start --web",
@@ -51,6 +51,7 @@
     "expo-linking": "~8.0.12",
     "expo-notifications": "~0.32.17",
     "expo-router": "~6.0.24",
+    "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "expo-updates": "~29.0.18",
     "expo-video": "~3.0.16",

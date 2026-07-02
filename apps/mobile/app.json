@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0a1124"
+      "backgroundColor": "#fbbf24"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -20,7 +20,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0a1124"
+        "backgroundColor": "#fbbf24"
       },
       "package": "com.sandnes.hmi",
       "versionCode": 2
