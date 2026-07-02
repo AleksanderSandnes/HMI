@@ -9,9 +9,15 @@ import {
   Geist_900Black,
   useFonts,
 } from "@expo-google-fonts/geist";
+import {
+  DarkTheme as NavDarkTheme,
+  DefaultTheme as NavDefaultTheme,
+  ThemeProvider as NavigationThemeProvider,
+  type Theme as NavigationTheme,
+} from "@react-navigation/native";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -59,6 +65,33 @@ function ThemedStatusBar() {
   return <StatusBar style={mode === "dark" ? "light" : "dark"} backgroundColor={colors.bgBase} />;
 }
 
+/**
+ * Bridges our theme into React Navigation's own ThemeProvider (used
+ * internally by expo-router's `<Tabs>`/`<Stack>`). Without this, React
+ * Navigation falls back to its own `DefaultTheme` — a light, opaque
+ * `rgb(242,242,242)` scene background — which bleeds through anywhere our
+ * screens don't fully repaint over it, regardless of our own dark/light
+ * mode. `background` is forced transparent so our GlassCard/ScreenBackground
+ * colors are always what's visible.
+ */
+function AppNavigationTheme({ children }: { children: ReactNode }) {
+  const { mode, colors } = useThemeColors();
+  const base = mode === "dark" ? NavDarkTheme : NavDefaultTheme;
+  const navTheme: NavigationTheme = {
+    ...base,
+    dark: mode === "dark",
+    colors: {
+      ...base.colors,
+      background: "transparent",
+      card: colors.panelBg,
+      text: colors.textPrimary,
+      border: colors.glassBorder,
+      notification: colors.negative,
+    },
+  };
+  return <NavigationThemeProvider value={navTheme}>{children}</NavigationThemeProvider>;
+}
+
 export default function RootLayout() {
   // Load Geist per-weight on native (the web build loads it via CSS in `font.ts`).
   const [fontsLoaded, fontError] = useFonts(
@@ -88,13 +121,15 @@ export default function RootLayout() {
       <KeyboardProvider>
         <SafeAreaProvider>
           <ThemeProvider mode={themeMode}>
-            <QueryProvider>
-              <AuthProvider>
-                <ThemedStatusBar />
-                <PushRegistrar />
-                <AuthGate />
-              </AuthProvider>
-            </QueryProvider>
+            <AppNavigationTheme>
+              <QueryProvider>
+                <AuthProvider>
+                  <ThemedStatusBar />
+                  <PushRegistrar />
+                  <AuthGate />
+                </AuthProvider>
+              </QueryProvider>
+            </AppNavigationTheme>
           </ThemeProvider>
         </SafeAreaProvider>
       </KeyboardProvider>
