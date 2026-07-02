@@ -337,7 +337,7 @@ function LanguageCard() {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition hover:bg-glass-fill"
+        className="flex w-full items-center gap-3 rounded-[18px] px-3.5 py-3 text-left transition hover:bg-glass-fill"
       >
         <span
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px]"

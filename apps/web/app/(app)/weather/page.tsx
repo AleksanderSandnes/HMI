@@ -128,10 +128,10 @@ function MetricChips({ active, onSelect }: { active: string; onSelect: (key: str
             className={cn(
               "flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] border px-3.5 py-2 text-[13px] font-bold transition",
               on
-                ? "border-transparent bg-glass-fill-strong"
+                ? "bg-glass-fill-strong"
                 : "border-glass-border bg-glass-fill text-text-muted hover:text-text-secondary",
             )}
-            style={on ? { color: m.accent } : undefined}
+            style={on ? { color: m.accent, borderColor: `${m.accent}66` } : undefined}
           >
             <Icon size={14} />
             {t(m.labelKey)}

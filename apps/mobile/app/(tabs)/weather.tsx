@@ -134,10 +134,9 @@ function MetricChips({ active, onSelect }: { active: string; onSelect: (key: str
               onPress={() => onSelect(m.key)}
               className={cn(
                 "h-9 flex-row items-center gap-2 rounded-md border px-3.5",
-                on
-                  ? "border-transparent bg-glass-fill-strong"
-                  : "border-glass-border bg-glass-fill",
+                on ? "bg-glass-fill-strong" : "border-glass-border bg-glass-fill",
               )}
+              style={on ? { borderColor: `${m.accent}66` } : undefined}
             >
               {m.icon(on ? m.accent : colors.textMuted, 14)}
               <Text
