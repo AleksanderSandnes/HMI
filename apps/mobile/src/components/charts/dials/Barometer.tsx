@@ -116,7 +116,7 @@ function Module({
         {label}
       </Text>
       <Gauge value={v} />
-      <Text className="text-[17px] font-extrabold leading-none text-text-primary">
+      <Text className="text-[17px] font-extrabold leading-none text-text-primary ios:leading-[1.05]">
         {r != null ? r : "—"}
         <Text className="text-[10px] font-bold text-text-muted"> {unit}</Text>
       </Text>

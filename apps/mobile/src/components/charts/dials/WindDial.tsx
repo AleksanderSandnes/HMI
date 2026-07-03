@@ -77,7 +77,7 @@ export function WindDialFace({ degrees, speed, gust, unit = "km/h", size = SIZE 
         <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
           <Text
             style={{ fontSize: bigFont }}
-            className="font-extrabold leading-none text-text-primary"
+            className="font-extrabold leading-none text-text-primary ios:leading-[1.05]"
           >
             {spd != null ? Math.round(spd) : "—"}
           </Text>

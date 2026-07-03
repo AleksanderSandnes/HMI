@@ -1,4 +1,5 @@
-import { StyleSheet, useWindowDimensions } from "react-native";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import { useThemeColors } from "../../lib/theme";
@@ -37,38 +38,49 @@ const LIGHT_GSUN: GsunStops = {
  */
 export function ScreenBackground() {
   const { mode } = useThemeColors();
-  // Numeric dimensions, not "100%": react-native-svg does not re-resolve
-  // percentage sizes when the surface rotates, leaving the gradient at the
-  // portrait width in landscape.
-  const { width, height } = useWindowDimensions();
+  // Measure the actual container and remount the Svg (key) when it changes:
+  // react-native-svg neither re-resolves percentage sizes on rotation
+  // (Android) nor reliably resizes an existing native surface (iOS), which
+  // left the gradient at the portrait width in landscape.
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const g = mode === "dark" ? DARK_GSUN : LIGHT_GSUN;
 
   return (
-    <Svg style={StyleSheet.absoluteFill} width={width} height={height} pointerEvents="none">
-      <Defs>
-        <LinearGradient id="bg-base" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={g.base[0]} />
-          <Stop offset="0.55" stopColor={g.base[1]} />
-          <Stop offset="1" stopColor={g.base[2]} />
-        </LinearGradient>
-        <RadialGradient id="bg-solar" cx="16%" cy="0%" rx="60%" ry="46%">
-          <Stop offset="0" stopColor={g.solar.color} stopOpacity={g.solar.opacity} />
-          <Stop offset="0.6" stopColor={g.solar.color} stopOpacity="0" />
-        </RadialGradient>
-        <RadialGradient id="bg-teal" cx="96%" cy="8%" rx="52%" ry="42%">
-          <Stop offset="0" stopColor={g.teal.color} stopOpacity={g.teal.opacity} />
-          <Stop offset="0.6" stopColor={g.teal.color} stopOpacity="0" />
-        </RadialGradient>
-        <RadialGradient id="bg-violet" cx="50%" cy="102%" rx="70%" ry="55%">
-          <Stop offset="0" stopColor={g.violet.color} stopOpacity={g.violet.opacity} />
-          <Stop offset="0.66" stopColor={g.violet.color} stopOpacity="0" />
-        </RadialGradient>
-      </Defs>
-      <Rect x="0" y="0" width="100%" height="100%" fill="url(#bg-base)" />
-      <Rect x="0" y="0" width="100%" height="100%" fill="url(#bg-solar)" />
-      <Rect x="0" y="0" width="100%" height="100%" fill="url(#bg-teal)" />
-      <Rect x="0" y="0" width="100%" height="100%" fill="url(#bg-violet)" />
-    </Svg>
+    <View
+      style={StyleSheet.absoluteFill}
+      pointerEvents="none"
+      onLayout={({ nativeEvent: { layout } }) =>
+        setSize({ w: Math.round(layout.width), h: Math.round(layout.height) })
+      }
+    >
+      {size ? (
+        <Svg key={`${size.w}x${size.h}`} width={size.w} height={size.h}>
+          <Defs>
+            <LinearGradient id="bg-base" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={g.base[0]} />
+              <Stop offset="0.55" stopColor={g.base[1]} />
+              <Stop offset="1" stopColor={g.base[2]} />
+            </LinearGradient>
+            <RadialGradient id="bg-solar" cx="16%" cy="0%" rx="60%" ry="46%">
+              <Stop offset="0" stopColor={g.solar.color} stopOpacity={g.solar.opacity} />
+              <Stop offset="0.6" stopColor={g.solar.color} stopOpacity="0" />
+            </RadialGradient>
+            <RadialGradient id="bg-teal" cx="96%" cy="8%" rx="52%" ry="42%">
+              <Stop offset="0" stopColor={g.teal.color} stopOpacity={g.teal.opacity} />
+              <Stop offset="0.6" stopColor={g.teal.color} stopOpacity="0" />
+            </RadialGradient>
+            <RadialGradient id="bg-violet" cx="50%" cy="102%" rx="70%" ry="55%">
+              <Stop offset="0" stopColor={g.violet.color} stopOpacity={g.violet.opacity} />
+              <Stop offset="0.66" stopColor={g.violet.color} stopOpacity="0" />
+            </RadialGradient>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#bg-base)" />
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#bg-solar)" />
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#bg-teal)" />
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#bg-violet)" />
+        </Svg>
+      ) : null}
+    </View>
   );
 }
 

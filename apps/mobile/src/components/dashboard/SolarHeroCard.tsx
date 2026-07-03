@@ -59,7 +59,9 @@ export function SolarHeroCard({ model }: { model: DashboardModel }) {
           <Text
             adjustsFontSizeToFit
             numberOfLines={1}
-            className="text-[56px] font-black leading-[0.9] tracking-[-2px] text-solar-light"
+            // iOS clips glyphs to the line box (Android draws outside it), so
+            // the tight leading needs a platform override.
+            className="text-[56px] font-black leading-[0.9] tracking-[-2px] text-solar-light ios:leading-[1.05]"
           >
             {kwLabel(currentPower)}
           </Text>

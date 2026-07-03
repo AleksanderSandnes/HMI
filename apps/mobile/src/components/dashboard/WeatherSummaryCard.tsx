@@ -51,7 +51,8 @@ function BigMetric({
       </View>
       <Text
         className={cn(
-          "mt-1.5 font-extrabold leading-none text-text-primary",
+          // iOS clips glyphs when the line box is tighter than the font.
+          "mt-1.5 font-extrabold leading-none text-text-primary ios:leading-[1.05]",
           variant === "rich"
             ? "text-[40px]"
             : variant === "compact"
