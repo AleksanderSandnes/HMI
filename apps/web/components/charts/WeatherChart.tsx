@@ -1,6 +1,6 @@
 "use client";
 
-import { formatMetric as fmt } from "@hmi/core";
+import { formatMetric as fmt, WEEKDAY_ABBR, weekdayName, type Locale } from "@hmi/core";
 import { Loader2 } from "lucide-react";
 import {
   Area,
@@ -23,6 +23,19 @@ export interface LineSeries {
   data: number[];
   color: string;
   label: string;
+}
+
+/** Daily min/max/avg triplets for the phone weekly "daily range" view. */
+export interface WeatherBand {
+  min: number[];
+  max: number[];
+  avg: number[];
+}
+
+/** Expand a weekday abbreviation (weekly view) to its localized full name. */
+function expandLabel(label: string, locale: Locale): string {
+  const idx = (WEEKDAY_ABBR as readonly string[]).indexOf(label);
+  return idx >= 0 ? weekdayName(locale, idx) : label;
 }
 
 // Recharts discovers graphical items / Tooltip / defs by inspecting its direct children's
@@ -122,6 +135,131 @@ export function buildRows(
   });
 }
 
+interface BandRow {
+  label: string;
+  range: [number, number];
+  avg: number;
+}
+
+function buildBandRows(labels: string[], band: WeatherBand): BandRow[] {
+  return labels.map((label, i) => ({
+    label,
+    range: [band.min[i] ?? 0, band.max[i] ?? 0],
+    avg: band.avg[i] ?? 0,
+  }));
+}
+
+function buildBandTooltip(bandColor: string, range: number, unit: string, locale: Locale) {
+  const rows = (r: BandRow) => [
+    { color: "#fb7185", label: "High", value: r.range[1] },
+    { color: bandColor, label: "Avg", value: r.avg },
+    { color: "#60a5fa", label: "Low", value: r.range[0] },
+  ];
+  return (
+    <Tooltip
+      cursor={CURSOR}
+      content={({ active, payload, label }) => {
+        const row = payload?.[0]?.payload as BandRow | undefined;
+        if (!active || !row) return null;
+        return (
+          <div className="min-w-[7.5rem] rounded-xl border border-glass-border-strong bg-[var(--color-panel-bg)] px-3 py-2.5">
+            <p className="mb-1.5 text-[0.6875rem] font-bold text-text-muted">
+              {expandLabel(String(label ?? ""), locale)}
+            </p>
+            {rows(row).map((r) => (
+              <div key={r.label} className="mt-0.5 flex items-center gap-2">
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: r.color }}
+                />
+                <span className="flex-1 text-[0.71875rem] font-semibold text-text-secondary">
+                  {r.label}
+                </span>
+                <span className="text-[0.78125rem] font-extrabold text-text-primary">
+                  {fmt(r.value, range)}
+                  {unit ? ` ${unit}` : ""}
+                </span>
+              </div>
+            ))}
+          </div>
+        );
+      }}
+    />
+  );
+}
+
+function BandChart({
+  labels,
+  band,
+  bandColor,
+  unit,
+  height,
+  heightClass,
+}: {
+  labels: string[];
+  band: WeatherBand;
+  bandColor: string;
+  unit: string;
+  height: number;
+  heightClass?: string;
+}) {
+  const { locale } = useI18n();
+  const scale = useRemScale();
+  const { min: yMin, max: yMax, range } = weatherYDomain([...band.min, ...band.max]);
+  return (
+    <Frame heightClass={heightClass} height={height}>
+      <ResponsiveContainer width="100%" height={heightClass ? "100%" : height}>
+        <AreaChart
+          data={buildBandRows(labels, band)}
+          margin={{
+            top: Math.round(22 * scale),
+            right: Math.round(18 * scale),
+            bottom: Math.round(6 * scale),
+            left: 0,
+          }}
+        >
+          <CartesianGrid vertical={false} stroke={GRID_STROKE} />
+          <XAxis
+            dataKey="label"
+            tick={axisTick(scale)}
+            tickLine={false}
+            axisLine={false}
+            interval={0}
+          />
+          <YAxis
+            tick={axisTick(scale)}
+            tickLine={false}
+            axisLine={false}
+            width={Math.round(54 * scale)}
+            tickCount={5}
+            domain={[yMin, yMax]}
+            tickFormatter={(v: number) => fmt(v, range)}
+          />
+          {buildBandTooltip(bandColor, range, unit, locale)}
+          <Area
+            dataKey="range"
+            stroke="none"
+            fill={bandColor}
+            fillOpacity={0.16}
+            activeDot={false}
+            isAnimationActive={false}
+          />
+          <Area
+            type="monotone"
+            dataKey="avg"
+            stroke={bandColor}
+            strokeWidth={2.6}
+            fill="none"
+            dot={{ r: 2.6, fill: bandColor, stroke: "#0a1124", strokeWidth: 1.4 }}
+            activeDot={{ r: 5, fill: bandColor, stroke: "#0a1124", strokeWidth: 2 }}
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </Frame>
+  );
+}
+
 function StateView({
   loading,
   emptyText,
@@ -150,7 +288,8 @@ function StateView({
 
 interface WeatherChartProps {
   labels: string[];
-  series: LineSeries[];
+  /** Line series; ignored when `band` is provided. */
+  series?: LineSeries[];
   unit?: string;
   loading?: boolean;
   height?: number;
@@ -162,6 +301,13 @@ interface WeatherChartProps {
    * scales with the viewport. Overrides the numeric `height` when set.
    */
   heightClass?: string;
+  /** Daily min/max/avg band (phone weekly view); overrides `series` when set. */
+  band?: WeatherBand;
+  bandColor?: string;
+}
+
+function chartHasData(band: WeatherBand | undefined, n: number, total: number): boolean {
+  return band ? band.avg.length > 0 : n > 0 && total > 0;
 }
 
 /**
@@ -177,12 +323,13 @@ export function WeatherChart({
   emptyText,
   ticks,
   heightClass,
+  band,
+  bandColor = "#fbbf24",
 }: WeatherChartProps) {
   const { t } = useI18n();
-  const scale = useRemScale();
-  const { clean, n, all } = readClean(series);
+  const { clean, n, all } = readClean(series ?? []);
 
-  if (loading || !n || all.length === 0) {
+  if (loading || !chartHasData(band, n, all.length)) {
     return (
       <StateView
         loading={loading}
@@ -193,6 +340,53 @@ export function WeatherChart({
     );
   }
 
+  if (band) {
+    return (
+      <BandChart
+        labels={labels}
+        band={band}
+        bandColor={bandColor}
+        unit={unit}
+        height={height}
+        heightClass={heightClass}
+      />
+    );
+  }
+
+  return (
+    <SeriesChart
+      labels={labels}
+      clean={clean}
+      n={n}
+      all={all}
+      unit={unit}
+      ticks={ticks}
+      height={height}
+      heightClass={heightClass}
+    />
+  );
+}
+
+function SeriesChart({
+  labels,
+  clean,
+  n,
+  all,
+  unit,
+  ticks,
+  height,
+  heightClass,
+}: {
+  labels: string[];
+  clean: LineSeries[];
+  n: number;
+  all: number[];
+  unit: string;
+  ticks?: string[];
+  height: number;
+  heightClass?: string;
+}) {
+  const scale = useRemScale();
   const { min: yMin, max: yMax, range } = weatherYDomain(all);
   const tickProps = xTickProps(ticks);
 

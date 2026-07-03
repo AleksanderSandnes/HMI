@@ -1,12 +1,10 @@
 "use client";
 
 import { timeAgo, type NotificationItem, type NotificationLevel } from "@hmi/core";
-import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, Bell, CheckCircle2, Info, Trash2, X, type LucideIcon } from "lucide-react";
-import { useEffect } from "react";
 
 import { GlassCard } from "@/components/ui/GlassCard";
-import { useCore } from "@/lib/hooks/useCore";
+import { useNotifications } from "@/lib/hooks/useNotifications";
 import { useI18n } from "@/lib/i18n";
 
 const LEVEL: Record<NotificationLevel, { icon: LucideIcon; className: string }> = {
@@ -54,21 +52,8 @@ function NotificationRow({ item, onDismiss }: { item: NotificationItem; onDismis
 }
 
 export default function NotificationsPage() {
-  const { notifications } = useCore();
   const { t, tp } = useI18n();
-
-  const { data, refetch, isLoading } = useQuery<NotificationItem[]>({
-    queryKey: ["notifications"],
-    queryFn: () => notifications.fetchNotifications(),
-  });
-
-  // Live updates: refetch on any insert/delete for this user.
-  useEffect(() => {
-    const unsub = notifications.subscribeNotifications(() => void refetch());
-    return unsub;
-  }, [notifications, refetch]);
-
-  const items = data ?? [];
+  const { items, isLoading, dismiss, clearAll } = useNotifications();
 
   return (
     <div className="mx-auto flex w-full max-w-[51.25rem] flex-col gap-5">
@@ -83,10 +68,7 @@ export default function NotificationsPage() {
         </div>
         {items.length > 0 ? (
           <button
-            onClick={async () => {
-              await notifications.clearNotifications();
-              void refetch();
-            }}
+            onClick={() => void clearAll()}
             className="flex items-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-3.5 py-2 text-sm font-bold text-text-muted transition hover:text-negative"
           >
             <Trash2 size={15} className="size-[0.9375rem]" />
@@ -104,14 +86,7 @@ export default function NotificationsPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((item) => (
-            <NotificationRow
-              key={item.id}
-              item={item}
-              onDismiss={async () => {
-                await notifications.dismissNotification(item.id);
-                void refetch();
-              }}
-            />
+            <NotificationRow key={item.id} item={item} onDismiss={() => void dismiss(item.id)} />
           ))}
         </div>
       )}

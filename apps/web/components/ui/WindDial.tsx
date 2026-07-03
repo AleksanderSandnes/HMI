@@ -1,6 +1,7 @@
 "use client";
 
 import { windCompass } from "@hmi/core";
+import { useId } from "react";
 
 import { GlassCard } from "./GlassCard";
 
@@ -14,36 +15,38 @@ const CARDINALS = [
   { label: "W", x: 12, y: 53, size: 7.5, fill: "var(--color-text-muted)" },
 ];
 
-/**
- * Circular wind compass as a single centered object: a dial with an arrow that
- * rotates to the wind direction (points toward where the wind comes FROM), the
- * speed in the centre, and the cardinal + gust below.
- */
-export function WindDial({
-  degrees,
-  speed,
-  gust,
-  unit = "km/h",
-}: {
+export interface WindDialFaceProps {
   degrees?: number | null;
   speed?: number | null;
   gust?: number | null;
   unit?: string;
-}) {
+  /** Face diameter in CSS px at the default 16px root (rendered in rem). */
+  size?: number;
+}
+
+/**
+ * The compass face alone (dial + rotating arrow + centred speed + direction
+ * line) — used by the desktop WindDial tile and the hero WeatherSummaryCard.
+ */
+export function WindDialFace({
+  degrees,
+  speed,
+  gust,
+  unit = "km/h",
+  size = 96,
+}: WindDialFaceProps) {
+  const gradientId = useId();
   const deg = toNum(degrees);
   const spd = toNum(speed);
   const gst = toNum(gust);
   const dir = deg != null ? windCompass(deg) : null;
 
   return (
-    <GlassCard
-      strong
-      className="flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-2 p-3.5"
-    >
-      <div className="relative h-[6rem] w-[6rem]">
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative" style={{ width: `${size / 16}rem`, height: `${size / 16}rem` }}>
         <svg viewBox="0 0 100 100" className="h-full w-full">
           <defs>
-            <linearGradient id="wind-arrow" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#fde047" />
               <stop offset="100%" stopColor="#f59e0b" />
             </linearGradient>
@@ -75,8 +78,8 @@ export function WindDial({
               transform={`rotate(${deg} 50 50)`}
               style={{ transition: "transform 0.6s cubic-bezier(.2,.8,.2,1)" }}
             >
-              <path d="M50 4 L44 18 L50 14.5 L56 18 Z" fill="url(#wind-arrow)" />
-              <rect x="48.4" y="14" width="3.2" height="14" rx="1.6" fill="url(#wind-arrow)" />
+              <path d="M50 4 L44 18 L50 14.5 L56 18 Z" fill={`url(#${gradientId})`} />
+              <rect x="48.4" y="14" width="3.2" height="14" rx="1.6" fill={`url(#${gradientId})`} />
             </g>
           )}
         </svg>
@@ -91,6 +94,22 @@ export function WindDial({
         {dir ? `from ${dir}` : "Direction n/a"}
         {gst != null ? ` · gust ${Math.round(gst)}` : ""}
       </p>
+    </div>
+  );
+}
+
+/**
+ * Circular wind compass as a single centered object: a dial with an arrow that
+ * rotates to the wind direction (points toward where the wind comes FROM), the
+ * speed in the centre, and the cardinal + gust below.
+ */
+export function WindDial(props: Omit<WindDialFaceProps, "size">) {
+  return (
+    <GlassCard
+      strong
+      className="flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-2 p-3.5"
+    >
+      <WindDialFace {...props} size={96} />
     </GlassCard>
   );
 }

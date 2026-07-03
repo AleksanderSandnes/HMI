@@ -30,22 +30,31 @@ async function horizontalOverflow(page: import("@playwright/test").Page): Promis
 for (const path of PAGES) {
   test(`${path} has no horizontal overflow`, async ({ page }) => {
     await page.goto(path);
-    await page.getByRole("heading", { level: 1 }).first().waitFor();
+    // :visible — the dashboard renders two h1s (hero brand + desktop header)
+    // and only one is shown per breakpoint.
+    await page.locator("h1:visible").first().waitFor();
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
   });
 }
 
 test("nav chrome matches the viewport", async ({ page }, testInfo) => {
   await page.goto("/dashboard");
-  await page.getByRole("heading", { level: 1 }).first().waitFor();
+  await page.locator("h1:visible").first().waitFor();
   const topBar = page.locator("header");
   const bottomBar = page.locator("nav.fixed");
+  const rail = page.getByTestId("nav-rail");
   if (testInfo.project.name === "mobile") {
     await expect(bottomBar).toBeVisible();
     await expect(topBar).toBeHidden();
+    await expect(rail).toBeHidden();
+  } else if (testInfo.project.name === "tablet") {
+    await expect(rail).toBeVisible();
+    await expect(topBar).toBeHidden();
+    await expect(bottomBar).toBeHidden();
   } else {
     await expect(topBar).toBeVisible();
     await expect(bottomBar).toBeHidden();
+    await expect(rail).toBeHidden();
   }
 });
 
@@ -72,6 +81,35 @@ test("settings shows list and panel side by side on desktop", async ({ page }, t
   await expect(page.getByRole("button", { name: /Growatt/ })).toBeVisible();
   // Profile panel renders by default alongside the list.
   await expect(page.getByRole("button", { name: "Save profile" })).toBeVisible();
+});
+
+test("dashboard hero renders below lg with a working bell overlay", async ({ page }, testInfo) => {
+  test.skip(!["mobile", "tablet"].includes(testInfo.project.name), "hero renders below lg only");
+  await page.goto("/dashboard");
+  await expect(page.getByRole("heading", { name: "HMI", exact: true })).toBeVisible();
+
+  const bell = page.getByRole("button", { name: "Notifications" });
+  await expect(bell).toBeVisible();
+  await bell.click();
+  const overlay = page.getByRole("dialog", { name: "Notifications" });
+  await expect(overlay).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(overlay).toBeHidden();
+});
+
+test("tablet dashboard shows solar and weather side by side", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "tablet", "tablet two-column layout");
+  await page.goto("/dashboard");
+  await expect(page.getByRole("heading", { name: "HMI", exact: true })).toBeVisible();
+  // Retry: card heights shift while queries stream in, so read the boxes
+  // until the two columns settle on one row.
+  await expect(async () => {
+    const solar = await page.getByTestId("hero-solar-col").boundingBox();
+    const weather = await page.getByTestId("hero-weather-col").boundingBox();
+    expect(solar && weather).toBeTruthy();
+    expect(Math.abs(solar!.y - weather!.y)).toBeLessThan(4);
+    expect(weather!.x).toBeGreaterThan(solar!.x + solar!.width - 1);
+  }).toPass({ timeout: 10_000 });
 });
 
 test("weather toolbar stacks on mobile and stays inline on desktop", async ({ page }, testInfo) => {

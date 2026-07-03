@@ -95,6 +95,13 @@ export function formatPeak(v: number): string {
   return v.toFixed(v < 10 ? 1 : 0);
 }
 
+/** Dashboard hero label: watts → kW with 2 decimals under 10 kW, else 1. */
+export function kwLabel(watts: number | null | undefined): string {
+  if (watts == null) return "—";
+  const kw = watts / 1000;
+  return kw.toFixed(kw >= 10 ? 1 : 2);
+}
+
 /**
  * The unit that matches {@link formatPeak} after its k-scaling, so a 10 900 W
  * peak reads "10.9 kW" (not "10.9 W") and a 1 500 kWh total reads "1.5 MWh".

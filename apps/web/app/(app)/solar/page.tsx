@@ -5,6 +5,7 @@ import {
   formatPeak,
   getPeakOutput,
   peakUnit,
+  solarCapValues,
   toISO,
   type SolarData,
 } from "@hmi/core";
@@ -26,6 +27,36 @@ const ZERO = {
   todayRevenue: 0,
   totalRevenue: 0,
 };
+
+function Cap({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 flex-1">
+      <p className="truncate text-[0.625rem] font-bold uppercase tracking-[0.4px] text-text-muted">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-[1.125rem] font-extrabold tracking-[-0.3px] text-text-primary">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Peak + period-total captions under the chart (mirror of the mobile app's
+ * StatCaps). Below lg only — desktop surfaces gen/peak in the nav widget.
+ */
+function StatCaps({ solar, timespan }: { solar?: SolarData; timespan: string }) {
+  const { t } = useI18n();
+  const c = solarCapValues(solar, timespan);
+  if (!c.hasData) return null;
+  return (
+    <div className="mt-3 flex shrink-0 items-stretch rounded-[var(--radius-md)] border border-glass-border px-4 py-3.5 lg:hidden">
+      <Cap label={t(c.labels[0])} value={c.peakText} />
+      <div className="mx-4 w-px self-stretch bg-glass-border" />
+      <Cap label={t(c.labels[1])} value={c.totalText} />
+    </div>
+  );
+}
 
 export default function SolarPage() {
   const { growatt } = useCore();
@@ -100,6 +131,8 @@ export default function SolarPage() {
             heightClass="h-full"
           />
         </div>
+
+        {!isLoading ? <StatCaps solar={solar} timespan={timespan} /> : null}
       </GlassCard>
     </div>
   );

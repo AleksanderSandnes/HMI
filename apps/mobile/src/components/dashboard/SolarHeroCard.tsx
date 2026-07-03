@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { formatPeak, peakUnit, show } from "@hmi/core";
+import { formatPeak, kwLabel, peakUnit, show } from "@hmi/core";
 import { Text, View } from "react-native";
 
 import { useI18n } from "../../lib/i18n";
@@ -8,12 +8,6 @@ import type { DashboardModel } from "../../lib/useDashboardData";
 import { GlassCard } from "../ui/GlassCard";
 
 import { Sparkline } from "./Sparkline";
-
-export function kwLabel(watts: number | null | undefined): string {
-  if (watts == null) return "—";
-  const kw = watts / 1000;
-  return kw.toFixed(kw >= 10 ? 1 : 2);
-}
 
 function ProducingPill({ producing }: { producing: boolean }) {
   const { t } = useI18n();

@@ -4,7 +4,7 @@ import { GlassCard } from "./GlassCard";
 import { Skeleton } from "./Skeleton";
 import type { StatGradient } from "./StatTile";
 
-const GRADIENTS: Record<StatGradient, string> = {
+export const GRADIENTS: Record<StatGradient, string> = {
   energy: "linear-gradient(135deg,#5eead4,#2dd4bf,#10b981)",
   revenue: "linear-gradient(135deg,#fde68a,#facc15,#eab308)",
   solar: "linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)",

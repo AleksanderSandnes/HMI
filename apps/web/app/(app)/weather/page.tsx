@@ -1,11 +1,14 @@
 "use client";
 
 import {
+  buildWeatherDailyBands,
   buildWeatherSeries,
+  isPhoneWeekly,
   toISO,
   WEATHER_METRICS,
   WEATHER_TIME_OPTIONS,
   type WeatherMetricKey,
+  type WeatherMetricMeta,
 } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -26,6 +29,7 @@ import { DateSelector } from "@/components/ui/DateSelector";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { useCore } from "@/lib/hooks/useCore";
+import { useViewportWidth } from "@/lib/hooks/useViewportWidth";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -69,20 +73,8 @@ function MetricChips({ active, onSelect }: { active: string; onSelect: (key: str
   );
 }
 
-export default function WeatherPage() {
+function useWeatherChartData(dataType: string, timespan: string, ymd: string) {
   const { weather } = useCore();
-  const { t } = useI18n();
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const [dataType, setDataType] = useState("temperature");
-  const [timespan, setTimespan] = useState("hourly");
-  const [pickerDate, setPickerDate] = useState(toISO(yesterday));
-
-  const meta = WEATHER_METRICS.find((d) => d.key === dataType) ?? WEATHER_METRICS[0];
-  const ymd = pickerDate.replaceAll("-", "");
-
   const { data: observations, isLoading } = useQuery({
     queryKey: ["wx-hist", timespan, ymd],
     queryFn: async () => {
@@ -94,20 +86,83 @@ export default function WeatherPage() {
     },
   });
 
-  const { labels, series, ticks } = useMemo(
+  const series = useMemo(
     () => buildWeatherSeries(observations ?? [], dataType, timespan),
     [observations, dataType, timespan],
   );
+  const bands = useMemo(
+    () => buildWeatherDailyBands(observations ?? [], dataType),
+    [observations, dataType],
+  );
+  return { isLoading, series, bands };
+}
 
-  const seriesMeta = meta.series;
-  const chartSeries: LineSeries[] = series.map((data, i) => {
-    const sm = seriesMeta[i];
-    return {
-      data,
-      color: sm?.color ?? meta.accent,
-      label: sm ? t(sm.labelKey) : `Series ${i + 1}`,
-    };
+/** Metric title (with the phone-weekly "daily range" suffix) + the chart itself. */
+function WeatherChartPane({
+  meta,
+  phoneWeekly,
+  data,
+}: {
+  meta: WeatherMetricMeta;
+  phoneWeekly: boolean;
+  data: ReturnType<typeof useWeatherChartData>;
+}) {
+  const { t } = useI18n();
+  const { isLoading, series, bands } = data;
+  const chartSeries: LineSeries[] = series.series.map((s, i) => {
+    const sm = meta.series[i];
+    return { data: s, color: sm?.color ?? meta.accent, label: sm ? t(sm.labelKey) : `${i + 1}` };
   });
+  return (
+    <>
+      <h2 className="mb-[0.875rem] shrink-0 text-[1.1875rem] font-extrabold text-text-primary">
+        {t(meta.titleKey)}
+        {phoneWeekly ? (
+          <span className="text-[0.8125rem] font-semibold text-text-muted">
+            {" "}
+            · {t("weather.dailyRange")}
+          </span>
+        ) : null}
+      </h2>
+
+      {/* Below md the page scrolls naturally, so the chart needs a definite
+          height (percent heights collapse against min-h alone). */}
+      <div className="h-[clamp(15rem,45vh,32.5rem)] md:h-auto md:min-h-[13.75rem] md:flex-1">
+        <WeatherChart
+          key={phoneWeekly ? "band" : "series"}
+          labels={phoneWeekly ? bands.labels : series.labels}
+          series={phoneWeekly ? undefined : chartSeries}
+          band={phoneWeekly ? { min: bands.min, max: bands.max, avg: bands.avg } : undefined}
+          bandColor={meta.accent}
+          ticks={phoneWeekly ? undefined : series.ticks}
+          unit={meta.unit}
+          loading={isLoading}
+          heightClass="h-full"
+        />
+      </div>
+    </>
+  );
+}
+
+export default function WeatherPage() {
+  const { t } = useI18n();
+  const width = useViewportWidth();
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const [dataType, setDataType] = useState("temperature");
+  const [timespan, setTimespan] = useState("hourly");
+  const [pickerDate, setPickerDate] = useState(toISO(yesterday));
+
+  const meta = WEATHER_METRICS.find((d) => d.key === dataType) ?? WEATHER_METRICS[0];
+  const ymd = pickerDate.replaceAll("-", "");
+  // Phone weekly → 7 daily min/max/avg bands; desktop/hourly → dense series
+  // (same <1024 boundary the mobile app uses).
+  const phoneWeekly = isPhoneWeekly(width, timespan);
+
+  const data = useWeatherChartData(dataType, timespan, ymd);
+  const { isLoading } = data;
 
   return (
     <div className="mx-auto flex w-full max-w-[92.5rem] flex-col gap-4 md:h-full 3xl:max-w-[100rem]">
@@ -140,22 +195,7 @@ export default function WeatherPage() {
           </div>
         </div>
 
-        <h2 className="mb-[0.875rem] shrink-0 text-[1.1875rem] font-extrabold text-text-primary">
-          {t(meta.titleKey)}
-        </h2>
-
-        {/* Below md the page scrolls naturally, so the chart needs a definite
-            height (percent heights collapse against min-h alone). */}
-        <div className="h-[clamp(15rem,45vh,32.5rem)] md:h-auto md:min-h-[13.75rem] md:flex-1">
-          <WeatherChart
-            labels={labels}
-            series={chartSeries}
-            ticks={ticks}
-            unit={meta.unit}
-            loading={isLoading}
-            heightClass="h-full"
-          />
-        </div>
+        <WeatherChartPane meta={meta} phoneWeekly={phoneWeekly} data={data} />
       </GlassCard>
     </div>
   );
