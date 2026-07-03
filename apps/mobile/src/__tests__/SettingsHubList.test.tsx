@@ -19,14 +19,15 @@ jest.mock("../lib/usePreference", () => ({ usePreference: () => [true, jest.fn()
 jest.mock("../lib/useAvatar", () => ({ useAvatar: () => ({ uri: null }) }));
 jest.mock("@react-navigation/bottom-tabs", () => ({ useBottomTabBarHeight: () => 0 }));
 
-async function renderList(props: Partial<React.ComponentProps<typeof SettingsHubList>> = {}) {
-  // gcTime Infinity: no cache-eviction timers left running after the test.
+function renderList(props: Partial<React.ComponentProps<typeof SettingsHubList>> = {}) {
+  // Fully synchronous render: fetching is disabled (the assertions only cover
+  // the static rows and callbacks) and gcTime Infinity leaves no timers
+  // behind — both matter for slow CI runners.
   const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+    defaultOptions: { queries: { retry: false, gcTime: Infinity, enabled: false } },
   });
   let tree!: TestRenderer.ReactTestRenderer;
-  // Async act so the mocked queries settle inside the test (no stray updates).
-  await act(async () => {
+  act(() => {
     tree = TestRenderer.create(
       <QueryClientProvider client={client}>
         <I18nProvider locale="en">
@@ -50,8 +51,8 @@ function pressRowWithText(root: TestRenderer.ReactTestInstance, text: string) {
 }
 
 describe("SettingsHubList", () => {
-  it("renders the hub rows", async () => {
-    const root = await renderList();
+  it("renders the hub rows", () => {
+    const root = renderList();
     const texts = root.findAll((n) => String(n.type) === "Text").map((n) => n.props.children);
     expect(texts).toEqual(
       expect.arrayContaining([
@@ -63,17 +64,17 @@ describe("SettingsHubList", () => {
     );
   });
 
-  it("fires onSelect with the route key for each nav row", async () => {
+  it("fires onSelect with the route key for each nav row", () => {
     const onSelect = jest.fn();
-    const root = await renderList({ onSelect });
+    const root = renderList({ onSelect });
     pressRowWithText(root, "Change password");
     expect(onSelect).toHaveBeenLastCalledWith("password");
     pressRowWithText(root, "Growatt solar");
     expect(onSelect).toHaveBeenLastCalledWith("growatt");
   });
 
-  it("highlights the active route's row", async () => {
-    const root = await renderList({ activeRoute: "profile" });
+  it("highlights the active route's row", () => {
+    const root = renderList({ activeRoute: "profile" });
     const tinted = root.findAll(
       (n) => typeof n.props.className === "string" && n.props.className.includes("245,158,11"),
     );
