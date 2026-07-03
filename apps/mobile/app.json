@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#fbbf24"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -23,7 +25,7 @@
         "backgroundColor": "#fbbf24"
       },
       "package": "com.sandnes.hmi",
-      "versionCode": 2
+      "versionCode": 3
     },
     "web": {
       "bundler": "metro",
