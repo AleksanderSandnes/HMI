@@ -1,18 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
-import { type UserProfile } from "@hmi/core";
+import { BREAKPOINTS, type LayoutMode, type UserProfile } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import { Text, View } from "react-native";
+import { Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { NotificationsOverlay } from "../../src/components/NotificationsOverlay";
 import { DashboardTopbar } from "../../src/components/dashboard/DashboardTopbar";
 import { SolarHeroCard } from "../../src/components/dashboard/SolarHeroCard";
-import { WeatherSummaryCard } from "../../src/components/dashboard/WeatherSummaryCard";
+import {
+  WeatherSummaryCard,
+  type WeatherSummaryVariant,
+} from "../../src/components/dashboard/WeatherSummaryCard";
 import { useI18n } from "../../src/lib/i18n";
 import { useThemeColors } from "../../src/lib/theme";
 import { useCore } from "../../src/lib/useCore";
-import { useDashboardData } from "../../src/lib/useDashboardData";
+import { useDashboardData, type DashboardModel } from "../../src/lib/useDashboardData";
 import { useLayoutMode } from "../../src/lib/useLayoutMode";
 import { useNotifications } from "../../src/lib/useNotifications";
 
@@ -38,10 +41,39 @@ function SectionLabel({
   );
 }
 
+/**
+ * Weather-card presentation for the current window. Landscape phones shrink
+ * the card to fit the short viewport; wide portrait tablets (>= web md
+ * breakpoint) get the rich 2×2 widget; other tablets keep the phone card but
+ * let the dial absorb the roomier card (more so in landscape, where the
+ * two-column card is tall and wide).
+ */
+function weatherCardFor(
+  mode: LayoutMode,
+  width: number,
+): { variant: WeatherSummaryVariant; dialSize?: number } {
+  if (mode.isPhoneLandscape) return { variant: "compact" };
+  if (!mode.isLandscape && width >= BREAKPOINTS.mobile) return { variant: "rich" };
+  if (mode.isTablet) return { variant: "default", dialSize: mode.isLandscape ? 230 : 190 };
+  return { variant: "default" };
+}
+
+/** Section-label captions: "MID 12KTL3-XL · 12 kW" and the updated-at clock. */
+function labelMeta(model: DashboardModel) {
+  const { device, capacityKw, obs } = model;
+  const solarRight = [device?.model, capacityKw != null ? `${capacityKw} kW` : null]
+    .filter(Boolean)
+    .join(" · ");
+  return { solarRight: solarRight || undefined, updatedTime: obs?.obsTimeLocal?.split(" ")[1] };
+}
+
 export default function Dashboard() {
   const { account } = useCore();
   const { t } = useI18n();
-  const twoCol = useLayoutMode().columns === 2;
+  const mode = useLayoutMode();
+  const { width } = useWindowDimensions();
+  const twoCol = mode.columns === 2;
+  const weatherCard = weatherCardFor(mode, width);
   const model = useDashboardData();
   const { items, count, clearAll, dismiss } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -52,38 +84,42 @@ export default function Dashboard() {
     staleTime: Infinity,
   });
 
-  const { device, capacityKw, obs } = model;
-  const solarRight = [device?.model, capacityKw != null ? `${capacityKw} kW` : null]
-    .filter(Boolean)
-    .join(" · ");
-  const updated = obs?.obsTimeLocal
-    ? `${t("dashboard.updated")} ${obs.obsTimeLocal.split(" ")[1] ?? ""}`
-    : undefined;
+  const { solarRight, updatedTime } = labelMeta(model);
+  const updated = updatedTime ? `${t("dashboard.updated")} ${updatedTime}` : undefined;
 
   // Section fragments shared by both arrangements: a single portrait column,
   // or solar | weather side by side when the window is wide (columns === 2).
   const solarSection = (
     <>
-      <SectionLabel icon="sunny" text={t("dashboard.solar")} right={solarRight || undefined} />
+      <SectionLabel icon="sunny" text={t("dashboard.solar")} right={solarRight} />
       <SolarHeroCard model={model} />
     </>
   );
   const weatherSection = (
     <>
       <SectionLabel icon="partly-sunny" text={t("dashboard.weather")} right={updated} />
-      <WeatherSummaryCard model={model} />
+      <WeatherSummaryCard
+        model={model}
+        variant={weatherCard.variant}
+        dialSize={weatherCard.dialSize}
+      />
     </>
   );
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
       <View className="flex-1 gap-3 px-4 pb-3 pt-1">
-        <DashboardTopbar
-          username={profile?.username}
-          notifCount={count}
-          online={device?.online}
-          onBellPress={() => setNotifOpen(true)}
-        />
+        {/* Landscape phones need the height for the two cards (mirrors web,
+            which hides the hero topbar in landscape); the bell is reachable
+            in portrait. */}
+        {!mode.isPhoneLandscape ? (
+          <DashboardTopbar
+            username={profile?.username}
+            notifCount={count}
+            online={model.device?.online}
+            onBellPress={() => setNotifOpen(true)}
+          />
+        ) : null}
 
         {twoCol ? (
           <View className="min-h-0 flex-1 flex-row gap-3">

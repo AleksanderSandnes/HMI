@@ -26,25 +26,30 @@ function renderHook(width: number, height: number) {
 }
 
 describe("useLayoutMode", () => {
-  it("phone portrait: bottom tabs, single column", () => {
+  it("phone portrait: single column", () => {
     const mode = renderHook(393, 852);
-    expect(mode.showRail).toBe(false);
     expect(mode.columns).toBe(1);
     expect(mode.splitSettings).toBe(false);
   });
 
-  it("phone landscape: bottom bar stays, two columns, no split settings", () => {
+  it("phone landscape: two columns, no split settings", () => {
     const mode = renderHook(852, 393);
     expect(mode.isPhoneLandscape).toBe(true);
-    expect(mode.showRail).toBe(false);
     expect(mode.columns).toBe(2);
     expect(mode.splitSettings).toBe(false);
   });
 
-  it("tablet landscape: rail + split settings", () => {
+  it("tablet portrait: stacks like a phone, split settings", () => {
+    const mode = renderHook(810, 1080);
+    expect(mode.isTablet).toBe(true);
+    expect(mode.columns).toBe(1);
+    expect(mode.splitSettings).toBe(true);
+  });
+
+  it("tablet landscape: two columns + split settings", () => {
     const mode = renderHook(1180, 820);
     expect(mode.isTablet).toBe(true);
-    expect(mode.showRail).toBe(true);
+    expect(mode.columns).toBe(2);
     expect(mode.splitSettings).toBe(true);
   });
 });

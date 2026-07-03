@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, useWindowDimensions } from "react-native";
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import { useThemeColors } from "../../lib/theme";
@@ -37,10 +37,14 @@ const LIGHT_GSUN: GsunStops = {
  */
 export function ScreenBackground() {
   const { mode } = useThemeColors();
+  // Numeric dimensions, not "100%": react-native-svg does not re-resolve
+  // percentage sizes when the surface rotates, leaving the gradient at the
+  // portrait width in landscape.
+  const { width, height } = useWindowDimensions();
   const g = mode === "dark" ? DARK_GSUN : LIGHT_GSUN;
 
   return (
-    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
+    <Svg style={StyleSheet.absoluteFill} width={width} height={height} pointerEvents="none">
       <Defs>
         <LinearGradient id="bg-base" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={g.base[0]} />

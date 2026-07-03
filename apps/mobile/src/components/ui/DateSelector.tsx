@@ -3,6 +3,7 @@ import { formatDayMonth, parseYMD, shiftYMD, toYMD, weekdayAbbr } from "@hmi/cor
 import { useState } from "react";
 import { Pressable, Text } from "react-native";
 
+import { cn } from "../../lib/cn";
 import { useI18n } from "../../lib/i18n";
 import { useThemeColors } from "../../lib/theme";
 
@@ -13,6 +14,8 @@ interface DateSelectorProps {
   selectedDate: string;
   onDateSelect: (date: string) => void;
   disabled?: boolean;
+  /** Shorter buttons/label (landscape phone side panels). */
+  compact?: boolean;
 }
 
 function StepButton({
@@ -20,11 +23,13 @@ function StepButton({
   label,
   onPress,
   disabled,
+  compact,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
   disabled: boolean;
+  compact: boolean;
 }) {
   const { colors } = useThemeColors();
   return (
@@ -33,9 +38,12 @@ function StepButton({
       disabled={disabled}
       accessibilityLabel={label}
       style={disabled ? { opacity: 0.4 } : undefined}
-      className="h-[46px] w-[46px] items-center justify-center rounded-[14px] border border-glass-border bg-glass-fill"
+      className={cn(
+        "items-center justify-center rounded-[14px] border border-glass-border bg-glass-fill",
+        compact ? "h-[38px] w-[38px]" : "h-[46px] w-[46px]",
+      )}
     >
-      <Ionicons name={icon} size={20} color={colors.textSecondary} />
+      <Ionicons name={icon} size={compact ? 18 : 20} color={colors.textSecondary} />
     </Pressable>
   );
 }
@@ -45,7 +53,12 @@ function StepButton({
  * chevrons move a day at a time (next disabled at today); the centre button opens
  * the drill-down calendar. Local-tz date math via the shared @hmi/core helpers.
  */
-export function DateSelector({ selectedDate, onDateSelect, disabled = false }: DateSelectorProps) {
+export function DateSelector({
+  selectedDate,
+  onDateSelect,
+  disabled = false,
+  compact = false,
+}: DateSelectorProps) {
   const [open, setOpen] = useState(false);
   const { colors } = useThemeColors();
   const { locale, t } = useI18n();
@@ -55,25 +68,37 @@ export function DateSelector({ selectedDate, onDateSelect, disabled = false }: D
 
   return (
     <>
-      <GlassCard strong className="flex-row items-center gap-2 p-[7px]">
+      <GlassCard strong className={cn("flex-row items-center gap-2", compact ? "p-1" : "p-[7px]")}>
         <StepButton
           icon="chevron-back"
           label={t("a11y.previousDay")}
           disabled={disabled}
+          compact={compact}
           onPress={() => onDateSelect(shiftYMD(selectedDate, -1))}
         />
         <Pressable
           disabled={disabled}
           onPress={() => setOpen(true)}
-          className="h-[46px] flex-1 flex-row items-center justify-center gap-2.5 rounded-[14px] border border-glass-border bg-glass-fill"
+          className={cn(
+            "flex-1 flex-row items-center justify-center gap-2.5 rounded-[14px] border border-glass-border bg-glass-fill",
+            compact ? "h-[38px]" : "h-[46px]",
+          )}
         >
           <Ionicons name="calendar" size={16} color={colors.textSecondary} />
-          <Text className="text-[15px] font-extrabold text-text-primary">{label}</Text>
+          <Text
+            className={cn(
+              "font-extrabold text-text-primary",
+              compact ? "text-[13px]" : "text-[15px]",
+            )}
+          >
+            {label}
+          </Text>
         </Pressable>
         <StepButton
           icon="chevron-forward"
           label={t("a11y.nextDay")}
           disabled={disabled || atToday}
+          compact={compact}
           onPress={() => onDateSelect(shiftYMD(selectedDate, 1))}
         />
       </GlassCard>

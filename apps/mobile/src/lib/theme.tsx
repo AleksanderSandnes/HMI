@@ -44,6 +44,8 @@ export interface ThemeColors {
   skyTint: string;
   /** Darker/lighter flat tint (cyan) for pressure-style data icons. */
   cyanTint: string;
+  /** Darker/lighter flat tint (indigo) of the app accent, for label text/icons. */
+  accentTint: string;
   /** Faint disc fill behind compass/gauge dials (wind, barometer). */
   dialFill: string;
   /** Hairline ring stroke around compass/gauge dials. */
@@ -74,6 +76,7 @@ const LIGHT: ThemeColors = {
   energyTint: "#0d9488",
   skyTint: "#0284c7",
   cyanTint: "#0891b2",
+  accentTint: "#6366f1",
   dialFill: "rgba(20, 26, 41, 0.045)",
   dialRing: "rgba(20, 26, 41, 0.14)",
   scrim: "rgba(20, 26, 41, 0.25)",
@@ -98,6 +101,7 @@ const DARK: ThemeColors = {
   energyTint: "#34d399",
   skyTint: "#38bdf8",
   cyanTint: "#22d3ee",
+  accentTint: "#818cf8",
   dialFill: "rgba(255, 255, 255, 0.03)",
   dialRing: "rgba(255, 255, 255, 0.12)",
   scrim: "rgba(4, 7, 14, 0.5)",

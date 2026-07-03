@@ -46,26 +46,31 @@ function MetricChip({
   meta,
   on,
   onSelect,
+  compact = false,
 }: {
   meta: WeatherMetricMeta;
   on: boolean;
   onSelect: (key: string) => void;
+  compact?: boolean;
 }) {
   const { colors } = useThemeColors();
   const { t } = useI18n();
+  const accent = on ? meta.accent : colors.textMuted;
+  const chipCls = cn(
+    "flex-row items-center gap-2 rounded-md border",
+    compact ? "h-8 px-3" : "h-9 px-3.5",
+    on ? "bg-glass-fill-strong" : "border-glass-border bg-glass-fill",
+  );
   return (
     <Pressable
       onPress={() => onSelect(meta.key)}
-      className={cn(
-        "h-9 flex-row items-center gap-2 rounded-md border px-3.5",
-        on ? "bg-glass-fill-strong" : "border-glass-border bg-glass-fill",
-      )}
+      className={chipCls}
       style={on ? { borderColor: `${meta.accent}66` } : undefined}
     >
-      {METRIC_ICONS[meta.key]?.(on ? meta.accent : colors.textMuted, 14)}
+      {METRIC_ICONS[meta.key]?.(accent, compact ? 13 : 14)}
       <Text
-        style={on ? { color: meta.accent } : undefined}
-        className={cn("text-[13px] font-bold", !on && "text-text-muted")}
+        style={{ color: accent }}
+        className={cn("font-bold", compact ? "text-[12px]" : "text-[13px]")}
       >
         {t(meta.labelKey)}
       </Text>
@@ -77,16 +82,21 @@ function MetricChips({
   active,
   onSelect,
   wrap = false,
+  compact = false,
 }: {
   active: string;
   onSelect: (key: string) => void;
   /** Wrap into rows (landscape side panel) instead of scrolling horizontally. */
   wrap?: boolean;
+  /** Smaller chips (landscape phone side panel). */
+  compact?: boolean;
 }) {
   const chips = WEATHER_METRICS.map((m) => (
-    <MetricChip key={m.key} meta={m} on={m.key === active} onSelect={onSelect} />
+    <MetricChip key={m.key} meta={m} on={m.key === active} onSelect={onSelect} compact={compact} />
   ));
-  if (wrap) return <View className="flex-row flex-wrap gap-2">{chips}</View>;
+  if (wrap) {
+    return <View className={cn("flex-row flex-wrap", compact ? "gap-1.5" : "gap-2")}>{chips}</View>;
+  }
   return (
     <View className="mb-3 h-11">
       <ScrollView
@@ -191,20 +201,26 @@ export default function Weather() {
   // Phone weekly → 7 daily min/max/avg bands; tablet/hourly → dense series.
   // Width-based on purpose: a landscape phone (< tablet breakpoint) keeps bands.
   const phoneWeekly = isPhoneWeekly(width, timespan);
-  const { isLandscape } = useLayoutMode();
+  const { isLandscape, isPhoneLandscape } = useLayoutMode();
 
   const data = useWeatherChartData(dataType, timespan, ymd, meta);
   const { isLoading } = data;
 
   // Shared leaves for both arrangements (portrait stack / landscape side panel).
   const dateSelector = (
-    <DateSelector selectedDate={pickerDate} onDateSelect={setPickerDate} disabled={isLoading} />
+    <DateSelector
+      selectedDate={pickerDate}
+      onDateSelect={setPickerDate}
+      disabled={isLoading}
+      compact={isPhoneLandscape}
+    />
   );
   const segmented = (
     <SegmentedControl
       value={timespan}
       onChange={setTimespan}
       options={WEATHER_TIME_OPTIONS.map(({ labelKey, value }) => ({ label: t(labelKey), value }))}
+      compact={isPhoneLandscape}
     />
   );
   const chartPane = <WeatherChartPane meta={meta} phoneWeekly={phoneWeekly} data={data} />;
@@ -213,6 +229,7 @@ export default function Weather() {
     <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
       {isLandscape ? (
         <LandscapeShell
+          compact={isPhoneLandscape}
           chart={
             <GlassCard strong className="flex-1 p-[18px]">
               {chartPane}
@@ -220,10 +237,19 @@ export default function Weather() {
           }
           panel={
             <>
-              <PageHeader title={t("weather.title")} subtitle={t("weather.subtitle")} />
+              <PageHeader
+                title={t("weather.title")}
+                subtitle={t("weather.subtitle")}
+                compact={isPhoneLandscape}
+              />
               {dateSelector}
-              <MetricChips active={dataType} onSelect={setDataType} wrap />
               {segmented}
+              <MetricChips
+                active={dataType}
+                onSelect={setDataType}
+                wrap
+                compact={isPhoneLandscape}
+              />
             </>
           }
         />

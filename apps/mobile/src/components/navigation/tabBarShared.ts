@@ -1,7 +1,7 @@
 import type { Ionicons } from "@expo/vector-icons";
 import { type BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
-/** Route-name → Ionicons glyph for the tab bar / nav rail. */
+/** Route-name → Ionicons glyph for the tab bar. */
 export const TAB_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   index: "grid",
   solar: "sunny",
@@ -17,7 +17,7 @@ export function tabIcon(routeName: string, focused: boolean): keyof typeof Ionic
 type TabNavigation = BottomTabBarProps["navigation"];
 type TabRoute = BottomTabBarProps["state"]["routes"][number];
 
-/** Standard tabPress emit + navigate, shared by GlassTabBar and GlassNavRail. */
+/** Standard tabPress emit + navigate for the glass tab bar. */
 export function makeTabPressHandler(navigation: TabNavigation, route: TabRoute, focused: boolean) {
   return () => {
     const event = navigation.emit({

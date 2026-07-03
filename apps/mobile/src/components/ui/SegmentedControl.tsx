@@ -28,10 +28,13 @@ export function SegmentedControl({
   value,
   onChange,
   options,
+  compact = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   options?: SegmentOption[];
+  /** Shorter pills (landscape phone side panels). */
+  compact?: boolean;
 }) {
   const { mode } = useThemeColors();
   const { t } = useI18n();
@@ -51,7 +54,10 @@ export function SegmentedControl({
             onPress={() => onChange(opt.value)}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
-            className="flex-1 items-center justify-center rounded-pill py-2.5"
+            className={cn(
+              "flex-1 items-center justify-center rounded-pill",
+              compact ? "py-1.5" : "py-2.5",
+            )}
           >
             {active ? (
               <LinearGradient
@@ -63,7 +69,7 @@ export function SegmentedControl({
             ) : null}
             <Text
               className={cn(
-                "text-[13px]",
+                compact ? "text-[12px]" : "text-[13px]",
                 active ? "font-extrabold text-text-inverse" : "font-semibold text-text-muted",
               )}
             >

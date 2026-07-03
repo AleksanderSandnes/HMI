@@ -17,6 +17,7 @@ import { SolarChart } from "../../src/components/charts";
 import { DateSelector } from "../../src/components/ui/DateSelector";
 import { GlassCard } from "../../src/components/ui/GlassCard";
 import { SegmentedControl } from "../../src/components/ui/SegmentedControl";
+import { cn } from "../../src/lib/cn";
 import { useI18n } from "../../src/lib/i18n";
 import { useCore } from "../../src/lib/useCore";
 import { useLayoutMode } from "../../src/lib/useLayoutMode";
@@ -47,12 +48,26 @@ function Cap({ label, value, wide = false }: { label: string; value: string; wid
 }
 
 /** Peak + period-total captions under the chart (design 1d). */
-function StatCaps({ solar, timespan }: { solar?: SolarData; timespan: string }) {
+function StatCaps({
+  solar,
+  timespan,
+  compact = false,
+}: {
+  solar?: SolarData;
+  timespan: string;
+  /** Tighter box (landscape phone side panel — the panel gap replaces the margin). */
+  compact?: boolean;
+}) {
   const { t } = useI18n();
   const c = solarCapValues(solar, timespan);
   if (!c.hasData) return null;
   return (
-    <View className="mt-3 flex-row items-stretch rounded-md border border-glass-border px-4 py-3.5">
+    <View
+      className={cn(
+        "flex-row items-stretch rounded-md border border-glass-border px-4",
+        compact ? "py-2.5" : "mt-3 py-3.5",
+      )}
+    >
       <Cap label={t(c.labels[0])} value={c.peakText} wide />
       <View className="mx-4 w-px self-stretch bg-glass-border" />
       <Cap label={t(c.labels[1])} value={c.totalText} />
@@ -60,9 +75,24 @@ function StatCaps({ solar, timespan }: { solar?: SolarData; timespan: string }) 
   );
 }
 
+/** Chart card heading: fixed title + timespan/date subtitle. */
+function ChartTitle({ timespan, date }: { timespan: string; date: string }) {
+  const { locale, t } = useI18n();
+  return (
+    <View className="mb-3">
+      <Text className="text-[19px] font-extrabold text-text-primary">
+        {t("solar.powerGeneration")}
+      </Text>
+      <Text className="mt-0.5 text-[13px] font-medium text-text-muted">
+        {chartSubtitle(timespan, date, locale)}
+      </Text>
+    </View>
+  );
+}
+
 export default function Solar() {
   const { growatt } = useCore();
-  const { locale, t } = useI18n();
+  const { t } = useI18n();
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -76,32 +106,33 @@ export default function Solar() {
   });
 
   const chartData = solar?.chartData ?? EMPTY;
-  const { isLandscape } = useLayoutMode();
+  const { isLandscape, isPhoneLandscape } = useLayoutMode();
 
   // Shared leaves for both arrangements (portrait stack / landscape side panel).
-  const chartTitle = (
-    <View className="mb-3">
-      <Text className="text-[19px] font-extrabold text-text-primary">
-        {t("solar.powerGeneration")}
-      </Text>
-      <Text className="mt-0.5 text-[13px] font-medium text-text-muted">
-        {chartSubtitle(timespan, pickerDate, locale)}
-      </Text>
-    </View>
-  );
+  const chartTitle = <ChartTitle timespan={timespan} date={pickerDate} />;
   const dateSelector = (
-    <DateSelector selectedDate={pickerDate} onDateSelect={setPickerDate} disabled={isLoading} />
+    <DateSelector
+      selectedDate={pickerDate}
+      onDateSelect={setPickerDate}
+      disabled={isLoading}
+      compact={isPhoneLandscape}
+    />
   );
-  const segmented = <SegmentedControl value={timespan} onChange={setTimespan} />;
+  const segmented = (
+    <SegmentedControl value={timespan} onChange={setTimespan} compact={isPhoneLandscape} />
+  );
   const chart = (
     <SolarChart data={chartData} timespan={timespan} date={pickerDate} loading={isLoading} />
   );
-  const caps = !isLoading ? <StatCaps solar={solar} timespan={timespan} /> : null;
+  const caps = !isLoading ? (
+    <StatCaps solar={solar} timespan={timespan} compact={isPhoneLandscape} />
+  ) : null;
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
       {isLandscape ? (
         <LandscapeShell
+          compact={isPhoneLandscape}
           chart={
             <GlassCard strong className="flex-1 p-[18px]">
               {chartTitle}
@@ -110,7 +141,11 @@ export default function Solar() {
           }
           panel={
             <>
-              <PageHeader title={t("solar.title")} subtitle={t("solar.subtitle")} />
+              <PageHeader
+                title={t("solar.title")}
+                subtitle={t("solar.subtitle")}
+                compact={isPhoneLandscape}
+              />
               {dateSelector}
               {segmented}
               {caps}
