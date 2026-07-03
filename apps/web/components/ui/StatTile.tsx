@@ -33,13 +33,13 @@ interface StatTileProps {
 // lookup (keeps the component's complexity low).
 const SIZES = {
   regular: {
-    pad: "p-[18px]",
+    pad: "p-[1.125rem]",
     headMb: "mb-3.5",
     chip: 42,
     iconSize: 17,
-    label: "text-[12.5px]",
+    label: "text-[0.78125rem]",
     skeleton: "h-7 w-24",
-    value: "text-[26px]",
+    value: "text-[1.625rem]",
     unit: "text-sm",
     sublabel: "mt-1.5 text-xs",
   },
@@ -48,11 +48,11 @@ const SIZES = {
     headMb: "mb-2.5",
     chip: 30,
     iconSize: 15,
-    label: "text-[10.5px]",
+    label: "text-[0.65625rem]",
     skeleton: "h-6 w-20",
-    value: "text-[21px]",
-    unit: "text-[11px]",
-    sublabel: "mt-1 text-[10.5px]",
+    value: "text-[1.3125rem]",
+    unit: "text-[0.6875rem]",
+    sublabel: "mt-1 text-[0.65625rem]",
   },
 } as const;
 
@@ -69,7 +69,11 @@ function DeltaPill({ delta }: { delta: number }) {
           : "bg-[rgba(251,113,133,0.13)] text-negative",
       )}
     >
-      {positive ? <ArrowUp size={9} /> : <ArrowDown size={9} />}
+      {positive ? (
+        <ArrowUp size={9} className="size-[0.5625rem]" />
+      ) : (
+        <ArrowDown size={9} className="size-[0.5625rem]" />
+      )}
       <span className="text-xs font-extrabold">{Math.abs(delta).toFixed(0)}%</span>
     </div>
   );

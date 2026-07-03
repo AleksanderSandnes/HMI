@@ -40,7 +40,7 @@ export function WindDial({
       strong
       className="flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-2 p-3.5"
     >
-      <div className="relative h-[96px] w-[96px]">
+      <div className="relative h-[6rem] w-[6rem]">
         <svg viewBox="0 0 100 100" className="h-full w-full">
           <defs>
             <linearGradient id="wind-arrow" x1="0" y1="0" x2="0" y2="1">
@@ -81,13 +81,13 @@ export function WindDial({
           )}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[26px] font-extrabold leading-none text-text-primary">
+          <span className="text-[1.625rem] font-extrabold leading-none text-text-primary">
             {spd != null ? Math.round(spd) : "—"}
           </span>
-          <span className="text-[10px] font-bold text-text-muted">{unit}</span>
+          <span className="text-[0.625rem] font-bold text-text-muted">{unit}</span>
         </div>
       </div>
-      <p className="text-[12px] font-semibold text-text-secondary">
+      <p className="text-[0.75rem] font-semibold text-text-secondary">
         {dir ? `from ${dir}` : "Direction n/a"}
         {gst != null ? ` · gust ${Math.round(gst)}` : ""}
       </p>

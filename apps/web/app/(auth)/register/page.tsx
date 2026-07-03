@@ -221,7 +221,7 @@ function RegisterHeader({ header }: { header: (typeof HEADERS)[number] }) {
   const { t } = useI18n();
   return (
     <div className="mb-5 flex flex-col items-center text-center">
-      <h1 className="text-[25px] font-extrabold tracking-tight text-text-primary">
+      <h1 className="text-[1.5625rem] font-extrabold tracking-tight text-text-primary">
         {t(header.titleKey)}
       </h1>
       <p className="mt-1.5 text-sm font-medium text-text-muted">{t(header.subtitleKey)}</p>
@@ -307,7 +307,7 @@ function GrowattStep({ flow }: { flow: RegisterFlow }) {
         onChange={setField(setGrowatt, "password")}
         disabled={saving}
       />
-      <p className="mb-4 mt-0.5 text-center text-[12.5px] font-medium leading-[18px] text-text-muted">
+      <p className="mb-4 mt-0.5 text-center text-[0.78125rem] font-medium leading-[1.125rem] text-text-muted">
         {t("auth.register.optionalHint")}
       </p>
       <div className="flex gap-3">
@@ -355,7 +355,7 @@ function WeatherStep({ flow }: { flow: RegisterFlow }) {
         onChange={setField(setWeather, "apiKey")}
         disabled={saving}
       />
-      <p className="mb-4 mt-0.5 text-center text-[12.5px] font-medium leading-[18px] text-text-muted">
+      <p className="mb-4 mt-0.5 text-center text-[0.78125rem] font-medium leading-[1.125rem] text-text-muted">
         {t("auth.register.optionalHint")}
       </p>
       <div className="flex gap-3">
@@ -381,7 +381,7 @@ export default function RegisterPage() {
   const header = HEADERS[step];
 
   return (
-    <GlassCard strong elevated className="w-full max-w-[460px] p-8 sm:p-9">
+    <GlassCard strong elevated className="w-full max-w-[28.75rem] p-8 sm:p-9">
       <StepIndicator step={step} />
       <RegisterHeader header={header} />
 
@@ -424,11 +424,11 @@ function StepIndicator({ step }: { step: number }) {
                   !active && !done && "border-glass-border-strong bg-glass-fill text-text-muted",
                 )}
               >
-                {done ? <Check size={12} /> : i + 1}
+                {done ? <Check size={12} className="size-[0.75rem]" /> : i + 1}
               </div>
               <span
                 className={cn(
-                  "mt-1.5 text-[11px] font-bold",
+                  "mt-1.5 text-[0.6875rem] font-bold",
                   active ? "text-text-secondary" : "text-text-muted",
                 )}
               >

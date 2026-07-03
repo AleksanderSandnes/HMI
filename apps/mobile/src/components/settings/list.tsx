@@ -38,6 +38,7 @@ export function SettingsRow({
   subtitle,
   right,
   onPress,
+  active = false,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   gradient: StatGradient;
@@ -45,10 +46,17 @@ export function SettingsRow({
   subtitle?: string;
   right?: ReactNode;
   onPress?: () => void;
+  /** Solar-tinted highlight for the selected row (split settings on tablet). */
+  active?: boolean;
 }) {
   const { colors } = useThemeColors();
   const body = (
-    <View className="flex-row items-center gap-3 px-3.5 py-3">
+    <View
+      className={cn(
+        "flex-row items-center gap-3 px-3.5 py-3",
+        active && "bg-[rgba(245,158,11,0.12)]",
+      )}
+    >
       <LinearGradient
         colors={GRADIENTS[gradient]}
         start={{ x: 0, y: 0 }}

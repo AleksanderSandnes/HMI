@@ -24,7 +24,7 @@ const POPOVER_W = 300;
 const POPOVER_H = 360;
 
 const GRID_BTN =
-  "flex h-11 items-center justify-center rounded-[var(--radius-md)] text-[13px] font-bold transition";
+  "flex h-11 items-center justify-center rounded-[var(--radius-md)] text-[0.8125rem] font-bold transition";
 
 function headerLabelFor(view: View, viewDate: Date, yearStart: number, locale: Locale): string {
   if (view === "day") return `${monthName(locale, viewDate.getMonth())} ${viewDate.getFullYear()}`;
@@ -53,7 +53,7 @@ function DayGrid({
         {weekdays.map((w) => (
           <span
             key={w}
-            className="flex h-7 items-center justify-center text-[11px] font-bold uppercase text-text-muted"
+            className="flex h-7 items-center justify-center text-[0.6875rem] font-bold uppercase text-text-muted"
           >
             {w}
           </span>
@@ -72,7 +72,7 @@ function DayGrid({
               aria-label={toYMD(d)}
               aria-current={isSelected ? "date" : undefined}
               className={cn(
-                "flex h-9 items-center justify-center rounded-[var(--radius-sm)] text-[13px] font-bold transition",
+                "flex h-9 items-center justify-center rounded-[var(--radius-sm)] text-[0.8125rem] font-bold transition",
                 isSelected
                   ? "bg-solar-light text-text-inverse"
                   : inMonth
@@ -266,7 +266,7 @@ function CalendarPopover({
         top: pos.top,
         transform: pos.up ? "translate(-50%, -100%)" : "translate(-50%, 0)",
       }}
-      className="z-[100] w-[300px] rounded-[var(--radius-lg)] border border-glass-border-strong bg-[var(--color-panel-bg)] p-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+      className="z-[100] w-[18.75rem] rounded-[var(--radius-lg)] border border-glass-border-strong bg-[var(--color-panel-bg)] p-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl"
     >
       <div className="mb-3 flex items-center justify-between gap-1">
         <button
@@ -275,7 +275,7 @@ function CalendarPopover({
           aria-label={t("date.previous")}
           className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong"
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={16} className="size-[1rem]" />
         </button>
         <button
           type="button"
@@ -284,7 +284,7 @@ function CalendarPopover({
           className="flex flex-1 items-center justify-center gap-1 rounded-[var(--radius-sm)] py-1 text-sm font-extrabold text-text-primary transition hover:bg-glass-fill"
         >
           {headerLabel}
-          {showZoom ? <ChevronDown size={13} className="text-text-muted" /> : null}
+          {showZoom ? <ChevronDown size={13} className="size-[0.8125rem] text-text-muted" /> : null}
         </button>
         <button
           type="button"
@@ -292,7 +292,7 @@ function CalendarPopover({
           aria-label={t("date.next")}
           className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] border border-glass-border bg-glass-fill text-text-secondary transition hover:bg-glass-fill-strong"
         >
-          <ChevronRight size={16} />
+          <ChevronRight size={16} className="size-[1rem]" />
         </button>
       </div>
       {children}
@@ -329,7 +329,7 @@ function TriggerRow({
         aria-label={t("a11y.previousDay")}
         className={STEP_BTN}
       >
-        <ChevronLeft size={18} />
+        <ChevronLeft size={18} className="size-[1.125rem]" />
       </button>
       <button
         type="button"
@@ -339,7 +339,7 @@ function TriggerRow({
         aria-expanded={open}
         className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-4 py-2 text-sm font-bold text-text-primary transition hover:bg-glass-fill-strong disabled:opacity-50"
       >
-        <CalendarDays size={14} className="text-text-secondary" />
+        <CalendarDays size={14} className="size-[0.875rem] text-text-secondary" />
         {pretty}
       </button>
       <button
@@ -349,7 +349,7 @@ function TriggerRow({
         aria-label={t("a11y.nextDay")}
         className={STEP_BTN}
       >
-        <ChevronRight size={18} />
+        <ChevronRight size={18} className="size-[1.125rem]" />
       </button>
     </div>
   );

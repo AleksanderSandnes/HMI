@@ -17,9 +17,10 @@ import {
 } from "recharts";
 
 import { Frame } from "./chartFrame";
-import { AXIS_TICK, CURSOR, GRID_STROKE } from "./chartTheme";
+import { axisTick, CURSOR, GRID_STROKE } from "./chartTheme";
 
 import { barGapPercent } from "@/lib/chart";
+import { useRemScale } from "@/lib/hooks/useRemScale";
 
 interface SolarChartProps {
   data: SimpleChartData;
@@ -49,10 +50,12 @@ function buildTooltip(isArea: boolean, unit: string) {
         const p = payload[0];
         return (
           <div className="rounded-xl border border-glass-border-strong bg-[var(--color-panel-bg)] px-3 py-2 text-center">
-            <p className="text-[15px] font-extrabold text-text-primary">
+            <p className="text-[0.9375rem] font-extrabold text-text-primary">
               {formatNum(Number(p.value))} {unit}
             </p>
-            <p className="mt-px text-[11px] font-semibold text-text-muted">{p.payload.label}</p>
+            <p className="mt-px text-[0.6875rem] font-semibold text-text-muted">
+              {p.payload.label}
+            </p>
           </div>
         );
       }}
@@ -63,13 +66,13 @@ function buildTooltip(isArea: boolean, unit: string) {
 // Recharts identifies axis children by component type via React.Children, which
 // does NOT look inside a Fragment — but it does flatten arrays. So return an array
 // (not a <>fragment</>) or the axes silently never render.
-function buildAxes(yMax: number) {
+function buildAxes(yMax: number, scale: number) {
   return [
     <CartesianGrid key="grid" vertical={false} stroke={GRID_STROKE} strokeWidth={1} />,
     <XAxis
       key="x"
       dataKey="label"
-      tick={AXIS_TICK}
+      tick={axisTick(scale)}
       tickLine={false}
       axisLine={false}
       interval="preserveStartEnd"
@@ -77,10 +80,10 @@ function buildAxes(yMax: number) {
     />,
     <YAxis
       key="y"
-      tick={AXIS_TICK}
+      tick={axisTick(scale)}
       tickLine={false}
       axisLine={false}
-      width={46}
+      width={Math.round(46 * scale)}
       tickCount={5}
       domain={[0, yMax]}
       tickFormatter={(v: number) => formatNum(v)}
@@ -88,7 +91,12 @@ function buildAxes(yMax: number) {
   ];
 }
 
-const MARGIN = { top: 22, right: 16, bottom: 6, left: 0 };
+const chartMargin = (scale: number) => ({
+  top: Math.round(22 * scale),
+  right: Math.round(16 * scale),
+  bottom: Math.round(6 * scale),
+  left: 0,
+});
 
 function readSolar(data: SimpleChartData): { values: number[]; labels: string[] } {
   return { values: data?.datasets?.[0]?.data ?? [], labels: data?.labels ?? [] };
@@ -122,7 +130,7 @@ function StateView({
     <Frame heightClass={heightClass} height={height}>
       {loading ? (
         <div className="flex h-full w-full items-center justify-center">
-          <Loader2 size={32} className="animate-spin text-solar-light" />
+          <Loader2 size={32} className="size-[2rem] animate-spin text-solar-light" />
         </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-text-muted">
@@ -139,6 +147,7 @@ function AreaView({
   tooltip,
   peakLabel,
   max,
+  scale,
   width,
   height,
 }: {
@@ -147,12 +156,13 @@ function AreaView({
   tooltip: React.ReactNode;
   peakLabel: string;
   max: number;
+  scale: number;
   // Injected by ResponsiveContainer via cloneElement — must reach the chart.
   width?: number;
   height?: number;
 }) {
   return (
-    <AreaChart width={width} height={height} data={chartData} margin={MARGIN}>
+    <AreaChart width={width} height={height} data={chartData} margin={chartMargin(scale)}>
       <defs>
         <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#34d399" stopOpacity={0.55} />
@@ -198,6 +208,7 @@ function BarView({
   tooltip,
   gapPct,
   peakIndex,
+  scale,
   width,
   height,
 }: {
@@ -206,6 +217,7 @@ function BarView({
   tooltip: React.ReactNode;
   gapPct: number;
   peakIndex: number;
+  scale: number;
   // Injected by ResponsiveContainer via cloneElement — must reach the chart.
   width?: number;
   height?: number;
@@ -215,7 +227,7 @@ function BarView({
       width={width}
       height={height}
       data={chartData}
-      margin={MARGIN}
+      margin={chartMargin(scale)}
       barCategoryGap={`${gapPct}%`}
     >
       <defs>
@@ -230,7 +242,12 @@ function BarView({
       </defs>
       {axes}
       {tooltip}
-      <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={72} isAnimationActive={false}>
+      <Bar
+        dataKey="value"
+        radius={[6, 6, 0, 0]}
+        maxBarSize={Math.round(72 * scale)}
+        isAnimationActive={false}
+      >
         {chartData.map((entry, i) => (
           <Cell key={i} fill={i === peakIndex ? "url(#barPeak)" : "url(#barNormal)"} />
         ))}
@@ -252,6 +269,7 @@ export function SolarChart({
   showAxes = true,
   heightClass,
 }: SolarChartProps) {
+  const scale = useRemScale();
   const { values, labels } = readSolar(data);
   const isArea = timespan === "hourly";
 
@@ -260,7 +278,7 @@ export function SolarChart({
   }
 
   const { chartData, max, yMax, peakIndex, peakLabel } = solarModel(values, labels);
-  const axes = showAxes ? buildAxes(yMax) : null;
+  const axes = showAxes ? buildAxes(yMax, scale) : null;
   const tooltip = buildTooltip(isArea, isArea ? "W" : "kWh");
 
   return (
@@ -273,6 +291,7 @@ export function SolarChart({
             tooltip={tooltip}
             peakLabel={peakLabel}
             max={max}
+            scale={scale}
           />
         ) : (
           <BarView
@@ -281,6 +300,7 @@ export function SolarChart({
             tooltip={tooltip}
             gapPct={barGapPercent(values.length)}
             peakIndex={peakIndex}
+            scale={scale}
           />
         )}
       </ResponsiveContainer>

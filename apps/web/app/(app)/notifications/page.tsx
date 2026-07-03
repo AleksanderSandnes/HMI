@@ -20,7 +20,7 @@ function EmptyState() {
   const { t } = useI18n();
   return (
     <GlassCard className="flex flex-col items-center gap-3 p-12 text-center">
-      <Bell size={32} className="text-text-muted" />
+      <Bell size={32} className="size-[2rem] text-text-muted" />
       <p className="text-sm font-semibold text-text-secondary">{t("notifications.allCaughtUp")}</p>
       <p className="text-sm text-text-muted">{t("notifications.emptyHint")}</p>
     </GlassCard>
@@ -32,7 +32,7 @@ function NotificationRow({ item, onDismiss }: { item: NotificationItem; onDismis
   const { icon: Icon, className } = LEVEL[item.level] ?? LEVEL.info;
   return (
     <GlassCard className="flex items-start gap-3.5 p-4">
-      <Icon size={18} className={`mt-0.5 shrink-0 ${className}`} />
+      <Icon size={18} className={`mt-0.5 size-[1.125rem] shrink-0 ${className}`} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <p className="truncate font-bold text-text-primary">{item.title}</p>
@@ -47,7 +47,7 @@ function NotificationRow({ item, onDismiss }: { item: NotificationItem; onDismis
         aria-label={t("a11y.dismiss")}
         className="shrink-0 rounded-md p-1 text-text-muted transition hover:text-text-primary"
       >
-        <X size={16} />
+        <X size={16} className="size-[1rem]" />
       </button>
     </GlassCard>
   );
@@ -71,13 +71,13 @@ export default function NotificationsPage() {
   const items = data ?? [];
 
   return (
-    <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5">
+    <div className="mx-auto flex w-full max-w-[51.25rem] flex-col gap-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[30px] font-extrabold tracking-[-0.8px] text-text-primary">
+          <h1 className="text-[1.875rem] font-extrabold tracking-[-0.8px] text-text-primary">
             {t("notifications.title")}
           </h1>
-          <p className="mt-1 text-[14.5px] font-medium text-text-muted">
+          <p className="mt-1 text-[0.90625rem] font-medium text-text-muted">
             {tp("notifications.count", items.length)}
           </p>
         </div>
@@ -89,7 +89,7 @@ export default function NotificationsPage() {
             }}
             className="flex items-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-3.5 py-2 text-sm font-bold text-text-muted transition hover:text-negative"
           >
-            <Trash2 size={15} />
+            <Trash2 size={15} className="size-[0.9375rem]" />
             {t("notifications.clearAll")}
           </button>
         ) : null}

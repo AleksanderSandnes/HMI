@@ -27,8 +27,8 @@ function NavWeatherWidget() {
   return (
     <div className="flex items-center gap-3">
       <span className="flex items-center gap-1.5">
-        <Sun size={13} className="text-solar-light" />
-        <span className="whitespace-nowrap text-[13px] font-bold text-text-secondary">
+        <Sun size={13} className="size-[0.8125rem] text-solar-light" />
+        <span className="whitespace-nowrap text-[0.8125rem] font-bold text-text-secondary">
           {temp != null ? `${Math.round(temp)}° · ${place || "Sandnes"}` : "—"}
         </span>
       </span>
@@ -47,12 +47,12 @@ function NavWeatherWidget() {
 function NavStat({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
     <span className="flex items-baseline gap-1 whitespace-nowrap">
-      <span className="text-[10px] font-bold uppercase tracking-[0.3px] text-text-muted">
+      <span className="text-[0.625rem] font-bold uppercase tracking-[0.3px] text-text-muted">
         {label}
       </span>
-      <span className="text-[13px] font-extrabold text-text-primary">
+      <span className="text-[0.8125rem] font-extrabold text-text-primary">
         {value}
-        <span className="ml-0.5 text-[9px] font-bold text-text-muted">{unit}</span>
+        <span className="ml-0.5 text-[0.5625rem] font-bold text-text-muted">{unit}</span>
       </span>
     </span>
   );
@@ -81,7 +81,7 @@ export function AppNav() {
           page title (left) and the nav links align with the content's right
           edge. Sign out lives at the bottom of the Settings list, not here. */}
       <header className="sticky top-0 z-30 hidden border-b border-glass-border bg-[var(--color-panel-bg)] px-5 backdrop-blur-xl md:block md:px-8">
-        <div className="mx-auto flex w-full max-w-[1480px] items-center justify-between py-2.5">
+        <div className="mx-auto flex w-full max-w-[92.5rem] items-center justify-between py-2.5 3xl:max-w-[100rem]">
           <div className="flex items-center gap-3.5">
             <Link
               href="/dashboard"
@@ -113,7 +113,7 @@ export function AppNav() {
                       : "text-text-secondary hover:bg-glass-fill hover:text-text-primary",
                   )}
                 >
-                  <Icon size={17} />
+                  <Icon size={17} className="size-[1.0625rem]" />
                   {t(labelKey)}
                 </Link>
               );
@@ -131,11 +131,11 @@ export function AppNav() {
               key={href}
               href={href}
               className={cn(
-                "flex flex-col items-center gap-1 rounded-[var(--radius-md)] px-2 py-1.5 text-[10px] font-semibold transition",
+                "flex flex-col items-center gap-1 rounded-[var(--radius-md)] px-2 py-1.5 text-[0.625rem] font-semibold transition",
                 active ? "text-solar-light" : "text-text-muted",
               )}
             >
-              <Icon size={20} />
+              <Icon size={20} className="size-[1.25rem]" />
               {t(labelKey)}
             </Link>
           );

@@ -34,7 +34,7 @@ export default async function LandingPage() {
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.3),rgba(0,0,0,0.6),rgba(0,0,0,0.3))]" />
 
       <div className="animate-fade-in-up relative z-10 flex flex-col items-center px-6 text-center">
-        <h1 className="text-[42px] font-extrabold leading-tight tracking-tight text-white drop-shadow-lg md:text-[68px]">
+        <h1 className="text-[2.625rem] font-extrabold leading-tight tracking-tight text-white drop-shadow-lg md:text-[4.25rem]">
           {t("landing.title")}
         </h1>
         <p className="mt-2 text-lg font-medium text-white/80 md:text-2xl">
@@ -52,13 +52,13 @@ export default async function LandingPage() {
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:gap-7">
           <Link
             href="/login"
-            className="min-w-[200px] rounded-[var(--radius-md)] bg-[linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)] px-10 py-4 text-center text-base font-extrabold text-text-inverse transition hover:brightness-105 sm:min-w-[180px]"
+            className="min-w-[12.5rem] rounded-[var(--radius-md)] bg-[linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)] px-10 py-4 text-center text-base font-extrabold text-text-inverse transition hover:brightness-105 sm:min-w-[11.25rem]"
           >
             {t("landing.login")}
           </Link>
           <Link
             href="/register"
-            className="min-w-[200px] rounded-[var(--radius-md)] border border-white/40 bg-white/5 px-10 py-4 text-center text-base font-extrabold text-white backdrop-blur transition hover:bg-white/15 sm:min-w-[180px]"
+            className="min-w-[12.5rem] rounded-[var(--radius-md)] border border-white/40 bg-white/5 px-10 py-4 text-center text-base font-extrabold text-white backdrop-blur transition hover:bg-white/15 sm:min-w-[11.25rem]"
           >
             {t("landing.register")}
           </Link>

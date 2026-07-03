@@ -5,5 +5,6 @@ export * from "./date";
 export * from "./datetime";
 export * from "./format";
 export * from "./growattApiHelpers";
+export * from "./layout";
 export * from "./solarStats";
 export * from "./weatherSeries";

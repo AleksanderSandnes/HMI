@@ -126,14 +126,14 @@ function MetricChips({ active, onSelect }: { active: string; onSelect: (key: str
             type="button"
             onClick={() => onSelect(m.key)}
             className={cn(
-              "flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] border px-3.5 py-2 text-[13px] font-bold transition",
+              "flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] border px-3.5 py-2 text-[0.8125rem] font-bold transition",
               on
                 ? "bg-glass-fill-strong"
                 : "border-glass-border bg-glass-fill text-text-muted hover:text-text-secondary",
             )}
             style={on ? { color: m.accent, borderColor: `${m.accent}66` } : undefined}
           >
-            <Icon size={14} />
+            <Icon size={14} className="size-[0.875rem]" />
             {t(m.labelKey)}
           </button>
         );
@@ -183,7 +183,7 @@ export default function WeatherPage() {
   });
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[1480px] flex-col gap-4">
+    <div className="mx-auto flex h-full w-full max-w-[92.5rem] flex-col gap-4 3xl:max-w-[100rem]">
       <PageHeader
         title={t("weather.title")}
         subtitle={t("weather.subtitle")}
@@ -197,11 +197,11 @@ export default function WeatherPage() {
       />
 
       {/* Chart card — fills the remaining viewport so nothing scrolls off-screen. */}
-      <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[22px]">
+      <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[1.375rem]">
         {/* Data-type chips (left) + timespan (right) on one row. */}
         <div className="mb-4 flex shrink-0 items-center gap-3">
           <MetricChips active={dataType} onSelect={setDataType} />
-          <div className="w-[220px] shrink-0">
+          <div className="w-[13.75rem] shrink-0">
             <SegmentedControl
               value={timespan}
               onChange={setTimespan}
@@ -213,11 +213,11 @@ export default function WeatherPage() {
           </div>
         </div>
 
-        <h2 className="mb-[14px] shrink-0 text-[19px] font-extrabold text-text-primary">
+        <h2 className="mb-[0.875rem] shrink-0 text-[1.1875rem] font-extrabold text-text-primary">
           {t(meta.titleKey)}
         </h2>
 
-        <div className="min-h-[220px] flex-1">
+        <div className="min-h-[13.75rem] flex-1">
           <WeatherChart
             labels={labels}
             series={chartSeries}

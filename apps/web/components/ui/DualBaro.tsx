@@ -103,16 +103,18 @@ function Module({
   const v = toNum(value);
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.3px] text-text-muted">{label}</p>
-      <div className="relative h-[92px] w-[92px]">
+      <p className="text-[0.6875rem] font-bold uppercase tracking-[0.3px] text-text-muted">
+        {label}
+      </p>
+      <div className="relative h-[5.75rem] w-[5.75rem]">
         <Gauge value={v} />
       </div>
       {loading ? (
         <Skeleton className="h-5 w-12" />
       ) : (
-        <p className="text-[17px] font-extrabold leading-none text-text-primary">
+        <p className="text-[1.0625rem] font-extrabold leading-none text-text-primary">
           {v != null ? round(v, 1) : "—"}
-          <span className="ml-1 text-[10px] font-bold text-text-muted">{unit}</span>
+          <span className="ml-1 text-[0.625rem] font-bold text-text-muted">{unit}</span>
         </p>
       )}
     </div>

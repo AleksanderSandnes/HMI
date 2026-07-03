@@ -62,7 +62,11 @@ export function SolarHeroCard({ model }: { model: DashboardModel }) {
         </View>
 
         <View className="mt-2.5 flex-row items-end gap-1.5">
-          <Text className="text-[56px] font-black leading-[0.9] tracking-[-2px] text-solar-light">
+          <Text
+            adjustsFontSizeToFit
+            numberOfLines={1}
+            className="text-[56px] font-black leading-[0.9] tracking-[-2px] text-solar-light"
+          >
             {kwLabel(currentPower)}
           </Text>
           <Text className="mb-2 text-[20px] font-extrabold text-text-secondary">kW</Text>

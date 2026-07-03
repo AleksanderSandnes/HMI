@@ -7,8 +7,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useI18n } from "../../lib/i18n";
 import { useThemeColors } from "../../lib/theme";
+import { useLayoutMode } from "../../lib/useLayoutMode";
 
-/** Pushed settings sub-screen: back header + keyboard-aware scroll (design 1g–1j). */
+/**
+ * Pushed settings sub-screen: back header + keyboard-aware scroll (design
+ * 1g–1j). In the tablet split layout it is the detail pane instead: the back
+ * chevron disappears (the list column stays visible) and the form is capped
+ * to a readable width.
+ */
 export function SubScreen({
   title,
   subtitle,
@@ -21,17 +27,28 @@ export function SubScreen({
   const router = useRouter();
   const { colors } = useThemeColors();
   const { t } = useI18n();
+  const { splitSettings } = useLayoutMode();
+
+  // canGoBack is false when this screen was reached by replace (split-mode
+  // selection, then rotated to portrait) or via a cold deep link.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/settings");
+  };
+
   return (
-    <SafeAreaView className="flex-1" edges={["top"]}>
+    <SafeAreaView className="flex-1" edges={["top", "right"]}>
       <View className="flex-row items-center gap-3 px-4 pb-2 pt-1">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={8}
-          accessibilityLabel={t("a11y.back")}
-          className="h-9 w-9 items-center justify-center rounded-[12px] border border-glass-border bg-glass-fill"
-        >
-          <Ionicons name="chevron-back" size={18} color={colors.textSecondary} />
-        </Pressable>
+        {!splitSettings ? (
+          <Pressable
+            onPress={goBack}
+            hitSlop={8}
+            accessibilityLabel={t("a11y.back")}
+            className="h-9 w-9 items-center justify-center rounded-[12px] border border-glass-border bg-glass-fill"
+          >
+            <Ionicons name="chevron-back" size={18} color={colors.textSecondary} />
+          </Pressable>
+        ) : null}
         <View className="flex-1">
           <Text className="text-[20px] font-extrabold tracking-[-0.4px] text-text-primary">
             {title}
@@ -41,11 +58,13 @@ export function SubScreen({
       </View>
       <KeyboardAwareScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 16, gap: 16 }}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 16 }}
         bottomOffset={24}
         keyboardShouldPersistTaps="handled"
       >
-        {children}
+        <View className={splitSettings ? "w-full max-w-[560px] gap-4 self-center" : "gap-4"}>
+          {children}
+        </View>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );

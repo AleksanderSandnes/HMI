@@ -13,9 +13,10 @@ import {
 } from "recharts";
 
 import { Frame } from "./chartFrame";
-import { AXIS_TICK, CURSOR, GRID_STROKE } from "./chartTheme";
+import { axisTick, CURSOR, GRID_STROKE } from "./chartTheme";
 
 import { weatherYDomain } from "@/lib/chart";
+import { useRemScale } from "@/lib/hooks/useRemScale";
 import { useI18n } from "@/lib/i18n";
 
 export interface LineSeries {
@@ -49,8 +50,8 @@ function buildTooltip(clean: LineSeries[], range: number, unit: string) {
       content={({ active, payload, label }) => {
         if (!active || !payload?.length) return null;
         return (
-          <div className="min-w-[120px] rounded-xl border border-glass-border-strong bg-[var(--color-panel-bg)] px-3 py-2.5">
-            <p className="mb-1.5 text-[11px] font-bold text-text-muted">{label}</p>
+          <div className="min-w-[7.5rem] rounded-xl border border-glass-border-strong bg-[var(--color-panel-bg)] px-3 py-2.5">
+            <p className="mb-1.5 text-[0.6875rem] font-bold text-text-muted">{label}</p>
             {payload.map((p, i) => {
               const s = clean[Number(p.dataKey?.toString().slice(1))];
               return (
@@ -59,10 +60,10 @@ function buildTooltip(clean: LineSeries[], range: number, unit: string) {
                     className="h-2 w-2 shrink-0 rounded-full"
                     style={{ backgroundColor: s?.color }}
                   />
-                  <span className="flex-1 text-[11.5px] font-semibold text-text-secondary">
+                  <span className="flex-1 text-[0.71875rem] font-semibold text-text-secondary">
                     {s?.label}
                   </span>
-                  <span className="text-[12.5px] font-extrabold text-text-primary">
+                  <span className="text-[0.78125rem] font-extrabold text-text-primary">
                     {fmt(Number(p.value), range)}
                     {unit ? ` ${unit}` : ""}
                   </span>
@@ -133,7 +134,7 @@ function StateView({
     <Frame heightClass={heightClass} height={height}>
       {loading ? (
         <div className="flex h-full w-full items-center justify-center">
-          <Loader2 size={32} className="animate-spin text-solar-light" />
+          <Loader2 size={32} className="size-[2rem] animate-spin text-solar-light" />
         </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-text-muted">
@@ -175,6 +176,7 @@ export function WeatherChart({
   heightClass,
 }: WeatherChartProps) {
   const { t } = useI18n();
+  const scale = useRemScale();
   const { clean, n, all } = readClean(series);
 
   if (loading || !n || all.length === 0) {
@@ -196,22 +198,27 @@ export function WeatherChart({
       <ResponsiveContainer width="100%" height={heightClass ? "100%" : height}>
         <AreaChart
           data={buildRows(labels, clean)}
-          margin={{ top: 22, right: 18, bottom: 6, left: 0 }}
+          margin={{
+            top: Math.round(22 * scale),
+            right: Math.round(18 * scale),
+            bottom: Math.round(6 * scale),
+            left: 0,
+          }}
         >
           {buildDefs(clean)}
           <CartesianGrid vertical={false} stroke={GRID_STROKE} />
           <XAxis
             dataKey="label"
-            tick={AXIS_TICK}
+            tick={axisTick(scale)}
             tickLine={false}
             axisLine={false}
             {...tickProps}
           />
           <YAxis
-            tick={AXIS_TICK}
+            tick={axisTick(scale)}
             tickLine={false}
             axisLine={false}
-            width={54}
+            width={Math.round(54 * scale)}
             tickCount={5}
             domain={[yMin, yMax]}
             tickFormatter={(v: number) => fmt(v, range)}

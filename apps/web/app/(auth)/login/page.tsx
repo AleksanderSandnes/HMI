@@ -24,9 +24,9 @@ function LoginHeader() {
   return (
     <div className="mb-6 flex flex-col items-center text-center">
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#fde047,#fbbf24,#f59e0b)]">
-        <Zap size={20} className="text-text-inverse" fill="currentColor" />
+        <Zap size={20} className="size-[1.25rem] text-text-inverse" fill="currentColor" />
       </div>
-      <h1 className="text-[26px] font-extrabold tracking-tight text-text-primary">
+      <h1 className="text-[1.625rem] font-extrabold tracking-tight text-text-primary">
         {t("auth.login.title")}
       </h1>
       <p className="mt-1.5 text-sm font-medium text-text-muted">{t("auth.login.subtitle")}</p>
@@ -93,7 +93,7 @@ function LoginForm() {
   const schema = useMemo(() => createLoginSchema(t), [t]);
 
   return (
-    <GlassCard strong elevated className="w-full max-w-[430px] p-8 sm:p-9">
+    <GlassCard strong elevated className="w-full max-w-[26.875rem] p-8 sm:p-9">
       <LoginHeader />
       {error ? <StatusBanner kind="error" message={error} /> : null}
 

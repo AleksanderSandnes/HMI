@@ -89,7 +89,7 @@ function ConfiguredBadge({ on }: { on: boolean }) {
   return (
     <span
       className={cn(
-        "rounded-[var(--radius-pill)] px-2.5 py-1 text-[11px] font-bold",
+        "rounded-[var(--radius-pill)] px-2.5 py-1 text-[0.6875rem] font-bold",
         on ? "bg-[rgba(52,211,153,0.13)] text-positive" : "bg-glass-fill text-text-muted",
       )}
     >
@@ -129,16 +129,16 @@ function HubRow({
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px]"
         style={{ backgroundImage: GRADIENTS[gradient] }}
       >
-        <Icon size={18} className="text-text-inverse" />
+        <Icon size={18} className="size-[1.125rem] text-text-inverse" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[13.5px] font-bold text-text-primary">{title}</span>
+        <span className="block text-[0.84375rem] font-bold text-text-primary">{title}</span>
         {subtitle ? (
-          <span className="mt-px block text-[11px] text-text-muted">{subtitle}</span>
+          <span className="mt-px block text-[0.6875rem] text-text-muted">{subtitle}</span>
         ) : null}
       </span>
       {badge}
-      <ChevronRight size={17} className="shrink-0 text-text-muted" />
+      <ChevronRight size={17} className="size-[1.0625rem] shrink-0 text-text-muted" />
     </button>
   );
 }
@@ -167,21 +167,21 @@ function ProfileHubRow({
     >
       <Avatar initials={deriveInitials(profile?.username)} url={profile?.avatarUrl} size={48} />
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-extrabold text-text-primary">
+        <span className="block text-[0.9375rem] font-extrabold text-text-primary">
           {profile?.username ?? t("settings.yourProfile")}
         </span>
         <span className="mt-0.5 block truncate text-xs text-text-muted">
           {profile?.email ?? "—"}
         </span>
       </span>
-      <ChevronRight size={18} className="shrink-0 text-text-muted" />
+      <ChevronRight size={18} className="size-[1.125rem] shrink-0 text-text-muted" />
     </button>
   );
 }
 
 function GroupLabel({ children }: { children: ReactNode }) {
   return (
-    <p className="ml-1.5 mt-1.5 text-[10.5px] font-bold tracking-[0.6px] text-text-muted">
+    <p className="ml-1.5 mt-1.5 text-[0.65625rem] font-bold tracking-[0.6px] text-text-muted">
       {children}
     </p>
   );
@@ -220,18 +220,18 @@ function AppearanceCard() {
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px]"
               style={{ backgroundImage: GRADIENTS.preferences }}
             >
-              <Contrast size={18} className="text-text-inverse" />
+              <Contrast size={18} className="size-[1.125rem] text-text-inverse" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13.5px] font-bold text-text-primary">
+              <span className="block text-[0.84375rem] font-bold text-text-primary">
                 {t("settings.appearance")}
               </span>
-              <span className="mt-px block text-[11px] text-text-muted">
+              <span className="mt-px block text-[0.6875rem] text-text-muted">
                 {appearanceLabel(hydrated, theme, resolvedTheme, t)}
               </span>
             </span>
           </div>
-          <div className="flex gap-[3px] rounded-xl border border-glass-border bg-glass-fill-subtle p-[3px]">
+          <div className="flex gap-[0.1875rem] rounded-xl border border-glass-border bg-glass-fill-subtle p-[0.1875rem]">
             {APPEARANCE_OPTIONS.map(({ value, labelKey, icon: Icon }) => {
               const active = hydrated && theme === value;
               return (
@@ -248,7 +248,7 @@ function AppearanceCard() {
                       : "text-text-secondary hover:text-text-primary",
                   )}
                 >
-                  <Icon size={14} />
+                  <Icon size={14} className="size-[0.875rem]" />
                   {t(labelKey)}
                 </button>
               );
@@ -285,14 +285,14 @@ function LanguageListbox({
             aria-selected={active}
             onClick={() => onPick(lang.code)}
             className={cn(
-              "flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] transition",
+              "flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[0.8125rem] transition",
               active
                 ? "bg-glass-fill font-bold text-text-primary"
                 : "text-text-secondary hover:bg-glass-fill hover:text-text-primary",
             )}
           >
             <span className="flex-1">{lang.label}</span>
-            {active ? <Check size={15} /> : null}
+            {active ? <Check size={15} className="size-[0.9375rem]" /> : null}
           </button>
         );
       })}
@@ -343,19 +343,22 @@ function LanguageCard() {
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px]"
           style={{ backgroundImage: GRADIENTS.preferences }}
         >
-          <Languages size={18} className="text-text-inverse" />
+          <Languages size={18} className="size-[1.125rem] text-text-inverse" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[13.5px] font-bold text-text-primary">
+          <span className="block text-[0.84375rem] font-bold text-text-primary">
             {t("common.language")}
           </span>
-          <span className="mt-px block text-[11px] text-text-muted">
+          <span className="mt-px block text-[0.6875rem] text-text-muted">
             {hydrated ? (current?.label ?? locale) : "—"}
           </span>
         </span>
         <ChevronRight
           size={17}
-          className={cn("shrink-0 text-text-muted transition-transform", open && "rotate-90")}
+          className={cn(
+            "size-[1.0625rem] shrink-0 text-text-muted transition-transform",
+            open && "rotate-90",
+          )}
         />
       </button>
       {open ? (
@@ -390,20 +393,20 @@ function PanelHeader({
     <>
       <div className="flex items-center gap-3.5">
         <span
-          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[13px]"
+          className="flex h-[2.625rem] w-[2.625rem] shrink-0 items-center justify-center rounded-[13px]"
           style={{ backgroundImage: GRADIENTS[gradient] }}
         >
-          <Icon size={21} className="text-text-inverse" />
+          <Icon size={21} className="size-[1.3125rem] text-text-inverse" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-lg font-extrabold tracking-[-0.3px] text-text-primary">
             {title}
           </span>
-          <span className="mt-0.5 block text-[12.5px] text-text-muted">{subtitle}</span>
+          <span className="mt-0.5 block text-[0.78125rem] text-text-muted">{subtitle}</span>
         </span>
         {badge}
       </div>
-      <div className="my-[18px] h-px bg-glass-border" />
+      <div className="my-[1.125rem] h-px bg-glass-border" />
     </>
   );
 }
@@ -473,7 +476,7 @@ function AvatarPicker({ profile, account }: { profile: UserProfile; account: Cor
             className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-bg-base"
             style={{ backgroundImage: GRADIENTS.accent }}
           >
-            <Camera size={13} className="text-text-inverse" />
+            <Camera size={13} className="size-[0.8125rem] text-text-inverse" />
           </span>
         </button>
         <input
@@ -489,7 +492,7 @@ function AvatarPicker({ profile, account }: { profile: UserProfile; account: Cor
           type="button"
           onClick={() => void remove()}
           disabled={busy}
-          className="text-[13px] font-bold text-text-muted transition hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-60"
+          className="text-[0.8125rem] font-bold text-text-muted transition hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-60"
         >
           {t("settings.removePhoto")}
         </button>
@@ -802,7 +805,7 @@ function SettingsList({
 }) {
   const { t } = useI18n();
   return (
-    <div className="flex w-[370px] shrink-0 flex-col gap-2.5">
+    <div className="flex w-[23.125rem] shrink-0 flex-col gap-2.5">
       <ProfileHubRow
         profile={profile}
         active={section === "profile"}
@@ -831,7 +834,7 @@ function SettingsList({
           active={section === "growatt"}
           onClick={() => onSelect("growatt")}
         />
-        <div className="ml-[62px] h-px bg-glass-border" />
+        <div className="ml-[3.875rem] h-px bg-glass-border" />
         <HubRow
           icon={CloudSun}
           gradient="solar"
@@ -886,9 +889,9 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-[22px]">
+    <div className="mx-auto flex w-full max-w-[68.75rem] flex-col gap-[1.375rem]">
       <div>
-        <h1 className="text-[28px] font-extrabold tracking-[-0.8px] text-text-primary">
+        <h1 className="text-[1.75rem] font-extrabold tracking-[-0.8px] text-text-primary">
           {t("settings.title")}
         </h1>
         <p className="mt-1 text-sm font-medium text-text-muted">{t("settings.subtitle")}</p>
@@ -904,7 +907,7 @@ export default function SettingsPage() {
           onSignOut={() => void signOut()}
         />
 
-        <div className="min-h-[520px] min-w-0 flex-1">
+        <div className="min-h-[32.5rem] min-w-0 flex-1">
           {section === "profile" ? <ProfilePanel profile={profile} account={account} /> : null}
           {section === "growatt" ? (
             <GrowattPanel

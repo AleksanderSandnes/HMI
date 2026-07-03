@@ -28,8 +28,8 @@ export function StatusBanner({ kind, message }: { kind: Kind; message: string })
     <div
       className={`mb-3.5 flex items-center gap-2.5 rounded-[var(--radius-sm)] border px-3.5 py-2.5 ${className}`}
     >
-      <Icon size={14} className="shrink-0" />
-      <span className="flex-1 text-[13px] font-bold leading-[17px]">{message}</span>
+      <Icon size={14} className="size-[0.875rem] shrink-0" />
+      <span className="flex-1 text-[0.8125rem] font-bold leading-[1.0625rem]">{message}</span>
     </div>
   );
 }

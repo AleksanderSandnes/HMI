@@ -5,7 +5,7 @@ interface AvatarProps {
   initials: string;
   /** Public URL of the profile picture, or null/undefined for initials. */
   url?: string | null;
-  /** Diameter in pixels. */
+  /** Diameter in CSS px at the default 16px root (rendered in rem so it scales). */
   size: number;
   className?: string;
 }
@@ -17,7 +17,7 @@ interface AvatarProps {
 export function Avatar({ initials, url, size, className }: AvatarProps) {
   return (
     <div
-      style={{ width: size, height: size }}
+      style={{ width: `${size / 16}rem`, height: `${size / 16}rem` }}
       className={cn(
         "flex items-center justify-center overflow-hidden rounded-full border border-glass-border-strong bg-glass-fill-strong",
         className,
@@ -27,7 +27,7 @@ export function Avatar({ initials, url, size, className }: AvatarProps) {
         <img src={url} alt="" className="h-full w-full object-cover" />
       ) : (
         <span
-          style={{ fontSize: Math.round(size * 0.34) }}
+          style={{ fontSize: `${Math.round(size * 0.34) / 16}rem` }}
           className="font-extrabold text-text-secondary"
         >
           {initials}

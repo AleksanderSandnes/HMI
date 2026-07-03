@@ -22,14 +22,14 @@ export function Toggle({
       disabled={disabled}
       onClick={() => onChange(!value)}
       className={cn(
-        "flex h-7 w-[46px] justify-center rounded-[var(--radius-pill)] p-[3px]",
+        "flex h-7 w-[2.875rem] justify-center rounded-[var(--radius-pill)] p-[0.1875rem]",
         value ? "bg-solar" : "bg-glass-fill-strong border border-glass-border",
         disabled && "opacity-70",
       )}
     >
       <span
         className={cn(
-          "h-[22px] w-[22px] rounded-[var(--radius-pill)] bg-white",
+          "h-[1.375rem] w-[1.375rem] rounded-[var(--radius-pill)] bg-white",
           value && "ml-auto",
         )}
       />

@@ -11,6 +11,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { ScrollView, Text, View, Pressable, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { LandscapeShell } from "../../src/components/LandscapeShell";
 import { PageHeader } from "../../src/components/PageHeader";
 import { WeatherChart, type LineSeries } from "../../src/components/charts";
 import { DateSelector } from "../../src/components/ui/DateSelector";
@@ -20,6 +21,7 @@ import { cn } from "../../src/lib/cn";
 import { useI18n } from "../../src/lib/i18n";
 import { useThemeColors } from "../../src/lib/theme";
 import { useCore } from "../../src/lib/useCore";
+import { useLayoutMode } from "../../src/lib/useLayoutMode";
 
 interface MetricMeta {
   key: string;
@@ -116,9 +118,51 @@ const TIME_OPTION_KEYS: { labelKey: TranslationKey; value: string }[] = [
   { labelKey: "timespan.weekly", value: "weekly" },
 ];
 
-function MetricChips({ active, onSelect }: { active: string; onSelect: (key: string) => void }) {
+function MetricChip({
+  meta,
+  on,
+  onSelect,
+}: {
+  meta: MetricMeta;
+  on: boolean;
+  onSelect: (key: string) => void;
+}) {
   const { colors } = useThemeColors();
   const { t } = useI18n();
+  return (
+    <Pressable
+      onPress={() => onSelect(meta.key)}
+      className={cn(
+        "h-9 flex-row items-center gap-2 rounded-md border px-3.5",
+        on ? "bg-glass-fill-strong" : "border-glass-border bg-glass-fill",
+      )}
+      style={on ? { borderColor: `${meta.accent}66` } : undefined}
+    >
+      {meta.icon(on ? meta.accent : colors.textMuted, 14)}
+      <Text
+        style={on ? { color: meta.accent } : undefined}
+        className={cn("text-[13px] font-bold", !on && "text-text-muted")}
+      >
+        {t(meta.labelKey)}
+      </Text>
+    </Pressable>
+  );
+}
+
+function MetricChips({
+  active,
+  onSelect,
+  wrap = false,
+}: {
+  active: string;
+  onSelect: (key: string) => void;
+  /** Wrap into rows (landscape side panel) instead of scrolling horizontally. */
+  wrap?: boolean;
+}) {
+  const chips = METRICS.map((m) => (
+    <MetricChip key={m.key} meta={m} on={m.key === active} onSelect={onSelect} />
+  ));
+  if (wrap) return <View className="flex-row flex-wrap gap-2">{chips}</View>;
   return (
     <View className="mb-3 h-11">
       <ScrollView
@@ -126,30 +170,45 @@ function MetricChips({ active, onSelect }: { active: string; onSelect: (key: str
         showsHorizontalScrollIndicator={false}
         contentContainerClassName="items-center gap-2"
       >
-        {METRICS.map((m) => {
-          const on = m.key === active;
-          return (
-            <Pressable
-              key={m.key}
-              onPress={() => onSelect(m.key)}
-              className={cn(
-                "h-9 flex-row items-center gap-2 rounded-md border px-3.5",
-                on ? "bg-glass-fill-strong" : "border-glass-border bg-glass-fill",
-              )}
-              style={on ? { borderColor: `${m.accent}66` } : undefined}
-            >
-              {m.icon(on ? m.accent : colors.textMuted, 14)}
-              <Text
-                style={on ? { color: m.accent } : undefined}
-                className={cn("text-[13px] font-bold", !on && "text-text-muted")}
-              >
-                {t(m.labelKey)}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {chips}
       </ScrollView>
     </View>
+  );
+}
+
+/** Metric title (with the phone-weekly "daily range" suffix) + the chart itself. */
+function WeatherChartPane({
+  meta,
+  phoneWeekly,
+  data,
+}: {
+  meta: MetricMeta;
+  phoneWeekly: boolean;
+  data: ReturnType<typeof useWeatherChartData>;
+}) {
+  const { t } = useI18n();
+  const { isLoading, series, bands, chartSeries } = data;
+  return (
+    <>
+      <Text className="mb-3 text-[19px] font-extrabold text-text-primary">
+        {t(meta.titleKey)}
+        {phoneWeekly ? (
+          <Text className="text-[13px] font-semibold text-text-muted">
+            {" "}
+            · {t("weather.dailyRange")}
+          </Text>
+        ) : null}
+      </Text>
+      <WeatherChart
+        key={phoneWeekly ? "band" : "series"}
+        labels={phoneWeekly ? bands.labels : series.labels}
+        series={phoneWeekly ? undefined : chartSeries}
+        band={phoneWeekly ? { min: bands.min, max: bands.max, avg: bands.avg } : undefined}
+        bandColor={meta.accent}
+        unit={meta.unit}
+        loading={isLoading}
+      />
+    </>
   );
 }
 
@@ -201,66 +260,62 @@ export default function Weather() {
   const meta = METRICS.find((d) => d.key === dataType) ?? METRICS[0];
   const ymd = pickerDate.replaceAll("-", "");
   // Phone weekly → 7 daily min/max/avg bands; tablet/hourly → dense series.
+  // Width-based on purpose: a landscape phone (< tablet breakpoint) keeps bands.
   const phoneWeekly = isPhoneWeekly(width, timespan);
+  const { isLandscape } = useLayoutMode();
 
-  const { isLoading, series, bands, chartSeries } = useWeatherChartData(
-    dataType,
-    timespan,
-    ymd,
-    meta,
+  const data = useWeatherChartData(dataType, timespan, ymd, meta);
+  const { isLoading } = data;
+
+  // Shared leaves for both arrangements (portrait stack / landscape side panel).
+  const dateSelector = (
+    <DateSelector selectedDate={pickerDate} onDateSelect={setPickerDate} disabled={isLoading} />
   );
+  const segmented = (
+    <SegmentedControl
+      value={timespan}
+      onChange={setTimespan}
+      options={TIME_OPTION_KEYS.map(({ labelKey, value }) => ({ label: t(labelKey), value }))}
+    />
+  );
+  const chartPane = <WeatherChartPane meta={meta} phoneWeekly={phoneWeekly} data={data} />;
 
   return (
-    <SafeAreaView className="flex-1" edges={["top"]}>
-      <View className="flex-1 gap-4 p-4">
-        <PageHeader
-          title={t("weather.title")}
-          subtitle={t("weather.subtitle")}
-          right={
-            <DateSelector
-              selectedDate={pickerDate}
-              onDateSelect={setPickerDate}
-              disabled={isLoading}
-            />
+    <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
+      {isLandscape ? (
+        <LandscapeShell
+          chart={
+            <GlassCard strong className="flex-1 p-[18px]">
+              {chartPane}
+            </GlassCard>
+          }
+          panel={
+            <>
+              <PageHeader title={t("weather.title")} subtitle={t("weather.subtitle")} />
+              {dateSelector}
+              <MetricChips active={dataType} onSelect={setDataType} wrap />
+              {segmented}
+            </>
           }
         />
-
-        <GlassCard strong className="flex-1 p-[18px]">
-          <MetricChips active={dataType} onSelect={setDataType} />
-
-          {/* Timespan */}
-          <View className="mb-4 w-full max-w-[260px]">
-            <SegmentedControl
-              value={timespan}
-              onChange={setTimespan}
-              options={TIME_OPTION_KEYS.map(({ labelKey, value }) => ({
-                label: t(labelKey),
-                value,
-              }))}
-            />
-          </View>
-
-          <Text className="mb-3 text-[19px] font-extrabold text-text-primary">
-            {t(meta.titleKey)}
-            {phoneWeekly ? (
-              <Text className="text-[13px] font-semibold text-text-muted">
-                {" "}
-                · {t("weather.dailyRange")}
-              </Text>
-            ) : null}
-          </Text>
-
-          <WeatherChart
-            key={phoneWeekly ? "band" : "series"}
-            labels={phoneWeekly ? bands.labels : series.labels}
-            series={phoneWeekly ? undefined : chartSeries}
-            band={phoneWeekly ? { min: bands.min, max: bands.max, avg: bands.avg } : undefined}
-            bandColor={meta.accent}
-            unit={meta.unit}
-            loading={isLoading}
+      ) : (
+        <View className="flex-1 gap-4 p-4">
+          <PageHeader
+            title={t("weather.title")}
+            subtitle={t("weather.subtitle")}
+            right={dateSelector}
           />
-        </GlassCard>
-      </View>
+
+          <GlassCard strong className="flex-1 p-[18px]">
+            <MetricChips active={dataType} onSelect={setDataType} />
+
+            {/* Timespan */}
+            <View className="mb-4 w-full max-w-[260px]">{segmented}</View>
+
+            {chartPane}
+          </GlassCard>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

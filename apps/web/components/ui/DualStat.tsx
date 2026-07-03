@@ -25,13 +25,17 @@ function Module({
 }) {
   return (
     <div className="min-w-0 flex-1">
-      <p className="text-[11px] font-bold uppercase tracking-[0.3px] text-text-muted">{label}</p>
+      <p className="text-[0.6875rem] font-bold uppercase tracking-[0.3px] text-text-muted">
+        {label}
+      </p>
       {loading ? (
         <Skeleton className="mt-2 h-7 w-16" />
       ) : (
-        <p className="mt-1 truncate text-[27px] font-extrabold leading-tight tracking-[-0.5px] text-text-primary">
+        <p className="mt-1 truncate text-[1.6875rem] font-extrabold leading-tight tracking-[-0.5px] text-text-primary">
           {value}
-          {unit ? <span className="ml-1 text-[12px] font-bold text-text-muted">{unit}</span> : null}
+          {unit ? (
+            <span className="ml-1 text-[0.75rem] font-bold text-text-muted">{unit}</span>
+          ) : null}
         </p>
       )}
     </div>
@@ -73,9 +77,9 @@ export function DualStat({
           className="flex h-8 w-8 items-center justify-center rounded-[10px]"
           style={{ backgroundImage: GRADIENTS[gradient] }}
         >
-          <Icon size={16} className="text-[#0a1124]" />
+          <Icon size={16} className="size-[1rem] text-[#0a1124]" />
         </div>
-        <span className="text-[12px] font-bold uppercase tracking-[0.3px] text-text-muted">
+        <span className="text-[0.75rem] font-bold uppercase tracking-[0.3px] text-text-muted">
           {label}
         </span>
       </div>

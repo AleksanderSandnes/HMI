@@ -22,7 +22,11 @@ function RevealToggle({ reveal, onToggle }: { reveal: boolean; onToggle: () => v
       className="py-1.5 pl-2.5 text-text-secondary"
       aria-label={reveal ? "Hide password" : "Show password"}
     >
-      {reveal ? <EyeOff size={14} /> : <Eye size={14} />}
+      {reveal ? (
+        <EyeOff size={14} className="size-[0.875rem]" />
+      ) : (
+        <Eye size={14} className="size-[0.875rem]" />
+      )}
     </button>
   );
 }
@@ -32,7 +36,7 @@ function FieldHelp({ error, hint }: { error?: string; hint?: string }) {
     return <p className="ml-0.5 mt-1.5 text-xs font-semibold text-negative">{error}</p>;
   }
   if (hint) {
-    return <p className="mt-1.5 text-[11.5px] font-medium text-text-muted">{hint}</p>;
+    return <p className="mt-1.5 text-[0.71875rem] font-medium text-text-muted">{hint}</p>;
   }
   return null;
 }
@@ -57,7 +61,7 @@ export function Field({
 
   return (
     <div className="mb-4">
-      <label className="mb-2 block text-[12.5px] font-bold tracking-[0.3px] text-text-secondary">
+      <label className="mb-2 block text-[0.78125rem] font-bold tracking-[0.3px] text-text-secondary">
         {label}
       </label>
       <div
@@ -69,7 +73,10 @@ export function Field({
         {Icon ? (
           <Icon
             size={14}
-            className={cn("mr-2.5 shrink-0", focused ? "text-solar-light" : "text-text-muted")}
+            className={cn(
+              "mr-2.5 size-[0.875rem] shrink-0",
+              focused ? "text-solar-light" : "text-text-muted",
+            )}
           />
         ) : null}
         <input
@@ -84,7 +91,7 @@ export function Field({
             onBlur?.(e);
           }}
           className={cn(
-            "w-full bg-transparent py-3 text-[15px] font-semibold text-text-primary outline-none placeholder:text-text-muted",
+            "w-full bg-transparent py-3 text-[0.9375rem] font-semibold text-text-primary outline-none placeholder:text-text-muted",
             className,
           )}
         />

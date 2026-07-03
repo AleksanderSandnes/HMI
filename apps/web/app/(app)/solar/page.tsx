@@ -62,7 +62,7 @@ export default function SolarPage() {
   }, [generation, peakValue, peakUnitStr, setSolarStats]);
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[1480px] flex-col gap-4">
+    <div className="mx-auto flex h-full w-full max-w-[92.5rem] flex-col gap-4 3xl:max-w-[100rem]">
       <PageHeader
         title={t("solar.title")}
         subtitle={t("solar.subtitle")}
@@ -75,22 +75,22 @@ export default function SolarPage() {
         }
       />
 
-      <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[22px]">
-        <div className="mb-[18px] flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[1.375rem]">
+        <div className="mb-[1.125rem] flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-[19px] font-extrabold text-text-primary">
+            <h2 className="text-[1.1875rem] font-extrabold text-text-primary">
               {t("solar.powerGeneration")}
             </h2>
-            <p className="mt-0.5 text-[13px] font-medium text-text-muted">
+            <p className="mt-0.5 text-[0.8125rem] font-medium text-text-muted">
               {chartSubtitle(timespan, pickerDate, locale)}
             </p>
           </div>
-          <div className="w-full sm:w-[460px]">
+          <div className="w-full sm:w-[28.75rem]">
             <SegmentedControl value={timespan} onChange={setTimespan} />
           </div>
         </div>
 
-        <div className="min-h-[220px] flex-1">
+        <div className="min-h-[13.75rem] flex-1">
           <SolarChart
             data={chartData}
             timespan={timespan}

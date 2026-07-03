@@ -8,6 +8,13 @@ export const BREAKPOINTS = {
   desktop: 1200,
 } as const;
 
+/**
+ * A window whose *smaller* dimension is at least this many dp is a tablet.
+ * Min-dimension (not width) so orientation doesn't flip the classification —
+ * iPad mini portrait is 744dp wide, a landscape phone can exceed 850dp.
+ */
+export const TABLET_MIN_DIM = 600;
+
 /** Animation durations (ms). */
 export const ANIMATION_DURATION = {
   fast: 150,

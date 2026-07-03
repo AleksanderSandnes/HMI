@@ -46,8 +46,8 @@ function SectionLabel({
 }) {
   return (
     <div className="flex items-center gap-2.5">
-      <Icon size={15} className="text-solar-light" />
-      <span className="text-[11.5px] font-bold uppercase tracking-[0.6px] text-text-secondary">
+      <Icon size={15} className="size-[0.9375rem] text-solar-light" />
+      <span className="text-[0.71875rem] font-bold uppercase tracking-[0.6px] text-text-secondary">
         {text}
       </span>
       <div className="h-px flex-1 bg-glass-border" />
@@ -61,7 +61,7 @@ function StatusBadge({ online }: { online: boolean | null | undefined }) {
   if (online == null) return null;
   return (
     <span
-      className={`flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-1 text-[11px] font-bold ${online ? "bg-[rgba(52,211,153,0.13)] text-positive" : "bg-[rgba(251,113,133,0.13)] text-negative"}`}
+      className={`flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-1 text-[0.6875rem] font-bold ${online ? "bg-[rgba(52,211,153,0.13)] text-positive" : "bg-[rgba(251,113,133,0.13)] text-negative"}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${online ? "bg-positive" : "bg-negative"}`} />
       {online ? t("dashboard.inverterOnline") : t("dashboard.inverterOffline")}
@@ -134,7 +134,7 @@ function SolarSection({ model }: { model: DashboardModel }) {
         text={t("dashboard.solar")}
         right={
           capacityKw != null ? (
-            <span className="text-[11px] font-semibold text-text-muted">
+            <span className="text-[0.6875rem] font-semibold text-text-muted">
               {capacityKw} {t("dashboard.kwSystem")}
             </span>
           ) : null
@@ -294,7 +294,7 @@ function WeatherSection({ model }: { model: DashboardModel }) {
         text={t("dashboard.weather")}
         right={
           obs?.obsTimeLocal ? (
-            <span className="text-[11px] font-semibold text-text-muted">
+            <span className="text-[0.6875rem] font-semibold text-text-muted">
               {t("dashboard.updated")} {obs.obsTimeLocal.split(" ")[1] ?? ""}
             </span>
           ) : null
@@ -314,7 +314,7 @@ export default function DashboardPage() {
   const { device } = model;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 md:h-full">
+    <div className="mx-auto flex w-full max-w-[100rem] flex-col gap-3 md:h-full 3xl:max-w-[105rem]">
       <PageHeader
         title={t("dashboard.title")}
         subtitle={

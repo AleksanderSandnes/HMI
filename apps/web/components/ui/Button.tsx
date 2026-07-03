@@ -31,10 +31,10 @@ function ButtonContent({
   Icon?: LucideIcon;
   loading: boolean;
 }) {
-  if (loading) return <Loader2 size={16} className="animate-spin" />;
+  if (loading) return <Loader2 size={16} className="size-[1rem] animate-spin" />;
   return (
     <>
-      {Icon ? <Icon size={15} /> : null}
+      {Icon ? <Icon size={15} className="size-[0.9375rem]" /> : null}
       <span className="truncate">{label}</span>
     </>
   );
@@ -76,7 +76,7 @@ export function Button({
       disabled={isDisabled}
       style={isPrimary ? { backgroundImage: GRADIENTS[gradient] } : undefined}
       className={cn(
-        "flex min-h-12 w-full items-center justify-center gap-2.5 rounded-[var(--radius-md)] px-4 text-[15px] font-extrabold tracking-[0.2px] transition",
+        "flex min-h-12 w-full items-center justify-center gap-2.5 rounded-[var(--radius-md)] px-4 text-[0.9375rem] font-extrabold tracking-[0.2px] transition",
         VARIANT_CLASS[variant],
         isDisabled && "cursor-not-allowed opacity-50",
         className,

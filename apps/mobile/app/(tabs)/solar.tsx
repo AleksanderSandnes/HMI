@@ -14,6 +14,7 @@ import { useState } from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { LandscapeShell } from "../../src/components/LandscapeShell";
 import { PageHeader } from "../../src/components/PageHeader";
 import { SolarChart } from "../../src/components/charts";
 import { DateSelector } from "../../src/components/ui/DateSelector";
@@ -21,6 +22,7 @@ import { GlassCard } from "../../src/components/ui/GlassCard";
 import { SegmentedControl } from "../../src/components/ui/SegmentedControl";
 import { useI18n } from "../../src/lib/i18n";
 import { useCore } from "../../src/lib/useCore";
+import { useLayoutMode } from "../../src/lib/useLayoutMode";
 
 const EMPTY: SimpleChartData = { labels: [], datasets: [{ data: [] }] };
 
@@ -107,41 +109,63 @@ export default function Solar() {
   });
 
   const chartData = solar?.chartData ?? EMPTY;
+  const { isLandscape } = useLayoutMode();
+
+  // Shared leaves for both arrangements (portrait stack / landscape side panel).
+  const chartTitle = (
+    <View className="mb-3">
+      <Text className="text-[19px] font-extrabold text-text-primary">
+        {t("solar.powerGeneration")}
+      </Text>
+      <Text className="mt-0.5 text-[13px] font-medium text-text-muted">
+        {chartSubtitle(timespan, pickerDate, locale)}
+      </Text>
+    </View>
+  );
+  const dateSelector = (
+    <DateSelector selectedDate={pickerDate} onDateSelect={setPickerDate} disabled={isLoading} />
+  );
+  const segmented = <SegmentedControl value={timespan} onChange={setTimespan} />;
+  const chart = (
+    <SolarChart data={chartData} timespan={timespan} date={pickerDate} loading={isLoading} />
+  );
+  const caps = !isLoading ? <StatCaps solar={solar} timespan={timespan} /> : null;
 
   return (
-    <SafeAreaView className="flex-1" edges={["top"]}>
-      <View className="flex-1 gap-4 p-4">
-        <PageHeader
-          title={t("solar.title")}
-          subtitle={t("solar.subtitle")}
-          right={
-            <DateSelector
-              selectedDate={pickerDate}
-              onDateSelect={setPickerDate}
-              disabled={isLoading}
-            />
+    <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
+      {isLandscape ? (
+        <LandscapeShell
+          chart={
+            <GlassCard strong className="flex-1 p-[18px]">
+              {chartTitle}
+              {chart}
+            </GlassCard>
+          }
+          panel={
+            <>
+              <PageHeader title={t("solar.title")} subtitle={t("solar.subtitle")} />
+              {dateSelector}
+              {segmented}
+              {caps}
+            </>
           }
         />
+      ) : (
+        <View className="flex-1 gap-4 p-4">
+          <PageHeader
+            title={t("solar.title")}
+            subtitle={t("solar.subtitle")}
+            right={dateSelector}
+          />
 
-        <GlassCard strong className="flex-1 p-[18px]">
-          <View className="mb-3">
-            <Text className="text-[19px] font-extrabold text-text-primary">
-              {t("solar.powerGeneration")}
-            </Text>
-            <Text className="mt-0.5 text-[13px] font-medium text-text-muted">
-              {chartSubtitle(timespan, pickerDate, locale)}
-            </Text>
-          </View>
-
-          <View className="mb-4">
-            <SegmentedControl value={timespan} onChange={setTimespan} />
-          </View>
-
-          <SolarChart data={chartData} timespan={timespan} date={pickerDate} loading={isLoading} />
-
-          {!isLoading ? <StatCaps solar={solar} timespan={timespan} /> : null}
-        </GlassCard>
-      </View>
+          <GlassCard strong className="flex-1 p-[18px]">
+            {chartTitle}
+            <View className="mb-4">{segmented}</View>
+            {chart}
+            {caps}
+          </GlassCard>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

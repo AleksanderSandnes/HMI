@@ -13,6 +13,7 @@ import { useI18n } from "../../src/lib/i18n";
 import { useThemeColors } from "../../src/lib/theme";
 import { useCore } from "../../src/lib/useCore";
 import { useDashboardData } from "../../src/lib/useDashboardData";
+import { useLayoutMode } from "../../src/lib/useLayoutMode";
 import { useNotifications } from "../../src/lib/useNotifications";
 
 function SectionLabel({
@@ -40,6 +41,7 @@ function SectionLabel({
 export default function Dashboard() {
   const { account } = useCore();
   const { t } = useI18n();
+  const twoCol = useLayoutMode().columns === 2;
   const model = useDashboardData();
   const { items, count, clearAll, dismiss } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -58,8 +60,23 @@ export default function Dashboard() {
     ? `${t("dashboard.updated")} ${obs.obsTimeLocal.split(" ")[1] ?? ""}`
     : undefined;
 
+  // Section fragments shared by both arrangements: a single portrait column,
+  // or solar | weather side by side when the window is wide (columns === 2).
+  const solarSection = (
+    <>
+      <SectionLabel icon="sunny" text={t("dashboard.solar")} right={solarRight || undefined} />
+      <SolarHeroCard model={model} />
+    </>
+  );
+  const weatherSection = (
+    <>
+      <SectionLabel icon="partly-sunny" text={t("dashboard.weather")} right={updated} />
+      <WeatherSummaryCard model={model} />
+    </>
+  );
+
   return (
-    <SafeAreaView className="flex-1" edges={["top"]}>
+    <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
       <View className="flex-1 gap-3 px-4 pb-3 pt-1">
         <DashboardTopbar
           username={profile?.username}
@@ -68,11 +85,17 @@ export default function Dashboard() {
           onBellPress={() => setNotifOpen(true)}
         />
 
-        <SectionLabel icon="sunny" text={t("dashboard.solar")} right={solarRight || undefined} />
-        <SolarHeroCard model={model} />
-
-        <SectionLabel icon="partly-sunny" text={t("dashboard.weather")} right={updated} />
-        <WeatherSummaryCard model={model} />
+        {twoCol ? (
+          <View className="min-h-0 flex-1 flex-row gap-3">
+            <View className="min-w-0 flex-1 gap-3">{solarSection}</View>
+            <View className="min-w-0 flex-1 gap-3">{weatherSection}</View>
+          </View>
+        ) : (
+          <>
+            {solarSection}
+            {weatherSection}
+          </>
+        )}
       </View>
 
       <NotificationsOverlay
