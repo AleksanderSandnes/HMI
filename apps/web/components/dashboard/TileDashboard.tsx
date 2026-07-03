@@ -51,7 +51,7 @@ function SolarSection({ model }: { model: DashboardModel }) {
           ) : null
         }
       />
-      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4 lg:min-h-0 lg:flex-1">
+      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4 lg:landscape:min-h-0 lg:landscape:flex-1">
         <DualStat
           icon={Zap}
           gradient="solar"
@@ -211,7 +211,7 @@ function WeatherSection({ model }: { model: DashboardModel }) {
           ) : null
         }
       />
-      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4 lg:min-h-0 lg:flex-[2]">
+      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4 lg:landscape:min-h-0 lg:landscape:flex-[2]">
         <WeatherTilesA model={model} />
         <WeatherTilesB model={model} />
       </div>
@@ -224,7 +224,7 @@ export function TileDashboard({ model }: { model: DashboardModel }) {
   const { t } = useI18n();
   const { device } = model;
   return (
-    <div className="mx-auto hidden w-full max-w-[100rem] flex-col gap-3 lg:flex lg:h-full 3xl:max-w-[105rem]">
+    <div className="mx-auto hidden w-full max-w-[100rem] flex-col gap-3 lg:flex lg:landscape:h-full 3xl:max-w-[105rem]">
       <PageHeader
         title={t("dashboard.title")}
         subtitle={

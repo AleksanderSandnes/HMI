@@ -41,11 +41,12 @@ function HeroSections({ model }: { model: DashboardModel }) {
         />
         <SolarHeroCard model={model} />
       </div>
-      {/* Natural height on small phones so the AVG sublabels never clip; the
-          solar hero above absorbs the remaining space. Equal split from sm. */}
+      {/* Phones: equal 50/50 split with the solar hero, like the mobile app.
+          Tablets (md..lg): natural height so the extended stats never clip;
+          the solar hero absorbs the remaining space. */}
       <div
         data-testid="hero-weather-col"
-        className="flex min-w-0 flex-col gap-3 sm:min-h-0 sm:flex-1"
+        className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 md:flex-none"
       >
         <SectionLabel
           icon={CloudRain}
