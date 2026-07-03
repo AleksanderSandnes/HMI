@@ -22,6 +22,8 @@ export interface WindDialFaceProps {
   unit?: string;
   /** Face diameter in CSS px at the default 16px root (rendered in rem). */
   size?: number;
+  /** Responsive size classes (w-/h-); overrides `size` when set. */
+  sizeClassName?: string;
 }
 
 /**
@@ -34,6 +36,7 @@ export function WindDialFace({
   gust,
   unit = "km/h",
   size = 96,
+  sizeClassName,
 }: WindDialFaceProps) {
   const gradientId = useId();
   const deg = toNum(degrees);
@@ -43,7 +46,10 @@ export function WindDialFace({
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="relative" style={{ width: `${size / 16}rem`, height: `${size / 16}rem` }}>
+      <div
+        className={`relative ${sizeClassName ?? ""}`}
+        style={sizeClassName ? undefined : { width: `${size / 16}rem`, height: `${size / 16}rem` }}
+      >
         <svg viewBox="0 0 100 100" className="h-full w-full">
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

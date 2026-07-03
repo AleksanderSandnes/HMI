@@ -33,7 +33,8 @@ function NavWeatherWidget() {
         </span>
       </span>
       {solarStats ? (
-        <span className="flex items-center gap-3">
+        // Hidden below lg: the md-width top bar has no room for the stats.
+        <span className="hidden items-center gap-3 lg:flex">
           <span className="h-5 w-px bg-glass-border" />
           <NavStat label={t("nav.gen")} value={solarStats.generation} unit={solarStats.genUnit} />
           <span className="h-5 w-px bg-glass-border" />
@@ -70,41 +71,10 @@ const NAV = [
 
 const NAV_TABS = NAV.filter(({ href }) => href !== "/notifications");
 
-/** Vertical glass rail for tablet widths (mirror of mobile GlassNavRail). */
-function NavRail({ pathname }: { pathname: string }) {
-  const { t } = useI18n();
-  return (
-    <nav
-      data-testid="nav-rail"
-      className="hidden shrink-0 flex-col justify-center py-2.5 pl-2 pr-1 md:flex lg:hidden"
-    >
-      <div className="flex flex-col items-stretch gap-1 rounded-[24px] border border-glass-border bg-glass-fill px-1.5 py-2">
-        {NAV_TABS.map(({ href, labelKey, icon: Icon }) => {
-          const active = pathname.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex w-16 flex-col items-center gap-1 rounded-2xl px-1 py-2.5 text-[0.625rem] font-bold transition",
-                active
-                  ? "border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.15)] text-solar-light"
-                  : "text-text-muted hover:text-text-secondary",
-              )}
-            >
-              <Icon size={20} className="size-[1.25rem]" />
-              {t(labelKey)}
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
-
 /**
- * Responsive app navigation: bottom tab bar on phones, left rail on tablets,
- * horizontal top bar on desktop (parity with the RN tab bar / GlassNavRail).
+ * Responsive app navigation: bottom tab bar on phones (4 tabs like the app —
+ * notifications live behind the dashboard bell), horizontal top bar from md
+ * up (icon-only links until lg).
  */
 export function AppNav() {
   const pathname = usePathname();
@@ -112,11 +82,11 @@ export function AppNav() {
 
   return (
     <>
-      {/* Desktop top bar (lg+). Inner content is constrained to the same
-          max-width + padding as the page content so the brand aligns with the
-          page title (left) and the nav links align with the content's right
-          edge. Sign out lives at the bottom of the Settings list, not here. */}
-      <header className="sticky top-0 z-30 hidden border-b border-glass-border bg-[var(--color-panel-bg)] px-8 backdrop-blur-xl lg:block">
+      {/* Top bar (md+). Inner content is constrained to the same max-width +
+          padding as the page content so the brand aligns with the page title
+          (left) and the nav links align with the content's right edge. Sign
+          out lives at the bottom of the Settings list, not here. */}
+      <header className="sticky top-0 z-30 hidden border-b border-glass-border bg-[var(--color-panel-bg)] px-5 backdrop-blur-xl md:block md:px-8">
         <div className="mx-auto flex w-full max-w-[92.5rem] items-center justify-between py-2.5 3xl:max-w-[100rem]">
           <div className="flex items-center gap-3.5">
             <Link
@@ -151,16 +121,14 @@ export function AppNav() {
                   )}
                 >
                   <Icon size={17} className="size-[1.0625rem]" />
-                  {t(labelKey)}
+                  {/* Icon-only below lg — the full labels don't fit a 768px bar. */}
+                  <span className="hidden lg:inline">{t(labelKey)}</span>
                 </Link>
               );
             })}
           </nav>
         </div>
       </header>
-
-      {/* Tablet left rail (md..lg) */}
-      <NavRail pathname={pathname} />
 
       {/* Mobile bottom tab bar — 4 tabs like the app (bell replaces Notifications) */}
       <nav className="glass fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-glass-border px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden">

@@ -121,9 +121,10 @@ export default function SolarPage() {
           </div>
         </div>
 
-        {/* Below md the page scrolls naturally, so the chart needs a definite
-            height (percent heights collapse against min-h alone). */}
-        <div className="h-[clamp(15rem,45vh,32.5rem)] md:h-auto md:min-h-[13.75rem] md:flex-1">
+        {/* Below md the chart takes whatever height keeps the whole page —
+            header, controls, chart AND the caps row — inside the initial
+            viewport (~27.5rem of chrome), so nothing needs scrolling. */}
+        <div className="h-[clamp(9rem,calc(100dvh-32rem),36rem)] md:h-auto md:min-h-[13.75rem] md:flex-1">
           <SolarChart
             data={chartData}
             timespan={timespan}

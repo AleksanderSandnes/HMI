@@ -33,10 +33,10 @@ describe("useLayoutMode", () => {
     expect(mode.splitSettings).toBe(false);
   });
 
-  it("phone landscape: rail + two columns, no split settings", () => {
+  it("phone landscape: bottom bar stays, two columns, no split settings", () => {
     const mode = renderHook(852, 393);
     expect(mode.isPhoneLandscape).toBe(true);
-    expect(mode.showRail).toBe(true);
+    expect(mode.showRail).toBe(false);
     expect(mode.columns).toBe(2);
     expect(mode.splitSettings).toBe(false);
   });

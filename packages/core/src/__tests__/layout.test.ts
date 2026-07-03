@@ -18,14 +18,14 @@ describe("layoutModeFor", () => {
       },
     },
     {
-      name: "iPhone landscape (852x393): rail + two columns, no split settings",
+      name: "iPhone landscape (852x393): bottom bar stays, two columns, no split settings",
       w: 852,
       h: 393,
       expected: {
         isLandscape: true,
         isTablet: false,
         isPhoneLandscape: true,
-        showRail: true,
+        showRail: false,
         splitSettings: false,
         columns: 2,
       },

@@ -20,7 +20,7 @@ function MutedRight({ text }: { text: string | null }) {
   return <span className="text-[0.6875rem] font-semibold text-text-muted">{text}</span>;
 }
 
-/** Solar/weather section columns — side by side on tablet, stacked on phones. */
+/** Solar/weather sections, stacked like the phone app on every size below lg. */
 function HeroSections({ model }: { model: DashboardModel }) {
   const { t } = useI18n();
   const { device, capacityKw, obs } = model;
@@ -32,7 +32,7 @@ function HeroSections({ model }: { model: DashboardModel }) {
     : null;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 md:flex-row">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div data-testid="hero-solar-col" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
         <SectionLabel
           icon={Sun}
@@ -41,7 +41,12 @@ function HeroSections({ model }: { model: DashboardModel }) {
         />
         <SolarHeroCard model={model} />
       </div>
-      <div data-testid="hero-weather-col" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+      {/* Natural height on small phones so the AVG sublabels never clip; the
+          solar hero above absorbs the remaining space. Equal split from sm. */}
+      <div
+        data-testid="hero-weather-col"
+        className="flex min-w-0 flex-col gap-3 sm:min-h-0 sm:flex-1"
+      >
         <SectionLabel
           icon={CloudRain}
           text={t("dashboard.weather")}

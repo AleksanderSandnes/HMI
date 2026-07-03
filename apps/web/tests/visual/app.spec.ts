@@ -42,19 +42,12 @@ test("nav chrome matches the viewport", async ({ page }, testInfo) => {
   await page.locator("h1:visible").first().waitFor();
   const topBar = page.locator("header");
   const bottomBar = page.locator("nav.fixed");
-  const rail = page.getByTestId("nav-rail");
   if (testInfo.project.name === "mobile") {
     await expect(bottomBar).toBeVisible();
     await expect(topBar).toBeHidden();
-    await expect(rail).toBeHidden();
-  } else if (testInfo.project.name === "tablet") {
-    await expect(rail).toBeVisible();
-    await expect(topBar).toBeHidden();
-    await expect(bottomBar).toBeHidden();
   } else {
     await expect(topBar).toBeVisible();
     await expect(bottomBar).toBeHidden();
-    await expect(rail).toBeHidden();
   }
 });
 
@@ -97,18 +90,16 @@ test("dashboard hero renders below lg with a working bell overlay", async ({ pag
   await expect(overlay).toBeHidden();
 });
 
-test("tablet dashboard shows solar and weather side by side", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "tablet", "tablet two-column layout");
+test("dashboard hero sections stack vertically below lg", async ({ page }, testInfo) => {
+  test.skip(!["mobile", "tablet"].includes(testInfo.project.name), "hero renders below lg only");
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { name: "HMI", exact: true })).toBeVisible();
-  // Retry: card heights shift while queries stream in, so read the boxes
-  // until the two columns settle on one row.
+  // Retry: card heights shift while queries stream in.
   await expect(async () => {
     const solar = await page.getByTestId("hero-solar-col").boundingBox();
     const weather = await page.getByTestId("hero-weather-col").boundingBox();
     expect(solar && weather).toBeTruthy();
-    expect(Math.abs(solar!.y - weather!.y)).toBeLessThan(4);
-    expect(weather!.x).toBeGreaterThan(solar!.x + solar!.width - 1);
+    expect(weather!.y).toBeGreaterThan(solar!.y + solar!.height - 1);
   }).toPass({ timeout: 10_000 });
 });
 

@@ -27,7 +27,7 @@ function BigMetric({
         <Icon size={14} className={`size-[0.875rem] ${colorClass}`} />
         <span className="text-[0.6875rem] font-bold text-text-secondary">{label}</span>
       </span>
-      <p className="mt-1.5 text-[2.125rem] font-extrabold leading-none text-text-primary">
+      <p className="mt-1 text-[1.75rem] font-extrabold leading-none text-text-primary sm:mt-1.5 sm:text-[2.125rem]">
         {value}
         <span className="text-[0.9375rem] font-bold text-text-muted"> {unit}</span>
       </p>
@@ -56,7 +56,7 @@ function StatCol({
         <Icon size={13} className={`size-[0.8125rem] ${colorClass}`} />
         <span className="text-[0.6875rem] font-bold text-text-secondary">{label}</span>
       </span>
-      <p className="mt-1.5 text-[1.375rem] font-extrabold text-text-primary">
+      <p className="mt-1 text-[1.125rem] font-extrabold text-text-primary sm:mt-1.5 sm:text-[1.375rem]">
         {value}
         {unit ? <span className="text-[0.625rem] font-bold text-text-muted">{unit}</span> : null}
       </p>
@@ -74,18 +74,19 @@ export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
   return (
     <GlassCard
       strong
-      className="flex min-h-0 flex-1 flex-col justify-between gap-3 px-3.5 pb-6 pt-3.5"
+      className="flex min-h-0 flex-1 flex-col justify-between gap-3 px-3.5 pb-4 pt-3 sm:pb-6 sm:pt-3.5"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Smaller dial below sm so the row fits a 375px iPhone SE. */}
         <WindDialFace
           degrees={obs?.winddir}
           speed={m.windSpeed}
           gust={m.windGust}
           unit="km/h"
-          size={150}
+          sizeClassName="h-[7.25rem] w-[7.25rem] sm:h-[9.375rem] sm:w-[9.375rem]"
         />
-        <div className="mx-1 w-px self-stretch bg-glass-border" />
-        <div className="flex flex-1 flex-col items-center gap-5">
+        <div className="mx-0.5 w-px self-stretch bg-glass-border sm:mx-1" />
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-3 sm:gap-5">
           <BigMetric
             icon={Thermometer}
             colorClass="text-negative"

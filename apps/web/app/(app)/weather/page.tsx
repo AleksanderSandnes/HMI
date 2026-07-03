@@ -125,9 +125,10 @@ function WeatherChartPane({
         ) : null}
       </h2>
 
-      {/* Below md the page scrolls naturally, so the chart needs a definite
-          height (percent heights collapse against min-h alone). */}
-      <div className="h-[clamp(15rem,45vh,32.5rem)] md:h-auto md:min-h-[13.75rem] md:flex-1">
+      {/* Below md the chart takes whatever height keeps the whole page inside
+          the initial viewport (~25rem of chrome above/below), so nothing
+          needs scrolling. */}
+      <div className="h-[clamp(9rem,calc(100dvh-29.5rem),36rem)] md:h-auto md:min-h-[13.75rem] md:flex-1">
         <WeatherChart
           key={phoneWeekly ? "band" : "series"}
           labels={phoneWeekly ? bands.labels : series.labels}

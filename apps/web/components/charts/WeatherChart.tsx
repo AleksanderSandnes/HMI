@@ -1,6 +1,12 @@
 "use client";
 
-import { formatMetric as fmt, WEEKDAY_ABBR, weekdayName, type Locale } from "@hmi/core";
+import {
+  BREAKPOINTS,
+  formatMetric as fmt,
+  WEEKDAY_ABBR,
+  weekdayName,
+  type Locale,
+} from "@hmi/core";
 import { Loader2 } from "lucide-react";
 import {
   Area,
@@ -17,6 +23,7 @@ import { axisTick, CURSOR, GRID_STROKE } from "./chartTheme";
 
 import { weatherYDomain } from "@/lib/chart";
 import { useRemScale } from "@/lib/hooks/useRemScale";
+import { useViewportWidth } from "@/lib/hooks/useViewportWidth";
 import { useI18n } from "@/lib/i18n";
 
 export interface LineSeries {
@@ -205,19 +212,12 @@ function BandChart({
 }) {
   const { locale } = useI18n();
   const scale = useRemScale();
+  const { yAxisWidth, margin } = useChartGeometry(scale);
   const { min: yMin, max: yMax, range } = weatherYDomain([...band.min, ...band.max]);
   return (
     <Frame heightClass={heightClass} height={height}>
       <ResponsiveContainer width="100%" height={heightClass ? "100%" : height}>
-        <AreaChart
-          data={buildBandRows(labels, band)}
-          margin={{
-            top: Math.round(22 * scale),
-            right: Math.round(18 * scale),
-            bottom: Math.round(6 * scale),
-            left: 0,
-          }}
-        >
+        <AreaChart data={buildBandRows(labels, band)} margin={margin}>
           <CartesianGrid vertical={false} stroke={GRID_STROKE} />
           <XAxis
             dataKey="label"
@@ -230,7 +230,7 @@ function BandChart({
             tick={axisTick(scale)}
             tickLine={false}
             axisLine={false}
-            width={Math.round(54 * scale)}
+            width={yAxisWidth}
             tickCount={5}
             domain={[yMin, yMax]}
             tickFormatter={(v: number) => fmt(v, range)}
@@ -311,6 +311,24 @@ function chartHasData(band: WeatherBand | undefined, n: number, total: number): 
 }
 
 /**
+ * Axis/margin geometry: phones get the mobile app's tight values (34px y-axis,
+ * 8px right) so the plot area uses the narrow width; larger screens keep the
+ * roomier rem-scaled desktop geometry.
+ */
+function useChartGeometry(scale: number) {
+  const phone = useViewportWidth() < BREAKPOINTS.mobile;
+  return {
+    yAxisWidth: phone ? 34 : Math.round(54 * scale),
+    margin: {
+      top: Math.round(22 * scale),
+      right: phone ? 8 : Math.round(18 * scale),
+      bottom: Math.round(6 * scale),
+      left: 0,
+    },
+  };
+}
+
+/**
  * Multi-series weather chart (Recharts port of the mobile weather line chart).
  * Smooth (monotone) areas + lines, shared crosshair tooltip listing every series.
  */
@@ -387,21 +405,14 @@ function SeriesChart({
   heightClass?: string;
 }) {
   const scale = useRemScale();
+  const { yAxisWidth, margin } = useChartGeometry(scale);
   const { min: yMin, max: yMax, range } = weatherYDomain(all);
   const tickProps = xTickProps(ticks);
 
   return (
     <Frame heightClass={heightClass} height={height}>
       <ResponsiveContainer width="100%" height={heightClass ? "100%" : height}>
-        <AreaChart
-          data={buildRows(labels, clean)}
-          margin={{
-            top: Math.round(22 * scale),
-            right: Math.round(18 * scale),
-            bottom: Math.round(6 * scale),
-            left: 0,
-          }}
-        >
+        <AreaChart data={buildRows(labels, clean)} margin={margin}>
           {buildDefs(clean)}
           <CartesianGrid vertical={false} stroke={GRID_STROKE} />
           <XAxis
@@ -415,7 +426,7 @@ function SeriesChart({
             tick={axisTick(scale)}
             tickLine={false}
             axisLine={false}
-            width={Math.round(54 * scale)}
+            width={yAxisWidth}
             tickCount={5}
             domain={[yMin, yMax]}
             tickFormatter={(v: number) => fmt(v, range)}
