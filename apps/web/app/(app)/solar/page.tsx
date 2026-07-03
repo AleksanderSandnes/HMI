@@ -28,13 +28,15 @@ const ZERO = {
   totalRevenue: 0,
 };
 
-function Cap({ label, value }: { label: string; value: string }) {
+function Cap({ label, value, wide = false }: { label: string; value: string; wide?: boolean }) {
   return (
-    <div className="min-w-0 flex-1">
+    // The peak cap ("14:00 · 3.1 kW") is longer than the total, so it gets a
+    // wider share instead of truncating on narrow phones.
+    <div className={wide ? "min-w-0 flex-[1.6]" : "min-w-0 flex-1"}>
       <p className="truncate text-[0.625rem] font-bold uppercase tracking-[0.4px] text-text-muted">
         {label}
       </p>
-      <p className="mt-1 truncate text-[1.125rem] font-extrabold tracking-[-0.3px] text-text-primary">
+      <p className="mt-1 truncate text-[1rem] font-extrabold tracking-[-0.3px] text-text-primary sm:text-[1.125rem]">
         {value}
       </p>
     </div>
@@ -51,7 +53,7 @@ function StatCaps({ solar, timespan }: { solar?: SolarData; timespan: string }) 
   if (!c.hasData) return null;
   return (
     <div className="mt-3 flex shrink-0 items-stretch rounded-[var(--radius-md)] border border-glass-border px-4 py-3.5 lg:hidden">
-      <Cap label={t(c.labels[0])} value={c.peakText} />
+      <Cap label={t(c.labels[0])} value={c.peakText} wide />
       <div className="mx-4 w-px self-stretch bg-glass-border" />
       <Cap label={t(c.labels[1])} value={c.totalText} />
     </div>

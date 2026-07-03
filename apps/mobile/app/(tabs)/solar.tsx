@@ -23,9 +23,11 @@ import { useLayoutMode } from "../../src/lib/useLayoutMode";
 
 const EMPTY: SimpleChartData = { labels: [], datasets: [{ data: [] }] };
 
-function Cap({ label, value }: { label: string; value: string }) {
+function Cap({ label, value, wide = false }: { label: string; value: string; wide?: boolean }) {
   return (
-    <View className="min-w-0 flex-1">
+    // The peak cap ("14:00 · 3.1 kW") is longer than the total, so it gets a
+    // wider share (mirrors web).
+    <View className={wide ? "min-w-0 flex-[1.6]" : "min-w-0 flex-1"}>
       <Text
         numberOfLines={1}
         className="text-[10px] font-bold uppercase tracking-[0.4px] text-text-muted"
@@ -51,7 +53,7 @@ function StatCaps({ solar, timespan }: { solar?: SolarData; timespan: string }) 
   if (!c.hasData) return null;
   return (
     <View className="mt-3 flex-row items-stretch rounded-md border border-glass-border px-4 py-3.5">
-      <Cap label={t(c.labels[0])} value={c.peakText} />
+      <Cap label={t(c.labels[0])} value={c.peakText} wide />
       <View className="mx-4 w-px self-stretch bg-glass-border" />
       <Cap label={t(c.labels[1])} value={c.totalText} />
     </View>

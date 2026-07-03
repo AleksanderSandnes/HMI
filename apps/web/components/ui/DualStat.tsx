@@ -25,7 +25,7 @@ function Module({
 }) {
   return (
     <div className="min-w-0 flex-1">
-      <p className="text-[0.6875rem] font-bold uppercase tracking-[0.3px] text-text-muted lg:text-[0.75rem]">
+      <p className="text-[0.6875rem] font-bold uppercase tracking-[0.3px] text-text-muted lg:text-[0.75rem] lg:portrait:text-[0.8125rem]">
         {label}
       </p>
       {/* No truncate on the value: when the tile is narrow (e.g. 246 W/m² in
@@ -34,10 +34,10 @@ function Module({
       {loading ? (
         <Skeleton className="mt-2 h-7 w-16" />
       ) : (
-        <p className="mt-1 text-[1.6875rem] font-extrabold leading-tight tracking-[-0.5px] text-text-primary xl:text-[2rem]">
+        <p className="mt-1 text-[1.6875rem] font-extrabold leading-tight tracking-[-0.5px] text-text-primary xl:text-[2rem] lg:portrait:text-[2.375rem]">
           {value}
           {unit ? (
-            <span className="ml-1 whitespace-nowrap text-[0.75rem] font-bold text-text-muted xl:text-[0.8125rem]">
+            <span className="ml-1 whitespace-nowrap text-[0.75rem] font-bold text-text-muted xl:text-[0.8125rem] lg:portrait:text-[0.875rem]">
               {unit}
             </span>
           ) : null}
@@ -78,16 +78,16 @@ export function DualStat({
   return (
     <GlassCard
       strong
-      className="flex h-full min-w-0 flex-1 flex-col justify-center gap-3.5 p-4 lg:gap-5 lg:p-5"
+      className="flex h-full min-w-0 flex-1 flex-col justify-center gap-3.5 p-4 lg:gap-5 lg:p-5 lg:portrait:gap-6 lg:portrait:p-6"
     >
       <div className="flex items-center gap-2 lg:gap-2.5">
         <div
-          className="flex h-8 w-8 items-center justify-center rounded-[10px] lg:h-10 lg:w-10 lg:rounded-[12px]"
+          className="flex h-8 w-8 items-center justify-center rounded-[10px] lg:h-10 lg:w-10 lg:rounded-[12px] lg:portrait:h-11 lg:portrait:w-11"
           style={{ backgroundImage: GRADIENTS[gradient] }}
         >
           <Icon size={16} className="size-[1rem] text-[#0a1124] lg:size-[1.25rem]" />
         </div>
-        <span className="text-[0.75rem] font-bold uppercase tracking-[0.3px] text-text-muted lg:text-[0.8125rem]">
+        <span className="text-[0.75rem] font-bold uppercase tracking-[0.3px] text-text-muted lg:text-[0.8125rem] lg:portrait:text-[0.875rem]">
           {label}
         </span>
       </div>

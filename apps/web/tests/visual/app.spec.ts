@@ -27,19 +27,22 @@ async function horizontalOverflow(page: import("@playwright/test").Page): Promis
   });
 }
 
+// The dashboard has no visible h1 on tablets (hero topbar is phone-only and
+// the desktop header is lg+), so the readiness wait falls back to the hero
+// solar column there.
+const READY = 'h1:visible, [data-testid="hero-solar-col"]:visible';
+
 for (const path of PAGES) {
   test(`${path} has no horizontal overflow`, async ({ page }) => {
     await page.goto(path);
-    // :visible — the dashboard renders two h1s (hero brand + desktop header)
-    // and only one is shown per breakpoint.
-    await page.locator("h1:visible").first().waitFor();
+    await page.locator(READY).first().waitFor();
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
   });
 }
 
 test("nav chrome matches the viewport", async ({ page }, testInfo) => {
   await page.goto("/dashboard");
-  await page.locator("h1:visible").first().waitFor();
+  await page.locator(READY).first().waitFor();
   const topBar = page.locator("header");
   const bottomBar = page.locator("nav.fixed");
   if (testInfo.project.name === "mobile") {
@@ -76,8 +79,8 @@ test("settings shows list and panel side by side on desktop", async ({ page }, t
   await expect(page.getByRole("button", { name: "Save profile" })).toBeVisible();
 });
 
-test("dashboard hero renders below lg with a working bell overlay", async ({ page }, testInfo) => {
-  test.skip(!["mobile", "tablet"].includes(testInfo.project.name), "hero renders below lg only");
+test("dashboard hero topbar and bell overlay work on phones", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "hero topbar is phone-only");
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { name: "HMI", exact: true })).toBeVisible();
 
@@ -90,10 +93,17 @@ test("dashboard hero renders below lg with a working bell overlay", async ({ pag
   await expect(overlay).toBeHidden();
 });
 
+test("tablet dashboard hides the hero topbar (top nav is enough)", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "tablet", "tablet-only behavior");
+  await page.goto("/dashboard");
+  await page.getByTestId("hero-solar-col").waitFor();
+  await expect(page.getByRole("heading", { name: "HMI", exact: true })).toBeHidden();
+});
+
 test("dashboard hero sections stack vertically below lg", async ({ page }, testInfo) => {
   test.skip(!["mobile", "tablet"].includes(testInfo.project.name), "hero renders below lg only");
   await page.goto("/dashboard");
-  await expect(page.getByRole("heading", { name: "HMI", exact: true })).toBeVisible();
+  await page.getByTestId("hero-solar-col").waitFor();
   // Retry: card heights shift while queries stream in.
   await expect(async () => {
     const solar = await page.getByTestId("hero-solar-col").boundingBox();

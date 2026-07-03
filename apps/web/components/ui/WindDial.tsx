@@ -115,7 +115,10 @@ export function WindDial(props: Omit<WindDialFaceProps, "size">) {
       strong
       className="flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-2 p-3.5"
     >
-      <WindDialFace {...props} sizeClassName="h-[6rem] w-[6rem] lg:h-[7rem] lg:w-[7rem]" />
+      <WindDialFace
+        {...props}
+        sizeClassName="h-[6rem] w-[6rem] lg:h-[7rem] lg:w-[7rem] lg:portrait:h-[8.75rem] lg:portrait:w-[8.75rem]"
+      />
     </GlassCard>
   );
 }

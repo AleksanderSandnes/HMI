@@ -51,7 +51,7 @@ function SolarSection({ model }: { model: DashboardModel }) {
           ) : null
         }
       />
-      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4 lg:landscape:min-h-0 lg:landscape:flex-1">
+      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4 lg:portrait:grid-cols-2 lg:landscape:min-h-0 lg:landscape:flex-1">
         <DualStat
           icon={Zap}
           gradient="solar"
@@ -211,7 +211,7 @@ function WeatherSection({ model }: { model: DashboardModel }) {
           ) : null
         }
       />
-      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4 lg:landscape:min-h-0 lg:landscape:flex-[2]">
+      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4 lg:portrait:grid-cols-2 lg:landscape:min-h-0 lg:landscape:flex-[2]">
         <WeatherTilesA model={model} />
         <WeatherTilesB model={model} />
       </div>

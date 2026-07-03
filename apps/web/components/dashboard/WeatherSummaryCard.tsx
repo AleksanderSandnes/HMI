@@ -22,12 +22,15 @@ function BigMetric({
   label,
   value,
   unit,
+  sub,
 }: {
   icon: LucideIcon;
   colorClass: string;
   label: string;
   value: string;
   unit: string;
+  /** Secondary line (e.g. weekly average) — tablets only. */
+  sub?: string;
 }) {
   return (
     <div className="flex flex-col items-center">
@@ -37,10 +40,16 @@ function BigMetric({
           {label}
         </span>
       </span>
-      <p className="mt-1 text-[1.5rem] font-extrabold leading-none text-text-primary sm:mt-1.5 sm:text-[2.125rem] md:text-[2.5rem]">
+      {/* Value scales with the viewport height so tall phones don't look empty. */}
+      <p className="mt-1 text-[clamp(1.5rem,3.6vh,2.125rem)] font-extrabold leading-none text-text-primary sm:mt-1.5 md:text-[2.5rem]">
         {value}
         <span className="text-[0.9375rem] font-bold text-text-muted"> {unit}</span>
       </p>
+      {sub ? (
+        <p className="mt-1 hidden text-[0.71875rem] font-bold uppercase tracking-[0.3px] text-text-muted md:block">
+          {sub}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -68,7 +77,7 @@ function StatCol({
           {label}
         </span>
       </span>
-      <p className="mt-1 text-[1.125rem] font-extrabold text-text-primary sm:mt-1.5 sm:text-[1.375rem] md:text-[1.75rem]">
+      <p className="mt-1 text-[clamp(1.125rem,2.6vh,1.375rem)] font-extrabold text-text-primary sm:mt-1.5 md:text-[1.75rem]">
         {value}
         {unit ? <span className="text-[0.625rem] font-bold text-text-muted">{unit}</span> : null}
       </p>
@@ -155,29 +164,35 @@ function ExtendedStats({ model }: { model: DashboardModel }) {
 /** Hero dashboard weather panel (mirror of mobile WeatherSummaryCard). */
 export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
   const { t } = useI18n();
-  const { obs, m } = model;
+  const { obs, m, wkAvg } = model;
   return (
     <GlassCard
       strong
-      className="flex min-h-0 flex-1 flex-col justify-between gap-3 px-3.5 pb-4 pt-3 sm:pb-6 sm:pt-3.5 md:gap-5 md:px-6 md:pb-7 md:pt-5"
+      className="flex min-h-0 flex-1 flex-col gap-3 px-3.5 pb-4 pt-3 sm:pb-6 sm:pt-3.5 md:gap-5 md:px-6 md:pb-7 md:pt-5"
     >
-      <div className="flex items-center gap-2 sm:gap-3 md:gap-5">
-        {/* Dial scales with the form factor: compact on small phones, roomy on tablets. */}
-        <WindDialFace
-          degrees={obs?.winddir}
-          speed={m.windSpeed}
-          gust={m.windGust}
-          unit="km/h"
-          sizeClassName="h-[6.25rem] w-[6.25rem] sm:h-[9.375rem] sm:w-[9.375rem] md:h-[11.25rem] md:w-[11.25rem]"
-        />
-        <div className="mx-0.5 w-px self-stretch bg-glass-border sm:mx-1" />
-        <div className="flex min-w-0 flex-1 flex-col items-center gap-3 sm:gap-5 md:gap-7">
+      {/* flex-1 + centred: extra card height pads evenly around the dial row
+          instead of leaving one band of white space above the stat rows. */}
+      <div className="flex min-h-0 flex-1 items-center gap-2 sm:gap-3 md:gap-0">
+        {/* At md the dial column is exactly 1/3 wide so this divider lines up
+            with the first divider of the stat rows below. */}
+        <div className="flex justify-center md:w-1/3 md:flex-none">
+          <WindDialFace
+            degrees={obs?.winddir}
+            speed={m.windSpeed}
+            gust={m.windGust}
+            unit="km/h"
+            sizeClassName="h-[clamp(5.5rem,16.5vh,9.375rem)] w-[clamp(5.5rem,16.5vh,9.375rem)] md:h-[11.25rem] md:w-[11.25rem]"
+          />
+        </div>
+        <div className="mx-0.5 w-px self-stretch bg-glass-border sm:mx-1 md:mx-0" />
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-3 sm:gap-5 md:gap-6">
           <BigMetric
             icon={Thermometer}
             colorClass="text-negative"
             label={t("dashboard.temperature")}
             value={show(m.temp)}
             unit="°C"
+            sub={t("dashboard.avg", { value: `${show(wkAvg.temp)}°C` })}
           />
           <BigMetric
             icon={CloudRain}
@@ -185,6 +200,7 @@ export function WeatherSummaryCard({ model }: { model: DashboardModel }) {
             label={t("dashboard.precipitation")}
             value={show(m.precipRate, 1)}
             unit="mm/h"
+            sub={`${t("dashboard.today")} ${show(m.precipTotal, 1)} mm`}
           />
         </div>
       </div>

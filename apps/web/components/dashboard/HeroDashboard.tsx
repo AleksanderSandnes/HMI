@@ -76,13 +76,17 @@ export function HeroDashboard({ model }: { model: DashboardModel }) {
 
   return (
     <div className="flex h-full min-h-[34rem] flex-col gap-3 lg:hidden">
-      <DashboardTopbar
-        username={profile?.username}
-        avatarUrl={profile?.avatarUrl}
-        notifCount={count}
-        online={model.device?.online}
-        onBellClick={() => setNotifOpen(true)}
-      />
+      {/* Phones only: tablets already have the top nav bar (bell lives there
+          as the Notifications page link), so the hero topbar is redundant. */}
+      <div className="md:hidden">
+        <DashboardTopbar
+          username={profile?.username}
+          avatarUrl={profile?.avatarUrl}
+          notifCount={count}
+          online={model.device?.online}
+          onBellClick={() => setNotifOpen(true)}
+        />
+      </div>
 
       <HeroSections model={model} />
 
