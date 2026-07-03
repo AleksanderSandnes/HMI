@@ -33,12 +33,13 @@ function NavWeatherWidget() {
         </span>
       </span>
       {solarStats ? (
-        <>
+        // Hidden below lg: the md-width top bar has no room for the stats.
+        <span className="hidden items-center gap-3 lg:flex">
           <span className="h-5 w-px bg-glass-border" />
           <NavStat label={t("nav.gen")} value={solarStats.generation} unit={solarStats.genUnit} />
           <span className="h-5 w-px bg-glass-border" />
           <NavStat label={t("nav.peak")} value={solarStats.peak} unit={solarStats.peakUnit} />
-        </>
+        </span>
       ) : null}
     </div>
   );
@@ -106,6 +107,7 @@ export function AppNav() {
                 <Link
                   key={href}
                   href={href}
+                  aria-label={t(labelKey)}
                   className={cn(
                     "flex items-center gap-2 rounded-[var(--radius-md)] px-3.5 py-2 text-sm font-semibold transition",
                     active
@@ -114,7 +116,8 @@ export function AppNav() {
                   )}
                 >
                   <Icon size={17} className="size-[1.0625rem]" />
-                  {t(labelKey)}
+                  {/* Icon-only below lg — the full labels don't fit a 768px bar. */}
+                  <span className="hidden lg:inline">{t(labelKey)}</span>
                 </Link>
               );
             })}

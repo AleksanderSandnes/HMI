@@ -144,7 +144,9 @@ export default function WeatherPage() {
           {t(meta.titleKey)}
         </h2>
 
-        <div className="min-h-[13.75rem] flex-1">
+        {/* Below md the page scrolls naturally, so the chart needs a definite
+            height (percent heights collapse against min-h alone). */}
+        <div className="h-[clamp(15rem,45vh,32.5rem)] md:h-auto md:min-h-[13.75rem] md:flex-1">
           <WeatherChart
             labels={labels}
             series={chartSeries}
