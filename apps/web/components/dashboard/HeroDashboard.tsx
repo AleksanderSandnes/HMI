@@ -32,7 +32,9 @@ function HeroSections({ model }: { model: DashboardModel }) {
     : null;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    // Landscape (phones/tablets below lg): solar | weather side by side so
+    // both fit one view without scrolling.
+    <div className="flex min-h-0 flex-1 flex-col gap-3 landscape:flex-row">
       <div data-testid="hero-solar-col" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
         <SectionLabel
           icon={Sun}
@@ -42,11 +44,12 @@ function HeroSections({ model }: { model: DashboardModel }) {
         <SolarHeroCard model={model} />
       </div>
       {/* Phones: equal 50/50 split with the solar hero, like the mobile app.
-          Tablets (md..lg): natural height so the extended stats never clip;
-          the solar hero absorbs the remaining space. */}
+          Portrait tablets: natural height so the rich widget never clips;
+          the solar hero absorbs the remaining space. Landscape: equal column
+          beside the solar hero. */}
       <div
         data-testid="hero-weather-col"
-        className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 md:flex-none"
+        className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 md:portrait:flex-none"
       >
         <SectionLabel
           icon={CloudRain}
@@ -75,10 +78,12 @@ export function HeroDashboard({ model }: { model: DashboardModel }) {
   });
 
   return (
-    <div className="flex h-full min-h-[34rem] flex-col gap-3 lg:hidden">
-      {/* Phones only: tablets already have the top nav bar (bell lives there
-          as the Notifications page link), so the hero topbar is redundant. */}
-      <div className="md:hidden">
+    // Landscape drops the portrait min-height so the side-by-side cards fit
+    // short viewports (e.g. 667x375) without scrolling.
+    <div className="flex h-full min-h-[34rem] flex-col gap-3 landscape:min-h-0 lg:hidden">
+      {/* Portrait phones only: tablets have the top nav bar (bell lives there
+          as the Notifications link) and landscape needs the height. */}
+      <div className="md:hidden landscape:hidden">
         <DashboardTopbar
           username={profile?.username}
           avatarUrl={profile?.avatarUrl}

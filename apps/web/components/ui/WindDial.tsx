@@ -117,7 +117,7 @@ export function WindDial(props: Omit<WindDialFaceProps, "size">) {
     >
       <WindDialFace
         {...props}
-        sizeClassName="h-[6rem] w-[6rem] lg:h-[7rem] lg:w-[7rem] lg:portrait:h-[8.75rem] lg:portrait:w-[8.75rem]"
+        sizeClassName="h-[6rem] w-[6rem] lg:h-[8.5rem] lg:w-[8.5rem] lg:portrait:h-[8.75rem] lg:portrait:w-[8.75rem]"
       />
     </GlassCard>
   );
