@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
+  deriveInitials,
   growattConfig,
   weatherConfig,
   type ApiSettingsResponse,
@@ -28,13 +29,6 @@ import { GroupLabel, SettingsGroup, SettingsRow } from "./list";
 /** Settings sub-screens reachable from the hub list. */
 export type SettingsSubRoute = "profile" | "password" | "growatt" | "weather";
 
-function initials(name?: string | null): string {
-  if (!name) return "·";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-}
-
 function ProfileCard({
   profile,
   onPress,
@@ -56,7 +50,7 @@ function ProfileCard({
           active && "border-[rgba(245,158,11,0.35)] bg-[rgba(245,158,11,0.08)]",
         )}
       >
-        <Avatar initials={initials(profile?.username)} uri={uri} size={52} />
+        <Avatar initials={deriveInitials(profile?.username)} uri={uri} size={52} />
         <View className="min-w-0 flex-1">
           <Text className="text-[16px] font-extrabold text-text-primary">
             {profile?.username ?? t("settings.yourProfile")}

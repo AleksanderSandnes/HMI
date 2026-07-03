@@ -9,7 +9,9 @@ import {
   translate,
   weekdayName,
   type Locale,
+  type TranslationKey,
 } from "../i18n";
+import type { SolarData } from "../types/solar";
 
 export const CO2_PER_KWH = 0.4; // kg CO₂ avoided per kWh of solar (grid average)
 
@@ -168,4 +170,44 @@ export function formatMetric(v: number, range: number): string {
 /** Percentage change of `curr` vs `prev`, or null when `prev` is non-positive. */
 export function percentDelta(curr: number, prev: number): number | null {
   return prev > 0 ? ((curr - prev) / prev) * 100 : null;
+}
+
+// --- Chart stat caps (peak + period total under the solar chart) ---
+
+/** Per-timespan label keys for the two stat caps: [peak, total]. */
+export const SOLAR_CAP_LABELS: Record<string, [TranslationKey, TranslationKey]> = {
+  hourly: ["solar.cap.peak", "solar.cap.todayTotal"],
+  weekly: ["solar.cap.peakDay", "solar.cap.weekTotal"],
+  monthly: ["solar.cap.peakDay", "solar.cap.monthTotal"],
+  yearly: ["solar.cap.bestMonth", "solar.cap.yearTotal"],
+  total: ["solar.cap.bestYear", "solar.cap.fiveYearTotal"],
+};
+
+function capPeakText(peak: PeakOutput | null): string {
+  if (!peak) return "—";
+  const v = `${formatPeak(peak.value)} ${peakUnit(peak.value, peak.unit)}`;
+  return peak.label ? `${peak.label} · ${v}` : v;
+}
+
+/** Period total in kWh: today's metric for hourly, else the dataset sum. */
+export function solarTotalKwh(solar: SolarData | undefined, timespan: string): number {
+  if (timespan === "hourly") return solar?.metrics.todayGeneration ?? 0;
+  const vals = solar?.chartData?.datasets?.[0]?.data ?? [];
+  return vals.reduce((a, b) => a + (b || 0), 0);
+}
+
+/**
+ * Everything the StatCaps row needs: label keys (translate app-side) plus
+ * formatted peak/total strings.
+ */
+export function solarCapValues(solar: SolarData | undefined, timespan: string) {
+  const vals = solar?.chartData?.datasets?.[0]?.data ?? [];
+  const peak = getPeakOutput(solar?.chartData as SimpleChartData, timespan);
+  const total = solarTotalKwh(solar, timespan);
+  return {
+    hasData: vals.length > 0,
+    labels: SOLAR_CAP_LABELS[timespan] ?? (["solar.cap.peak", "solar.cap.total"] as const),
+    peakText: capPeakText(peak),
+    totalText: `${formatPeak(total)} ${peakUnit(total, "kWh")}`,
+  };
 }

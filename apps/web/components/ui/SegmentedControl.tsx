@@ -50,7 +50,7 @@ export function SegmentedControl({
                 : undefined
             }
             className={cn(
-              "flex-1 rounded-[var(--radius-pill)] py-2.5 text-center text-[0.8125rem] transition",
+              "min-w-0 flex-1 truncate rounded-[var(--radius-pill)] px-1 py-2.5 text-center text-xs transition sm:text-[0.8125rem]",
               active
                 ? "font-extrabold text-text-inverse"
                 : "font-semibold text-text-muted hover:text-text-secondary",

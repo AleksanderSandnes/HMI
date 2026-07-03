@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LANGUAGES, type TranslationKey, type Translator } from "@hmi/core";
+import { appearanceLabel, LANGUAGES, type TranslationKey } from "@hmi/core";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -21,18 +21,6 @@ const APPEARANCE_OPTIONS: {
   { value: "system", labelKey: "settings.system", icon: "desktop-outline" },
   { value: "dark", labelKey: "settings.dark", icon: "moon" },
 ];
-
-function appearanceSubtitle(
-  preference: ThemePreference,
-  mode: "light" | "dark",
-  t: Translator,
-): string {
-  const modeLabel = mode === "dark" ? t("settings.dark") : t("settings.light");
-  if (preference === "system") {
-    return t("settings.systemRightNow", { mode: modeLabel });
-  }
-  return preference === "dark" ? t("settings.dark") : t("settings.light");
-}
 
 function AppearanceSegmented() {
   const { preference, setPreference, colors } = useThemeColors();
@@ -122,7 +110,7 @@ export function PreferencesGroup({
                 {t("settings.appearance")}
               </Text>
               <Text className="mt-0.5 text-[11.5px] text-text-muted">
-                {appearanceSubtitle(preference, mode, t)}
+                {appearanceLabel(preference, mode, t)}
               </Text>
             </View>
           </View>

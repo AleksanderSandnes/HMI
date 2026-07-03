@@ -98,13 +98,14 @@ const chartMargin = (scale: number) => ({
   left: 0,
 });
 
-function readSolar(data: SimpleChartData): { values: number[]; labels: string[] } {
+export function readSolar(data: SimpleChartData): { values: number[]; labels: string[] } {
   return { values: data?.datasets?.[0]?.data ?? [], labels: data?.labels ?? [] };
 }
 
-const hasNoData = (values: number[]): boolean => !values.length || values.every((v) => v === 0);
+export const hasNoData = (values: number[]): boolean =>
+  !values.length || values.every((v) => v === 0);
 
-function solarModel(values: number[], labels: string[]) {
+export function solarModel(values: number[], labels: string[]) {
   const chartData: Point[] = values.map((value, i) => ({ label: labels[i] ?? "", value }));
   const max = Math.max(...values);
   const peakIndex = values.indexOf(max);

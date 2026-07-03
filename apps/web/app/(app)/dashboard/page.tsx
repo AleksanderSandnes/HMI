@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  dashboardDates,
+  dashboardQueries,
   dashboardWeekAverages,
   formatPeak,
   lastPositive,
@@ -8,10 +10,7 @@ import {
   show,
   solarDevice,
   solarMetrics,
-  toISO,
   weatherNow,
-  type CurrentWeather,
-  type SolarData,
 } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -71,37 +70,16 @@ function StatusBadge({ online }: { online: boolean | null | undefined }) {
 
 function useDashboardData() {
   const { growatt, weather } = useCore();
-  const today = toISO(new Date());
-  const yesterday = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 1);
-    return toISO(d);
-  }, []);
+  const { today, yesterday } = dashboardDates();
+  const q = useMemo(
+    () => dashboardQueries({ growatt, weather }, today, yesterday),
+    [growatt, weather, today, yesterday],
+  );
 
-  const { data: solar, isLoading: solarLoading } = useQuery<SolarData>({
-    queryKey: ["dashboard-solar", today],
-    queryFn: () => growatt.fetchSolarData("hourly", today),
-    refetchOnWindowFocus: false,
-    staleTime: Infinity,
-  });
-  const { data: solarWeek } = useQuery<SolarData>({
-    queryKey: ["dashboard-solar-week", yesterday],
-    queryFn: () => growatt.fetchSolarData("weekly", yesterday),
-    refetchOnWindowFocus: false,
-    staleTime: Infinity,
-  });
-  const { data: weatherData, isLoading: weatherLoading } = useQuery<CurrentWeather>({
-    queryKey: ["dashboard-weather"],
-    queryFn: () => weather.getCurrentWeatherData(),
-    refetchInterval: 60_000,
-    refetchIntervalInBackground: false,
-    staleTime: 60_000,
-  });
-  const { data: weekObs } = useQuery({
-    queryKey: ["dashboard-weather-week", yesterday],
-    queryFn: () => weather.getWeeklyHourlyWeatherData(yesterday.replaceAll("-", "")),
-    staleTime: 30 * 60_000,
-  });
+  const { data: solar, isLoading: solarLoading } = useQuery(q.solar);
+  const { data: solarWeek } = useQuery(q.solarWeek);
+  const { data: weatherData, isLoading: weatherLoading } = useQuery(q.weatherCurrent);
+  const { data: weekObs } = useQuery(q.weatherWeek);
 
   const wkAvg = useMemo(() => dashboardWeekAverages(weekObs), [weekObs]);
 
@@ -140,7 +118,7 @@ function SolarSection({ model }: { model: DashboardModel }) {
           ) : null
         }
       />
-      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:min-h-0 md:flex-1 md:grid-cols-4">
+      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4 lg:min-h-0 lg:flex-1">
         <DualStat
           icon={Zap}
           gradient="solar"
@@ -300,7 +278,7 @@ function WeatherSection({ model }: { model: DashboardModel }) {
           ) : null
         }
       />
-      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:min-h-0 md:flex-[2] md:grid-cols-4">
+      <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4 lg:min-h-0 lg:flex-[2]">
         <WeatherTilesA model={model} />
         <WeatherTilesB model={model} />
       </div>
@@ -314,7 +292,7 @@ export default function DashboardPage() {
   const { device } = model;
 
   return (
-    <div className="mx-auto flex w-full max-w-[100rem] flex-col gap-3 md:h-full 3xl:max-w-[105rem]">
+    <div className="mx-auto flex w-full max-w-[100rem] flex-col gap-3 lg:h-full 3xl:max-w-[105rem]">
       <PageHeader
         title={t("dashboard.title")}
         subtitle={

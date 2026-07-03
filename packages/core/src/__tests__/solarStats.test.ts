@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { SolarData } from "../types/solar";
 import {
   chartSubtitle,
   comparisonLabel,
@@ -13,6 +14,8 @@ import {
   percentDelta,
   periodLabel,
   previousPeriodDate,
+  solarCapValues,
+  solarTotalKwh,
   toISO,
 } from "../utils/solarStats";
 
@@ -141,5 +144,59 @@ describe("formatMetric", () => {
     expect(formatMetric(42.6, 30)).toBe("43");
     expect(formatMetric(1500, 50)).toBe("1.5k");
     expect(formatMetric(1500, 200)).toBe("1500");
+  });
+});
+
+function makeSolar(data: number[], labels: string[], todayGeneration = 0): SolarData {
+  return {
+    chartData: { labels, datasets: [{ data, color: () => "#000", strokeWidth: 1 }] },
+    metrics: { todayGeneration, totalGeneration: 0, todayRevenue: 0, totalRevenue: 0 },
+  };
+}
+
+describe("solarTotalKwh", () => {
+  it("uses the today metric for the hourly timespan", () => {
+    expect(solarTotalKwh(makeSolar([500, 900], ["10", "11"], 12.3), "hourly")).toBe(12.3);
+  });
+
+  it("sums the dataset for aggregated timespans, ignoring gaps", () => {
+    expect(solarTotalKwh(makeSolar([1, 2, 0, 4], ["a", "b", "c", "d"]), "weekly")).toBe(7);
+  });
+
+  it("returns 0 without data", () => {
+    expect(solarTotalKwh(undefined, "weekly")).toBe(0);
+  });
+});
+
+describe("solarCapValues", () => {
+  it("reports no data for an empty dataset", () => {
+    expect(solarCapValues(makeSolar([], []), "hourly").hasData).toBe(false);
+    expect(solarCapValues(undefined, "hourly").hasData).toBe(false);
+  });
+
+  it("labels the caps per timespan with a fallback", () => {
+    expect(solarCapValues(makeSolar([1], ["a"]), "weekly").labels).toEqual([
+      "solar.cap.peakDay",
+      "solar.cap.weekTotal",
+    ]);
+    expect(solarCapValues(makeSolar([1], ["a"]), "bogus").labels).toEqual([
+      "solar.cap.peak",
+      "solar.cap.total",
+    ]);
+  });
+
+  it("formats the peak with its label and k-scaled unit", () => {
+    const c = solarCapValues(makeSolar([200, 10_900], ["09:00", "12:00"], 5), "hourly");
+    expect(c.peakText).toBe("12:00 · 10.9 kW");
+    expect(c.totalText).toBe("5.0 kWh");
+  });
+
+  it("shows an em dash for a peakless (all-zero) dataset", () => {
+    expect(solarCapValues(makeSolar([0, 0], ["a", "b"]), "weekly").peakText).toBe("—");
+  });
+
+  it("k-scales the aggregated total into MWh", () => {
+    const c = solarCapValues(makeSolar([800, 700], ["Jan", "Feb"]), "yearly");
+    expect(c.totalText).toBe("1.5 MWh");
   });
 });

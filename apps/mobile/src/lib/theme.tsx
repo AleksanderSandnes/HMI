@@ -10,7 +10,7 @@ export type ThemePreference = "light" | "dark" | "system";
 
 const STORAGE_KEY = "pref.theme";
 
-function resolvePreference(preference: ThemePreference): ThemeMode {
+export function resolvePreference(preference: ThemePreference): ThemeMode {
   if (preference === "system") {
     return Appearance.getColorScheme() === "light" ? "light" : "dark";
   }

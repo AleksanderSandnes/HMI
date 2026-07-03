@@ -25,7 +25,6 @@ export interface LoginInput {
 
 export interface RegisterInput {
   email: string;
-  username?: string;
   password: string;
 }
 
@@ -41,11 +40,12 @@ export function createAuthApi(ctx: CoreApiContext) {
     return toUser(data.session, data.user);
   }
 
-  async function registerUser({ email, username, password }: RegisterInput): Promise<AuthUser> {
+  // Registration doesn't collect a username — the auth payload falls back to
+  // the email local-part (toUser) and users can set one later in Settings.
+  async function registerUser({ email, password }: RegisterInput): Promise<AuthUser> {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { username: username?.trim() } },
     });
     if (error) throw error;
 

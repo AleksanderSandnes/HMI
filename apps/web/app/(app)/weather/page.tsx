@@ -1,6 +1,12 @@
 "use client";
 
-import { buildWeatherSeries, toISO, type TranslationKey } from "@hmi/core";
+import {
+  buildWeatherSeries,
+  toISO,
+  WEATHER_METRICS,
+  WEATHER_TIME_OPTIONS,
+  type WeatherMetricKey,
+} from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import {
   CloudRain,
@@ -23,103 +29,24 @@ import { useCore } from "@/lib/hooks/useCore";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-interface MetricMeta {
-  key: string;
-  labelKey: TranslationKey;
-  icon: LucideIcon;
-  unit: string;
-  titleKey: TranslationKey;
-  accent: string;
-  series: { labelKey: TranslationKey; color: string }[];
-}
-
-const METRICS: MetricMeta[] = [
-  {
-    key: "temperature",
-    labelKey: "weather.chip.temp",
-    icon: Thermometer,
-    unit: "°C",
-    titleKey: "weather.temperature",
-    accent: "#fb7185",
-    series: [
-      { labelKey: "weather.temperature", color: "#fb7185" },
-      { labelKey: "weather.dewPoint", color: "#34d399" },
-    ],
-  },
-  {
-    key: "windSpeed",
-    labelKey: "weather.chip.wind",
-    icon: Wind,
-    unit: "km/h",
-    titleKey: "weather.wind",
-    accent: "#60a5fa",
-    series: [
-      { labelKey: "weather.windSpeed", color: "#60a5fa" },
-      { labelKey: "weather.windGust", color: "#fbbf24" },
-    ],
-  },
-  {
-    key: "precip",
-    labelKey: "weather.chip.rain",
-    icon: CloudRain,
-    unit: "mm",
-    titleKey: "weather.precipitation",
-    accent: "#38bdf8",
-    series: [
-      { labelKey: "weather.accumTotal", color: "#38bdf8" },
-      { labelKey: "weather.rate", color: "#34d399" },
-    ],
-  },
-  {
-    key: "humidity",
-    labelKey: "weather.chip.humidity",
-    icon: Droplets,
-    unit: "%",
-    titleKey: "weather.humidity",
-    accent: "#22d3ee",
-    series: [{ labelKey: "weather.humidity", color: "#22d3ee" }],
-  },
-  {
-    key: "pressure",
-    labelKey: "weather.chip.pressure",
-    icon: Gauge,
-    unit: "hPa",
-    titleKey: "weather.pressure",
-    accent: "#a78bfa",
-    series: [{ labelKey: "weather.pressure", color: "#a78bfa" }],
-  },
-  {
-    key: "solarRadiation",
-    labelKey: "weather.chip.solar",
-    icon: SunMedium,
-    unit: "W/m²",
-    titleKey: "weather.solarRadiation",
-    accent: "#fbbf24",
-    series: [{ labelKey: "weather.solarRadiation", color: "#fbbf24" }],
-  },
-  {
-    key: "uvIndex",
-    labelKey: "weather.chip.uv",
-    icon: Sun,
-    unit: "UV",
-    titleKey: "weather.uvIndex",
-    accent: "#c084fc",
-    series: [{ labelKey: "weather.uvIndex", color: "#c084fc" }],
-  },
-];
-
-const TIME_OPTION_KEYS: { labelKey: TranslationKey; value: string }[] = [
-  { labelKey: "timespan.hourly", value: "hourly" },
-  { labelKey: "timespan.weekly", value: "weekly" },
-];
+// Shared metric metadata lives in @hmi/core; only the icons are web-specific.
+const METRIC_ICONS: Record<WeatherMetricKey, LucideIcon> = {
+  temperature: Thermometer,
+  windSpeed: Wind,
+  precip: CloudRain,
+  humidity: Droplets,
+  pressure: Gauge,
+  solarRadiation: SunMedium,
+  uvIndex: Sun,
+};
 
 function MetricChips({ active, onSelect }: { active: string; onSelect: (key: string) => void }) {
   const { t } = useI18n();
   return (
     <div className="flex flex-1 gap-2 overflow-x-auto pb-1">
-      {METRICS.map((m) => {
+      {WEATHER_METRICS.map((m) => {
         const on = m.key === active;
-        const Icon = m.icon;
+        const Icon = METRIC_ICONS[m.key];
         return (
           <button
             key={m.key}
@@ -153,7 +80,7 @@ export default function WeatherPage() {
   const [timespan, setTimespan] = useState("hourly");
   const [pickerDate, setPickerDate] = useState(toISO(yesterday));
 
-  const meta = METRICS.find((d) => d.key === dataType) ?? METRICS[0];
+  const meta = WEATHER_METRICS.find((d) => d.key === dataType) ?? WEATHER_METRICS[0];
   const ymd = pickerDate.replaceAll("-", "");
 
   const { data: observations, isLoading } = useQuery({
@@ -183,7 +110,7 @@ export default function WeatherPage() {
   });
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[92.5rem] flex-col gap-4 3xl:max-w-[100rem]">
+    <div className="mx-auto flex w-full max-w-[92.5rem] flex-col gap-4 md:h-full 3xl:max-w-[100rem]">
       <PageHeader
         title={t("weather.title")}
         subtitle={t("weather.subtitle")}
@@ -199,13 +126,13 @@ export default function WeatherPage() {
       {/* Chart card — fills the remaining viewport so nothing scrolls off-screen. */}
       <GlassCard strong elevated className="flex min-h-0 flex-1 flex-col p-[1.375rem]">
         {/* Data-type chips (left) + timespan (right) on one row. */}
-        <div className="mb-4 flex shrink-0 items-center gap-3">
+        <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
           <MetricChips active={dataType} onSelect={setDataType} />
-          <div className="w-[13.75rem] shrink-0">
+          <div className="w-full shrink-0 sm:w-[13.75rem]">
             <SegmentedControl
               value={timespan}
               onChange={setTimespan}
-              options={TIME_OPTION_KEYS.map(({ labelKey, value }) => ({
+              options={WEATHER_TIME_OPTIONS.map(({ labelKey, value }) => ({
                 label: t(labelKey),
                 value,
               }))}

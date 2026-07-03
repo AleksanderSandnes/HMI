@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  appearanceLabel,
   coreErrorMessage,
+  deriveInitials,
   growattConfig,
   weatherConfig,
   LANGUAGES,
@@ -14,6 +16,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Camera,
   Check,
+  ChevronLeft,
   ChevronRight,
   CloudSun,
   Contrast,
@@ -30,22 +33,23 @@ import {
   User,
   type LucideIcon,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBanner } from "@/components/ui/StatusBanner";
+import { extractExtension } from "@/lib/file";
 import { useCore } from "@/lib/hooks/useCore";
 import { useI18n } from "@/lib/i18n";
+import { sectionFromParam, type Section } from "@/lib/settingsSection";
 import { cn } from "@/lib/utils";
 
 type Core = ReturnType<typeof useCore>;
 type Banner = { kind: "success" | "error"; message: string } | null;
-type Section = "profile" | "password" | "growatt" | "weather";
 
 const GRADIENTS = {
   accent: "linear-gradient(135deg,#a78bfa,#818cf8,#6366f1)",
@@ -65,23 +69,6 @@ function useHydrated() {
     () => true,
     () => false,
   );
-}
-
-/** First letters of the first two words, else the first two characters. */
-function deriveInitials(name?: string | null): string {
-  if (!name) return "·";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.trim().slice(0, 2).toUpperCase();
-}
-
-/** Best-effort file extension from the filename, falling back to the mime type. */
-function extractExtension(file: File): string {
-  const dot = file.name.lastIndexOf(".");
-  if (dot > 0 && dot < file.name.length - 1) {
-    return file.name.slice(dot + 1).toLowerCase();
-  }
-  return file.type.split("/")[1] || "jpg";
 }
 
 function ConfiguredBadge({ on }: { on: boolean }) {
@@ -187,16 +174,19 @@ function GroupLabel({ children }: { children: ReactNode }) {
   );
 }
 
-function appearanceLabel(
+/** Core appearanceLabel with a pre-hydration guard (next-themes is client-only). */
+function themeSubtitle(
   hydrated: boolean,
   theme: string | undefined,
   resolvedTheme: string | undefined,
   t: Translator,
 ): string {
   if (!hydrated) return "—";
-  const mode = resolvedTheme === "dark" ? t("settings.dark") : t("settings.light");
-  if (theme === "system") return t("settings.systemRightNow", { mode });
-  return mode;
+  return appearanceLabel(
+    theme === "system" ? "system" : theme === "dark" ? "dark" : "light",
+    resolvedTheme === "dark" ? "dark" : "light",
+    t,
+  );
 }
 
 const APPEARANCE_OPTIONS = [
@@ -227,7 +217,7 @@ function AppearanceCard() {
                 {t("settings.appearance")}
               </span>
               <span className="mt-px block text-[0.6875rem] text-text-muted">
-                {appearanceLabel(hydrated, theme, resolvedTheme, t)}
+                {themeSubtitle(hydrated, theme, resolvedTheme, t)}
               </span>
             </span>
           </div>
@@ -542,7 +532,7 @@ function ProfilePanel({
         <>
           <AvatarPicker profile={profile} account={account} />
           {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field
               label={t("settings.usernameLabel")}
               icon={User}
@@ -610,7 +600,7 @@ function PasswordPanel({ account }: { account: Core["account"] }) {
         subtitle={t("settings.changePasswordSubtitle")}
       />
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Field
           label={t("settings.newPasswordLabel")}
           icon={KeyRound}
@@ -684,7 +674,7 @@ function GrowattPanel({
         badge={<ConfiguredBadge on={configured} />}
       />
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Field
           label={t("settings.accountEmailLabel")}
           icon={Mail}
@@ -759,7 +749,7 @@ function WeatherPanel({
         badge={<ConfiguredBadge on={configured} />}
       />
       {banner ? <StatusBanner kind={banner.kind} message={banner.message} /> : null}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Field
           label={t("settings.stationIdLabel")}
           icon={MapPin}
@@ -796,7 +786,8 @@ function SettingsList({
   wc,
   onSignOut,
 }: {
-  section: Section;
+  /** `null` = no panel open (mobile shows the list; desktop shows profile). */
+  section: Section | null;
   onSelect: (s: Section) => void;
   profile: UserProfile | undefined;
   gc: ReturnType<typeof growattConfig>;
@@ -804,11 +795,17 @@ function SettingsList({
   onSignOut: () => void;
 }) {
   const { t } = useI18n();
+  const effective = section ?? "profile";
   return (
-    <div className="flex w-[23.125rem] shrink-0 flex-col gap-2.5">
+    <div
+      className={cn(
+        "w-full flex-col gap-2.5 md:flex md:w-[23.125rem] md:shrink-0",
+        section === null ? "flex" : "hidden",
+      )}
+    >
       <ProfileHubRow
         profile={profile}
-        active={section === "profile"}
+        active={effective === "profile"}
         onClick={() => onSelect("profile")}
       />
 
@@ -818,7 +815,7 @@ function SettingsList({
           icon={ShieldCheck}
           gradient="revenue"
           title={t("settings.changePassword")}
-          active={section === "password"}
+          active={effective === "password"}
           onClick={() => onSelect("password")}
         />
       </div>
@@ -831,7 +828,7 @@ function SettingsList({
           title={t("settings.growatt")}
           subtitle={t("settings.growattSubtitle")}
           badge={<ConfiguredBadge on={gc.configured} />}
-          active={section === "growatt"}
+          active={effective === "growatt"}
           onClick={() => onSelect("growatt")}
         />
         <div className="ml-[3.875rem] h-px bg-glass-border" />
@@ -841,7 +838,7 @@ function SettingsList({
           title={t("settings.weatherStation")}
           subtitle={wc.station ? `${wc.station} · Sandnes` : t("settings.notConfigured")}
           badge={<ConfiguredBadge on={wc.configured} />}
-          active={section === "weather"}
+          active={effective === "weather"}
           onClick={() => onSelect("weather")}
         />
       </div>
@@ -860,11 +857,15 @@ function SettingsList({
   );
 }
 
-export default function SettingsPage() {
+function SettingsPageInner() {
   const { t } = useI18n();
-  const [section, setSection] = useState<Section>("profile");
-  const { account, settings, auth } = useCore();
   const router = useRouter();
+  // URL-driven master-detail: `null` (no ?section=) shows the list on mobile
+  // and the profile panel on desktop; browser back closes the panel.
+  const section = sectionFromParam(useSearchParams().get("section"));
+  const effective = section ?? "profile";
+  const openSection = (s: Section) => router.push(`/settings?section=${s}`, { scroll: false });
+  const { account, settings, auth } = useCore();
 
   const { data: profile } = useQuery<UserProfile>({
     queryKey: ["profile"],
@@ -900,16 +901,29 @@ export default function SettingsPage() {
       <div className="flex items-start gap-6">
         <SettingsList
           section={section}
-          onSelect={setSection}
+          onSelect={openSection}
           profile={profile}
           gc={gc}
           wc={wc}
           onSignOut={() => void signOut()}
         />
 
-        <div className="min-h-[32.5rem] min-w-0 flex-1">
-          {section === "profile" ? <ProfilePanel profile={profile} account={account} /> : null}
-          {section === "growatt" ? (
+        <div
+          className={cn(
+            "min-w-0 flex-1 md:block md:min-h-[32.5rem]",
+            section === null ? "hidden" : "block",
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => router.push("/settings", { scroll: false })}
+            className="mb-3 flex items-center gap-1.5 text-[0.8125rem] font-bold text-text-secondary md:hidden"
+          >
+            <ChevronLeft size={16} className="size-[1rem]" />
+            {t("settings.title")}
+          </button>
+          {effective === "profile" ? <ProfilePanel profile={profile} account={account} /> : null}
+          {effective === "growatt" ? (
             <GrowattPanel
               key={gc.key}
               initialEmail={gc.email}
@@ -918,7 +932,7 @@ export default function SettingsPage() {
               onSaved={refetchApi}
             />
           ) : null}
-          {section === "weather" ? (
+          {effective === "weather" ? (
             <WeatherPanel
               key={wc.key}
               initialStationId={wc.station}
@@ -927,9 +941,19 @@ export default function SettingsPage() {
               onSaved={refetchApi}
             />
           ) : null}
-          {section === "password" ? <PasswordPanel account={account} /> : null}
+          {effective === "password" ? <PasswordPanel account={account} /> : null}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  // useSearchParams needs a Suspense boundary if this route is ever statically
+  // prerendered; the (app) layout is dynamic today, this is insurance.
+  return (
+    <Suspense>
+      <SettingsPageInner />
+    </Suspense>
   );
 }

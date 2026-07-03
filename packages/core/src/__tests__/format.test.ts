@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { average, clamp, lastPositive, round, show, toNum } from "../utils/format";
+import { average, clamp, deriveInitials, lastPositive, round, show, toNum } from "../utils/format";
 
 describe("toNum", () => {
   it("returns null for nullish or non-numeric input", () => {
@@ -71,5 +71,27 @@ describe("clamp", () => {
     expect(clamp(5, 0, 10)).toBe(5);
     expect(clamp(-3, 0, 10)).toBe(0);
     expect(clamp(99, 0, 10)).toBe(10);
+  });
+});
+
+describe("deriveInitials", () => {
+  it("takes the first letters of the first two words", () => {
+    expect(deriveInitials("Aleksander Sandnes")).toBe("AS");
+    expect(deriveInitials("ada lovelace jr")).toBe("AL");
+  });
+
+  it("takes the first two characters of a single word", () => {
+    expect(deriveInitials("aleksander")).toBe("AL");
+  });
+
+  it("falls back to a middle dot when there is no name", () => {
+    expect(deriveInitials(null)).toBe("·");
+    expect(deriveInitials(undefined)).toBe("·");
+    expect(deriveInitials("   ")).toBe("·");
+  });
+
+  it("ignores surrounding whitespace", () => {
+    expect(deriveInitials("  bo  ")).toBe("BO");
+    expect(deriveInitials("  ada   lovelace ")).toBe("AL");
   });
 });

@@ -39,3 +39,14 @@ export function lastPositive(vals: number[]): number {
 export function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
 }
+
+/**
+ * Avatar initials: first letters of the first two words, else the first two
+ * characters; "·" when there is no name.
+ */
+export function deriveInitials(name?: string | null): string {
+  if (!name?.trim()) return "·";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.trim().slice(0, 2).toUpperCase();
+}

@@ -62,7 +62,7 @@ export default function SolarPage() {
   }, [generation, peakValue, peakUnitStr, setSolarStats]);
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[92.5rem] flex-col gap-4 3xl:max-w-[100rem]">
+    <div className="mx-auto flex w-full max-w-[92.5rem] flex-col gap-4 md:h-full 3xl:max-w-[100rem]">
       <PageHeader
         title={t("solar.title")}
         subtitle={t("solar.subtitle")}

@@ -192,7 +192,6 @@ export const en = {
   "auth.register.weatherTitle": "Connect Weather.com",
   "auth.register.weatherSubtitle": "Optional — add your weather station",
   "auth.register.weatherSubtitleMobile": "Optional — add your weather credentials",
-  "auth.register.usernamePlaceholder": "Choose a username",
   "auth.register.passwordPlaceholder": "Create a secure password",
   "auth.register.confirmPasswordPlaceholder": "Re-enter your password",
   "auth.register.growattEmailPlaceholder": "your-email@domain.com",
@@ -296,7 +295,6 @@ export const en = {
   "validation.emailInvalid": "Email must be a valid email",
   "validation.passwordRequired": "Password is required",
   "validation.passwordMin": "Password must be at least 4 characters",
-  "validation.usernameRequired": "Username is required",
   "validation.passwordsMustMatch": "Passwords must match",
   "validation.confirmPassword": "Please confirm your password",
 } as const satisfies Record<string, string>;

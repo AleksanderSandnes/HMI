@@ -3,7 +3,7 @@
 // Ported from mobile src/services/weatherApiService.ts.
 import type { CoreApiContext } from "./context";
 
-function toYmd(d: Date): string {
+export function toYmd(d: Date): string {
   return (
     `${d.getFullYear()}` +
     `${String(d.getMonth() + 1).padStart(2, "0")}` +
@@ -11,7 +11,7 @@ function toYmd(d: Date): string {
   );
 }
 
-function parseYmd(s: string): Date {
+export function parseYmd(s: string): Date {
   return new Date(Number(s.slice(0, 4)), Number(s.slice(4, 6)) - 1, Number(s.slice(6, 8)));
 }
 
@@ -19,16 +19,15 @@ function parseYmd(s: string): Date {
 const LIVE_TTL_MS = 5 * 60 * 1000;
 
 /** Whether `date` (YYYYMMDD) is today or yesterday — i.e. still a "live", incomplete day. */
-function isLiveDate(date: string): boolean {
-  const now = new Date();
+export function isLiveDate(date: string, now: Date = new Date()): boolean {
   const y = new Date(now);
   y.setDate(now.getDate() - 1);
   return date === toYmd(now) || date === toYmd(y);
 }
 
 /** The 7 YYYYMMDD dates (oldest first) ending on `end` (or today). */
-function weekDatesEnding(end?: string): string[] {
-  const last = end ? parseYmd(end) : new Date();
+export function weekDatesEnding(end?: string, now: Date = new Date()): string[] {
+  const last = end ? parseYmd(end) : now;
   const out: string[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(last);

@@ -4,7 +4,10 @@ import {
   buildWeatherDailyBands,
   isPhoneWeekly,
   toISO,
-  type TranslationKey,
+  WEATHER_METRICS,
+  WEATHER_TIME_OPTIONS,
+  type WeatherMetricKey,
+  type WeatherMetricMeta,
 } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState, type ReactNode } from "react";
@@ -23,107 +26,28 @@ import { useThemeColors } from "../../src/lib/theme";
 import { useCore } from "../../src/lib/useCore";
 import { useLayoutMode } from "../../src/lib/useLayoutMode";
 
-interface MetricMeta {
-  key: string;
-  labelKey: TranslationKey;
-  icon: (color: string, size: number) => ReactNode;
-  unit: string;
-  titleKey: TranslationKey;
-  accent: string;
-  series: { labelKey: TranslationKey; color: string }[];
-}
-
+// Shared metric metadata lives in @hmi/core; only the icons are app-specific.
 const io =
   (name: keyof typeof Ionicons.glyphMap) =>
   // eslint-disable-next-line react/display-name -- render-prop, not a component
   (color: string, size: number): ReactNode => <Ionicons name={name} color={color} size={size} />;
 
-const METRICS: MetricMeta[] = [
-  {
-    key: "temperature",
-    labelKey: "weather.chip.temp",
-    icon: io("thermometer"),
-    unit: "°C",
-    titleKey: "weather.temperature",
-    accent: "#fb7185",
-    series: [
-      { labelKey: "weather.temperature", color: "#fb7185" },
-      { labelKey: "weather.dewPoint", color: "#34d399" },
-    ],
-  },
-  {
-    key: "windSpeed",
-    labelKey: "weather.chip.wind",
-    icon: (c, s) => <MaterialCommunityIcons name="weather-windy" color={c} size={s} />,
-    unit: "km/h",
-    titleKey: "weather.wind",
-    accent: "#60a5fa",
-    series: [
-      { labelKey: "weather.windSpeed", color: "#60a5fa" },
-      { labelKey: "weather.windGust", color: "#fbbf24" },
-    ],
-  },
-  {
-    key: "precip",
-    labelKey: "weather.chip.rain",
-    icon: io("rainy"),
-    unit: "mm",
-    titleKey: "weather.precipitation",
-    accent: "#38bdf8",
-    series: [
-      { labelKey: "weather.accumTotal", color: "#38bdf8" },
-      { labelKey: "weather.rate", color: "#34d399" },
-    ],
-  },
-  {
-    key: "humidity",
-    labelKey: "weather.chip.humidity",
-    icon: io("water"),
-    unit: "%",
-    titleKey: "weather.humidity",
-    accent: "#22d3ee",
-    series: [{ labelKey: "weather.humidity", color: "#22d3ee" }],
-  },
-  {
-    key: "pressure",
-    labelKey: "weather.chip.pressure",
-    icon: io("speedometer"),
-    unit: "hPa",
-    titleKey: "weather.pressure",
-    accent: "#a78bfa",
-    series: [{ labelKey: "weather.pressure", color: "#a78bfa" }],
-  },
-  {
-    key: "solarRadiation",
-    labelKey: "weather.chip.solar",
-    icon: io("sunny"),
-    unit: "W/m²",
-    titleKey: "weather.solarRadiation",
-    accent: "#fbbf24",
-    series: [{ labelKey: "weather.solarRadiation", color: "#fbbf24" }],
-  },
-  {
-    key: "uvIndex",
-    labelKey: "weather.chip.uv",
-    icon: io("sunny-outline"),
-    unit: "UV",
-    titleKey: "weather.uvIndex",
-    accent: "#c084fc",
-    series: [{ labelKey: "weather.uvIndex", color: "#c084fc" }],
-  },
-];
-
-const TIME_OPTION_KEYS: { labelKey: TranslationKey; value: string }[] = [
-  { labelKey: "timespan.hourly", value: "hourly" },
-  { labelKey: "timespan.weekly", value: "weekly" },
-];
+const METRIC_ICONS: Record<WeatherMetricKey, (color: string, size: number) => ReactNode> = {
+  temperature: io("thermometer"),
+  windSpeed: (c, s) => <MaterialCommunityIcons name="weather-windy" color={c} size={s} />,
+  precip: io("rainy"),
+  humidity: io("water"),
+  pressure: io("speedometer"),
+  solarRadiation: io("sunny"),
+  uvIndex: io("sunny-outline"),
+};
 
 function MetricChip({
   meta,
   on,
   onSelect,
 }: {
-  meta: MetricMeta;
+  meta: WeatherMetricMeta;
   on: boolean;
   onSelect: (key: string) => void;
 }) {
@@ -138,7 +62,7 @@ function MetricChip({
       )}
       style={on ? { borderColor: `${meta.accent}66` } : undefined}
     >
-      {meta.icon(on ? meta.accent : colors.textMuted, 14)}
+      {METRIC_ICONS[meta.key]?.(on ? meta.accent : colors.textMuted, 14)}
       <Text
         style={on ? { color: meta.accent } : undefined}
         className={cn("text-[13px] font-bold", !on && "text-text-muted")}
@@ -159,7 +83,7 @@ function MetricChips({
   /** Wrap into rows (landscape side panel) instead of scrolling horizontally. */
   wrap?: boolean;
 }) {
-  const chips = METRICS.map((m) => (
+  const chips = WEATHER_METRICS.map((m) => (
     <MetricChip key={m.key} meta={m} on={m.key === active} onSelect={onSelect} />
   ));
   if (wrap) return <View className="flex-row flex-wrap gap-2">{chips}</View>;
@@ -182,7 +106,7 @@ function WeatherChartPane({
   phoneWeekly,
   data,
 }: {
-  meta: MetricMeta;
+  meta: WeatherMetricMeta;
   phoneWeekly: boolean;
   data: ReturnType<typeof useWeatherChartData>;
 }) {
@@ -212,7 +136,12 @@ function WeatherChartPane({
   );
 }
 
-function useWeatherChartData(dataType: string, timespan: string, ymd: string, meta: MetricMeta) {
+function useWeatherChartData(
+  dataType: string,
+  timespan: string,
+  ymd: string,
+  meta: WeatherMetricMeta,
+) {
   const { weather } = useCore();
   const { t } = useI18n();
   const { data: observations, isLoading } = useQuery({
@@ -257,7 +186,7 @@ export default function Weather() {
   const [timespan, setTimespan] = useState("hourly");
   const [pickerDate, setPickerDate] = useState(toISO(yesterday));
 
-  const meta = METRICS.find((d) => d.key === dataType) ?? METRICS[0];
+  const meta = WEATHER_METRICS.find((d) => d.key === dataType) ?? WEATHER_METRICS[0];
   const ymd = pickerDate.replaceAll("-", "");
   // Phone weekly → 7 daily min/max/avg bands; tablet/hourly → dense series.
   // Width-based on purpose: a landscape phone (< tablet breakpoint) keeps bands.
@@ -275,7 +204,7 @@ export default function Weather() {
     <SegmentedControl
       value={timespan}
       onChange={setTimespan}
-      options={TIME_OPTION_KEYS.map(({ labelKey, value }) => ({ label: t(labelKey), value }))}
+      options={WEATHER_TIME_OPTIONS.map(({ labelKey, value }) => ({ label: t(labelKey), value }))}
     />
   );
   const chartPane = <WeatherChartPane meta={meta} phoneWeekly={phoneWeekly} data={data} />;

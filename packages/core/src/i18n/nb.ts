@@ -192,7 +192,6 @@ export const nb: Record<TranslationKey, string> = {
   "auth.register.weatherTitle": "Koble til Weather.com",
   "auth.register.weatherSubtitle": "Valgfritt — legg til værstasjonen din",
   "auth.register.weatherSubtitleMobile": "Valgfritt — legg til værpåloggingen din",
-  "auth.register.usernamePlaceholder": "Velg et brukernavn",
   "auth.register.passwordPlaceholder": "Lag et sikkert passord",
   "auth.register.confirmPasswordPlaceholder": "Skriv inn passordet på nytt",
   "auth.register.growattEmailPlaceholder": "din-epost@domene.no",
@@ -299,7 +298,6 @@ export const nb: Record<TranslationKey, string> = {
   "validation.emailInvalid": "Oppgi en gyldig e-postadresse",
   "validation.passwordRequired": "Passord er påkrevd",
   "validation.passwordMin": "Passordet må være minst 4 tegn",
-  "validation.usernameRequired": "Brukernavn er påkrevd",
   "validation.passwordsMustMatch": "Passordene må være like",
   "validation.confirmPassword": "Bekreft passordet ditt",
 };

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loginSchema, registerAccountSchema } from "../validation/auth";
+import { loginSchema, registerAccountSchema, validateRegisterAccount } from "../validation/auth";
 
 const validLogin = { email: "user@example.com", password: "secret" };
 
@@ -27,19 +27,12 @@ describe("loginSchema", () => {
 describe("registerAccountSchema", () => {
   const validRegister = {
     email: "user@example.com",
-    username: "alice",
     password: "secret",
     confirmPassword: "secret",
   };
 
   it("accepts a fully valid registration", async () => {
     expect(await registerAccountSchema.isValid(validRegister)).toBe(true);
-  });
-
-  it("requires a username", async () => {
-    await expect(
-      registerAccountSchema.validate({ ...validRegister, username: "" }),
-    ).rejects.toThrow("Username is required");
   });
 
   it("requires confirmPassword to match password", async () => {
@@ -53,5 +46,35 @@ describe("registerAccountSchema", () => {
     await expect(registerAccountSchema.validate(withoutConfirm)).rejects.toThrow(
       "Please confirm your password",
     );
+  });
+});
+
+describe("validateRegisterAccount", () => {
+  const valid = {
+    email: "user@example.com",
+    password: "secret",
+    confirmPassword: "secret",
+  };
+
+  it("returns an empty map for valid input", () => {
+    expect(validateRegisterAccount(valid, registerAccountSchema)).toEqual({});
+  });
+
+  it("maps every invalid field to its first message", () => {
+    const errs = validateRegisterAccount(
+      { email: "nope", password: "pw123", confirmPassword: "other" },
+      registerAccountSchema,
+    );
+    expect(errs.email).toBeTruthy();
+    expect(errs.confirmPassword).toBeTruthy();
+    expect(errs.password).toBeUndefined();
+  });
+
+  it("keeps only the first message per field", () => {
+    const errs = validateRegisterAccount(
+      { email: "", password: "pw123", confirmPassword: "pw123" },
+      registerAccountSchema,
+    );
+    expect(typeof errs.email).toBe("string");
   });
 });

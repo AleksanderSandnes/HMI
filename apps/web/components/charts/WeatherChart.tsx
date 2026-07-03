@@ -98,18 +98,21 @@ function buildAreas(clean: LineSeries[], n: number) {
     ));
 }
 
-function readClean(series: LineSeries[]) {
+export function readClean(series: LineSeries[]) {
   const clean = (series || []).filter((s) => s.data && s.data.length > 0);
   return { clean, n: clean[0]?.data.length ?? 0, all: clean.flatMap((s) => s.data) };
 }
 
-function xTickProps(ticks?: string[]) {
+export function xTickProps(ticks?: string[]) {
   return ticks && ticks.length
     ? { ticks, interval: 0 as const }
     : { interval: "preserveStartEnd" as const, minTickGap: 32 };
 }
 
-function buildRows(labels: string[], clean: LineSeries[]): Record<string, number | string>[] {
+export function buildRows(
+  labels: string[],
+  clean: LineSeries[],
+): Record<string, number | string>[] {
   return labels.map((label, i) => {
     const row: Record<string, number | string> = { label };
     clean.forEach((s, si) => {

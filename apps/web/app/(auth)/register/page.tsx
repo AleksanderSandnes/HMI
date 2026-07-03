@@ -3,14 +3,14 @@
 import {
   coreErrorMessage,
   createRegisterAccountSchema,
+  validateRegisterAccount,
   type TranslationKey,
   type Translator,
 } from "@hmi/core";
-import { ArrowLeft, ArrowRight, Check, Key, Lock, Mail, MapPin, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Key, Lock, Mail, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import * as Yup from "yup";
 
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
@@ -46,27 +46,8 @@ type Setter<T> = (v: T) => void;
 
 interface AccountState {
   email: string;
-  username: string;
   password: string;
   confirmPassword: string;
-}
-
-function validateAccount(
-  account: AccountState,
-  schema: ReturnType<typeof createRegisterAccountSchema>,
-): Record<string, string> {
-  try {
-    schema.validateSync(account, { abortEarly: false });
-    return {};
-  } catch (err) {
-    const map: Record<string, string> = {};
-    if (err instanceof Yup.ValidationError) {
-      err.inner.forEach((e) => {
-        if (e.path && !map[e.path]) map[e.path] = e.message;
-      });
-    }
-    return map;
-  }
 }
 
 interface CreateAccountDeps {
@@ -84,14 +65,13 @@ interface CreateAccountDeps {
 async function runCreateAccount(d: CreateAccountDeps) {
   d.setStepError(null);
   d.setAccountError(null);
-  const errs = validateAccount(d.account, d.schema);
+  const errs = validateRegisterAccount(d.account, d.schema);
   d.setAccountErrors(errs);
   if (Object.keys(errs).length) return;
   d.setSaving(true);
   try {
     await d.auth.registerUser({
       email: d.account.email.trim(),
-      username: d.account.username.trim(),
       password: d.account.password,
     });
     d.setStep(1);
@@ -163,7 +143,6 @@ function useRegisterFlow() {
   const [step, setStep] = useState(0);
   const [account, setAccount] = useState<AccountState>({
     email: "",
-    username: "",
     password: "",
     confirmPassword: "",
   });
@@ -242,15 +221,6 @@ function AccountStep({ flow }: { flow: RegisterFlow }) {
         value={account.email}
         onChange={setField(setAccount, "email")}
         error={accountErrors.email}
-        disabled={saving}
-      />
-      <Field
-        label={t("settings.usernameLabel")}
-        icon={User}
-        placeholder={t("auth.register.usernamePlaceholder")}
-        value={account.username}
-        onChange={setField(setAccount, "username")}
-        error={accountErrors.username}
         disabled={saving}
       />
       <Field

@@ -18,6 +18,7 @@ import {
   type CalendarView as View,
 } from "@/lib/date";
 import { useI18n } from "@/lib/i18n";
+import { computePopoverPos, type PopoverPos } from "@/lib/popover";
 import { cn } from "@/lib/utils";
 
 const POPOVER_W = 300;
@@ -26,7 +27,12 @@ const POPOVER_H = 360;
 const GRID_BTN =
   "flex h-11 items-center justify-center rounded-[var(--radius-md)] text-[0.8125rem] font-bold transition";
 
-function headerLabelFor(view: View, viewDate: Date, yearStart: number, locale: Locale): string {
+export function headerLabelFor(
+  view: View,
+  viewDate: Date,
+  yearStart: number,
+  locale: Locale,
+): string {
   if (view === "day") return `${monthName(locale, viewDate.getMonth())} ${viewDate.getFullYear()}`;
   if (view === "month") return `${viewDate.getFullYear()}`;
   return `${yearStart} – ${yearStart + 11}`;
@@ -150,12 +156,6 @@ function YearGrid({
   );
 }
 
-interface PopoverPos {
-  left: number;
-  top: number;
-  up: boolean;
-}
-
 /** Open/close + fixed-position + outside-click/scroll handling for the popover. */
 function useDatePopover(
   selectedDate: string,
@@ -172,16 +172,16 @@ function useDatePopover(
   const openPopover = () => {
     const rect = rootRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const half = POPOVER_W / 2;
-    const margin = 8;
-    const left = Math.min(
-      Math.max(rect.left + rect.width / 2, half + margin),
-      window.innerWidth - half - margin,
-    );
-    const up = window.innerHeight - rect.bottom < POPOVER_H;
     setViewDate(parseYMD(selectedDate));
     setView("day");
-    setPos({ left, top: up ? rect.top - 10 : rect.bottom + 10, up });
+    setPos(
+      computePopoverPos(
+        rect,
+        { width: window.innerWidth, height: window.innerHeight },
+        POPOVER_W,
+        POPOVER_H,
+      ),
+    );
     setOpen(true);
   };
 
@@ -308,6 +308,7 @@ function TriggerRow({
   rootRef,
   disabled,
   pretty,
+  prettyShort,
   open,
   onShift,
   onToggle,
@@ -315,6 +316,8 @@ function TriggerRow({
   rootRef: React.RefObject<HTMLDivElement | null>;
   disabled: boolean;
   pretty: string;
+  /** Compact date label shown below the `sm` breakpoint. */
+  prettyShort: string;
   open: boolean;
   onShift: (days: number) => void;
   onToggle: () => void;
@@ -340,7 +343,8 @@ function TriggerRow({
         className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-glass-border bg-glass-fill px-4 py-2 text-sm font-bold text-text-primary transition hover:bg-glass-fill-strong disabled:opacity-50"
       >
         <CalendarDays size={14} className="size-[0.875rem] text-text-secondary" />
-        {pretty}
+        <span className="sm:hidden">{prettyShort}</span>
+        <span className="hidden sm:inline">{pretty}</span>
       </button>
       <button
         type="button"
@@ -426,6 +430,7 @@ export function DateSelector({
   };
 
   const pretty = `${weekdayAbbr(locale, selected.getDay())}, ${formatDayMonth(locale, selected)}, ${selected.getFullYear()}`;
+  const prettyShort = `${formatDayMonth(locale, selected)} ${selected.getFullYear()}`;
 
   return (
     <GlassCard strong className="flex w-fit items-center p-1.5">
@@ -433,6 +438,7 @@ export function DateSelector({
         rootRef={rootRef}
         disabled={disabled}
         pretty={pretty}
+        prettyShort={prettyShort}
         open={open}
         onShift={shift}
         onToggle={pop.toggleOpen}

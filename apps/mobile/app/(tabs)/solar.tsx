@@ -1,13 +1,10 @@
 import {
   chartSubtitle,
-  formatPeak,
-  getPeakOutput,
-  peakUnit,
+  solarCapValues,
   toISO,
   type SimpleChartData,
   type SolarData,
   type SolarTimespan,
-  type TranslationKey,
 } from "@hmi/core";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -47,42 +44,10 @@ function Cap({ label, value }: { label: string; value: string }) {
   );
 }
 
-const CAP_LABELS: Record<string, [TranslationKey, TranslationKey]> = {
-  hourly: ["solar.cap.peak", "solar.cap.todayTotal"],
-  weekly: ["solar.cap.peakDay", "solar.cap.weekTotal"],
-  monthly: ["solar.cap.peakDay", "solar.cap.monthTotal"],
-  yearly: ["solar.cap.bestMonth", "solar.cap.yearTotal"],
-  total: ["solar.cap.bestYear", "solar.cap.fiveYearTotal"],
-};
-
-function peakText(peak: ReturnType<typeof getPeakOutput>): string {
-  if (!peak) return "—";
-  const v = `${formatPeak(peak.value)} ${peakUnit(peak.value, peak.unit)}`;
-  return peak.label ? `${peak.label} · ${v}` : v;
-}
-
-function totalKwh(solar: SolarData | undefined, timespan: string): number {
-  if (timespan === "hourly") return solar?.metrics.todayGeneration ?? 0;
-  const vals = solar?.chartData?.datasets?.[0]?.data ?? [];
-  return vals.reduce((a, b) => a + (b || 0), 0);
-}
-
-function capValues(solar: SolarData | undefined, timespan: string) {
-  const vals = solar?.chartData?.datasets?.[0]?.data ?? [];
-  const peak = getPeakOutput(solar?.chartData as SimpleChartData, timespan);
-  const total = totalKwh(solar, timespan);
-  return {
-    hasData: vals.length > 0,
-    labels: CAP_LABELS[timespan] ?? (["solar.cap.peak", "solar.cap.total"] as const),
-    peakText: peakText(peak),
-    totalText: `${formatPeak(total)} ${peakUnit(total, "kWh")}`,
-  };
-}
-
 /** Peak + period-total captions under the chart (design 1d). */
 function StatCaps({ solar, timespan }: { solar?: SolarData; timespan: string }) {
   const { t } = useI18n();
-  const c = capValues(solar, timespan);
+  const c = solarCapValues(solar, timespan);
   if (!c.hasData) return null;
   return (
     <View className="mt-3 flex-row items-stretch rounded-md border border-glass-border px-4 py-3.5">

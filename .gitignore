@@ -24,6 +24,7 @@ apps/web/next-env.d.ts
 # Playwright
 apps/web/test-results/
 apps/web/playwright-report/
+apps/web/playwright/.auth/
 apps/web/tests/visual/**/*-actual.png
 apps/web/tests/visual/**/*-diff.png
 

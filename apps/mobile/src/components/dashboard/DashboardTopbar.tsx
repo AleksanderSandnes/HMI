@@ -1,17 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
+import { deriveInitials } from "@hmi/core";
 import { Pressable, Text, View } from "react-native";
 
 import { useI18n } from "../../lib/i18n";
 import { useThemeColors } from "../../lib/theme";
 import { useAvatar } from "../../lib/useAvatar";
 import { Avatar } from "../ui/Avatar";
-
-function deriveInitials(name?: string | null): string {
-  if (!name) return "·";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-}
 
 /** Dashboard chrome row (design 1c): brand · bell + badge · avatar with online dot. */
 export function DashboardTopbar({

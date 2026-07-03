@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   coreErrorMessage,
   createRegisterAccountSchema,
+  validateRegisterAccount,
   type TranslationKey,
   type Translator,
 } from "@hmi/core";
@@ -10,7 +11,6 @@ import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import * as Yup from "yup";
 
 import { Button } from "../../src/components/ui/Button";
 import { Field } from "../../src/components/ui/Field";
@@ -23,7 +23,6 @@ import { useI18n } from "../../src/lib/i18n";
 import { useCore } from "../../src/lib/useCore";
 
 const mail: IconRender = (p) => <Ionicons name="mail-outline" {...p} />;
-const user: IconRender = (p) => <Ionicons name="person-outline" {...p} />;
 const lock: IconRender = (p) => <Ionicons name="lock-closed-outline" {...p} />;
 const key: IconRender = (p) => <Ionicons name="key-outline" {...p} />;
 const pin: IconRender = (p) => <Ionicons name="location-outline" {...p} />;
@@ -65,27 +64,8 @@ const HEADERS: Record<
 
 interface AccountState {
   email: string;
-  username: string;
   password: string;
   confirmPassword: string;
-}
-
-function validateAccount(
-  account: AccountState,
-  schema: ReturnType<typeof createRegisterAccountSchema>,
-): Record<string, string> {
-  try {
-    schema.validateSync(account, { abortEarly: false });
-    return {};
-  } catch (err) {
-    const map: Record<string, string> = {};
-    if (err instanceof Yup.ValidationError) {
-      err.inner.forEach((e) => {
-        if (e.path && !map[e.path]) map[e.path] = e.message;
-      });
-    }
-    return map;
-  }
 }
 
 type Core = ReturnType<typeof useCore>;
@@ -103,17 +83,16 @@ interface CreateAccountDeps {
   setAccountErrors: Setter<Record<string, string>>;
 }
 
-async function runCreateAccount(d: CreateAccountDeps) {
+export async function runCreateAccount(d: CreateAccountDeps) {
   d.setStepError(null);
   d.setAccountError(null);
-  const errs = validateAccount(d.account, d.schema);
+  const errs = validateRegisterAccount(d.account, d.schema);
   d.setAccountErrors(errs);
   if (Object.keys(errs).length) return;
   d.setSaving(true);
   try {
     await d.auth.registerUser({
       email: d.account.email.trim(),
-      username: d.account.username.trim(),
       password: d.account.password,
     });
     d.setStep(1);
@@ -133,7 +112,7 @@ interface SaveGrowattDeps {
   setStepError: Setter<string | null>;
 }
 
-async function runSaveGrowatt(d: SaveGrowattDeps) {
+export async function runSaveGrowatt(d: SaveGrowattDeps) {
   d.setStepError(null);
   const email = d.growatt.email.trim();
   const password = d.growatt.password.trim();
@@ -159,7 +138,7 @@ interface FinishDeps {
   setStepError: Setter<string | null>;
 }
 
-async function runFinish(d: FinishDeps) {
+export async function runFinish(d: FinishDeps) {
   d.setStepError(null);
   const stationId = d.weather.stationId.trim();
   const apiKey = d.weather.apiKey.trim();
@@ -184,7 +163,6 @@ function useRegisterFlow() {
   const [step, setStep] = useState(0);
   const [account, setAccount] = useState<AccountState>({
     email: "",
-    username: "",
     password: "",
     confirmPassword: "",
   });
@@ -342,16 +320,6 @@ function AccountStep({ flow }: { flow: RegisterFlow }) {
         value={account.email}
         onChangeText={set("email")}
         error={accountErrors.email}
-        editable={!saving}
-      />
-      <Field
-        label={t("settings.usernameLabel")}
-        icon={user}
-        autoCapitalize="none"
-        placeholder={t("auth.register.usernamePlaceholder")}
-        value={account.username}
-        onChangeText={set("username")}
-        error={accountErrors.username}
         editable={!saving}
       />
       <Field

@@ -123,7 +123,7 @@ export function AppNav() {
       </header>
 
       {/* Mobile bottom tab bar */}
-      <nav className="glass fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-glass-border px-2 py-2 md:hidden">
+      <nav className="glass fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-glass-border px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden">
         {NAV.map(({ href, labelKey, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (

@@ -9,7 +9,7 @@ import { GlassCard } from "../ui/GlassCard";
 
 import { Sparkline } from "./Sparkline";
 
-function kwLabel(watts: number | null | undefined): string {
+export function kwLabel(watts: number | null | undefined): string {
   if (watts == null) return "—";
   const kw = watts / 1000;
   return kw.toFixed(kw >= 10 ? 1 : 2);

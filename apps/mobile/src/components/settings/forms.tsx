@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { coreErrorMessage, type AvatarUpload, type Translator } from "@hmi/core";
+import { coreErrorMessage, deriveInitials, type AvatarUpload, type Translator } from "@hmi/core";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
@@ -25,13 +25,6 @@ const user: IconRender = (p) => <Ionicons name="person-outline" {...p} />;
 const keyIc: IconRender = (p) => <Ionicons name="key-outline" {...p} />;
 const pin: IconRender = (p) => <Ionicons name="location-outline" {...p} />;
 const sun: IconRender = (p) => <Ionicons name="sunny-outline" {...p} />;
-
-function deriveInitials(name?: string | null): string {
-  if (!name) return "·";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-}
 
 const PICKER_OPTS = { allowsEditing: true, aspect: [1, 1] as [number, number], quality: 0.6 };
 

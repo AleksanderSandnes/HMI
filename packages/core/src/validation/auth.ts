@@ -25,7 +25,6 @@ export function createRegisterAccountSchema(t: Translator) {
       .required(t("validation.emailRequired"))
       .email(t("validation.emailInvalid"))
       .label("Email"),
-    username: Yup.string().required(t("validation.usernameRequired")).label("Username"),
     password: Yup.string()
       .required(t("validation.passwordRequired"))
       .min(4, t("validation.passwordMin"))
@@ -41,3 +40,31 @@ export const registerAccountSchema = createRegisterAccountSchema(getTranslator(D
 
 export type LoginValues = Yup.InferType<typeof loginSchema>;
 export type RegisterAccountValues = Yup.InferType<typeof registerAccountSchema>;
+
+export interface RegisterAccountFields {
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+/**
+ * Validate the register-account step, returning a field → first-message map
+ * ({} when valid). Shared by the web and mobile register wizards.
+ */
+export function validateRegisterAccount(
+  account: RegisterAccountFields,
+  schema: ReturnType<typeof createRegisterAccountSchema>,
+): Record<string, string> {
+  try {
+    schema.validateSync(account, { abortEarly: false });
+    return {};
+  } catch (err) {
+    const map: Record<string, string> = {};
+    if (err instanceof Yup.ValidationError) {
+      err.inner.forEach((e) => {
+        if (e.path && !map[e.path]) map[e.path] = e.message;
+      });
+    }
+    return map;
+  }
+}

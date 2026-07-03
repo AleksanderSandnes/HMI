@@ -30,6 +30,9 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
+  // Extend under the iOS home indicator so env(safe-area-inset-bottom) works
+  // for the mobile bottom tab bar.
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({
