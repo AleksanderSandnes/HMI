@@ -149,12 +149,9 @@ export default function WeatherPage() {
   const { t } = useI18n();
   const width = useViewportWidth();
 
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-
   const [dataType, setDataType] = useState("temperature");
   const [timespan, setTimespan] = useState("hourly");
-  const [pickerDate, setPickerDate] = useState(toISO(yesterday));
+  const [pickerDate, setPickerDate] = useState(toISO(new Date()));
 
   const meta = WEATHER_METRICS.find((d) => d.key === dataType) ?? WEATHER_METRICS[0];
   const ymd = pickerDate.replaceAll("-", "");

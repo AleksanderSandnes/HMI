@@ -94,11 +94,8 @@ export default function Solar() {
   const { growatt } = useCore();
   const { t } = useI18n();
 
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-
   const [timespan, setTimespan] = useState("hourly");
-  const [pickerDate, setPickerDate] = useState(toISO(yesterday));
+  const [pickerDate, setPickerDate] = useState(toISO(new Date()));
 
   const { data: solar, isLoading } = useQuery<SolarData>({
     queryKey: ["solar", timespan, pickerDate],
