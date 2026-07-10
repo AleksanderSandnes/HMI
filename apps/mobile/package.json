@@ -28,7 +28,7 @@
     "@expo/metro-runtime": "~6.1.2",
     "@expo/ngrok": "^4.1.0",
     "@expo/vector-icons": "^15.0.3",
-    "@hmi/core": "*",
+    "@hmi/core": "workspace:*",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-picker/picker": "2.11.1",
     "@react-navigation/native": "^7.3.4",

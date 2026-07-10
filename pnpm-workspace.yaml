@@ -1,0 +1,33 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# pnpm settings live here (not .npmrc) as of pnpm v10+.
+# Flat node_modules (like npm/yarn) so Metro/Expo autolinking and React Native
+# resolve native modules correctly. pnpm still uses its fast content-addressed store.
+nodeLinker: hoisted
+strictPeerDependencies: false
+autoInstallPeers: true
+
+# Dependency version pins. Moved here from package.json because pnpm no longer
+# reads the "pnpm" field in package.json.
+overrides:
+  postcss: ^8.5.15
+  js-yaml: ^4.2.0
+  uuid: ^11.1.1
+  "@typescript-eslint/typescript-estree>minimatch": 9.0.9
+
+# Trusted native deps allowed to run install/build scripts (pnpm blocks build
+# scripts by default as a supply-chain safeguard):
+#   esbuild       → downloads its prebuilt bundler binary (vitest/tooling)
+#   sharp         → native image processing for Next.js image optimization
+#   unrs-resolver → native resolver for eslint-import-resolver-typescript
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - unrs-resolver
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true

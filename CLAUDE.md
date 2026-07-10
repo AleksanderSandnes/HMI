@@ -9,7 +9,7 @@ than duplicating logic.
 
 Always:
 
-- Run `npm run check` before finishing a task (Prettier + ESLint + typecheck across all packages).
+- Run `pnpm run check` before finishing a task (Prettier + ESLint + typecheck across all packages).
 - Never disable ESLint rules.
 - Never use `any` unless absolutely necessary.
 - Prefer interfaces over types for object shapes.
@@ -24,9 +24,9 @@ Always:
 ## Tooling
 
 - **Format:** Prettier (`.prettierrc` — double quotes, `printWidth` 100, trailing commas). Run
-  `npm run format` to fix, `npm run format:check` to verify.
+  `pnpm run format` to fix, `pnpm run format:check` to verify.
 - **Lint:** ESLint 9 flat config, one per package (each layers the shared rules in
   `eslint.config.base.mjs` onto its framework preset — Next for web, Expo/RN for mobile). Run via
-  `npm run lint` (turbo). Type-aware rules are on (`no-floating-promises`, `no-misused-promises`).
-- **Types:** `npm run typecheck` (turbo, `tsc --noEmit` per package).
-- **Tests:** `npm run test` (turbo) — core/web Vitest, mobile jest-expo.
+  `pnpm run lint` (turbo). Type-aware rules are on (`no-floating-promises`, `no-misused-promises`).
+- **Types:** `pnpm run typecheck` (turbo, `tsc --noEmit` per package).
+- **Tests:** `pnpm run test` (turbo) — core/web Vitest, mobile jest-expo.

@@ -28,7 +28,7 @@ charts — on the web, tablet, and mobile.
 
 ## 🗂️ Monorepo
 
-A **Turborepo + npm-workspaces** monorepo:
+A **Turborepo + pnpm-workspaces** monorepo:
 
 ```
 apps/
@@ -109,14 +109,14 @@ stack for end-to-end use.
 
 ### Prerequisites
 
-| Tool                       | Version        | Needed for                               |
-| -------------------------- | -------------- | ---------------------------------------- |
-| **Node.js**                | 22 (LTS)       | everything (web, mobile, core, tooling)  |
-| **npm**                    | 10+            | workspaces                               |
-| **Supabase CLI**           | ≥ 2.108        | local Supabase stack (`supabase start`)  |
-| **Docker** (or Podman)     | running daemon | **required** by the local Supabase stack |
-| **Java JDK + Maven**       | 17+            | the Growatt service (solar data)         |
-| **Watchman** (recommended) | latest         | faster Metro file-watching for mobile    |
+| Tool                       | Version        | Needed for                                   |
+| -------------------------- | -------------- | -------------------------------------------- |
+| **Node.js**                | 22 (LTS)       | everything (web, mobile, core, tooling)      |
+| **pnpm**                   | 10+            | workspaces (`corepack enable` or standalone) |
+| **Supabase CLI**           | ≥ 2.108        | local Supabase stack (`supabase start`)      |
+| **Docker** (or Podman)     | running daemon | **required** by the local Supabase stack     |
+| **Java JDK + Maven**       | 17+            | the Growatt service (solar data)             |
+| **Watchman** (recommended) | latest         | faster Metro file-watching for mobile        |
 
 > 💡 Start the Docker daemon before `supabase start` — the local Supabase stack runs on Docker.
 
@@ -125,7 +125,7 @@ stack for end-to-end use.
 ```bash
 git clone https://github.com/AleksanderSandnes/HMI.git
 cd HMI
-npm install        # installs every workspace (web, mobile, core)
+pnpm install       # installs every workspace (web, mobile, core)
 ```
 
 ### 2. Start Supabase locally
@@ -197,17 +197,17 @@ EXPO_PUBLIC_JAVA_API=
 **Web** (Next.js, http://localhost:3000):
 
 ```bash
-npm run web            # → next dev in apps/web
+pnpm run web            # → next dev in apps/web
 ```
 
 **Mobile** (Expo dev server):
 
 ```bash
-npm run mobile         # → expo start in apps/mobile
+pnpm run mobile         # → expo start in apps/mobile
 # or target a platform directly:
-npm --workspace @hmi/mobile run ios       # iOS simulator
-npm --workspace @hmi/mobile run android   # Android emulator
-npm --workspace @hmi/mobile run web       # Expo web
+pnpm --filter @hmi/mobile ios       # iOS simulator
+pnpm --filter @hmi/mobile android   # Android emulator
+pnpm --filter @hmi/mobile web       # Expo web
 ```
 
 > Charts use Victory Native XL + Skia, which need a **dev build** (not Expo Go) — `expo-dev-client`
@@ -243,20 +243,20 @@ with the matching `SPRING_DATASOURCE_*` / `SUPABASE_JWKS_URI` env var.
 Run the whole gate from the repo root (Turborepo fans out across `core`, `web`, `mobile`):
 
 ```bash
-npm run check     # prettier --check + eslint (per package) + tsc --noEmit
-npm run test      # vitest (core/web) + jest-expo (mobile)
+pnpm run check     # prettier --check + eslint (per package) + tsc --noEmit
+pnpm run test      # vitest (core/web) + jest-expo (mobile)
 ```
 
 Granular:
 
-| Task        | Command                                                              |
-| ----------- | -------------------------------------------------------------------- |
-| Format      | `npm run format` (write) · `npm run format:check`                    |
-| Lint (all)  | `npm run lint`                                                       |
-| Lint (one)  | `npm run lint --workspace @hmi/core` (or `@hmi/web` / `@hmi/mobile`) |
-| Typecheck   | `npm run typecheck`                                                  |
-| Tests (all) | `npm run test`                                                       |
-| Growatt API | `cd backend/growattAPI && mvn test`                                  |
+| Task        | Command                                                        |
+| ----------- | -------------------------------------------------------------- |
+| Format      | `pnpm run format` (write) · `pnpm run format:check`            |
+| Lint (all)  | `pnpm run lint`                                                |
+| Lint (one)  | `pnpm --filter @hmi/core lint` (or `@hmi/web` / `@hmi/mobile`) |
+| Typecheck   | `pnpm run typecheck`                                           |
+| Tests (all) | `pnpm run test`                                                |
+| Growatt API | `cd backend/growattAPI && mvn test`                            |
 
 CI (`.github/workflows/ci.yml`) runs a **per-package lint matrix** plus the **test** suites and a
 Prettier + typecheck **quality** job on every push / PR to `main` and `test`.
