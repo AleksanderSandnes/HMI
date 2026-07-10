@@ -11,10 +11,17 @@ autoInstallPeers: true
 
 # Dependency version pins. Moved here from package.json because pnpm no longer
 # reads the "pnpm" field in package.json.
+# Security pins (Dependabot): force patched floors on transitive deps that the
+# resolver would otherwise leave on vulnerable versions —
+#   vite    >=6.4.3  → fs.deny bypass / path traversal (5.x is EOL, no backport)
+#   esbuild >=0.25.0 → dev-server SSRF (CVE)
+#   postcss >=8.5.10 → XSS via unescaped </style>
 overrides:
   postcss: ^8.5.15
   js-yaml: ^4.2.0
   uuid: ^11.1.1
+  vite: ^6.4.3
+  esbuild: ^0.25.0
   "@typescript-eslint/typescript-estree>minimatch": 9.0.9
 
 # Trusted native deps allowed to run install/build scripts (pnpm blocks build
