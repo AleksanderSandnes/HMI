@@ -1,0 +1,4 @@
+# Reviewed historical Supabase public anon JWT (not a service-role credential).
+# Scope each exception to the exact commit, file, rule and line.
+761837b43c6b751b951f7225d9c1bfda2cc8c7c8:apps/mobile/package.json:jwt:15
+761837b43c6b751b951f7225d9c1bfda2cc8c7c8:apps/mobile/eas.json:jwt:22

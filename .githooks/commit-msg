@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+if grep -Eiq '^Co-Authored-By:.*Claude' "$1"; then
+  echo 'Claude attribution trailers are not allowed in this repository.' >&2
+  exit 1
+fi

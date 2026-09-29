@@ -16,15 +16,14 @@
     },
     "development-prod": {
       "extends": "development",
+      "environment": "production",
       "env": {
-        "EXPO_PUBLIC_DATA_MODE": "production",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://xdttfrknoazcqcelieck.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkdHRmcmtub2F6Y3FjZWxpZWNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NTg4MDAsImV4cCI6MjA5ODEzNDgwMH0.ZZ3nol_2ONq_K2N4-qb2lebG3PJa_4uHyWqziFVUy-Q"
+        "EXPO_PUBLIC_DATA_MODE": "production"
       }
     },
     "production": {
       "environment": "production",
-      "autoIncrement": true,
+      "autoIncrement": false,
       "android": {
         "buildType": "app-bundle"
       },
@@ -45,7 +44,7 @@
     "production": {
       "android": {
         "serviceAccountKeyPath": "./play-service-account.json",
-        "track": "production"
+        "track": "internal"
       }
     }
   }

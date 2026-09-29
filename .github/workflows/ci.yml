@@ -5,10 +5,18 @@ on:
     branches:
       - main
       - test
+      - "task/**"
   pull_request:
     branches:
       - main
       - test
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # Lint each package with its own command, selected per package:

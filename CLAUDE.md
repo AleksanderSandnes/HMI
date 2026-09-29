@@ -7,6 +7,19 @@ than duplicating logic.
 
 ## Code Quality
 
+## Release workflow
+
+- Start from updated `main`; use `task/<descriptiveShortName>` branches.
+- Use Conventional Commits. Never add Claude attribution trailers.
+- Run `npm run check` and `npm run test` before every commit; never commit failed checks.
+- Push task branches and merge verified tasks into `test`.
+- Merge `test` into `main` only after explicit user approval.
+- Install repository hooks with `git config core.hooksPath .githooks`; Gitleaks must be on PATH.
+- Ask before branch renames/deletions, DNS changes, paid services, store submissions,
+  or production secret rotation.
+
+## Quality requirements
+
 Always:
 
 - Run `npm run check` before finishing a task (Prettier + ESLint + typecheck across all packages).
