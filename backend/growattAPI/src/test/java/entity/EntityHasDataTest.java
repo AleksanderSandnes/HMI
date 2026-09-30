@@ -83,4 +83,11 @@ class EntityHasDataTest {
 		assertTrue(new TotalDataInvResponse(1L, new TotalDataInvResponse.Obj()).hasData());
 		assertFalse(new TotalDataInvResponse(1L, null).hasData());
 	}
+
+    @Test
+    void missingEnergyArraysAreNotProduction() {
+        assertFalse(new MonthResponse(1L, new MonthResponse.Obj(null)).hasData());
+        assertFalse(new YearResponse(1L, new YearResponse.Obj(null)).hasData());
+        assertFalse(new WeekResponse(1L, new WeekResponse.Obj(null, List.of())).hasData());
+    }
 }

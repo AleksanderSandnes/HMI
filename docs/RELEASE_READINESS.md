@@ -1,5 +1,8 @@
 # Release readiness tracker
 
+Resumed on Linux on 2026-09-30. See [HANDOVER.md](HANDOVER.md) and
+[the full updated plan](RELEASE_READINESS_PLAN.txt). The full release plan remains open.
+
 Plan: `release-readiness-plan.txt`, supplied 2026-09-29. This file records verified
 progress; unchecked work is not release-ready.
 
@@ -17,7 +20,7 @@ progress; unchecked work is not release-ready.
 - [x] GitHub, EAS and Vercel CLI authentication verified.
 - [x] Supabase CLI, Gitleaks, Maestro, ADB, bundletool and Android SDK installed.
 - [x] JDK 17 available in Gradle's provisioned toolchain cache.
-- [ ] Supabase authentication, linking and live security/performance advisors.
+- [x] Supabase authentication, linking and live security/performance advisor audits.
 - [ ] Branch protections and reviewed stale-branch cleanup proposal.
 - [ ] Security audit and fixes across both repositories and deployed services.
 - [ ] Domains, support email, SMTP and app-link association files.
@@ -126,6 +129,12 @@ The first JDK 17 run passes 29 tests (one existing skip) with 23% lines (112/487
 gaps are GrowattWebClient, GrowattDataService, SolarBackfillJob and session/error
 handling. This is a measured baseline, not a completed coverage gate.
 
+Final handover: backend verification now passes 63 tests (one live-provider skip),
+with 76.92% lines and 69.09% branches. Added session, transport, cache, cron and
+error tests. Removed cookies/raw exception details from logs and stored failures,
+rejected unsuccessful logins, replaced stale cookies and remembered failed month
+fetches within weekly requests. No production deployment or merge was performed.
+
 The installed Vercel connector lists HMI and `thefamilyapp-web`, but deployment
 access to their account scope returns HTTP 403. Its project-details tool also
 returns an input-validation error with the documented arguments. Ownership and
@@ -140,3 +149,33 @@ the verified iOS build/test route.
   pages and DNS can be finalized.
 - Confirm licensing, legal text, store declarations and production release actions
   after the concrete artifacts have been prepared for review.
+
+## Linux continuation (2026-09-30)
+
+- Reinstalled Node dependencies with npm ci; existing node_modules lacked runnable
+  tooling. npm audit reports three moderate findings and no high/critical findings.
+- JDK 17 clean Maven verification passes 89 backend tests (one deliberately gated
+  live-provider test skipped), 99.39% lines and 98.18% branches across all 28
+  compiled production classes. Every method and class is exercised.
+- JaCoCo now enforces 90% lines and branches both overall and per class in mvn verify,
+  including CI. No production-class exclusions or lowered targets were introduced.
+- Added real provider-shape chart, retry-limit, snapshot/year cache, failure,
+  backfill, JSON request, cache identity and per-login client isolation tests.
+  Controller tests verify caller plant IDs are overridden by authenticated settings
+  and cache hits avoid login; multiple live fetches share a request-local session.
+- A temporary untested source class failed verification at 0% lines/branches despite
+  high aggregate coverage. Removed the probe before final clean verification.
+- Removed runtime remote JavaScript password hashing and the Nashorn dependency;
+  offline provider compatibility vectors and fail-closed tests pass.
+- npm run check and all 247 core / 115 web / 84 mobile tests pass. Formatting
+  skips generated Maven targets and ignored machine-local tool/settings files.
+
+This closes the backend's initial 90% coverage threshold gap. Whole-app coverage,
+coverage-drop detection, UI/E2E/release verification, production security rollout
+and all other unchecked release requirements remain open.
+
+The inherited remote CI failure was a mobile auth-test timing bug: inactive
+fixtures used gcTime=0 and could disappear while awaiting a late session result.
+Use indefinite fixture lifetimes with explicit afterEach cleanup so assertions
+measure auth-driven removal. A delayed regression fails with the old configuration
+and passes after the fix; production auth behavior is unchanged.

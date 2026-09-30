@@ -1,33 +1,23 @@
 package md5;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.Objects;
 
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-
-import org.openjdk.nashorn.api.scripting.URLReader;
-
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
+/** Growatt's passwordCrc wire format: lowercase MD5 of the UTF-8 password. */
 public final class MD5 {
 
-	public static String md5(String password) {
-		
-		try {
-			ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
-			
-			engine.eval(new URLReader(new URL("https://server.growatt.com/javaScript/xhb/js/MD5.js?1.6.1")));
+    private MD5() {}
 
-			Invocable inv = (Invocable) engine;
-			return (String) inv.invokeFunction("MD5", password);
-		} catch (NoSuchMethodException | ScriptException | MalformedURLException e) {
-			log.error(e.getMessage(), e);
-		}
-		
-		return null;
-	}
+    public static String md5(String password) {
+        Objects.requireNonNull(password, "Password is required");
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("MD5")
+                    .digest(password.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Required MD5 algorithm is unavailable", e);
+        }
+    }
 }
