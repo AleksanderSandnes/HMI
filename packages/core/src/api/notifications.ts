@@ -72,29 +72,36 @@ export function createNotificationsApi(ctx: CoreApiContext) {
   async function registerPushToken(token: string): Promise<void> {
     const uid = await getCurrentUserId();
     if (!uid) return;
-    const { data } = await supabase
+    const { data, error: readError } = await supabase
       .from("profiles")
       .select("expo_push_tokens")
       .eq("auth_id", uid)
       .single();
+    if (readError) throw new Error(readError.message);
     const tokens = new Set<string>(data?.expo_push_tokens ?? []);
     tokens.add(token);
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({ expo_push_tokens: [...tokens] })
       .eq("auth_id", uid);
+    if (error) throw new Error(error.message);
   }
 
   async function unregisterPushToken(token: string): Promise<void> {
     const uid = await getCurrentUserId();
     if (!uid) return;
-    const { data } = await supabase
+    const { data, error: readError } = await supabase
       .from("profiles")
       .select("expo_push_tokens")
       .eq("auth_id", uid)
       .single();
+    if (readError) throw new Error(readError.message);
     const tokens = (data?.expo_push_tokens ?? []).filter((t: string) => t !== token);
-    await supabase.from("profiles").update({ expo_push_tokens: tokens }).eq("auth_id", uid);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ expo_push_tokens: tokens })
+      .eq("auth_id", uid);
+    if (error) throw new Error(error.message);
   }
 
   return {

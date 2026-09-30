@@ -99,6 +99,21 @@ describe("notification lifecycle", () => {
 });
 
 describe("notification device registration and synchronization", () => {
+  it("does not overwrite other devices after a failed token-list read", async () => {
+    const { api, single, update } = fixture();
+    single.mockResolvedValue({ data: null, error: { message: "read unavailable" } });
+    await expect(api.registerPushToken("fixture-token")).rejects.toThrow("read unavailable");
+    await expect(api.unregisterPushToken("fixture-token")).rejects.toThrow("read unavailable");
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("reports token update failures rather than confirming a registration or removal", async () => {
+    const { api, eq } = fixture();
+    eq.mockResolvedValue({ error: { message: "update denied" } });
+    await expect(api.registerPushToken("fixture-token")).rejects.toThrow("update denied");
+    await expect(api.unregisterPushToken("fixture-token")).rejects.toThrow("update denied");
+  });
+
   it("preserves other devices, deduplicates registration, and removes only the selected token", async () => {
     const { api, single, update, eq } = fixture();
     single.mockResolvedValueOnce({ data: { expo_push_tokens: ["other-device", "this-device"] } });

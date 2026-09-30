@@ -8,8 +8,12 @@ export function usePreference(key: string, initial: boolean) {
   useEffect(() => {
     let alive = true;
     void (async () => {
-      const v = await AsyncStorage.getItem(key);
-      if (alive && v != null) setValue(v === "1");
+      try {
+        const v = await AsyncStorage.getItem(key);
+        if (alive && v != null) setValue(v === "1");
+      } catch {
+        // Keep the default when local preference storage is unavailable.
+      }
     })();
     return () => {
       alive = false;
@@ -19,7 +23,9 @@ export function usePreference(key: string, initial: boolean) {
   const set = useCallback(
     (v: boolean) => {
       setValue(v);
-      void AsyncStorage.setItem(key, v ? "1" : "0");
+      void AsyncStorage.setItem(key, v ? "1" : "0").catch(() => {
+        // The current session still uses the preference even if persistence fails.
+      });
     },
     [key],
   );

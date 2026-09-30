@@ -80,6 +80,26 @@ open; this result does not mark the overall coverage phase complete.
 An unimported, untested temporary source module was rejected by the per-file gate
 with 0% lines/functions/statements; the probe was removed before final checks.
 
+Initial whole-application baselines include untested source files: web 8.78% lines
+(app/components/hooks/lib/utils), mobile 24.87% lines (app/src, excluding tests and
+declarations). Passing the existing suites does not meet the plan's 80% overall
+and 90% logic thresholds. New tests exercise notification query refresh/cleanup,
+mutation failures, native push-token persistence/logout cleanup, and boolean
+preferences. Preference storage failures now retain the current/default setting
+without an unhandled rejection; pending reads cannot update an unmounted hook.
+Current suites contain 246 core, 106 web and 73 mobile tests. Added responsive-hook
+resize/server-render/cleanup and shared navigation-state coverage. Auth-proxy tests
+exposed dropped refreshed/cleared cookies on redirects and erased earlier refresh
+batches; fixed cookie copying and verified all 11 proxy cases. Push-token API read
+failures now stop writes, and failed updates no longer appear successful. Overall
+web/mobile coverage thresholds are still pending.
+
+Login accepted arbitrary `redirectTo` query values, including script URLs, in
+Next's client router. It now accepts only app-local paths and falls back to the
+dashboard for external, protocol-relative, backslash, control-character and
+unsafe normalized paths. Seventeen boundary cases and five real login-form tests
+verify safe navigation and no navigation after authentication failure.
+
 The installed Vercel connector lists HMI and `thefamilyapp-web`, but deployment
 access to their account scope returns HTTP 403. Its project-details tool also
 returns an input-validation error with the documented arguments. Ownership and

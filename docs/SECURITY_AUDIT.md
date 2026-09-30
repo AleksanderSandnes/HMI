@@ -66,3 +66,24 @@ bearer authentication, with no form/basic authentication or auth cookie; a brows
 cannot supply another user's Authorization token automatically. Review this finding
 alongside authentication regression tests before deciding its disposition; it has
 not been silently suppressed or marked fixed.
+
+Web auth-proxy regression tests verify protected routes use Supabase `getUser()`
+and redirect only within the request origin. Cookie refresh/removal was lost on
+redirect responses, and repeated refresh batches replaced earlier cookies. The
+proxy now copies outgoing cookies, including their attributes, to every replacement
+or redirect response. Three tests reproduced the failures before the fix; all 11
+proxy tests now pass. Production deployment and logged-in browser smoke testing
+remain pending.
+
+Push-token registration/removal previously ignored profile read and write errors.
+A failed read could replace other devices' registrations with an empty list, and
+a rejected write could appear successful. The shared API now stops after a failed
+read and propagates write errors. Tests cover both operations; best-effort native
+logout cleanup still clears the local token and permits sign-out after a failure.
+
+The web login form passed untrusted `redirectTo` query values to `router.replace`,
+allowing external redirects and potentially script execution. It now permits only
+app-local paths, rejects control characters/backslashes and protocol-relative paths
+after normalization, and falls back to `/dashboard`. Seventeen boundary cases and
+five login-form tests verify unsafe inputs, preserved app destinations and failed
+authentication. This fix is local; production deployment remains pending.
