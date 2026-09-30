@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Release CLI (no dependencies).
-//   node scripts/release/release.mjs prepare [--base origin/main] [--dry-run]
+//   node scripts/release/release.mjs prepare [--base <ref>] [--dry-run]
 //     Bumps every version file and CHANGELOG.md from Conventional Commits in base..HEAD.
 //   node scripts/release/release.mjs notes
 //     Prints the current version's CHANGELOG section (used for the GitHub Release).
@@ -9,7 +9,7 @@ import { execFileSync } from "node:child_process";
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { bumpLevel, nextVersion, parseCommit, prependChangelog, renderChangelog } from "./core.mjs";
-import { applyVersion, currentVersion } from "./targets.mjs";
+import { applyVersion, currentVersion, DEFAULT_BASE } from "./targets.mjs";
 
 const root = process.cwd();
 const read = (file) => readFileSync(join(root, file), "utf8");
@@ -47,7 +47,7 @@ function commitsSince(base) {
 
 function prepare() {
   const dryRun = args.includes("--dry-run");
-  const commits = commitsSince(flag("--base", "origin/main"));
+  const commits = commitsSince(flag("--base", DEFAULT_BASE));
   const current = currentVersion(read);
   const version = nextVersion(current, bumpLevel(commits));
   if (!version) {

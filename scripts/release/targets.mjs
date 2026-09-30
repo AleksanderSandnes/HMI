@@ -35,3 +35,5 @@ export function applyVersion(read, write, version) {
   write("apps/mobile/app.json", `${JSON.stringify(app, null, 2)}\n`);
   return { build };
 }
+
+export const DEFAULT_BASE = "origin/main";
