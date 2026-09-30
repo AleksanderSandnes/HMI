@@ -23,3 +23,23 @@ Next: live RLS/storage/auth/edge audit, backend dependency and authorization aud
 encrypted session migration, release build validation, account deletion and UGC
 requirements, and required coverage thresholds. Do not mark this report complete
 until each has evidence.
+
+## Live audit and backend follow-up (2026-09-30)
+
+- All seven public tables have RLS. Policies restrict rows to auth.uid(), directly
+  or through the user's linked station/plant. No public-schema views found.
+- Vault RPC and edge invocation are not executable by anon/authenticated.
+  Anonymous execution of the integration-health pruning function is a finding.
+  Prepared a migration restricting it to service_role and revoking trigger RPC access;
+  migration has not been applied to production.
+- Added exact-origin CORS using FRONTEND_URL; production excludes localhost and
+  wildcard previews. Bearer auth does not enable credentialed cookie CORS.
+- Only health probes are public; production actuator exposes health without details.
+  JWT configuration now validates issuer and authenticated audience.
+- Maven verify passes: 27 tests, zero failures/errors, one existing skipped test.
+  Five new security tests exercise unauthorized endpoints, bearer requests and CORS.
+- Added Maven verification and core/Next builds to CI; remote result pending.
+- Supabase advisors still report leaked-password protection, one mutable search path,
+  pg_net extension placement and callable privileged functions. Review remains open.
+
+Issuer/JWKS configuration follows [Spring Security documentation](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html).

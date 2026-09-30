@@ -19,6 +19,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/growattAPI
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+      - run: mvn --batch-mode verify
+
+  build:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_DATA_MODE: production
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: build-validation-placeholder
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace @hmi/core
+      - run: npm run build --workspace @hmi/web
+
   # Lint each package with its own command, selected per package:
   #   @hmi/core → eslint src · @hmi/web → eslint · @hmi/mobile → eslint .
   lint:

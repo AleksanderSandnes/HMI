@@ -51,7 +51,7 @@ Resend SMTP; production ownership/access needs verification, not a new purchase.
 
 ## Pending user/account actions
 
-- Complete the browser Supabase login started by the CLI.
+- Supabase login completed and both repositories linked to the correct projects.
 - Choose owned domains and support/controller contact information before legal
   pages and DNS can be finalized.
 - Confirm licensing, legal text, store declarations and production release actions

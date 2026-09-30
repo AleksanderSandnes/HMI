@@ -2,6 +2,7 @@ package controller.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -26,6 +27,16 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final List<String> allowedOrigins;
+
+    public SecurityConfig(@Value("${cors.allowed-origins:https://hmi-six.vercel.app}") String origins) {
+        allowedOrigins = Arrays.stream(origins.split(",")).map(String::trim)
+            .filter(origin -> !origin.isEmpty()).toList();
+        if (allowedOrigins.isEmpty() || allowedOrigins.stream().anyMatch(origin -> origin.contains("*"))) {
+            throw new IllegalArgumentException("CORS requires explicit allowed origins");
+        }
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -47,9 +58,10 @@ public class SecurityConfig {
 
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-            // Public health/actuator; everything else needs a valid Supabase JWT.
+            // Only health probes are public; all other endpoints need a valid JWT.
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/growatt/health", "/actuator/**").permitAll()
+                .requestMatchers("/api/growatt/health", "/actuator/health", "/actuator/health/liveness",
+                    "/actuator/health/readiness").permitAll()
                 .anyRequest().authenticated()
             )
 
@@ -65,26 +77,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Origin *patterns* (not setAllowedOrigins): every Vercel preview/branch
-        // deployment gets its own subdomain (e.g. hmi-git-test-…, hmi-<hash>-…),
-        // so a wildcard is the only maintainable way to cover them — and patterns
-        // are the only form Spring permits alongside allowCredentials(true).
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-            // Production alias.
-            "https://hmi-six.vercel.app",
-            // Any preview deployment under this project's Vercel scope (covers the
-            // test branch deploy and per-commit previews).
-            "https://hmi-*-aleksander-sandnes-projects.vercel.app",
-            "https://hmi-git-test-aleksander-sandnes-projects.vercel.app",
-            "https://hmi-git-main-apsandnes-projects.vercel.app",
-            // Local dev: web (:3000) and Expo (:8081/:19006).
-            "http://localhost:3000",
-            "http://localhost:8081",
-            "http://localhost:19006"
-        ));
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
