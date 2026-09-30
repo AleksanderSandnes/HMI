@@ -20,4 +20,6 @@ module.exports = {
     "!**/*.d.ts",
     "!**/__tests__/**",
   ],
+  // Release gate (plan 7.1): overall >= 80%. Do not lower or exclude files to pass.
+  coverageThreshold: { global: { lines: 80, statements: 80, functions: 80, branches: 80 } },
 };
