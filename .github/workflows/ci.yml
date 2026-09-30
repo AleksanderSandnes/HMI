@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test scripts/release/
+      - run: node --test scripts/release/*.test.mjs
   database:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -39,6 +39,10 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - name: Isolate CI stack ports
+        run: |
+          # Hosted runners can already have services on the default 5432x ports.
+          sed -i 's/5432/5732/g' supabase/config.toml
       - name: Start disposable stack with repository migrations
         run: supabase start --exclude realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - name: Verify account deletion through real Auth, Storage and Vault
