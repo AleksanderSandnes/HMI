@@ -6,7 +6,10 @@
 app, component and library sources, including files no test imports. The earlier
 imported-file report was incomplete. Correct baseline: 39.38% lines. Date-picker
 interaction tests cover day/month/year selection, boundaries, dismissal, loading
-and Norwegian labels; full web coverage is now 50.20% (492/980 lines).
+and Norwegian labels; full web coverage reached 50.20% (492/980 lines). Further session and dashboard
+integration tests now bring it to 53.26% (522/980 lines), with 153 web tests passing.
+These cover account switches, absent/failing session reads, browser-client reuse,
+server cookie refresh/read-only contexts, dashboard failures and cached-weather refresh.
 
 The command uses two workers to avoid resource pressure during coverage reporting.
 HTML, JSON summary and LCOV reports are generated under `apps/web/coverage/`.
