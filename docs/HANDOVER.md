@@ -1,5 +1,30 @@
 # Release readiness handover — 30 September 2026
 
+## Verified continuation — 30 September 2026, 20:46 Oslo
+
+This section supersedes older rollout status below. The full plan is still open.
+Supabase CLI is authenticated and both projects are linked; the direct Codex
+Supabase MCP server is configured with OAuth authentication. Production Git branches
+have not been merged. Leaked-password protection was requested through the
+Management API and rejected with HTTP 402 for both projects (Pro required).
+No billing upgrade occurred. Email/password, SMTP, domains, signed builds, store
+uploads, screenshots, coverage gates and complete bootstrap still require work.
+
+- HMI task commit `1b28e58`: GitHub CI `36758576703`, Security, CodeQL and
+  Promotion Source all passed. Node 22 discovers the six release tests via
+  `*.test.mjs`; the database job uses isolated 5732x ports. Confirmation/cancel
+  test actions are synchronous and renderer roots are cleaned up.
+- All three pending migrations (20260930104000, 20260930180000, 20260930190000) applied live. `delete-account` is ACTIVE with gateway JWT
+  verification enabled. Anonymous POST returns 401. No exposed SECURITY DEFINER
+  function is executable by anon/authenticated. Fresh security advisors: one
+  warning (leaked-password protection), down from nine.
+- A fresh disposable stack replayed all repository migrations; real account
+  deletion passed 23 Auth/Storage/Vault checks. Full npm check/tests passed.
+- Live Auth still auto-confirms email, permits six-character passwords, uses
+  default SMTP and has no redirect allow-list. Confirmation/onboarding handling
+  must be fixed before enabling email confirmation. Core registration currently
+  permits four characters, so validators also need alignment.
+
 **Resumed on Linux on 2026-09-30. The release plan is not complete.**
 
 Resume **task/releaseReadiness** in both repositories:
