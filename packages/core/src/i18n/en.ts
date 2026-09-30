@@ -242,6 +242,16 @@ export const en = {
   "settings.notSet": "Not set",
   "settings.pushNotifications": "Push notifications",
   "settings.pushSubtitle": "Alerts on this device",
+  "settings.legal": "Legal & privacy",
+  "settings.privacyPolicy": "Privacy policy",
+  "settings.terms": "Terms of service",
+  "settings.support": "Support",
+  "settings.deleteAccount": "Delete account",
+  "settings.deleteAccountSubtitle": "Permanently remove your account and data",
+  "settings.deleteAccountConfirmTitle": "Delete your account?",
+  "settings.deleteAccountConfirmBody":
+    "This permanently deletes your profile, settings, stored Growatt and Weather.com credentials, notifications and avatar. It cannot be undone.",
+  "settings.deleteAccountConfirm": "Delete permanently",
   "settings.signOut": "Sign out",
   "settings.usernameLabel": "USERNAME",
   "settings.emailLabel": "EMAIL",
@@ -288,6 +298,7 @@ export const en = {
 
   // API errors (thrown as CoreError keys, translated at display time)
   "error.authRequired": "Authentication required. Please log in again.",
+  "error.accountDeletionFailed": "Could not delete your account. Please try again.",
   "error.signOutFailed": "Could not sign out. Please try again.",
   "error.registrationNoUser": "Registration failed: no user returned.",
 

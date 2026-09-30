@@ -3,13 +3,14 @@ import {
   deriveInitials,
   growattConfig,
   weatherConfig,
+  LEGAL_URLS,
   type ApiSettingsResponse,
   type UserProfile,
 } from "@hmi/core";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 
 import { cn } from "../../lib/cn";
 import { useI18n } from "../../lib/i18n";
@@ -27,7 +28,7 @@ import { ConfiguredBadge } from "./forms";
 import { GroupLabel, SettingsGroup, SettingsRow } from "./list";
 
 /** Settings sub-screens reachable from the hub list. */
-export type SettingsSubRoute = "profile" | "password" | "growatt" | "weather";
+export type SettingsSubRoute = "profile" | "password" | "growatt" | "weather" | "delete";
 
 function ProfileCard({
   profile,
@@ -87,6 +88,14 @@ function HubNavGroups({
           active={activeRoute === "password"}
           onPress={() => onSelect("password")}
         />
+        <SettingsRow
+          icon="trash"
+          gradient="accent"
+          title={t("settings.deleteAccount")}
+          subtitle={t("settings.deleteAccountSubtitle")}
+          active={activeRoute === "delete"}
+          onPress={() => onSelect("delete")}
+        />
       </SettingsGroup>
 
       <GroupLabel>{t("settings.integrations")}</GroupLabel>
@@ -108,6 +117,37 @@ function HubNavGroups({
           right={<ConfiguredBadge on={wc.configured} />}
           active={activeRoute === "weather"}
           onPress={() => onSelect("weather")}
+        />
+      </SettingsGroup>
+    </>
+  );
+}
+
+/** Public legal/support pages, opened in the system browser. */
+function LegalGroup() {
+  const { t } = useI18n();
+  const open = (url: string) => void Linking.openURL(url);
+  return (
+    <>
+      <GroupLabel>{t("settings.legal")}</GroupLabel>
+      <SettingsGroup>
+        <SettingsRow
+          icon="shield-checkmark"
+          gradient="preferences"
+          title={t("settings.privacyPolicy")}
+          onPress={() => open(LEGAL_URLS.privacy)}
+        />
+        <SettingsRow
+          icon="document-text"
+          gradient="preferences"
+          title={t("settings.terms")}
+          onPress={() => open(LEGAL_URLS.terms)}
+        />
+        <SettingsRow
+          icon="help-buoy"
+          gradient="preferences"
+          title={t("settings.support")}
+          onPress={() => open(LEGAL_URLS.support)}
         />
       </SettingsGroup>
     </>
@@ -171,6 +211,8 @@ export function SettingsHubList({
 
       <GroupLabel>{t("settings.preferences")}</GroupLabel>
       <PreferencesGroup pushOn={pushOn} setPushOn={setPushOn} />
+
+      <LegalGroup />
 
       <Button
         label={t("settings.signOut")}

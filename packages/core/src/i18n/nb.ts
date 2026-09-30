@@ -245,6 +245,16 @@ export const nb: Record<TranslationKey, string> = {
   "settings.notSet": "Ikke satt",
   "settings.pushNotifications": "Push-varsler",
   "settings.pushSubtitle": "Varsler på denne enheten",
+  "settings.legal": "Juridisk og personvern",
+  "settings.privacyPolicy": "Personvernerklæring",
+  "settings.terms": "Vilkår for bruk",
+  "settings.support": "Brukerstøtte",
+  "settings.deleteAccount": "Slett konto",
+  "settings.deleteAccountSubtitle": "Fjern kontoen og dataene dine permanent",
+  "settings.deleteAccountConfirmTitle": "Slette kontoen din?",
+  "settings.deleteAccountConfirmBody":
+    "Dette sletter profilen, innstillingene, lagrede Growatt- og Weather.com-påloggingsdetaljer, varsler og profilbildet ditt permanent. Det kan ikke angres.",
+  "settings.deleteAccountConfirm": "Slett permanent",
   "settings.signOut": "Logg ut",
   "settings.usernameLabel": "BRUKERNAVN",
   "settings.emailLabel": "E-POST",
@@ -291,6 +301,7 @@ export const nb: Record<TranslationKey, string> = {
 
   // API errors (thrown as CoreError keys, translated at display time)
   "error.authRequired": "Innlogging kreves. Logg inn på nytt.",
+  "error.accountDeletionFailed": "Kunne ikke slette kontoen. Prøv igjen.",
   "error.signOutFailed": "Kunne ikke logge ut. Prøv igjen.",
   "error.registrationNoUser": "Registreringen mislyktes: ingen bruker ble returnert.",
 

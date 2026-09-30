@@ -19,6 +19,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  release-tooling:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test scripts/release/
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Start disposable stack with repository migrations
+        run: supabase start --exclude realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Verify account deletion through real Auth, Storage and Vault
+        run: deno run --allow-env --allow-net --allow-run --allow-read supabase/tests/account_deletion_http.ts .
+      - name: Stop stack
+        if: always()
+        run: supabase stop --no-backup
   edge-security:
     runs-on: ubuntu-latest
     timeout-minutes: 10

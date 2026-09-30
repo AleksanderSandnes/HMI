@@ -11,6 +11,7 @@ import type { CoreApiContext } from "./context";
 import { CoreError } from "./errors";
 
 const AVATAR_BUCKET = "avatars";
+export const ACCOUNT_DELETION_CONFIRMATION = "DELETE_MY_ACCOUNT";
 const PROFILE_COLS = "id, username, email, avatar_url, created_at, updated_at";
 
 interface ProfileRow {
@@ -33,16 +34,31 @@ function mapProfile(row: ProfileRow): UserProfile {
   };
 }
 
+async function requireAuthUserId(supabase: CoreApiContext["supabase"]): Promise<string> {
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) {
+    throw new CoreError("error.authRequired");
+  }
+  return data.user.id;
+}
+
+/**
+ * Permanently delete the signed-in account (profile, settings, Vault credentials,
+ * notifications and avatar) via the `delete-account` Edge Function, then drop the
+ * local session. The server requires the explicit confirmation token.
+ */
+async function deleteSignedInAccount(supabase: CoreApiContext["supabase"]): Promise<void> {
+  await requireAuthUserId(supabase);
+  const { error } = await supabase.functions.invoke("delete-account", {
+    body: { confirm: ACCOUNT_DELETION_CONFIRMATION },
+  });
+  if (error) throw new CoreError("error.accountDeletionFailed");
+  await supabase.auth.signOut({ scope: "local" });
+}
+
 export function createAccountApi(ctx: CoreApiContext) {
   const { supabase } = ctx;
-
-  async function requireUserId(): Promise<string> {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) {
-      throw new CoreError("error.authRequired");
-    }
-    return data.user.id;
-  }
+  const requireUserId = () => requireAuthUserId(supabase);
 
   /** Get the signed-in user's profile. */
   async function getUserProfile(): Promise<UserProfile> {
@@ -132,7 +148,14 @@ export function createAccountApi(ctx: CoreApiContext) {
     if (error) throw new Error(error.message);
   }
 
-  return { getUserProfile, updateUserProfile, uploadAvatar, removeAvatar, updateUserPassword };
+  return {
+    getUserProfile,
+    updateUserProfile,
+    uploadAvatar,
+    removeAvatar,
+    updateUserPassword,
+    deleteAccount: () => deleteSignedInAccount(supabase),
+  };
 }
 
 export type AccountApi = ReturnType<typeof createAccountApi>;
