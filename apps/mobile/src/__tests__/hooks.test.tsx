@@ -98,7 +98,11 @@ function renderHook<T>(hook: () => T, wrapper?: (c: React.ReactNode) => React.Re
   return { ref, client };
 }
 
-const flush = () => act(async () => void (await new Promise((r) => setTimeout(r, 0))));
+// Query resolution needs a few macrotasks; one tick is flaky when jest runs files in parallel.
+const flush = () =>
+  act(async () => {
+    for (let i = 0; i < 5; i++) await new Promise((r) => setTimeout(r, 5));
+  });
 
 describe("useNotifications", () => {
   it("loads, subscribes and refetches after dismiss/clear", async () => {
