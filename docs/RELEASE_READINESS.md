@@ -49,6 +49,24 @@ Vercel CLI is authenticated as `apsandnes`, but that account's available team ha
 no projects/domains. The Family vault already records `thefamilyapp.app` and
 Resend SMTP; production ownership/access needs verification, not a new purchase.
 
+## Coverage work (2026-09-30)
+
+An explicit V8 run including `packages/core/src/**/*.ts` and excluding test files
+measured the initial shared core at 74.35% lines, 72.85% statements, 69.24% branches,
+and 70.21% functions. Added behavioral tests for account ownership and failure paths,
+avatar uploads, authentication registration/sign-out, integration secret boundaries,
+weather cache expiry and upstream fallback, notification lifecycle and device tokens.
+The resulting 192 core tests pass: 96.88% lines, 95.70% statements, 87.16% branches,
+and 94.68% functions. The plan's 100% core target is still open; no threshold has
+been lowered or uncovered production code excluded to satisfy it.
+
+The installed Vercel connector lists HMI and `thefamilyapp-web`, but deployment
+access to their account scope returns HTTP 403. Its project-details tool also
+returns an input-validation error with the documented arguments. Ownership and
+deployment configuration are therefore still unverified. XcodeBuildMCP cannot
+run Apple's tools on this Windows host (`xcrun` is unavailable); macOS CI remains
+the verified iOS build/test route.
+
 ## Pending user/account actions
 
 - Supabase login completed and both repositories linked to the correct projects.

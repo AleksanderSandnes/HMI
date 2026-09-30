@@ -65,3 +65,45 @@ describe("createAuthApi", () => {
     await expect(api.loginUser({ email: "a@b.c", password: "bad" })).rejects.toBe(boom);
   });
 });
+
+describe("registration and sign-out lifecycle", () => {
+  it("accepts registration pending email confirmation without inventing a session", async () => {
+    const signUp = vi.fn().mockResolvedValue({
+      data: { session: null, user: { id: "fixture", user_metadata: {} } },
+      error: null,
+    });
+    const api = createAuthApi(makeCtx({ signUp }));
+    await expect(
+      api.registerUser({ email: " fixture@example.test ", password: "fixture" }),
+    ).resolves.toEqual({ id: "fixture", email: null, username: "", token: null });
+    expect(signUp).toHaveBeenCalledWith({ email: "fixture@example.test", password: "fixture" });
+  });
+
+  it("propagates registration errors", async () => {
+    const error = new Error("registration unavailable");
+    const api = createAuthApi(makeCtx({ signUp: vi.fn().mockResolvedValue({ data: {}, error }) }));
+    await expect(
+      api.registerUser({ email: "fixture@example.test", password: "fixture" }),
+    ).rejects.toBe(error);
+  });
+
+  it("waits for sign-out to finish", async () => {
+    let resolve: (() => void) | undefined;
+    const signOut = vi.fn().mockReturnValue(
+      new Promise<void>((done) => {
+        resolve = done;
+      }),
+    );
+    const api = createAuthApi(makeCtx({ signOut }));
+    let finished = false;
+    const operation = api.logout().then(() => {
+      finished = true;
+      return finished;
+    });
+    await Promise.resolve();
+    expect(finished).toBe(false);
+    resolve?.();
+    await operation;
+    expect(finished).toBe(true);
+  });
+});
