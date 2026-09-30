@@ -49,3 +49,7 @@ until each has evidence.
   pg_net extension placement and callable privileged functions. Review remains open.
 
 Issuer/JWKS configuration follows [Spring Security documentation](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html).
+
+CodeQL now scans TypeScript/JavaScript, the Java backend and workflows. Added
+Docker and GitHub Actions dependency updates alongside Maven/npm. Initial scans
+are pending; scheduled scans and Dependabot activation await the approved main merge.

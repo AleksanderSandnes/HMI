@@ -1,0 +1,50 @@
+name: CodeQL
+on:
+  push:
+    branches: [main, test, "task/**"]
+  pull_request:
+    branches: [main, test]
+  schedule:
+    - cron: "31 5 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  analyze:
+    name: Analyze ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: javascript-typescript
+            mode: none
+          - language: actions
+            mode: none
+          - language: java-kotlin
+            mode: manual
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        if: matrix.language == 'java-kotlin'
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.mode }}
+      - name: Compile Java backend
+        if: matrix.language == 'java-kotlin'
+        run: mvn -B -f backend/growattAPI/pom.xml clean package -DskipTests
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}

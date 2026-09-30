@@ -1,5 +1,17 @@
 version: 2
 updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+  - package-ecosystem: "docker"
+    directory: "/backend/growattAPI"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "build"
   # Maven backend (growattAPI, Spring Boot / Java 17)
   - package-ecosystem: "maven"
     directory: "/backend/growattAPI"
