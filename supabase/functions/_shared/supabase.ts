@@ -1,5 +1,6 @@
 // Shared Supabase clients + per-user credential resolution for the weather Edge Functions.
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.108.2";
+import { AuthenticationError } from "./authorize.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -15,7 +16,7 @@ export function adminClient(): SupabaseClient {
 /** Resolve the calling user's auth id from their bearer token. Throws if unauthenticated. */
 export async function requireUser(req: Request): Promise<string> {
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) throw new Error("Missing Authorization header");
+  if (!authHeader) throw new AuthenticationError();
 
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -25,7 +26,7 @@ export async function requireUser(req: Request): Promise<string> {
     data: { user },
     error,
   } = await userClient.auth.getUser();
-  if (error || !user) throw new Error("Invalid or expired session");
+  if (error || !user) throw new AuthenticationError();
   return user.id;
 }
 

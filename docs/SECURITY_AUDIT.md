@@ -53,3 +53,16 @@ Issuer/JWKS configuration follows [Spring Security documentation](https://docs.s
 CodeQL now scans TypeScript/JavaScript, the Java backend and workflows. Added
 Docker and GitHub Actions dependency updates alongside Maven/npm. Initial scans
 are pending; scheduled scans and Dependabot activation await the approved main merge.
+
+Initial CodeQL scans completed. Returned exception messages exposed internal details
+in weather/push functions; responses and stored job failures now use fixed messages.
+Maintenance/push functions additionally reject user/anon JWTs and require the exact
+server credential. Browser CORS is restricted to the verified production web origin.
+All five live functions have gateway JWT verification enabled; local changes are not
+yet deployed. New Deno authorization/error-response tests are included in CI.
+
+CodeQL also flags disabled CSRF in the Java API. Its filter chain uses stateless
+bearer authentication, with no form/basic authentication or auth cookie; a browser
+cannot supply another user's Authorization token automatically. Review this finding
+alongside authentication regression tests before deciding its disposition; it has
+not been silently suppressed or marked fixed.

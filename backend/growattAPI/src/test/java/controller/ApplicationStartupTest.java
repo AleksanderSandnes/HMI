@@ -39,4 +39,15 @@ class ApplicationStartupTest {
         return client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).build(),
             HttpResponse.BodyHandlers.discarding()).statusCode();
     }
+
+    @Test
+    void browserCookiesCannotAuthorizeAnApiMutation() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/growatt/data"))
+            .header("Cookie", "JSESSIONID=fictional-session; access_token=fictional-token")
+            .header("Origin", "https://hmi-six.vercel.app")
+            .POST(HttpRequest.BodyPublishers.ofString("{}"))
+            .build();
+        assertEquals(401, HttpClient.newHttpClient().send(request,
+            HttpResponse.BodyHandlers.discarding()).statusCode());
+    }
 }

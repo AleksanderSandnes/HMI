@@ -3,6 +3,7 @@
 // Cached/completed days are normally read directly from weather_historical via PostgREST;
 // this function is the fallback that fetches + persists a missing past day.
 import { corsHeaders, json } from "../_shared/cors.ts";
+import { weatherFailure } from "../_shared/authorize.ts";
 import {
   adminClient,
   getWeatherCredentials,
@@ -60,8 +61,7 @@ Deno.serve(async (req: Request) => {
     await recordHealth(admin, authId, "weather", "ok");
     return json({ observations, cached: false });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (authId) await recordHealth(admin, authId, "weather", "error", message);
-    return json({ error: message }, 500);
+    if (authId) await recordHealth(admin, authId, "weather", "error", "Weather request failed");
+    return weatherFailure(err);
   }
 });

@@ -3,12 +3,15 @@
 // past the threshold, inserts ONE (deduped) warning notification -> push. Implements the
 // solar/weather outage-alerts feature (the IP-block symptom: all live calls fail for days).
 import { json } from "../_shared/cors.ts";
+import { authorizeJob } from "../_shared/authorize.ts";
 import { adminClient } from "../_shared/supabase.ts";
 
 // How long without a success before we alert, per source (hours).
 const THRESHOLD_HOURS: Record<string, number> = { growatt: 26, weather: 26 };
 
-Deno.serve(async () => {
+Deno.serve(async (req: Request) => {
+  const denied = authorizeJob(req);
+  if (denied) return denied;
   const admin = adminClient();
   const now = Date.now();
   const alerts: unknown[] = [];
@@ -18,7 +21,7 @@ Deno.serve(async () => {
     .from("integration_health")
     .select("auth_id, source, status, checked_at")
     .order("checked_at", { ascending: false });
-  if (error) return json({ error: error.message }, 500);
+  if (error) return json({ error: "Failed to load integration health" }, 500);
 
   // Latest success + latest attempt per (auth_id, source).
   const latestOk = new Map<string, number>();
