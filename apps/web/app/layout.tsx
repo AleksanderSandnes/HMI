@@ -7,6 +7,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 import { LOCALE_COOKIE } from "@/lib/locale-cookie";
+import { createClient } from "@/lib/supabase/server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,9 @@ export default async function RootLayout({
 }>) {
   const raw = (await cookies()).get(LOCALE_COOKIE)?.value;
   const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+  const userId = error ? null : (data.user?.id ?? null);
   return (
     <html
       lang={locale}
@@ -49,7 +53,9 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <Providers initialLocale={locale}>{children}</Providers>
+        <Providers initialLocale={locale} initialUserId={userId}>
+          {children}
+        </Providers>
       </body>
     </html>
   );

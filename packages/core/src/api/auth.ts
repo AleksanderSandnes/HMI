@@ -50,12 +50,13 @@ export function createAuthApi(ctx: CoreApiContext) {
     if (error) throw error;
 
     if (!data.user) throw new CoreError("error.registrationNoUser");
-    // Email confirmation is disabled, so signUp returns a session immediately.
+    // A session may be absent while the user completes email confirmation.
     return toUser(data.session, data.user);
   }
 
   async function logout(): Promise<void> {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   }
 
   return { loginUser, registerUser, logout };

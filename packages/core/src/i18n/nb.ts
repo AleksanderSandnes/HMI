@@ -291,6 +291,7 @@ export const nb: Record<TranslationKey, string> = {
 
   // API errors (thrown as CoreError keys, translated at display time)
   "error.authRequired": "Innlogging kreves. Logg inn på nytt.",
+  "error.signOutFailed": "Kunne ikke logge ut. Prøv igjen.",
   "error.registrationNoUser": "Registreringen mislyktes: ingen bruker ble returnert.",
 
   // Validation

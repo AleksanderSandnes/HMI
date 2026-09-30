@@ -1,6 +1,6 @@
 import { AuthError, type AuthChangeEvent, type Session } from "@supabase/supabase-js";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
+import React, { useState } from "react";
 import TestRenderer, { act } from "react-test-renderer";
 
 import { AuthProvider, useAuth } from "../lib/auth";
@@ -20,6 +20,8 @@ let rejectInitial: (error: Error) => void;
 let current: ReturnType<typeof useAuth>;
 let renderer: TestRenderer.ReactTestRenderer;
 let client: QueryClient;
+let draft: string;
+let setDraft: (value: string) => void;
 
 function session(id: string): Session {
   return {
@@ -40,6 +42,7 @@ function session(id: string): Session {
 async function mount() {
   function Probe() {
     current = useAuth();
+    [draft, setDraft] = useState("empty");
     return null;
   }
   await act(async () => {
@@ -121,6 +124,16 @@ describe("native authentication lifecycle", () => {
 });
 
 describe("native account isolation and cleanup", () => {
+  it("removes local drafts when the account changes but retains them on token refresh", async () => {
+    await mount();
+    act(() => listener("SIGNED_IN", session("demo-a")));
+    act(() => setDraft("private draft"));
+    act(() => listener("TOKEN_REFRESHED", session("demo-a")));
+    expect(draft).toBe("private draft");
+    act(() => listener("SIGNED_IN", session("demo-b")));
+    expect(draft).toBe("empty");
+  });
+
   it("clears previous account queries and mutations on account changes and sign-out", async () => {
     await mount();
     act(() => listener("SIGNED_IN", session("demo-a")));

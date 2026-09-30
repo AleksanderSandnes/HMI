@@ -88,9 +88,9 @@ describe("registration and sign-out lifecycle", () => {
   });
 
   it("waits for sign-out to finish", async () => {
-    let resolve: (() => void) | undefined;
+    let resolve: ((value: { error: null }) => void) | undefined;
     const signOut = vi.fn().mockReturnValue(
-      new Promise<void>((done) => {
+      new Promise<{ error: null }>((done) => {
         resolve = done;
       }),
     );
@@ -102,8 +102,14 @@ describe("registration and sign-out lifecycle", () => {
     });
     await Promise.resolve();
     expect(finished).toBe(false);
-    resolve?.();
+    resolve?.({ error: null });
     await operation;
     expect(finished).toBe(true);
+  });
+
+  it("propagates a rejected sign-out result", async () => {
+    const error = new Error("sign-out unavailable");
+    const api = createAuthApi(makeCtx({ signOut: vi.fn().mockResolvedValue({ error }) }));
+    await expect(api.logout()).rejects.toBe(error);
   });
 });

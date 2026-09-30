@@ -92,5 +92,15 @@ Native authentication could restore a stale initial session after sign-out and
 retain previous account query data across sign-ins. Initial reads now defer to
 newer auth events; account changes/sign-out clear the query and mutation caches,
 including canceling pending queries. Session-read failures end loading signed out,
-and sign-out errors propagate rather than appearing successful. Ten lifecycle
-tests cover these boundaries. This fix still needs a production build smoke test.
+and sign-out errors propagate rather than appearing successful. Eleven lifecycle
+tests cover these boundaries. Native consumers now remount on account changes,
+removing private local drafts; the added draft regression failed before the fix.
+This fix still needs a production build smoke test.
+
+Web queries also survived logout/login across accounts. The provider now starts
+from the server-verified user, cancels old queries, replaces the query/mutation
+cache and remounts consumers on account changes, then refreshes server components.
+Same-account token refresh preserves state. Six lifecycle tests cover caches,
+local drafts, pending requests and subscription cleanup. Shared logout rejects
+Supabase error results; settings displays an error and stays on the current screen
+when sign-out fails. Three form tests cover success, errors and localized fallback.

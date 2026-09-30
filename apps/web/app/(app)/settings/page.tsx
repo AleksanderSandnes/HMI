@@ -8,6 +8,7 @@ import {
   weatherConfig,
   LANGUAGES,
   type ApiSettingsResponse,
+  type AuthApi,
   type Locale,
   type Translator,
   type UserProfile,
@@ -857,6 +858,23 @@ function SettingsList({
   );
 }
 
+function useSignOut(auth: AuthApi) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  async function signOut() {
+    setError(null);
+    try {
+      await auth.logout();
+      router.replace("/login");
+      router.refresh();
+    } catch (error) {
+      setError(coreErrorMessage(error, t, t("error.signOutFailed")));
+    }
+  }
+  return { error, signOut };
+}
+
 function SettingsPageInner() {
   const { t } = useI18n();
   const router = useRouter();
@@ -866,6 +884,7 @@ function SettingsPageInner() {
   const effective = section ?? "profile";
   const openSection = (s: Section) => router.push(`/settings?section=${s}`, { scroll: false });
   const { account, settings, auth } = useCore();
+  const { error: signOutError, signOut } = useSignOut(auth);
 
   const { data: profile } = useQuery<UserProfile>({
     queryKey: ["profile"],
@@ -883,12 +902,6 @@ function SettingsPageInner() {
   const gc = growattConfig(api);
   const wc = weatherConfig(api);
 
-  async function signOut() {
-    await auth.logout();
-    router.replace("/login");
-    router.refresh();
-  }
-
   return (
     <div className="mx-auto flex w-full max-w-[68.75rem] flex-col gap-[1.375rem]">
       <div>
@@ -898,6 +911,7 @@ function SettingsPageInner() {
         <p className="mt-1 text-sm font-medium text-text-muted">{t("settings.subtitle")}</p>
       </div>
 
+      {signOutError ? <StatusBanner kind="error" message={signOutError} /> : null}
       <div className="flex items-start gap-6">
         <SettingsList
           section={section}

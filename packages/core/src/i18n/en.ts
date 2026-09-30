@@ -288,6 +288,7 @@ export const en = {
 
   // API errors (thrown as CoreError keys, translated at display time)
   "error.authRequired": "Authentication required. Please log in again.",
+  "error.signOutFailed": "Could not sign out. Please try again.",
   "error.registrationNoUser": "Registration failed: no user returned.",
 
   // Validation (core yup schemas)

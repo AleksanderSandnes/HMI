@@ -87,7 +87,7 @@ and 90% logic thresholds. New tests exercise notification query refresh/cleanup,
 mutation failures, native push-token persistence/logout cleanup, and boolean
 preferences. Preference storage failures now retain the current/default setting
 without an unhandled rejection; pending reads cannot update an unmounted hook.
-Current suites contain 246 core, 106 web and 83 mobile tests. Added responsive-hook
+Current suites contain 247 core, 115 web and 84 mobile tests. Added responsive-hook
 resize/server-render/cleanup and shared navigation-state coverage. Auth-proxy tests
 exposed dropped refreshed/cleared cookies on redirects and erased earlier refresh
 batches; fixed cookie copying and verified all 11 proxy cases. Push-token API read
@@ -103,8 +103,19 @@ verify safe navigation and no navigation after authentication failure.
 Native auth now ignores delayed initial session results after a newer auth event,
 ends loading safely after session-read failures, and clears account query/mutation
 caches before switching accounts or signing out. Sign-out errors propagate to the
-caller. Ten lifecycle tests cover initialization, failure, sign-out races, cache
-isolation (including pending requests), token refresh and unmount cleanup.
+caller. Eleven lifecycle tests cover initialization, failure, sign-out races, cache
+isolation (including pending requests), local drafts, token refresh and unmount
+cleanup. Account changes remount native consumers so component state cannot cross
+accounts; the local-draft regression failed before adding that boundary.
+
+Web query state now starts with the server-verified account identity. An auth
+account change cancels and clears the old cache, creates a new query client,
+remounts consumers to remove old local state, and refreshes server components.
+Token refresh for the same account retains its cache. Six lifecycle tests cover
+account switches, sign-out, initial session, pending requests and cleanup. The
+shared logout API propagates rejected results; three settings tests verify success
+navigation and visible failures without false navigation. Overall coverage remains
+below target: the last full-source baseline was web 20.88% and mobile 29.8% lines.
 
 The installed Vercel connector lists HMI and `thefamilyapp-web`, but deployment
 access to their account scope returns HTTP 403. Its project-details tool also
