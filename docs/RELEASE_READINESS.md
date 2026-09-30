@@ -173,3 +173,9 @@ the verified iOS build/test route.
 This closes the backend's initial 90% coverage threshold gap. Whole-app coverage,
 coverage-drop detection, UI/E2E/release verification, production security rollout
 and all other unchecked release requirements remain open.
+
+The inherited remote CI failure was a mobile auth-test timing bug: inactive
+fixtures used gcTime=0 and could disappear while awaiting a late session result.
+Use indefinite fixture lifetimes with explicit afterEach cleanup so assertions
+measure auth-driven removal. A delayed regression fails with the old configuration
+and passes after the fix; production auth behavior is unchanged.

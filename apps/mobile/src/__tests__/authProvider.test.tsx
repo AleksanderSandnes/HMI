@@ -59,7 +59,11 @@ async function mount() {
 beforeEach(() => {
   jest.resetAllMocks();
   client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { gcTime: 0 } },
+    // Auth events must clear fixtures explicitly; timer-based GC would mask that behavior.
+    defaultOptions: {
+      queries: { retry: false, gcTime: Infinity },
+      mutations: { gcTime: Infinity },
+    },
   });
   auth.getSession.mockReturnValue(
     new Promise((resolve, reject) => {
@@ -179,6 +183,8 @@ describe("native account isolation and cleanup", () => {
     await mount();
     act(() => renderer.unmount());
     client.setQueryData(["fixture"], "keep");
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    expect(client.getQueryData(["fixture"])).toBe("keep");
     await act(async () => resolveInitial({ data: { session: session("demo-a") }, error: null }));
     act(() => listener("SIGNED_IN", session("demo-b")));
     expect(unsubscribe).toHaveBeenCalledTimes(1);
