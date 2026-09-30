@@ -46,9 +46,8 @@ Family:
 - Fresh replay of live public schema: SQL isolation tests, 65 real private-media
   HTTP checks, 30 deletion checks and rollback-only Vault transfer checks pass.
 - Latest Android checks pass: Spotless/detekt/lint/testDebugUnitTest/assembleDebug,
-  527 unit tests, zero failures. SwiftLint/SwiftFormat pass locally. Previous iOS
-  run passed 292 tests; new password-policy changes are running in macOS CI
-  (36762743768). Claude Code Review has a pre-existing provider failure.
+  527 unit tests, zero failures. SwiftLint/SwiftFormat pass locally. Latest iOS
+  run passed 293 tests; macOS CI 36762743768 and Android CI 36762743761 are green. Claude Code Review has a pre-existing provider failure.
 - Registration/reset now require eight characters; existing six/seven-character
   logins preserved. Live Auth minimum=8, OTP expiry=600, read-back verified.
 - Media buckets remain PUBLIC pending released signed-URL clients/minimum version.

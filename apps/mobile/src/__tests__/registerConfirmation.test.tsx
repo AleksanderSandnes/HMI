@@ -14,6 +14,7 @@ jest.mock("react-native-keyboard-controller", () => ({
   KeyboardAwareScrollView: require("react-native").View,
 }));
 jest.mock("../components/ui/ScreenBackground", () => ({ ScreenBackground: () => null }));
+jest.mock("expo-blur", () => ({ BlurView: require("react-native").View }));
 jest.mock("@expo/vector-icons", () => ({ Ionicons: () => null }));
 jest.mock("expo-router", () => ({ useRouter: () => ({ replace: jest.fn() }) }));
 
@@ -72,7 +73,9 @@ describe("native registration confirmation", () => {
     expect(mockAuth.confirmRegistration).toHaveBeenCalledWith("demo@example.test", "123456");
     expect(field("Confirmation code")).toBeUndefined();
     expect(button("Continue")).toBeDefined();
-  });
+    // The first full native screen render initializes RN on a cold CI worker.
+    // Keep a bounded allowance for that initialization; subsequent tests use 5s.
+  }, 15000);
 
   it("keeps the confirmation step available after verification fails", async () => {
     mockAuth.confirmRegistration.mockRejectedValue(new Error("Code expired"));

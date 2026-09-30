@@ -6,7 +6,7 @@ Web and mobile registration now wait for an email code when signup returns no
 session. The shared Auth API verifies the code and supports resending; integration
 onboarding starts only after a real session exists. English/Norwegian messages,
 web/native behavior tests, and a local confirmation email template are included.
-Nine real localhost Auth/profile checks passed (unconfirmed login and reused codes
+Nine real localhost Auth/profile checks passed locally and in CI (unconfirmed login and reused codes
 are denied), and Mailpit delivered the expected signup email. Local Auth now uses
 confirmation, eight-character new passwords and a ten-minute code expiry.
 
