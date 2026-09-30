@@ -1,5 +1,15 @@
 # Release readiness handover — 30 September 2026
 
+## First release-proposal workflow verification — 30 September 2026
+
+HMI PR #46 merged into `test` after all task/PR checks passed. The first
+Prepare Release workflow (36775117818) passed and generated a proposal for
+5.0.0/build 4 without writing a branch, tag or release. Artifact inspection
+found that the newly created CHANGELOG.md was absent from git diff. Both
+workflows now include that file with intent-to-add; a disposable-Git regression
+verifies that the patch contains the changelog and release notes. The fix's
+remote workflow verification remains pending. Production main/master are unchanged.
+
 ## Release automation prepared — 30 September 2026
 
 `prepare-release.yml` computes a version proposal after changes land in `test`.

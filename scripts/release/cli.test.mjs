@@ -54,6 +54,9 @@ test("real CLI dry run, prepare, verification and repeat are safe", () => {
     const verified = run("verify");
     assert.match(verified, new RegExp(`version=${version.replaceAll(".", "\\.")}`));
     assert.match(run("notes"), /support family sharing/);
+    git("add", "--intent-to-add", "CHANGELOG.md");
+    assert.match(git("diff"), /diff --git \S+\/CHANGELOG.md \S+\/CHANGELOG.md/);
+    assert.match(git("diff"), /support family sharing/);
     const after = files.map((file) => readFileSync(join(dir, file), "utf8"));
     assert.match(run("prepare", "--base", base), /prepared=true/);
     assert.deepEqual(
