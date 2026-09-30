@@ -14,6 +14,8 @@ export default defineConfig({
       include: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
       exclude: ["**/*.d.ts", "**/*.test.{ts,tsx}"],
       reporter: ["text", "json-summary", "lcov", "html"],
+      // Release gate (plan 7.1): overall >= 80%. Do not lower or exclude files to pass.
+      thresholds: { lines: 80, statements: 80, functions: 80, branches: 80 },
     },
   },
   resolve: {
