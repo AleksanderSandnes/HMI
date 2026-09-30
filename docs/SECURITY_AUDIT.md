@@ -104,3 +104,10 @@ Same-account token refresh preserves state. Six lifecycle tests cover caches,
 local drafts, pending requests and subscription cleanup. Shared logout rejects
 Supabase error results; settings displays an error and stays on the current screen
 when sign-out fails. Three form tests cover success, errors and localized fallback.
+
+Final backend handover: removed cookie values and raw exception details from logs,
+notifications and health records. Invalid-argument responses use a fixed message.
+Login rejects HTTP/provider/parse failures and clears stale cookies. Tests cover
+redaction, authentication failures, account-scoped Vault lookup, cache fallback
+and independent backfills. Maven verification passes 63 tests with one live-provider
+skip. Production deployment verification remains open.

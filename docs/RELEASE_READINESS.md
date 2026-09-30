@@ -1,5 +1,8 @@
 # Release readiness tracker
 
+Paused at the user's request on 2026-09-30. See [HANDOVER.md](HANDOVER.md) and
+[the full updated plan](RELEASE_READINESS_PLAN.txt) to resume on another machine.
+
 Plan: `release-readiness-plan.txt`, supplied 2026-09-29. This file records verified
 progress; unchecked work is not release-ready.
 
@@ -17,7 +20,7 @@ progress; unchecked work is not release-ready.
 - [x] GitHub, EAS and Vercel CLI authentication verified.
 - [x] Supabase CLI, Gitleaks, Maestro, ADB, bundletool and Android SDK installed.
 - [x] JDK 17 available in Gradle's provisioned toolchain cache.
-- [ ] Supabase authentication, linking and live security/performance advisors.
+- [x] Supabase authentication, linking and live security/performance advisor audits.
 - [ ] Branch protections and reviewed stale-branch cleanup proposal.
 - [ ] Security audit and fixes across both repositories and deployed services.
 - [ ] Domains, support email, SMTP and app-link association files.
@@ -125,6 +128,12 @@ The first JDK 17 run passes 29 tests (one existing skip) with 23% lines (112/487
 35.98% branches and 26.24% instructions across 27 executable classes. Largest
 gaps are GrowattWebClient, GrowattDataService, SolarBackfillJob and session/error
 handling. This is a measured baseline, not a completed coverage gate.
+
+Final handover: backend verification now passes 63 tests (one live-provider skip),
+with 76.92% lines and 69.09% branches. Added session, transport, cache, cron and
+error tests. Removed cookies/raw exception details from logs and stored failures,
+rejected unsuccessful logins, replaced stale cookies and remembered failed month
+fetches within weekly requests. No production deployment or merge was performed.
 
 The installed Vercel connector lists HMI and `thefamilyapp-web`, but deployment
 access to their account scope returns HTTP 403. Its project-details tool also

@@ -3,6 +3,7 @@ package service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -56,7 +57,7 @@ public class SolarBackfillJob {
 		try {
 			runBackfill();
 		} catch (Exception e) {
-			log.error("[SolarCron] Scheduled run failed: {}", e.getMessage(), e);
+			log.error("[SolarCron] Scheduled run failed ({})", e.getClass().getSimpleName());
 		}
 	}
 
@@ -94,17 +95,17 @@ public class SolarBackfillJob {
 
 			double kwh = dayEnergyKwh(day);
 			String message = kwh > 0
-					? String.format("Saved %.1f kWh of solar production for %s (plant %s).", kwh, dayDate, plantId)
-					: String.format("Synced solar data for %s — no production recorded (plant %s).", dayDate, plantId);
+					? String.format(Locale.ROOT, "Saved %.1f kWh of solar production for %s (plant %s).", kwh, dayDate, plantId)
+					: String.format(Locale.ROOT, "Synced solar data for %s — no production recorded (plant %s).", dayDate, plantId);
 
 			saveNotification(user, "success", "Solar data synced", message);
 			recordHealth(user, "ok", null);
-			log.info("[SolarCron] Backfilled solar for user {} ({} kWh).", user.getAuthId(), kwh);
+			log.info("[SolarCron] Backfilled solar successfully.");
 		} catch (Exception e) {
-			log.error("[SolarCron] Backfill failed for user {}: {}", user.getAuthId(), e.getMessage());
+			log.error("[SolarCron] Backfill failed ({})", e.getClass().getSimpleName());
 			saveNotification(user, "error", "Solar sync failed",
-					"Could not sync solar data for " + dayDate + ": " + e.getMessage());
-			recordHealth(user, "error", e.getMessage());
+					"Could not sync solar data for " + dayDate + ". Please try again later.");
+			recordHealth(user, "error", "Solar sync failed");
 		}
 	}
 
@@ -114,7 +115,7 @@ public class SolarBackfillJob {
 			integrationHealthRepository.save(
 					new IntegrationHealth(user.getAuthId(), "growatt", status, detail));
 		} catch (Exception e) {
-			log.warn("[SolarCron] Failed to record health for user {}: {}", user.getAuthId(), e.getMessage());
+			log.warn("[SolarCron] Failed to record health ({})", e.getClass().getSimpleName());
 		}
 	}
 
@@ -135,7 +136,7 @@ public class SolarBackfillJob {
 			notificationRepository.save(
 					new Notification(user.getAuthId(), "solar_sync", level, title, message));
 		} catch (Exception e) {
-			log.warn("[SolarCron] Failed to write notification for user {}: {}", user.getAuthId(), e.getMessage());
+			log.warn("[SolarCron] Failed to write notification ({})", e.getClass().getSimpleName());
 		}
 	}
 }

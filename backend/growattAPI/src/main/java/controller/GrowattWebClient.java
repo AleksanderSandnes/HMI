@@ -104,27 +104,42 @@ public class GrowattWebClient {
 	}
 
 	private Mono<String> readCookies(ClientResponse response) {
+		if (response.statusCode().isError()) {
+			return Mono.error(new IllegalStateException("Growatt login failed."));
+		}
 		MultiValueMap<String, ResponseCookie> cookies = response.cookies();
 		for (var key : cookies.keySet()) {
-			cookieJar.add(key, cookies.getFirst(key).getValue());
-			log.debug("{} : {}", key, cookies.getFirst(key).getValue());
+			cookieJar.set(key, cookies.getFirst(key).getValue());
 		}
 		return response.bodyToMono(String.class);
 	}
 
 	/** Log into server.growatt.com and capture the session cookies (incl. the plant id). */
 	public String login(LoginRequest loginRequest) {
+		cookieJar.clear();
 		LinkedMultiValueMap<String, String> loginData = new LinkedMultiValueMap<>();
 		loginData.add("account", loginRequest.getAccount());
 		loginData.add("passwordCrc", loginRequest.getPasswordCrc());
 
-		return client.post()
+		try {
+			String body = client.post()
 				.uri("/login")
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 				.body(BodyInserters.fromFormData(loginData))
 				.exchangeToMono(this::readCookies)
 				.block();
+			LoginResponse response = objectMapper.readValue(body, LoginResponse.class);
+			if (response.result() == null || response.result() != 1L) {
+				throw new IllegalStateException("Growatt login failed.");
+			}
+			return body;
+		} catch (Exception e) {
+			cookieJar.clear();
+			throw new IllegalStateException("Growatt login failed.");
+		}
 	}
+
+	private record LoginResponse(Long result) {}
 
 	// ---- Cumulative "as of now" snapshots (from the plant's device list) -----------------
 
@@ -286,7 +301,7 @@ public class GrowattWebClient {
 			}
 			log.error("POST to {} returned an empty body", uri);
 		} catch (Exception e) {
-			log.error("Error parsing JSON response from {}: {}", uri, e.getMessage());
+			log.error("Error parsing JSON response from {}", uri);
 		}
 		return null;
 	}

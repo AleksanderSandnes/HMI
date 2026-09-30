@@ -131,12 +131,12 @@ public class GrowattDataService {
 		try {
 			end = LocalDate.parse(request.getDate(), DAY_FMT);
 		} catch (Exception e) {
-			log.warn("[Week] could not parse date '{}', defaulting to today", request.getDate());
+			log.warn("[Week] could not parse date, defaulting to today");
 			end = LocalDate.now();
 		}
 		LocalDate start = end.minusDays(6);
 
-		Map<YearMonth, MonthResponse> monthsCache = new HashMap<>();
+		Map<YearMonth, Optional<MonthResponse>> monthsCache = new HashMap<>();
 		List<Double> energy = new ArrayList<>();
 		List<String> days = new ArrayList<>();
 
@@ -145,12 +145,12 @@ public class GrowattDataService {
 			MonthResponse month = monthsCache.computeIfAbsent(ym, key -> {
 				EnergyRequest monthRequest = new EnergyRequest(request.getPlantId(), key.format(MONTH_FMT));
 				try {
-					return getMonthChart(client, monthRequest);
+					return Optional.ofNullable(getMonthChart(client, monthRequest));
 				} catch (Exception ex) {
-					log.warn("[Week] month fetch failed for {} ({})", key, ex.getMessage());
-					return null;
+					log.warn("[Week] month fetch failed ({})", ex.getClass().getSimpleName());
+					return Optional.empty();
 				}
-			});
+			}).orElse(null);
 
 			energy.add(extractDayEnergy(month, day.getDayOfMonth()));
 			days.add(day.format(DAY_FMT));
@@ -197,7 +197,7 @@ public class GrowattDataService {
 	public void backfillDayChart(String plantId, String date, DayResponse response) {
 		if (!isSuccessful(response) || !response.hasData()) {
 			log.info("[Cache] SKIP backfill for {} - no successful production data",
-					logKey(CacheType.DAY, plantId, date));
+					CacheType.DAY);
 			return;
 		}
 		upsert(CacheType.DAY, plantId, date, response);
@@ -210,7 +210,7 @@ public class GrowattDataService {
 
 		// We need a stable, non-blank (type, plantId, date) key to cache against; otherwise go live.
 		if (!cacheEnabled || StringUtils.isBlank(plantId) || StringUtils.isBlank(date)) {
-			log.info("[Cache] BYPASS -> live fetch (type={}, plantId={}, date={})", type, plantId, date);
+			log.info("[Cache] BYPASS -> live fetch (type={})", type);
 			return liveFetch.apply(request);
 		}
 
@@ -220,20 +220,20 @@ public class GrowattDataService {
 		try {
 			Optional<SolarDataCache> cached = repository.findFirstByTypeAndPlantIdAndDate(type.name(), plantId, date);
 			if (cached.isPresent() && (!current || isFresh(type, cached.get()))) {
-				log.info("[Cache] HIT {} - served from DB, no Growatt call ({})", logKey(type, plantId, date),
+				log.info("[Cache] HIT {} - served from DB, no Growatt call ({})", type,
 						current ? "within TTL" : "completed period");
 				return objectMapper.readValue(cached.get().getPayload(), clazz);
 			}
 			if (cached.isPresent()) {
-				log.info("[Cache] STALE {} -> refetching", logKey(type, plantId, date));
+				log.info("[Cache] STALE {} -> refetching", type);
 			}
 		} catch (Exception e) {
-			log.warn("[Cache] read failed for {} ({}), falling back to live", logKey(type, plantId, date),
-					e.getMessage());
+			log.warn("[Cache] read failed for {} ({}), falling back to live", type,
+					e.getClass().getSimpleName());
 		}
 
 		// 2) Cache miss / stale -> call the Growatt API.
-		log.info("[Cache] MISS {} -> calling Growatt", logKey(type, plantId, date));
+		log.info("[Cache] MISS {} -> calling Growatt", type);
 		T result = liveFetch.apply(request);
 
 		// 3) Persist. Current periods are always upserted (even empty) so the TTL throttle holds;
@@ -242,7 +242,7 @@ public class GrowattDataService {
 			upsert(type, plantId, date, result);
 		} else if (isSuccessful(result)) {
 			log.info("[Cache] SKIP save for {} - completed period has no production data",
-					logKey(type, plantId, date));
+					type);
 		}
 
 		return result;
@@ -257,9 +257,9 @@ public class GrowattDataService {
 			document.setPayload(objectMapper.writeValueAsString(result));
 			document.setCachedAt(Instant.now());
 			repository.save(document);
-			log.info("[Cache] SAVE {}", logKey(type, plantId, date));
+			log.info("[Cache] SAVE {}", type);
 		} catch (Exception e) {
-			log.warn("[Cache] save failed for {} ({})", logKey(type, plantId, date), e.getMessage());
+			log.warn("[Cache] save failed for {} ({})", type, e.getClass().getSimpleName());
 		}
 	}
 
@@ -305,12 +305,9 @@ public class GrowattDataService {
 					return true;
 			}
 		} catch (Exception e) {
-			log.warn("[Cache] could not parse date '{}' for type {}, treating as live", date, type);
+			log.warn("[Cache] could not parse date for type {}, treating as live", type);
 			return true;
 		}
 	}
 
-	private String logKey(CacheType type, String plantId, String date) {
-		return type.name() + "/" + plantId + "/" + date;
-	}
 }
