@@ -87,7 +87,7 @@ and 90% logic thresholds. New tests exercise notification query refresh/cleanup,
 mutation failures, native push-token persistence/logout cleanup, and boolean
 preferences. Preference storage failures now retain the current/default setting
 without an unhandled rejection; pending reads cannot update an unmounted hook.
-Current suites contain 246 core, 106 web and 73 mobile tests. Added responsive-hook
+Current suites contain 246 core, 106 web and 83 mobile tests. Added responsive-hook
 resize/server-render/cleanup and shared navigation-state coverage. Auth-proxy tests
 exposed dropped refreshed/cleared cookies on redirects and erased earlier refresh
 batches; fixed cookie copying and verified all 11 proxy cases. Push-token API read
@@ -99,6 +99,12 @@ Next's client router. It now accepts only app-local paths and falls back to the
 dashboard for external, protocol-relative, backslash, control-character and
 unsafe normalized paths. Seventeen boundary cases and five real login-form tests
 verify safe navigation and no navigation after authentication failure.
+
+Native auth now ignores delayed initial session results after a newer auth event,
+ends loading safely after session-read failures, and clears account query/mutation
+caches before switching accounts or signing out. Sign-out errors propagate to the
+caller. Ten lifecycle tests cover initialization, failure, sign-out races, cache
+isolation (including pending requests), token refresh and unmount cleanup.
 
 The installed Vercel connector lists HMI and `thefamilyapp-web`, but deployment
 access to their account scope returns HTTP 403. Its project-details tool also

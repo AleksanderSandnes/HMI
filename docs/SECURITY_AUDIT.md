@@ -87,3 +87,10 @@ app-local paths, rejects control characters/backslashes and protocol-relative pa
 after normalization, and falls back to `/dashboard`. Seventeen boundary cases and
 five login-form tests verify unsafe inputs, preserved app destinations and failed
 authentication. This fix is local; production deployment remains pending.
+
+Native authentication could restore a stale initial session after sign-out and
+retain previous account query data across sign-ins. Initial reads now defer to
+newer auth events; account changes/sign-out clear the query and mutation caches,
+including canceling pending queries. Session-read failures end loading signed out,
+and sign-out errors propagate rather than appearing successful. Ten lifecycle
+tests cover these boundaries. This fix still needs a production build smoke test.
