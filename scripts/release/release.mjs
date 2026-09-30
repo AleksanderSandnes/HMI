@@ -9,7 +9,9 @@ import { execFileSync } from "node:child_process";
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { bumpLevel, nextVersion, parseCommit, prependChangelog, renderChangelog } from "./core.mjs";
-import { applyVersion, currentVersion, DEFAULT_BASE } from "./targets.mjs";
+import { applyVersion, currentVersion, releaseState, DEFAULT_BASE } from "./targets.mjs";
+
+import { verifyRelease } from "./verify.mjs";
 
 const root = process.cwd();
 const read = (file) => readFileSync(join(root, file), "utf8");
@@ -47,8 +49,15 @@ function commitsSince(base) {
 
 function prepare() {
   const dryRun = args.includes("--dry-run");
-  const commits = commitsSince(flag("--base", DEFAULT_BASE));
+  const base = flag("--base", DEFAULT_BASE);
   const current = currentVersion(read);
+  const baseRead = (file) => execFileSync("git", ["show", `${base}:${file}`], { encoding: "utf8" });
+  if (current !== currentVersion(baseRead)) {
+    verifyRelease(releaseState(read), read("CHANGELOG.md"));
+    output({ released: "false", version: current, prepared: "true" });
+    return;
+  }
+  const commits = commitsSince(base);
   const version = nextVersion(current, bumpLevel(commits));
   if (!version) {
     output({ released: "false", version: current });
@@ -80,8 +89,9 @@ function notes() {
 const command = args[0];
 if (command === "prepare") prepare();
 else if (command === "notes") notes();
+else if (command === "verify") output(verifyRelease(releaseState(read), read("CHANGELOG.md")));
 else if (command === "version") output({ version: currentVersion(read) });
 else {
-  console.error("Usage: release.mjs <prepare|notes|version> [--base <ref>] [--dry-run]");
+  console.error("Usage: release.mjs <prepare|notes|version|verify> [--base <ref>] [--dry-run]");
   process.exit(2);
 }

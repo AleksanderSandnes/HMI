@@ -37,3 +37,19 @@ export function applyVersion(read, write, version) {
 }
 
 export const DEFAULT_BASE = "origin/main";
+
+export function releaseState(read) {
+  const app = JSON.parse(read("apps/mobile/app.json")).expo;
+  const lock = JSON.parse(read("package-lock.json"));
+  const versions = Object.fromEntries(
+    PACKAGES.map((file) => [file, JSON.parse(read(file)).version]),
+  );
+  versions["package-lock.json"] = lock.version;
+  for (const key of LOCK_KEYS) versions[`package-lock.json:${key}`] = lock.packages?.[key]?.version;
+  return {
+    version: app.version,
+    build: app.android.versionCode,
+    versions,
+    builds: { "apps/mobile/app.json:ios": app.ios?.buildNumber },
+  };
+}
