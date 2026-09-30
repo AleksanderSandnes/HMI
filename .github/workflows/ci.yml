@@ -19,6 +19,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  release-tooling:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test scripts/release/*.test.mjs
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Isolate CI stack ports
+        run: |
+          # Hosted runners can already have services on the default 5432x ports.
+          sed -i 's/5432/5732/g' supabase/config.toml
+      - name: Start disposable stack with repository migrations
+        run: supabase start --exclude realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Verify account deletion through real Auth, Storage and Vault
+        run: deno run --allow-env --allow-net --allow-run --allow-read supabase/tests/account_deletion_http.ts .
+      - name: Verify email confirmation through real Auth
+        run: deno run --allow-env --allow-net --allow-run --allow-read supabase/tests/email_confirmation_http.ts .
+      - name: Stop stack
+        if: always()
+        run: supabase stop --no-backup
   edge-security:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -113,6 +146,33 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test
+      - name: Collect full web coverage
+        run: npm run test:coverage --workspace @hmi/web
+      - name: Report full web coverage
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const { total } = JSON.parse(fs.readFileSync('apps/web/coverage/coverage-summary.json', 'utf8'));
+          const value = total.lines;
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            `## Full web coverage\n\nLines: ${value.covered}/${value.total} (${value.pct}%). Release target: 80% overall and 90% logic; targets remain open.\n`);
+          NODE
+      - name: Upload full web coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-coverage
+          path: apps/web/coverage/
+          if-no-files-found: warn
+      - name: Collect full mobile coverage
+        run: npm run test:coverage --workspace @hmi/mobile -- --runInBand --coverageReporters=json-summary --coverageReporters=lcov --coverageReporters=text-summary
+      - name: Upload full mobile coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-coverage
+          path: apps/mobile/coverage/
+          if-no-files-found: warn
       - name: Report core coverage
         if: always()
         run: |

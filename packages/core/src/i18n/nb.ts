@@ -182,6 +182,16 @@ export const nb: Record<TranslationKey, string> = {
   "auth.login.createOne": "Opprett en",
 
   // Auth — register
+  "auth.register.confirmTitle": "Bekreft e-postadressen",
+  "auth.register.confirmSubtitle": "Skriv inn koden du fikk på e-post for å fortsette.",
+  "auth.register.codeLabel": "Bekreftelseskode",
+  "auth.register.codeHint": "Koden utløper etter ti minutter. Sjekk søppelpostmappen om nødvendig.",
+  "auth.register.confirm": "Bekreft e-post",
+  "auth.register.resend": "Send en ny kode",
+  "auth.register.resent": "En ny bekreftelseskode er sendt.",
+  "auth.register.codeRequired": "Skriv inn bekreftelseskoden fra e-posten.",
+  "auth.register.confirmFailed":
+    "Kunne ikke bekrefte e-postadressen. Sjekk koden eller be om en ny.",
   "auth.register.stepAccount": "Konto",
   "auth.register.stepSolar": "Sol",
   "auth.register.stepWeather": "Vær",
@@ -245,6 +255,16 @@ export const nb: Record<TranslationKey, string> = {
   "settings.notSet": "Ikke satt",
   "settings.pushNotifications": "Push-varsler",
   "settings.pushSubtitle": "Varsler på denne enheten",
+  "settings.legal": "Juridisk og personvern",
+  "settings.privacyPolicy": "Personvernerklæring",
+  "settings.terms": "Vilkår for bruk",
+  "settings.support": "Brukerstøtte",
+  "settings.deleteAccount": "Slett konto",
+  "settings.deleteAccountSubtitle": "Fjern kontoen og dataene dine permanent",
+  "settings.deleteAccountConfirmTitle": "Slette kontoen din?",
+  "settings.deleteAccountConfirmBody":
+    "Dette sletter profilen, innstillingene, lagrede Growatt- og Weather.com-påloggingsdetaljer, varsler og profilbildet ditt permanent. Det kan ikke angres.",
+  "settings.deleteAccountConfirm": "Slett permanent",
   "settings.signOut": "Logg ut",
   "settings.usernameLabel": "BRUKERNAVN",
   "settings.emailLabel": "E-POST",
@@ -291,6 +311,7 @@ export const nb: Record<TranslationKey, string> = {
 
   // API errors (thrown as CoreError keys, translated at display time)
   "error.authRequired": "Innlogging kreves. Logg inn på nytt.",
+  "error.accountDeletionFailed": "Kunne ikke slette kontoen. Prøv igjen.",
   "error.signOutFailed": "Kunne ikke logge ut. Prøv igjen.",
   "error.registrationNoUser": "Registreringen mislyktes: ingen bruker ble returnert.",
 
@@ -298,6 +319,7 @@ export const nb: Record<TranslationKey, string> = {
   "validation.emailRequired": "E-post er påkrevd",
   "validation.emailInvalid": "Oppgi en gyldig e-postadresse",
   "validation.passwordRequired": "Passord er påkrevd",
+  "validation.registrationPasswordMin": "Passordet må være minst 8 tegn",
   "validation.passwordMin": "Passordet må være minst 4 tegn",
   "validation.passwordsMustMatch": "Passordene må være like",
   "validation.confirmPassword": "Bekreft passordet ditt",

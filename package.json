@@ -16,7 +16,9 @@
     "format:check": "prettier . --check",
     "check": "npm run format:check && npm run lint && npm run typecheck",
     "web": "npm --workspace @hmi/web run dev",
-    "mobile": "npm --workspace @hmi/mobile run start"
+    "mobile": "npm --workspace @hmi/mobile run start",
+    "release:prepare": "node scripts/release/release.mjs prepare",
+    "test:release": "node --test scripts/release/*.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

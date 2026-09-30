@@ -69,3 +69,14 @@ export const TYPOGRAPHY = {
     caption: 16,
   },
 } as const;
+
+/** Public website hosting the legal pages (switch to the custom domain once bought). */
+export const PUBLIC_WEB_URL = "https://hmi-six.vercel.app";
+
+/** Public legal/support pages linked from settings and the store listings. */
+export const LEGAL_URLS = {
+  privacy: `${PUBLIC_WEB_URL}/privacy`,
+  terms: `${PUBLIC_WEB_URL}/terms`,
+  support: `${PUBLIC_WEB_URL}/support`,
+  deleteAccount: `${PUBLIC_WEB_URL}/delete-account`,
+} as const;

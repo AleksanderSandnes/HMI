@@ -214,3 +214,7 @@ replay_pid*
 # Profiling files
 *.prof
 *.hprof
+
+# Python release-policy/test helpers
+__pycache__/
+*.pyc

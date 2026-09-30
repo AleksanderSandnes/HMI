@@ -1,4 +1,4 @@
-export const SETTINGS_SECTIONS = ["profile", "password", "growatt", "weather"] as const;
+export const SETTINGS_SECTIONS = ["profile", "password", "growatt", "weather", "delete"] as const;
 
 export type Section = (typeof SETTINGS_SECTIONS)[number];
 

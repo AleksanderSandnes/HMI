@@ -1,3 +1,76 @@
+CURRENT VERIFIED PROGRESS — 30 September 2026, updated through 22:10 Oslo — ACTIVE
+==================================================================
+This update supersedes the paused/undeployed status below. The full original plan
+is preserved and is NOT complete.
+
+Owner decisions: full permissions granted for continuing the plan; the remaining
+Pro-only leaked-password protection warning is explicitly accepted in BOTH
+projects and must not trigger a billing upgrade. Family keeps master. Production
+Git branches remain unchanged pending release gates.
+
+Supabase CLI login and linking verified for both projects. Direct Codex Supabase
+MCP at https://mcp.supabase.com/mcp is configured and OAuth-authenticated
+(codex mcp list confirms o_auth). The older app connector denied project access;
+CLI works and has performed verified live queries/deployments.
+
+HMI:
+- Verified registration task commit b1f6651. Task CI 36767240387 and PR CI 36767246382, Security, CodeQL,
+  Promotion Source all passed. PR #46 targets test:
+  https://github.com/AleksanderSandnes/HMI/pull/46
+- Fixed Node 22 release test discovery, isolated CI DB ports and deletion-test
+  act timing/cleanup. Six release-tooling tests and all npm checks/tests pass.
+- Live migrations 20260930104000, 20260930180000, 20260930190000 applied;
+  delete-account function deployed with JWT verification. Security warnings
+  reduced 9 -> 1 (accepted). Anonymous-key HTTP RPC/deletion smoke checks return401.
+- Fresh local migration replay + 23 real Auth/Storage/Vault deletion checks pass.
+- Registration now requires eight characters. Live Auth minimum=8, email OTP
+  expiry=600 seconds, read-back verified. Existing login passwords remain valid.
+- Registration confirmation implemented in web/mobile/shared Auth, with resend,
+  retry, English/Norwegian messages and a code email template. Nine real localhost
+  Auth/profile checks and local Mailpit delivery pass. Production still auto-
+  confirms until updated clients + verified SMTP/template are deployed.
+  Production redirect allow-list remains incomplete.
+
+Family:
+- Verified password-policy task commit f6003cb. PR #12 targets test:
+  https://github.com/AleksanderSandnes/The_family_app/pull/12
+- New ordered migrations: 20260930183127 function access, 183128 write guards,
+  183129 read guards, 183130 deletion, 183301 moderation, 184128 Vault webhook.
+  All applied live; db push dry-run reports up-to-date in both repos.
+- Deployed delete-account, push-on-message and daily-reminders with JWT verification.
+  New private webhook resolves existing server credential directly from Vault;
+  live trigger has zero credential arguments. Rotation of the old service-role
+  credential is STILL OPEN; moving it to Vault does not revoke it.
+- Security warnings reduced 24 -> 1 (accepted). Anonymous-key protected RPCs,
+  deletion and unauthenticated push requests are denied.
+- Fresh replay of live public schema: SQL isolation tests, 65 real private-media
+  HTTP checks, 30 deletion checks and rollback-only Vault transfer checks pass.
+- Latest Android checks pass: Spotless/detekt/lint/testDebugUnitTest/assembleDebug,
+  527 unit tests, zero failures. SwiftLint/SwiftFormat pass locally. Latest iOS
+  run passed 293 tests; macOS CI 36762743768 and Android CI 36762743761 are green. Claude Code Review has a pre-existing provider failure.
+- Registration/reset now require eight characters; existing six/seven-character
+  logins preserved. Live Auth minimum=8, OTP expiry=600, read-back verified.
+- Media buckets remain PUBLIC pending released signed-URL clients/minimum version.
+  Initial schema/Storage/Auth/Realtime/cron bootstrap still needs reconciliation.
+- Coverage remains far below target: iOS artifact 20.43% lines (5001/24482);
+  Android Kover is now measured: 13.20% overall / 43.72% logic. Gates still open. iOS job summary was fixed to avoid1MiB
+  overflow while retaining full artifacts.
+
+HMI full coverage now measured across all production files: web 53.26% after
+date-picker/session/dashboard behavior tests (153 web tests), mobile 36.26%, core100%. Family website home/privacy
+restored to HTTP 200 by rebuilding the same previous production source with the
+correct existing web root. New legal pages still need validation/publication.
+
+Remaining original scope: complete registration/SMTP/domain/app-link work, security
+rotation/dependency/platform audit, full coverage gates/UI/E2E tests, version and
+release/signing/submission pipelines, fictional seed/screenshots/store declarations,
+Android internal-track upload and iOS preparation. Continue the full plan; do not
+mark it complete based on advisor/CI fixes. Repo docs and Family Obsidian notes
+record the verified rollout and accepted warning. Main/master not merged; no
+store uploads, billing changes, DNS changes or bucket visibility changes performed.
+
+PREVIOUS HANDOVER / ORIGINAL PLAN — HISTORICAL
+============================================
 CURRENT PROGRESS — 30 September 2026 — PAUSED AT USER REQUEST
 ===========================================================
 The original plan is preserved below and is NOT complete.

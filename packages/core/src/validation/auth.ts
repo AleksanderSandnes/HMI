@@ -27,7 +27,7 @@ export function createRegisterAccountSchema(t: Translator) {
       .label("Email"),
     password: Yup.string()
       .required(t("validation.passwordRequired"))
-      .min(4, t("validation.passwordMin"))
+      .min(8, t("validation.registrationPasswordMin"))
       .label("Password"),
     confirmPassword: Yup.string()
       .oneOf([Yup.ref("password")], t("validation.passwordsMustMatch"))

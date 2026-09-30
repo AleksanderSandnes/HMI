@@ -1,0 +1,73 @@
+name: Prepare GitHub Release
+on:
+  workflow_run:
+    workflows: ["CI", "Security", "CodeQL", "Promotion Source"]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: release-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      ready: ${{ steps.release.outputs.ready }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test scripts/release/*.test.mjs
+      - name: Verify production commit, quality workflows and release files
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/release/pipeline.mjs
+  draft:
+    needs: verify
+    if: needs.verify.outputs.ready == 'true' && vars.RELEASE_DRAFT_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.verify.outputs.version }}
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Create immutable version tag and draft release
+        run: |
+          tag="v$VERSION"
+          if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
+            test "$(git rev-parse "$tag^{commit}")" = "$RELEASE_SHA" || {
+              echo "Version tag already belongs to another commit" >&2
+              exit 1
+            }
+          fi
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release already exists: $tag" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node scripts/release/release.mjs notes > "$RUNNER_TEMP/release-notes.md"
+          gh release create "$tag" --target "$RELEASE_SHA" --title "$tag" --notes-file "$RUNNER_TEMP/release-notes.md" --draft

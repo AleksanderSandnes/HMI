@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
+import { Linking } from "react-native";
 import TestRenderer, { act } from "react-test-renderer";
 
 import { SettingsHubList } from "../components/settings/SettingsHubList";
@@ -71,6 +72,22 @@ describe("SettingsHubList", () => {
     expect(onSelect).toHaveBeenLastCalledWith("password");
     pressRowWithText(root, "Growatt solar");
     expect(onSelect).toHaveBeenLastCalledWith("growatt");
+    pressRowWithText(root, "Delete account");
+    expect(onSelect).toHaveBeenLastCalledWith("delete");
+  });
+
+  it("opens the public legal pages in the browser", () => {
+    const openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+    const root = renderList();
+    pressRowWithText(root, "Privacy policy");
+    pressRowWithText(root, "Terms of service");
+    pressRowWithText(root, "Support");
+    expect(openURL.mock.calls.map(([url]) => url)).toEqual([
+      "https://hmi-six.vercel.app/privacy",
+      "https://hmi-six.vercel.app/terms",
+      "https://hmi-six.vercel.app/support",
+    ]);
+    openURL.mockRestore();
   });
 
   it("highlights the active route's row", () => {

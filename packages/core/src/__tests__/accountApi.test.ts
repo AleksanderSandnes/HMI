@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createAccountApi } from "../api/account";
+import { ACCOUNT_DELETION_CONFIRMATION, createAccountApi } from "../api/account";
 import type { CoreApiContext } from "../api/context";
 import { CoreError } from "../api/errors";
 
@@ -167,5 +167,43 @@ describe("avatar and password lifecycle", () => {
     await expect(
       api.updateUserPassword({ currentPassword: "old-fixture", newPassword: "new-fixture" }),
     ).rejects.toThrow("password rejected");
+  });
+});
+
+describe("account deletion", () => {
+  function deletionFixture(uid: string | null, invokeError: unknown = null) {
+    const invoke = vi.fn().mockResolvedValue({ data: null, error: invokeError });
+    const signOut = vi.fn().mockResolvedValue({ error: null });
+    const context = {
+      supabase: {
+        auth: {
+          getUser: vi.fn().mockResolvedValue({ data: { user: uid ? { id: uid } : null } }),
+          signOut,
+        },
+        functions: { invoke },
+      },
+    } as unknown as CoreApiContext;
+    return { api: createAccountApi(context), invoke, signOut };
+  }
+
+  it("calls the delete-account function with the explicit confirmation, then signs out locally", async () => {
+    const { api, invoke, signOut } = deletionFixture("auth-fixture");
+    await api.deleteAccount();
+    expect(invoke).toHaveBeenCalledWith("delete-account", {
+      body: { confirm: ACCOUNT_DELETION_CONFIRMATION },
+    });
+    expect(signOut).toHaveBeenCalledWith({ scope: "local" });
+  });
+
+  it("keeps the session and reports a translated error when deletion fails", async () => {
+    const { api, signOut } = deletionFixture("auth-fixture", new Error("server"));
+    await expect(api.deleteAccount()).rejects.toMatchObject({ key: "error.accountDeletionFailed" });
+    expect(signOut).not.toHaveBeenCalled();
+  });
+
+  it("refuses to call the function when signed out", async () => {
+    const { api, invoke } = deletionFixture(null);
+    await expect(api.deleteAccount()).rejects.toBeInstanceOf(CoreError);
+    expect(invoke).not.toHaveBeenCalled();
   });
 });

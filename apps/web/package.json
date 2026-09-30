@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "test:coverage": "vitest run --coverage --maxWorkers=2"
   },
   "dependencies": {
     "@hmi/core": "*",
