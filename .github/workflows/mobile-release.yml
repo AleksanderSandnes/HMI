@@ -1,0 +1,119 @@
+name: Mobile Release
+# Manual, owner-approved Android build through EAS. Inactive until the repository variable
+# RELEASE_MOBILE_ENABLED is "true"; the production environment adds the approval gate.
+# Play submission is a separate opt-in input and never runs on its own.
+on:
+  workflow_dispatch:
+    inputs:
+      submit_to_play:
+        description: Submit the verified build to the Play internal track
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mobile-release
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main' && vars.RELEASE_MOBILE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      build: ${{ steps.release.outputs.build }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test scripts/release/*.test.mjs
+      - name: Require a released production tip with passing quality workflows
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/release/pipeline.mjs | tee "$RUNNER_TEMP/pipeline.txt"
+          grep -qx 'ready=true' "$RUNNER_TEMP/pipeline.txt" || { echo "Production tip is not release-ready" >&2; exit 1; }
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: production
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      VERSION: ${{ needs.verify.outputs.version }}
+      BUILD: ${{ needs.verify.outputs.build }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Install EAS CLI
+        run: npm install --global eas-cli@24.8.0
+      - name: Validate public client configuration from EAS production environment
+        working-directory: apps/mobile
+        run: |
+          umask 077
+          env_file="$RUNNER_TEMP/eas-production.env"
+          eas env:pull production --non-interactive --path "$env_file"
+          node ../../scripts/release/client-config.mjs "$env_file"
+          rm -f "$env_file"
+      - name: Verify app version files
+        run: |
+          node -e '
+            const app = require("./apps/mobile/app.json").expo;
+            if (app.version !== process.env.VERSION || String(app.android.versionCode) !== process.env.BUILD) {
+              throw new Error("apps/mobile/app.json does not match the verified release");
+            }'
+      - name: Build signed Android bundle with stored EAS credentials
+        id: eas
+        working-directory: apps/mobile
+        run: |
+          eas build --platform android --profile production --non-interactive --wait --json --freeze-credentials > "$RUNNER_TEMP/build.json"
+          node -e '
+            const [build] = JSON.parse(require("fs").readFileSync(process.env.RUNNER_TEMP + "/build.json", "utf8"));
+            if (build.status !== "FINISHED") throw new Error("EAS build did not finish: " + build.status);
+            console.log("EAS build " + build.id + " finished");
+            require("fs").appendFileSync(process.env.GITHUB_OUTPUT, "build_id=" + build.id + "\n");'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hmi-build-${{ needs.verify.outputs.version }}-${{ needs.verify.outputs.build }}
+          path: ${{ runner.temp }}/build.json
+          retention-days: 30
+    outputs:
+      build_id: ${{ steps.eas.outputs.build_id }}
+  play-internal:
+    needs: [verify, build]
+    if: inputs.submit_to_play && vars.RELEASE_PLAY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: play-internal
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      BUILD_ID: ${{ needs.build.outputs.build_id }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install EAS CLI
+        run: npm install --global eas-cli@24.8.0
+      - name: Submit to the Play internal track
+        working-directory: apps/mobile
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          umask 077
+          printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" > play-service-account.json
+          trap 'rm -f play-service-account.json' EXIT
+          eas submit --platform android --profile production --id "$BUILD_ID" --non-interactive
