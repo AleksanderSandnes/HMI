@@ -90,4 +90,16 @@ class GrowattMappingTest {
 		GwDevicesResponse empty = MAPPER.readValue("{\"obj\":{\"datas\":[]}}", GwDevicesResponse.class);
 		assertFalse(GrowattWebClient.mapTotals(empty).hasData());
 	}
+
+    @Test
+    void absentDeviceListsDoNotFabricateDeviceCounts() throws Exception {
+        var missing = MAPPER.readValue("{}", GwDevicesResponse.class);
+        assertNull(missing.firstDevice());
+        assertNull(missing.deviceCount());
+        assertNull(missing.onlineCount());
+        var missingList = MAPPER.readValue("{\"obj\":{}}", GwDevicesResponse.class);
+        assertNull(missingList.firstDevice());
+        assertNull(missingList.deviceCount());
+        assertNull(missingList.onlineCount());
+    }
 }

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,8 +67,8 @@ class GrowattTransportTest {
     void loginCapturesCookiesAndUsesThemOnChartRequests() {
         assertEquals("{\"result\":1}", client.login(new LoginRequest("demo@example.com", "fictional-password")));
         assertEquals("demo-plant", client.getPlantId());
-        response = ClientResponse.create(HttpStatus.OK).body("{\"result\":1,\"obj\":{\"datas\":[{\"pac\":[12.0]}]}}").build();
-        client.getInvEnergyDayChart(new EnergyRequest("demo-plant", "2026-01-01"));
+        response = chartResponse();
+        assertEquals(List.of(12.0), client.getInvEnergyDayChart(new EnergyRequest("demo-plant", "2026-01-01")).getObj().getPac());
         assertEquals("/login", requests.get(0).url().getPath());
         assertEquals("fictional-session-secret", requests.get(1).cookies().getFirst("SESSION"));
         assertEquals("demo-plant", requests.get(1).cookies().getFirst(GrowattWebClient.ONE_PLANT_ID));
@@ -118,5 +119,86 @@ class GrowattTransportTest {
         assertNull(client.getInvEnergyDayChart(new EnergyRequest("demo-plant", "2026-01-01")).getResult());
         assertTrue(logs.list.stream().allMatch(event ->
                 !event.getFormattedMessage().contains("fictional-provider-secret") && event.getThrowableProxy() == null));
+    }
+
+    private ClientResponse chartResponse() {
+        return ClientResponse.create(HttpStatus.OK)
+                .body("{\"result\":1,\"obj\":[{\"datas\":{\"pac\":[12.0],\"energy\":[3.0,4.0]}}]}")
+                .build();
+    }
+
+    @Test
+    void mapsEachChartEndpointFromTheActualProviderShape() {
+        response = chartResponse();
+        assertEquals(List.of(3.0, 4.0), client.getInvEnergyMonthChart(new EnergyRequest("demo-plant", "2025-01")).getObj().getEnergy());
+        response = chartResponse();
+        assertEquals(List.of(3.0, 4.0), client.getInvEnergyYearChart(new EnergyRequest("demo-plant", "2025")).getObj().getEnergy());
+        response = chartResponse();
+        assertEquals(List.of(3.0, 4.0), client.getInvEnergyTotalChart(new EnergyRequest("demo-plant", "invalid-year")).getObj().getEnergy());
+        assertEquals(List.of("/energy/compare/getDevicesMonthChart", "/energy/compare/getDevicesYearChart",
+                "/energy/compare/getDevicesTotalChart"), requests.stream().map(r -> r.url().getPath()).toList());
+    }
+
+    @Test
+    void missingChartSeriesAndEmptyBodiesYieldNoData() {
+        for (String body : new String[] {"", "{\"obj\":null}", "{\"obj\":[]}", "{\"obj\":[null]}"}) {
+            response = ClientResponse.create(HttpStatus.OK).body(body).build();
+            assertFalse(client.getInvEnergyMonthChart(new EnergyRequest("demo-plant", "2025-01")).hasData());
+            response = ClientResponse.create(HttpStatus.OK).body(body).build();
+            assertFalse(client.getInvEnergyYearChart(new EnergyRequest("demo-plant", "bad")).hasData());
+            response = ClientResponse.create(HttpStatus.OK).body(body).build();
+            assertFalse(client.getInvEnergyTotalChart(new EnergyRequest("demo-plant", null)).hasData());
+        }
+    }
+
+    @Test
+    void mapsInverterAndDeviceTotalsIncludingMissingValues() {
+        String body = "{\"obj\":{\"datas\":[{\"eToday\":2.0,\"eTotal\":100.0,\"pac\":null}]}}";
+        response = ClientResponse.create(HttpStatus.OK).body(body).build();
+        var inverter = client.getInvTotalData(new EnergyRequest("demo-plant")).getObj();
+        assertEquals("2.0", inverter.getEpvToday());
+        assertEquals("100.0", inverter.getEpvTotal());
+        assertNull(inverter.getPac());
+        response = ClientResponse.create(HttpStatus.OK).body(body).build();
+        assertEquals(100.0, client.getTotalData(new EnergyRequest("demo-plant")).getObj().getETotal());
+        response = ClientResponse.create(HttpStatus.OK).body("{}").build();
+        assertFalse(client.getInvTotalData(new EnergyRequest("demo-plant")).hasData());
+        response = ClientResponse.create(HttpStatus.OK).body("invalid-json").build();
+        assertFalse(client.getInvTotalData(new EnergyRequest("demo-plant")).hasData());
+        assertTrue(requests.stream().allMatch(r -> r.url().getPath().equals("/panel/getDevicesByPlantList")));
+    }
+
+    @Test
+    void clientErrorsAreNotRetried() {
+        response = ClientResponse.create(HttpStatus.FORBIDDEN).body("fictional-provider-secret").build();
+        assertThrows(org.springframework.web.reactive.function.client.WebClientResponseException.Forbidden.class,
+                () -> client.getInvEnergyDayChart(new EnergyRequest("demo-plant", "2025-01-01")));
+        assertEquals(1, requests.size());
+    }
+
+    @Test
+    void retriesServerAndConnectionFailuresBeforeReturningData() {
+        AtomicInteger attempts = new AtomicInteger();
+        ReflectionTestUtils.setField(client, "client", WebClient.builder().baseUrl("https://isolated.example")
+                .exchangeFunction(request -> switch (attempts.incrementAndGet()) {
+                    case 1 -> Mono.just(ClientResponse.create(HttpStatus.SERVICE_UNAVAILABLE).build());
+                    case 2 -> Mono.error(new java.io.IOException("fictional connection reset"));
+                    default -> Mono.just(chartResponse());
+                }).build());
+        assertEquals(List.of(12.0), client.getInvEnergyDayChart(new EnergyRequest("demo-plant", "2025-01-01")).getObj().getPac());
+        assertEquals(3, attempts.get());
+    }
+
+    @Test
+    void persistentUpstreamFailuresStopAfterThreeAttempts() {
+        AtomicInteger attempts = new AtomicInteger();
+        ReflectionTestUtils.setField(client, "client", WebClient.builder().baseUrl("https://isolated.example")
+                .exchangeFunction(request -> {
+                    attempts.incrementAndGet();
+                    return Mono.just(ClientResponse.create(HttpStatus.SERVICE_UNAVAILABLE).build());
+                }).build());
+        assertThrows(RuntimeException.class,
+                () -> client.getInvEnergyDayChart(new EnergyRequest("demo-plant", "2025-01-01")));
+        assertEquals(3, attempts.get());
     }
 }

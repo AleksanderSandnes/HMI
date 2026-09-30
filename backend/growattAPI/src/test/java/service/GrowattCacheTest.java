@@ -21,6 +21,7 @@ import entity.EnergyRequest;
 import entity.MonthResponse;
 import entity.SolarDataCache;
 import entity.YearResponse;
+import entity.TotalDataResponse;
 import repository.SolarDataCacheRepository;
 
 class GrowattCacheTest {
@@ -136,5 +137,54 @@ class GrowattCacheTest {
         var result = service.getWeekChart(() -> client, new EnergyRequest("demo-plant", "2025-01-20"));
         assertEquals(java.util.Collections.nCopies(7, 0.0), result.getObj().getEnergy());
         verify(client).getInvEnergyMonthChart(any());
+    }
+
+    @Test
+    void snapshotUsesTodayAsCacheKeyAndPassesOriginalRequestUpstream() {
+        var request = new EnergyRequest("demo-plant", "ignored-client-date");
+        var response = new TotalDataResponse(1L, new TotalDataResponse.Obj());
+        when(client.getTotalData(request)).thenReturn(response);
+        assertSame(response, service.getTotalData(() -> client, request));
+        verify(repository, times(2)).findFirstByTypeAndPlantIdAndDate("SNAPSHOT", "demo-plant", LocalDate.now().toString());
+        verify(client).getTotalData(request);
+    }
+
+    @Test
+    void yearChartDelegatesToTheYearEndpoint() {
+        var request = new EnergyRequest("demo-plant", "2025");
+        var response = new YearResponse(1L, new YearResponse.Obj(List.of(12.0)));
+        when(client.getInvEnergyYearChart(request)).thenReturn(response);
+        assertSame(response, service.getYearChart(() -> client, request));
+        verify(repository).save(argThat(row -> row.getType().equals("YEAR") && row.getDate().equals("2025")));
+    }
+
+    @Test
+    void backfillSavesOnlySuccessfulProductionAndToleratesWriteFailures() {
+        service.backfillDayChart("demo-plant", "2025-01-01", null);
+        service.backfillDayChart("demo-plant", "2025-01-01", new DayResponse(null, production.getObj()));
+        service.backfillDayChart("demo-plant", "2025-01-01", new DayResponse(0L, production.getObj()));
+        service.backfillDayChart("demo-plant", "2025-01-01", new DayResponse(1L, new DayResponse.Obj(List.of())));
+        verify(repository, never()).save(any());
+        service.backfillDayChart("demo-plant", "2025-01-01", production);
+        verify(repository).save(argThat(row -> row.getPayload().contains("1200.0") && row.getCachedAt() != null));
+        when(repository.save(any())).thenThrow(new IllegalStateException("fictional write failure"));
+        assertDoesNotThrow(() -> service.backfillDayChart("demo-plant", "2025-01-01", production));
+    }
+
+    @Test
+    void unsuccessfulLiveResponsesAreNeverCachedEvenForCurrentPeriods() {
+        var request = new EnergyRequest("demo-plant", LocalDate.now().toString());
+        for (DayResponse response : new DayResponse[] {null, new DayResponse(null, null), new DayResponse(0L, production.getObj())}) {
+            when(client.getInvEnergyDayChart(request)).thenReturn(response);
+            assertSame(response, service.getDayChart(() -> client, request));
+        }
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void invalidWeekDatesUseTodayAndMissingMonthsProduceSevenZeroes() {
+        var result = service.getWeekChart(() -> client, new EnergyRequest("demo-plant", "invalid-date"));
+        assertEquals(java.util.Collections.nCopies(7, 0.0), result.getObj().getEnergy());
+        assertEquals(LocalDate.now().toString(), result.getObj().getDays().get(6));
     }
 }

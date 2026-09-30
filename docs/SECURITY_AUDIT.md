@@ -111,3 +111,13 @@ Login rejects HTTP/provider/parse failures and clears stale cookies. Tests cover
 redaction, authentication failures, account-scoped Vault lookup, cache fallback
 and independent backfills. Maven verification passes 63 tests with one live-provider
 skip. Production deployment verification remains open.
+
+## Local password hashing (2026-09-30, Linux continuation)
+
+Growatt login previously downloaded and executed MD5.js from the provider for
+every password hash. Replaced runtime JavaScript execution with Java's local
+UTF-8 MessageDigest and removed Nashorn. Six fixed vectors (ASCII, empty string,
+Norwegian characters, Chinese/emoji and CRLF) match the fetched provider script.
+Tests fail closed for null passwords and an unavailable digest implementation.
+MD5 remains the provider-required wire format; this does not change local password
+storage. Deployment and an explicitly enabled live-provider test remain pending.
