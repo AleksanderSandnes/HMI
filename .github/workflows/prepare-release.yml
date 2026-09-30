@@ -38,6 +38,7 @@ jobs:
         id: version
         run: |
           node scripts/release/release.mjs prepare --base origin/main
+          if [ -f CHANGELOG.md ]; then git add --intent-to-add CHANGELOG.md; fi
           git diff > "$RUNNER_TEMP/release.patch"
           git diff --stat >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
