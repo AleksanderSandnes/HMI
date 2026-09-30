@@ -194,18 +194,19 @@ async function fetchHourlySolarData(
 const AGGREGATED: SolarTimespan[] = ["weekly", "monthly", "yearly", "total"];
 
 async function checkApiHealth(baseUrl: string): Promise<boolean> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
     const response = await fetch(`${baseUrl}${ENDPOINTS.health}`, {
       method: "GET",
       signal: controller.signal,
     });
-    clearTimeout(timeoutId);
     return response.ok;
   } catch (error) {
     console.error("[GrowattAPI] Health check failed:", error);
     return false;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
