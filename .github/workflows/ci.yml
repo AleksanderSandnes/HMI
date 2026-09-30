@@ -42,6 +42,28 @@ jobs:
           java-version: 17
           cache: maven
       - run: mvn --batch-mode verify
+      - name: Report backend coverage
+        if: always()
+        run: |
+          python3 <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+          report = ET.parse('target/site/jacoco/jacoco.xml').getroot()
+          rows = ['## Java backend coverage', '', '| Metric | Coverage | Covered / total |', '| --- | --- | --- |']
+          for counter in report.findall('counter'):
+              covered = int(counter.attrib['covered'])
+              total = covered + int(counter.attrib['missed'])
+              percentage = 100 * covered / total if total else 100
+              rows.append(f"| {counter.attrib['type']} | {percentage:.2f}% | {covered} / {total} |")
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('\n'.join(rows) + '\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/growattAPI/target/site/jacoco
+          if-no-files-found: error
 
   build:
     runs-on: ubuntu-latest

@@ -117,6 +117,15 @@ shared logout API propagates rejected results; three settings tests verify succe
 navigation and visible failures without false navigation. Overall coverage remains
 below target: the last full-source baseline was web 20.88% and mobile 29.8% lines.
 
+The Java backend now records JaCoCo coverage during `mvn verify`, includes all
+compiled production classes without custom exclusions, and produces HTML/XML/CSV
+reports in `backend/growattAPI/target/site/jacoco`. CI publishes all counters in
+the job summary and uploads the report; a missing report fails the reporting step.
+The first JDK 17 run passes 29 tests (one existing skip) with 23% lines (112/487),
+35.98% branches and 26.24% instructions across 27 executable classes. Largest
+gaps are GrowattWebClient, GrowattDataService, SolarBackfillJob and session/error
+handling. This is a measured baseline, not a completed coverage gate.
+
 The installed Vercel connector lists HMI and `thefamilyapp-web`, but deployment
 access to their account scope returns HTTP 403. Its project-details tool also
 returns an input-validation error with the documented arguments. Ownership and
