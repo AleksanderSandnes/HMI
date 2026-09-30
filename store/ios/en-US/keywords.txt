@@ -1,0 +1,1 @@
+solar,growatt,energy,weather,dashboard,photovoltaic,inverter,home,monitor,pv
