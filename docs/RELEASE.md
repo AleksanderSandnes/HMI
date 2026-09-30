@@ -18,6 +18,18 @@ immutable version tag and a **draft** GitHub Release. Repeated runs reuse the
 same release and reject a tag that points to another commit. Publish the draft
 only after the owner reviews the release. This workflow does not upload to stores.
 
+`mobile-release.yml` is a manual (`workflow_dispatch`) Android build through EAS. It is
+inactive until `RELEASE_MOBILE_ENABLED=true` and only runs on `main`. `verify` requires the
+production tip to pass every workflow in `pipeline.json` plus the version/build/changelog
+checks. `build` runs in the `production` environment (owner approval): it pulls the EAS
+production environment into a temporary file, validates it as data
+(`scripts/release/client-config.mjs`: production project URL, publishable or anon key only,
+no secret/service-role key, `EXPO_PUBLIC_DATA_MODE=production`), checks `app.json` against
+the verified version and build, then runs `eas build --freeze-credentials` with the stored
+signing credentials. The optional `play-internal` job needs the `submit_to_play` input,
+`RELEASE_PLAY_ENABLED=true` and a `play-internal` environment approval. It has not been run
+and no paid EAS build has been started; `EXPO_TOKEN` and the Play key are owner actions.
+
 Both activation variables are currently unset. Production branches, environment
 protections, credentials and activation must be reviewed before enabling them.
 Coverage targets, signed native build/store jobs and the first approved production
