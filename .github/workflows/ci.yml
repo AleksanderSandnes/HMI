@@ -91,6 +91,30 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test
+      - name: Report core coverage
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'packages/core/coverage/coverage-summary.json';
+          if (!fs.existsSync(path)) {
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, 'Core coverage report was not produced.\n');
+            process.exit(0);
+          }
+          const { total } = JSON.parse(fs.readFileSync(path, 'utf8'));
+          const rows = ['## Shared core coverage', '', '| Metric | Coverage | Covered / total |', '| --- | --- | --- |'];
+          for (const metric of ['lines', 'branches', 'functions', 'statements']) {
+            const value = total[metric];
+            rows.push(`| ${metric} | ${value.pct}% | ${value.covered} / ${value.total} |`);
+          }
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, rows.join('\n') + '\n');
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: core-coverage
+          path: packages/core/coverage
+          if-no-files-found: warn
 
   # Preserve the rest of the quality gate (Prettier + typecheck) so it does not
   # regress alongside the per-package lint + test jobs.

@@ -59,12 +59,11 @@ export function validateRegisterAccount(
     schema.validateSync(account, { abortEarly: false });
     return {};
   } catch (err) {
+    if (!(err instanceof Yup.ValidationError)) throw err;
     const map: Record<string, string> = {};
-    if (err instanceof Yup.ValidationError) {
-      err.inner.forEach((e) => {
-        if (e.path && !map[e.path]) map[e.path] = e.message;
-      });
-    }
+    err.inner.forEach((e) => {
+      if (e.path && !map[e.path]) map[e.path] = e.message;
+    });
     return map;
   }
 }

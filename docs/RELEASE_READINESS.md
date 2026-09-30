@@ -68,6 +68,18 @@ health probe now clears its timeout on success, HTTP failure, transport failure,
 and abort; all four cases are tested. That fix passed local full checks and CI,
 CodeQL and secret scanning before advancing into `test`.
 
+The core now passes all four coverage metrics at 100% with 244 tests. Coverage is
+enabled on every core test run and includes all source TypeScript except test
+files. Per-file thresholds enforce 100% lines, branches, functions and statements;
+CI publishes the summary and coverage artifact. Removed an unreachable label
+formatting branch (the sampler always uses 12 points per hour) and a redundant
+fallback after the weather extractor, which always returns at least one series.
+Unexpected registration-validator failures now propagate instead of returning an
+empty validation-error map. Web/mobile/backend and Family coverage targets remain
+open; this result does not mark the overall coverage phase complete.
+An unimported, untested temporary source module was rejected by the per-file gate
+with 0% lines/functions/statements; the probe was removed before final checks.
+
 The installed Vercel connector lists HMI and `thefamilyapp-web`, but deployment
 access to their account scope returns HTTP 403. Its project-details tool also
 returns an input-validation error with the documented arguments. Ownership and
