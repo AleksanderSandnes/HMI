@@ -1,20 +1,32 @@
 /**
  * Supabase client for the mobile app — the single source of truth for auth +
  * data access. The session (access + refresh token) is persisted and
- * auto-refreshed by supabase-js using AsyncStorage on native (localStorage on
+ * auto-refreshed by supabase-js using encrypted SecureStore on native (localStorage on
  * web), so callers read the current token via {@link getAccessToken} rather than
  * a cached copy. Mirrors apps/web/lib/supabase/client.ts (which uses @supabase/ssr
- * cookies); here we use the AsyncStorage adapter instead.
+ * cookies). Existing native AsyncStorage sessions migrate to encrypted storage.
  */
 import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./env";
+import { createSessionStorage } from "./sessionStorage";
 
-/** localStorage on web; AsyncStorage on native. */
-const storage = Platform.OS === "web" ? undefined : AsyncStorage;
+const secureStorage = createSessionStorage(
+  {
+    getItem: (key) => SecureStore.getItemAsync(key),
+    setItem: (key, value) =>
+      SecureStore.setItemAsync(key, value, {
+        keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
+      }),
+    removeItem: (key) => SecureStore.deleteItemAsync(key),
+  },
+  AsyncStorage,
+);
+const storage = Platform.OS === "web" ? undefined : secureStorage;
 
 export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
