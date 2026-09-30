@@ -1,0 +1,49 @@
+name: Promotion Source
+on:
+  push:
+    branches: [main, test, "task/**"]
+  pull_request:
+    branches: [main, test]
+  pull_request_target:
+    branches: [main, test]
+permissions:
+  contents: read
+concurrency:
+  group: promotion-${{ github.event_name }}-${{ github.ref }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  promotion-policy-tests:
+    if: github.event_name != 'pull_request_target'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Test promotion policy
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+  trusted-promotion-check:
+    if: github.event_name == 'pull_request_target'
+    permissions:
+      contents: read
+      statuses: write
+    runs-on: ubuntu-latest
+    steps:
+      # Evaluate only the trusted workflow revision, never pull-request code.
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - name: Validate pull request source
+        id: validate
+        env:
+          PRODUCTION_BRANCH: main
+        run: python3 .github/scripts/validate_promotion.py
+      - name: Report source result on the proposed head commit
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROMOTION_SHA: ${{ github.event.pull_request.head.sha }}
+          PROMOTION_STATE: ${{ steps.validate.outcome == 'success' && 'success' || 'failure' }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$PROMOTION_SHA" \
+            -f state="$PROMOTION_STATE" -f context=promotion-source \
+            -f description='Protected branch source validation' \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" > /dev/null

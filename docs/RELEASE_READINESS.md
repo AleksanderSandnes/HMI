@@ -21,7 +21,7 @@ progress; unchecked work is not release-ready.
 - [x] Supabase CLI, Gitleaks, Maestro, ADB, bundletool and Android SDK installed.
 - [x] JDK 17 available in Gradle's provisioned toolchain cache.
 - [x] Supabase authentication, linking and live security/performance advisor audits.
-- [ ] Branch protections and reviewed stale-branch cleanup proposal.
+- [ ] Complete branch protection: quality protections are live on main/test; trusted source enforcement, release-bot provisioning and reviewed branch cleanup remain open.
 - [ ] Security audit and fixes across both repositories and deployed services.
 - [ ] Domains, support email, SMTP and app-link association files.
 - [ ] Common-mistakes checklist verified with evidence.

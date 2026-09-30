@@ -26,6 +26,8 @@ jobs:
         include:
           - language: javascript-typescript
             mode: none
+          - language: python
+            mode: none
           - language: actions
             mode: none
           - language: java-kotlin
