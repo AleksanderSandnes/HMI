@@ -60,6 +60,14 @@ The resulting 192 core tests pass: 96.88% lines, 95.70% statements, 87.16% branc
 and 94.68% functions. The plan's 100% core target is still open; no threshold has
 been lowered or uncovered production code excluded to satisfy it.
 
+Additional provider-response, period-math, localization and dashboard-query tests
+bring the core to 233 passing tests, 100% lines and functions, 99.38% statements,
+and 96.22% branches. Remaining branch gaps include date/translation fallbacks and
+validation error handling; the 100% branch gate remains unfinished. The Growatt
+health probe now clears its timeout on success, HTTP failure, transport failure,
+and abort; all four cases are tested. That fix passed local full checks and CI,
+CodeQL and secret scanning before advancing into `test`.
+
 The installed Vercel connector lists HMI and `thefamilyapp-web`, but deployment
 access to their account scope returns HTTP 403. Its project-details tool also
 returns an input-validation error with the documented arguments. Ownership and

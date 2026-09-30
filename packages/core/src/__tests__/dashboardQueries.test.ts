@@ -42,6 +42,8 @@ describe("dashboardQueries", () => {
     expect(deps.growatt.fetchSolarData).toHaveBeenCalledWith("weekly", "2026-02-28");
     await q.weatherWeek.queryFn();
     expect(deps.weather.getWeeklyHourlyWeatherData).toHaveBeenCalledWith("20260228");
+    await expect(q.weatherCurrent.queryFn()).resolves.toBe("current");
+    expect(deps.weather.getCurrentWeatherData).toHaveBeenCalledOnce();
   });
 
   it("keeps solar cached indefinitely and current weather on a 60s cycle", () => {
