@@ -57,7 +57,7 @@ function type(root: TestRenderer.ReactTestInstance, label: string, value: string
   const field = root.findAll(
     (n) => typeof n.props.onChangeText === "function" && n.props.label === label,
   )[0];
-  act(() => field.props.onChangeText(value));
+  void act(() => field.props.onChangeText(value));
 }
 
 async function pressButton(root: TestRenderer.ReactTestInstance, label: string) {
@@ -103,7 +103,7 @@ describe("AccountForm", () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     const root = mount(<AccountForm {...props} account={account as never} />);
     const change = root.findAll((n) => n.props.accessibilityLabel === "Change photo")[0];
-    act(() => change.props.onPress());
+    void act(() => change.props.onPress());
     const buttons = alert.mock.calls[0][2] as { text: string; onPress?: () => void }[];
     expect(buttons.map((b) => b.text)).toHaveLength(3);
 
@@ -138,7 +138,7 @@ describe("AccountForm", () => {
   it("does nothing when permission is denied or the picker is cancelled", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     const root = mount(<AccountForm {...props} account={account as never} />);
-    act(() =>
+    void act(() =>
       root.findAll((n) => n.props.accessibilityLabel === "Change photo")[0].props.onPress(),
     );
     const buttons = alert.mock.calls[0][2] as { onPress?: () => void }[];
@@ -160,7 +160,7 @@ describe("AccountForm", () => {
   it("uses webp and default mime types from the file extension", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     const root = mount(<AccountForm {...props} account={account as never} />);
-    act(() =>
+    void act(() =>
       root.findAll((n) => n.props.accessibilityLabel === "Change photo")[0].props.onPress(),
     );
     const buttons = alert.mock.calls[0][2] as { onPress?: () => void }[];

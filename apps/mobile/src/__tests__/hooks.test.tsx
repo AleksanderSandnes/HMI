@@ -1,16 +1,16 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { Platform } from "react-native";
 import TestRenderer, { act } from "react-test-renderer";
 
+import { usePushRegistration } from "../hooks/usePushRegistration";
+import { I18nProvider, useI18n, useI18nBootstrap } from "../lib/i18n";
+import { getAccessToken, getCurrentUserId } from "../lib/supabase";
 import { useAvatar } from "../lib/useAvatar";
 import { useDashboardData } from "../lib/useDashboardData";
-import { I18nProvider, useI18n, useI18nBootstrap } from "../lib/i18n";
 import { useLogout } from "../lib/useLogout";
 import { useNotifications } from "../lib/useNotifications";
-import { usePushRegistration } from "../hooks/usePushRegistration";
-import { getAccessToken, getCurrentUserId } from "../lib/supabase";
 
 const mockCore = {
   notifications: {
