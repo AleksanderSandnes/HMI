@@ -14,7 +14,7 @@ MCP at https://mcp.supabase.com/mcp is configured and OAuth-authenticated
 CLI works and has performed verified live queries/deployments.
 
 HMI:
-- Latest pushed task commit fe3d5d4. Task CI 36762633169, Security, CodeQL,
+- Latest pushed task commit b1f6651. Task CI 36767240387 and PR CI 36767246382, Security, CodeQL,
   Promotion Source all passed. PR #46 targets test:
   https://github.com/AleksanderSandnes/HMI/pull/46
 - Fixed Node 22 release test discovery, isolated CI DB ports and deletion-test
@@ -53,8 +53,13 @@ Family:
 - Media buckets remain PUBLIC pending released signed-URL clients/minimum version.
   Initial schema/Storage/Auth/Realtime/cron bootstrap still needs reconciliation.
 - Coverage remains far below target: iOS artifact 20.43% lines (5001/24482);
-  Android coverage gates not established. iOS job summary was fixed to avoid1MiB
+  Android Kover is now measured: 13.20% overall / 43.72% logic. Gates still open. iOS job summary was fixed to avoid1MiB
   overflow while retaining full artifacts.
+
+HMI full coverage now measured across all production files: web 50.20% after
+date-picker behavior tests, mobile 36.26%, core 100%. Family website home/privacy
+restored to HTTP 200 by rebuilding the same previous production source with the
+correct existing web root. New legal pages still need validation/publication.
 
 Remaining original scope: complete registration/SMTP/domain/app-link work, security
 rotation/dependency/platform audit, full coverage gates/UI/E2E tests, version and

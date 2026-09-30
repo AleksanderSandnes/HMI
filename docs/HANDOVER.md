@@ -1,5 +1,19 @@
 # Release readiness handover — 30 September 2026
 
+## Full web coverage baseline — 30 September 2026
+
+`npm run test:coverage --workspace @hmi/web` now explicitly includes all production
+app, component and library sources, including files no test imports. The earlier
+imported-file report was incomplete. Correct baseline: 39.38% lines. Date-picker
+interaction tests cover day/month/year selection, boundaries, dismissal, loading
+and Norwegian labels; full web coverage is now 50.20% (492/980 lines).
+
+The command uses two workers to avoid resource pressure during coverage reporting.
+HTML, JSON summary and LCOV reports are generated under `apps/web/coverage/`.
+The 80% overall / 90% logic requirements are still unmet; reporting is not a gate.
+Full mobile coverage also passed all 92 tests: 36.26% lines (466/1285).
+CI now collects and saves full web/mobile reports alongside the core report.
+
 ## Email confirmation client implementation — 30 September 2026
 
 Web and mobile registration now wait for an email code when signup returns no
