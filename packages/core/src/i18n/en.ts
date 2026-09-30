@@ -182,6 +182,16 @@ export const en = {
   "auth.login.createOne": "Create one",
 
   // Auth — register
+  "auth.register.confirmTitle": "Confirm your email",
+  "auth.register.confirmSubtitle": "Enter the code sent to your email to continue.",
+  "auth.register.codeLabel": "Confirmation code",
+  "auth.register.codeHint": "The code expires after ten minutes. Check your spam folder if needed.",
+  "auth.register.confirm": "Confirm email",
+  "auth.register.resend": "Send a new code",
+  "auth.register.resent": "A new confirmation code has been sent.",
+  "auth.register.codeRequired": "Enter the confirmation code from your email.",
+  "auth.register.confirmFailed":
+    "Could not confirm your email. Check the code or request a new one.",
   "auth.register.stepAccount": "Account",
   "auth.register.stepSolar": "Solar",
   "auth.register.stepWeather": "Weather",

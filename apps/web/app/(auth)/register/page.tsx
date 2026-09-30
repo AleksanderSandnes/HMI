@@ -27,6 +27,10 @@ const STEPS = [
 ] as const;
 
 const HEADERS: Record<number, { titleKey: TranslationKey; subtitleKey: TranslationKey }> = {
+  3: {
+    titleKey: "auth.register.confirmTitle",
+    subtitleKey: "auth.register.confirmSubtitle",
+  },
   0: {
     titleKey: "auth.register.createAccountTitle",
     subtitleKey: "auth.register.createAccountSubtitle",
@@ -70,11 +74,11 @@ async function runCreateAccount(d: CreateAccountDeps) {
   if (Object.keys(errs).length) return;
   d.setSaving(true);
   try {
-    await d.auth.registerUser({
+    const user = await d.auth.registerUser({
       email: d.account.email.trim(),
       password: d.account.password,
     });
-    d.setStep(1);
+    d.setStep(user.token ? 1 : 3);
   } catch (e) {
     d.setAccountError(coreErrorMessage(e, d.t, d.t("auth.register.failed")));
   } finally {
@@ -135,6 +139,39 @@ async function runFinish(d: FinishDeps) {
   }
 }
 
+interface ConfirmEmailDeps {
+  auth: Core["auth"];
+  email: string;
+  code: string;
+  resend: boolean;
+  t: Translator;
+  setAccountError: Setter<string | null>;
+  setConfirmationNotice: Setter<string | null>;
+  setSaving: Setter<boolean>;
+  setCode: Setter<string>;
+  done: () => void;
+}
+
+async function runConfirmEmail(d: ConfirmEmailDeps) {
+  d.setAccountError(null);
+  d.setConfirmationNotice(null);
+  d.setSaving(true);
+  try {
+    if (d.resend) {
+      await d.auth.resendConfirmation(d.email);
+      d.setConfirmationNotice(d.t("auth.register.resent"));
+    } else {
+      await d.auth.confirmRegistration(d.email, d.code);
+      d.done();
+    }
+    d.setCode("");
+  } catch (error) {
+    d.setAccountError(coreErrorMessage(error, d.t, d.t("auth.register.confirmFailed")));
+  } finally {
+    d.setSaving(false);
+  }
+}
+
 function useRegisterFlow() {
   const { auth, settings } = useCore();
   const { t } = useI18n();
@@ -152,6 +189,25 @@ function useRegisterFlow() {
   const [stepError, setStepError] = useState<string | null>(null);
   const [accountError, setAccountError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [code, setCode] = useState("");
+  const [confirmationNotice, setConfirmationNotice] = useState<string | null>(null);
+
+  const confirmEmail = (resend = false) =>
+    runConfirmEmail({
+      auth,
+      email: account.email,
+      code,
+      resend,
+      t,
+      setAccountError,
+      setConfirmationNotice,
+      setSaving,
+      setCode,
+      done: () => {
+        setAccount((current) => ({ ...current, password: "", confirmPassword: "" }));
+        setStep(1);
+      },
+    });
 
   const finalize = () => {
     router.replace("/dashboard");
@@ -164,6 +220,10 @@ function useRegisterFlow() {
     account,
     setAccount,
     accountErrors,
+    code,
+    setCode,
+    confirmationNotice,
+    confirmEmail,
     growatt,
     setGrowatt,
     weather,
@@ -204,6 +264,42 @@ function RegisterHeader({ header }: { header: (typeof HEADERS)[number] }) {
         {t(header.titleKey)}
       </h1>
       <p className="mt-1.5 text-sm font-medium text-text-muted">{t(header.subtitleKey)}</p>
+    </div>
+  );
+}
+
+function ConfirmationStep({ flow }: { flow: RegisterFlow }) {
+  const { t } = useI18n();
+  return (
+    <div>
+      <StatusBanner kind="info" message={flow.account.email} />
+      {flow.confirmationNotice ? (
+        <StatusBanner kind="success" message={flow.confirmationNotice} />
+      ) : null}
+      <Field
+        label={t("auth.register.codeLabel")}
+        aria-label={t("auth.register.codeLabel")}
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        hint={t("auth.register.codeHint")}
+        value={flow.code}
+        onChange={(event) => flow.setCode(event.target.value)}
+        disabled={flow.saving}
+      />
+      <Button
+        label={t("auth.register.confirm")}
+        onClick={() => flow.confirmEmail()}
+        loading={flow.saving}
+      />
+      <Button
+        label={t("auth.register.resend")}
+        variant="ghost"
+        onClick={() => flow.confirmEmail(true)}
+        disabled={flow.saving}
+      />
+      <Link href="/login" className="mt-4 block text-center text-sm font-bold text-solar-light">
+        {t("auth.register.signIn")}
+      </Link>
     </div>
   );
 }
@@ -352,12 +448,13 @@ export default function RegisterPage() {
 
   return (
     <GlassCard strong elevated className="w-full max-w-[28.75rem] p-8 sm:p-9">
-      <StepIndicator step={step} />
+      <StepIndicator step={step === 3 ? 0 : step} />
       <RegisterHeader header={header} />
 
       {accountError ? <StatusBanner kind="error" message={accountError} /> : null}
       {stepError ? <StatusBanner kind="error" message={stepError} /> : null}
 
+      {step === 3 ? <ConfirmationStep flow={flow} /> : null}
       {step === 0 ? <AccountStep flow={flow} /> : null}
       {step === 1 ? <GrowattStep flow={flow} /> : null}
       {step === 2 ? <WeatherStep flow={flow} /> : null}

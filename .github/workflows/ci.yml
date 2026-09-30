@@ -47,6 +47,8 @@ jobs:
         run: supabase start --exclude realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - name: Verify account deletion through real Auth, Storage and Vault
         run: deno run --allow-env --allow-net --allow-run --allow-read supabase/tests/account_deletion_http.ts .
+      - name: Verify email confirmation through real Auth
+        run: deno run --allow-env --allow-net --allow-run --allow-read supabase/tests/email_confirmation_http.ts .
       - name: Stop stack
         if: always()
         run: supabase stop --no-backup

@@ -32,7 +32,7 @@ const account = {
 describe("runCreateAccount", () => {
   it("registers and advances to the solar step", async () => {
     const spies = setterSpies();
-    const registerUser = jest.fn().mockResolvedValue({});
+    const registerUser = jest.fn().mockResolvedValue({ token: "session" });
     await runCreateAccount({
       auth: { registerUser } as never,
       account,
@@ -46,6 +46,19 @@ describe("runCreateAccount", () => {
     });
     expect(spies.setStep).toHaveBeenCalledWith(1);
     expect(spies.setSaving).toHaveBeenLastCalledWith(false);
+  });
+
+  it("waits for email confirmation when signup has no session", async () => {
+    const spies = setterSpies();
+    await runCreateAccount({
+      auth: { registerUser: jest.fn().mockResolvedValue({ token: null }) } as never,
+      account,
+      schema,
+      t,
+      ...spies,
+    });
+    expect(spies.setStep).toHaveBeenCalledWith(3);
+    expect(spies.setStep).not.toHaveBeenCalledWith(1);
   });
 
   it("short-circuits on validation errors without calling the api", async () => {

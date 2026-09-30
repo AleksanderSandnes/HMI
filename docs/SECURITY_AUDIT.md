@@ -1,5 +1,19 @@
 # Security audit — in progress
 
+## Email confirmation client implementation — 30 September 2026
+
+Web and mobile registration now wait for an email code when signup returns no
+session. The shared Auth API verifies the code and supports resending; integration
+onboarding starts only after a real session exists. English/Norwegian messages,
+web/native behavior tests, and a local confirmation email template are included.
+Nine real localhost Auth/profile checks passed (unconfirmed login and reused codes
+are denied), and Mailpit delivered the expected signup email. Local Auth now uses
+confirmation, eight-character new passwords and a ten-minute code expiry.
+
+Production still auto-confirms: deploy the updated clients, configure verified
+SMTP, apply the code template, then enable confirmation and smoke-test delivery.
+The remaining Pro-only leaked-password protection warning is accepted by the owner.
+
 > Owner decision (2026-09-30): accept the remaining Pro-only leaked-password
 > protection warning in both projects. No upgrade is required; this warning
 > does not block release readiness. Other security requirements still apply.
@@ -24,10 +38,10 @@ uploads, screenshots, coverage gates and complete bootstrap still require work.
   warning (leaked-password protection), down from nine.
 - A fresh disposable stack replayed all repository migrations; real account
   deletion passed 23 Auth/Storage/Vault checks. Full npm check/tests passed.
-- Live Auth still auto-confirms email, permits six-character passwords, uses
+- Live Auth still auto-confirms email, requires eight-character new passwords (verified through Management API read-back), uses
   default SMTP and has no redirect allow-list. Confirmation/onboarding handling
-  must be fixed before enabling email confirmation. Core registration currently
-  permits four characters, so validators also need alignment.
+  must be fixed before enabling email confirmation. Core registration now requires eight characters; existing login passwords
+  remain accepted. Both projects now expire email OTPs after 600 seconds.
 
 Date: 2026-09-29. Scope: tracked source, dependency tree and all local Git refs.
 Supabase CLI authenticated and linked on 2026-09-30; live policy review is in progress. Render/Vercel production configuration remains unverified.

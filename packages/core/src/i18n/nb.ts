@@ -182,6 +182,16 @@ export const nb: Record<TranslationKey, string> = {
   "auth.login.createOne": "Opprett en",
 
   // Auth — register
+  "auth.register.confirmTitle": "Bekreft e-postadressen",
+  "auth.register.confirmSubtitle": "Skriv inn koden du fikk på e-post for å fortsette.",
+  "auth.register.codeLabel": "Bekreftelseskode",
+  "auth.register.codeHint": "Koden utløper etter ti minutter. Sjekk søppelpostmappen om nødvendig.",
+  "auth.register.confirm": "Bekreft e-post",
+  "auth.register.resend": "Send en ny kode",
+  "auth.register.resent": "En ny bekreftelseskode er sendt.",
+  "auth.register.codeRequired": "Skriv inn bekreftelseskoden fra e-posten.",
+  "auth.register.confirmFailed":
+    "Kunne ikke bekrefte e-postadressen. Sjekk koden eller be om en ny.",
   "auth.register.stepAccount": "Konto",
   "auth.register.stepSolar": "Sol",
   "auth.register.stepWeather": "Vær",
