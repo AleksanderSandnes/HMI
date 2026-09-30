@@ -309,6 +309,7 @@ export const nb: Record<TranslationKey, string> = {
   "validation.emailRequired": "E-post er påkrevd",
   "validation.emailInvalid": "Oppgi en gyldig e-postadresse",
   "validation.passwordRequired": "Passord er påkrevd",
+  "validation.registrationPasswordMin": "Passordet må være minst 8 tegn",
   "validation.passwordMin": "Passordet må være minst 4 tegn",
   "validation.passwordsMustMatch": "Passordene må være like",
   "validation.confirmPassword": "Bekreft passordet ditt",

@@ -25,8 +25,8 @@ function setterSpies() {
 
 const account = {
   email: "user@example.com",
-  password: "secret",
-  confirmPassword: "secret",
+  password: "secret12",
+  confirmPassword: "secret12",
 };
 
 describe("runCreateAccount", () => {
@@ -42,7 +42,7 @@ describe("runCreateAccount", () => {
     });
     expect(registerUser).toHaveBeenCalledWith({
       email: "user@example.com",
-      password: "secret",
+      password: "secret12",
     });
     expect(spies.setStep).toHaveBeenCalledWith(1);
     expect(spies.setSaving).toHaveBeenLastCalledWith(false);

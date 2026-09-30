@@ -306,6 +306,7 @@ export const en = {
   "validation.emailRequired": "Email is required",
   "validation.emailInvalid": "Email must be a valid email",
   "validation.passwordRequired": "Password is required",
+  "validation.registrationPasswordMin": "Password must be at least 8 characters",
   "validation.passwordMin": "Password must be at least 4 characters",
   "validation.passwordsMustMatch": "Passwords must match",
   "validation.confirmPassword": "Please confirm your password",

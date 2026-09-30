@@ -1,5 +1,9 @@
 # Release readiness tracker
 
+> Owner decision (2026-09-30): accept the remaining Pro-only leaked-password
+> protection warning in both projects. No upgrade is required; this warning
+> does not block release readiness. Other security requirements still apply.
+
 ## Verified continuation — 30 September 2026, 20:46 Oslo
 
 This section supersedes older rollout status below. The full plan is still open.
