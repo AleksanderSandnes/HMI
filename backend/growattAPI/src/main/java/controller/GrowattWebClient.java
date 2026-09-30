@@ -14,8 +14,8 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
 
 import entity.DayResponse;
 import entity.EnergyRequest;
@@ -67,8 +67,8 @@ public class GrowattWebClient {
 
 	private final WebClient client;
 
-	private final ObjectMapper objectMapper = new ObjectMapper()
-			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	private final ObjectMapper objectMapper = tools.jackson.databind.json.JsonMapper.builder()
+			.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
 
 	/** Constructor without a proxy. */
 	public GrowattWebClient() {

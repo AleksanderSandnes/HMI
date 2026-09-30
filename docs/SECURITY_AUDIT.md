@@ -36,9 +36,15 @@ until each has evidence.
   wildcard previews. Bearer auth does not enable credentialed cookie CORS.
 - Only health probes are public; production actuator exposes health without details.
   JWT configuration now validates issuer and authenticated audience.
-- Maven verify passes: 27 tests, zero failures/errors, one existing skipped test.
+- Maven verify passes on JDK 17: 28 tests, zero failures/errors, one existing skipped test.
   Five new security tests exercise unauthorized endpoints, bearer requests and CORS.
-- Added Maven verification and core/Next builds to CI; remote result pending.
+- Added Maven verification and core/Next builds to CI; checks passed on task/test
+  before the dependency update. The dependency update requires a fresh CI run.
+- Upgraded Spring Boot 3.5.3 through verified 3.5.16 to 4.1.1 and Nashorn 15.6 to
+  15.7. Adapted modular web/security test starters, EntityScan, Jackson 3 mappers
+  and the Spring Security header DSL. Full production-profile startup with an
+  isolated in-memory database verifies public health and protected data/actuator
+  routes. Render deployment and real database smoke testing remain pending.
 - Supabase advisors still report leaked-password protection, one mutable search path,
   pg_net extension placement and callable privileged functions. Review remains open.
 
