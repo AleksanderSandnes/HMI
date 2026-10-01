@@ -19,7 +19,8 @@
     "web": "npm --workspace @hmi/web run dev",
     "mobile": "npm --workspace @hmi/mobile run start",
     "release:prepare": "node scripts/release/release.mjs prepare",
-    "test:release": "node --test scripts/release/*.test.mjs"
+    "test:release": "node --test scripts/release/*.test.mjs",
+    "store:screenshots": "node scripts/capture-store-screenshots.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
