@@ -20,6 +20,7 @@ import { Frame } from "./chartFrame";
 import { axisTick, CURSOR, GRID_STROKE } from "./chartTheme";
 
 import { barGapPercent } from "@/lib/chart";
+import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
 import { useRemScale } from "@/lib/hooks/useRemScale";
 
 interface SolarChartProps {
@@ -162,6 +163,7 @@ function AreaView({
   width?: number;
   height?: number;
 }) {
+  const reducedMotion = useReducedMotion();
   return (
     <AreaChart width={width} height={height} data={chartData} margin={chartMargin(scale)}>
       <defs>
@@ -196,6 +198,7 @@ function AreaView({
         fill="url(#areaFill)"
         dot={false}
         activeDot={{ r: 5, fill: "#34d399", stroke: "#0a1124", strokeWidth: 2 }}
+        isAnimationActive={!reducedMotion}
       />
       <ReferenceDot x={peakLabel} y={max} r={9} fill="#f59e0b" fillOpacity={0.18} stroke="none" />
       <ReferenceDot x={peakLabel} y={max} r={4.5} fill="#fbbf24" stroke="#0a1124" strokeWidth={2} />

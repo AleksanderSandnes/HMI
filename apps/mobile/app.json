@@ -40,7 +40,8 @@
           "photosPermission": "HMI needs access to your photos so you can set a profile picture.",
           "cameraPermission": "HMI needs camera access so you can take a profile picture."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "router": {

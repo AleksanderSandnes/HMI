@@ -8,6 +8,9 @@ dist
 **/.expo
 build
 **/build
+**/target
+.claude/settings.local.json
+mise.local.toml
 coverage
 **/coverage
 android

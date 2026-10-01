@@ -16,6 +16,16 @@ function toItem(row: Record<string, any>): NotificationItem {
   };
 }
 
+async function fetchPushTokens(ctx: CoreApiContext, uid: string): Promise<string[]> {
+  const { data, error } = await ctx.supabase
+    .from("profiles")
+    .select("expo_push_tokens")
+    .eq("auth_id", uid)
+    .single();
+  if (error) throw new Error(error.message);
+  return data?.expo_push_tokens ?? [];
+}
+
 export function createNotificationsApi(ctx: CoreApiContext) {
   const { supabase, getCurrentUserId } = ctx;
 
@@ -72,29 +82,24 @@ export function createNotificationsApi(ctx: CoreApiContext) {
   async function registerPushToken(token: string): Promise<void> {
     const uid = await getCurrentUserId();
     if (!uid) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("expo_push_tokens")
-      .eq("auth_id", uid)
-      .single();
-    const tokens = new Set<string>(data?.expo_push_tokens ?? []);
+    const tokens = new Set<string>(await fetchPushTokens(ctx, uid));
     tokens.add(token);
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({ expo_push_tokens: [...tokens] })
       .eq("auth_id", uid);
+    if (error) throw new Error(error.message);
   }
 
   async function unregisterPushToken(token: string): Promise<void> {
     const uid = await getCurrentUserId();
     if (!uid) return;
-    const { data } = await supabase
+    const tokens = (await fetchPushTokens(ctx, uid)).filter((t) => t !== token);
+    const { error } = await supabase
       .from("profiles")
-      .select("expo_push_tokens")
-      .eq("auth_id", uid)
-      .single();
-    const tokens = (data?.expo_push_tokens ?? []).filter((t: string) => t !== token);
-    await supabase.from("profiles").update({ expo_push_tokens: tokens }).eq("auth_id", uid);
+      .update({ expo_push_tokens: tokens })
+      .eq("auth_id", uid);
+    if (error) throw new Error(error.message);
   }
 
   return {

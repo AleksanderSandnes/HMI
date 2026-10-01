@@ -27,7 +27,7 @@ export function createRegisterAccountSchema(t: Translator) {
       .label("Email"),
     password: Yup.string()
       .required(t("validation.passwordRequired"))
-      .min(4, t("validation.passwordMin"))
+      .min(8, t("validation.registrationPasswordMin"))
       .label("Password"),
     confirmPassword: Yup.string()
       .oneOf([Yup.ref("password")], t("validation.passwordsMustMatch"))
@@ -59,12 +59,11 @@ export function validateRegisterAccount(
     schema.validateSync(account, { abortEarly: false });
     return {};
   } catch (err) {
+    if (!(err instanceof Yup.ValidationError)) throw err;
     const map: Record<string, string> = {};
-    if (err instanceof Yup.ValidationError) {
-      err.inner.forEach((e) => {
-        if (e.path && !map[e.path]) map[e.path] = e.message;
-      });
-    }
+    err.inner.forEach((e) => {
+      if (e.path && !map[e.path]) map[e.path] = e.message;
+    });
     return map;
   }
 }

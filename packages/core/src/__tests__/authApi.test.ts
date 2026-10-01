@@ -65,3 +65,110 @@ describe("createAuthApi", () => {
     await expect(api.loginUser({ email: "a@b.c", password: "bad" })).rejects.toBe(boom);
   });
 });
+
+describe("registration and sign-out lifecycle", () => {
+  it("accepts registration pending email confirmation without inventing a session", async () => {
+    const signUp = vi.fn().mockResolvedValue({
+      data: { session: null, user: { id: "fixture", user_metadata: {} } },
+      error: null,
+    });
+    const api = createAuthApi(makeCtx({ signUp }));
+    await expect(
+      api.registerUser({ email: " fixture@example.test ", password: "fixture" }),
+    ).resolves.toEqual({ id: "fixture", email: null, username: "", token: null });
+    expect(signUp).toHaveBeenCalledWith({ email: "fixture@example.test", password: "fixture" });
+  });
+
+  it("propagates registration errors", async () => {
+    const error = new Error("registration unavailable");
+    const api = createAuthApi(makeCtx({ signUp: vi.fn().mockResolvedValue({ data: {}, error }) }));
+    await expect(
+      api.registerUser({ email: "fixture@example.test", password: "fixture" }),
+    ).rejects.toBe(error);
+  });
+
+  it("waits for sign-out to finish", async () => {
+    let resolve: ((value: { error: null }) => void) | undefined;
+    const signOut = vi.fn().mockReturnValue(
+      new Promise<{ error: null }>((done) => {
+        resolve = done;
+      }),
+    );
+    const api = createAuthApi(makeCtx({ signOut }));
+    let finished = false;
+    const operation = api.logout().then(() => {
+      finished = true;
+      return finished;
+    });
+    await Promise.resolve();
+    expect(finished).toBe(false);
+    resolve?.({ error: null });
+    await operation;
+    expect(finished).toBe(true);
+  });
+
+  it("propagates a rejected sign-out result", async () => {
+    const error = new Error("sign-out unavailable");
+    const api = createAuthApi(makeCtx({ signOut: vi.fn().mockResolvedValue({ error }) }));
+    await expect(api.logout()).rejects.toBe(error);
+  });
+});
+
+describe("email confirmation", () => {
+  it("verifies a trimmed email code and returns the authenticated user", async () => {
+    const verifyOtp = vi.fn().mockResolvedValue({
+      data: {
+        session: { access_token: "confirmed" },
+        user: { id: "u1", email: "demo@example.test", user_metadata: {} },
+      },
+      error: null,
+    });
+    const api = createAuthApi(makeCtx({ verifyOtp }));
+    await expect(api.confirmRegistration(" demo@example.test ", " 123456 ")).resolves.toMatchObject(
+      { token: "confirmed" },
+    );
+    expect(verifyOtp).toHaveBeenCalledWith({
+      email: "demo@example.test",
+      token: "123456",
+      type: "email",
+    });
+  });
+
+  it("rejects a blank code without contacting Auth", async () => {
+    const verifyOtp = vi.fn();
+    await expect(
+      createAuthApi(makeCtx({ verifyOtp })).confirmRegistration("demo@example.test", " "),
+    ).rejects.toThrow(CoreError);
+    expect(verifyOtp).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { session: null, user: null },
+    { session: null, user: { id: "u1" } },
+  ])("requires a session and user before advancing: %j", async (data) => {
+    const api = createAuthApi(
+      makeCtx({ verifyOtp: vi.fn().mockResolvedValue({ data, error: null }) }),
+    );
+    await expect(api.confirmRegistration("demo@example.test", "123456")).rejects.toThrow(CoreError);
+  });
+
+  it("propagates expired or invalid code errors", async () => {
+    const error = new Error("Code expired");
+    const api = createAuthApi(
+      makeCtx({ verifyOtp: vi.fn().mockResolvedValue({ data: {}, error }) }),
+    );
+    await expect(api.confirmRegistration("demo@example.test", "123456")).rejects.toBe(error);
+  });
+
+  it("resends signup confirmation without creating another user", async () => {
+    const resend = vi.fn().mockResolvedValue({ error: null });
+    await createAuthApi(makeCtx({ resend })).resendConfirmation(" demo@example.test ");
+    expect(resend).toHaveBeenCalledWith({ type: "signup", email: "demo@example.test" });
+  });
+
+  it("propagates resend errors including rate limits", async () => {
+    const error = new Error("Too many requests");
+    const api = createAuthApi(makeCtx({ resend: vi.fn().mockResolvedValue({ error }) }));
+    await expect(api.resendConfirmation("demo@example.test")).rejects.toBe(error);
+  });
+});

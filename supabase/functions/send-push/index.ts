@@ -5,6 +5,8 @@
 //   2) Direct: { tokens: string[], title, body, data }.
 // Port of backend/weatherAPI/services/notificationService.sendExpoPush. Never throws fatally.
 import { json } from "../_shared/cors.ts";
+import { authorizeJob } from "../_shared/authorize.ts";
+import { PushInputError, readPushRequest } from "../_shared/pushInput.ts";
 import { adminClient } from "../_shared/supabase.ts";
 
 const EXPO_PUSH_ENDPOINT = "https://exp.host/--/api/v2/push/send";
@@ -31,32 +33,34 @@ async function sendExpoPush(
 }
 
 Deno.serve(async (req: Request) => {
+  const denied = authorizeJob(req);
+  if (denied) return denied;
   try {
-    const admin = adminClient();
-    const payload = await req.json();
+    const payload = await readPushRequest(req);
 
     // Shape 1: database webhook on notifications INSERT.
-    if (payload?.type === "INSERT" && payload?.record) {
-      const rec = payload.record;
+    if (payload.kind === "notification") {
+      const admin = adminClient();
       const { data: profile } = await admin
         .from("profiles")
         .select("expo_push_tokens")
-        .eq("auth_id", rec.auth_id)
+        .eq("auth_id", payload.authId)
         .maybeSingle();
       const tokens: string[] = profile?.expo_push_tokens ?? [];
-      const result = await sendExpoPush(tokens, rec.title ?? "HMI", rec.message ?? "", {
-        type: rec.type ?? "system",
-        notificationId: rec.id,
+      const result = await sendExpoPush(tokens, payload.title, payload.body, {
+        type: payload.type,
+        notificationId: payload.id,
       });
       return json(result);
     }
 
     // Shape 2: direct invocation.
-    const { tokens = [], title = "HMI", body = "", data = {} } = payload ?? {};
+    const { tokens, title, body, data } = payload;
     const result = await sendExpoPush(tokens, title, body, data);
     return json(result);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return json({ error: message }, 200); // 200 so webhook delivery isn't retried forever
+  } catch (error) {
+    if (error instanceof PushInputError)
+      return json({ error: "Invalid push request" }, error.status);
+    return json({ error: "Push delivery failed" }, 500);
   }
 });

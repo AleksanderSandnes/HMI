@@ -2,6 +2,7 @@
 // every user with weather credentials, then inserts one notification per user (which the
 // notifications->send-push webhook turns into an Expo push). Port of cron/weatherBackfill.js.
 import { json } from "../_shared/cors.ts";
+import { authorizeJob } from "../_shared/authorize.ts";
 import { adminClient, getWeatherCredentials, recordHealth } from "../_shared/supabase.ts";
 import { fetchHourly, todayAndYesterday } from "../_shared/weather.ts";
 
@@ -14,7 +15,9 @@ const prettyDate = (yyyymmdd: string) =>
     ? `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`
     : yyyymmdd;
 
-Deno.serve(async () => {
+Deno.serve(async (req: Request) => {
+  const denied = authorizeJob(req);
+  if (denied) return denied;
   const admin = adminClient();
   const { yesterday } = todayAndYesterday();
 
@@ -24,7 +27,7 @@ Deno.serve(async () => {
     .select("auth_id, weather_station_id, weather_api_key_secret_id")
     .not("weather_station_id", "is", null)
     .not("weather_api_key_secret_id", "is", null);
-  if (error) return json({ error: error.message }, 500);
+  if (error) return json({ error: "Failed to load weather jobs" }, 500);
 
   const results: unknown[] = [];
   for (const u of users ?? []) {
@@ -79,8 +82,8 @@ Deno.serve(async () => {
         ok ? undefined : "no observations",
       );
       results.push({ authId, count: observations.length, ok });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+    } catch {
+      const message = "Weather sync failed";
       await admin.from("notifications").insert({
         auth_id: authId,
         type: "weather_sync",

@@ -27,12 +27,29 @@ describe("loginSchema", () => {
 describe("registerAccountSchema", () => {
   const validRegister = {
     email: "user@example.com",
-    password: "secret",
-    confirmPassword: "secret",
+    password: "secret12",
+    confirmPassword: "secret12",
   };
 
   it("accepts a fully valid registration", async () => {
     expect(await registerAccountSchema.isValid(validRegister)).toBe(true);
+  });
+
+  it("requires eight characters for new passwords", async () => {
+    expect(
+      await registerAccountSchema.isValid({
+        ...validRegister,
+        password: "1234567",
+        confirmPassword: "1234567",
+      }),
+    ).toBe(false);
+    expect(
+      await registerAccountSchema.isValid({
+        ...validRegister,
+        password: "12345678",
+        confirmPassword: "12345678",
+      }),
+    ).toBe(true);
   });
 
   it("requires confirmPassword to match password", async () => {
@@ -52,8 +69,8 @@ describe("registerAccountSchema", () => {
 describe("validateRegisterAccount", () => {
   const valid = {
     email: "user@example.com",
-    password: "secret",
-    confirmPassword: "secret",
+    password: "secret12",
+    confirmPassword: "secret12",
   };
 
   it("returns an empty map for valid input", () => {
@@ -62,7 +79,7 @@ describe("validateRegisterAccount", () => {
 
   it("maps every invalid field to its first message", () => {
     const errs = validateRegisterAccount(
-      { email: "nope", password: "pw123", confirmPassword: "other" },
+      { email: "nope", password: "pw123456", confirmPassword: "other" },
       registerAccountSchema,
     );
     expect(errs.email).toBeTruthy();
@@ -72,7 +89,7 @@ describe("validateRegisterAccount", () => {
 
   it("keeps only the first message per field", () => {
     const errs = validateRegisterAccount(
-      { email: "", password: "pw123", confirmPassword: "pw123" },
+      { email: "", password: "pw123456", confirmPassword: "pw123456" },
       registerAccountSchema,
     );
     expect(typeof errs.email).toBe("string");

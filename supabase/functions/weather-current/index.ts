@@ -2,6 +2,7 @@
 // Replaces GET /api/weather/current. Fetches from Weather.com (proxy-safe, no IP block),
 // caches into weather_current, and records integration health.
 import { corsHeaders, json } from "../_shared/cors.ts";
+import { weatherFailure } from "../_shared/authorize.ts";
 import {
   adminClient,
   getWeatherCredentials,
@@ -43,8 +44,7 @@ Deno.serve(async (req: Request) => {
     await recordHealth(admin, authId, "weather", "ok");
     return json(payload);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (authId) await recordHealth(admin, authId, "weather", "error", message);
-    return json({ error: message }, 500);
+    if (authId) await recordHealth(admin, authId, "weather", "error", "Weather request failed");
+    return weatherFailure(err);
   }
 });

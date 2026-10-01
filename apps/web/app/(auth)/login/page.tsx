@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBanner } from "@/components/ui/StatusBanner";
+import { safeLoginRedirect } from "@/lib/auth-redirect";
 import { useCore } from "@/lib/hooks/useCore";
 import { useI18n } from "@/lib/i18n";
 
@@ -88,7 +89,7 @@ function LoginForm() {
   const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+  const redirectTo = safeLoginRedirect(searchParams.get("redirectTo"));
   const [error, setError] = useState<string | null>(null);
   const schema = useMemo(() => createLoginSchema(t), [t]);
 

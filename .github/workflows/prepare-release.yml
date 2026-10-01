@@ -1,0 +1,66 @@
+name: Prepare Release
+on:
+  push:
+    branches: [test]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Preview without creating a release PR
+        type: boolean
+        default: true
+permissions:
+  contents: read
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/test'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN || github.token }}
+      WRITE_RELEASE: ${{ vars.RELEASE_PREPARE_ENABLED == 'true' && (github.event_name == 'push' || !inputs.dry_run) }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: test
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_BOT_TOKEN || github.token }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test scripts/release/*.test.mjs
+      - name: Prepare reviewed version files
+        id: version
+        run: |
+          node scripts/release/release.mjs prepare --base origin/main
+          if [ -f CHANGELOG.md ]; then git add --intent-to-add CHANGELOG.md; fi
+          git diff > "$RUNNER_TEMP/release.patch"
+          git diff --stat >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-patch
+          path: ${{ runner.temp }}/release.patch
+      - name: Open task PR to test
+        if: steps.version.outputs.released == 'true' && env.WRITE_RELEASE == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          branch="task/releaseV${VERSION//./_}"
+          # Reuse an existing open proposal instead of creating parallel release PRs.
+          if [ "$(gh pr list --head "$branch" --base test --json number --jq 'length')" != 0 ]; then
+            echo "A release proposal already exists: $branch" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git switch -c "$branch"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json package-lock.json apps/web/package.json apps/mobile/package.json packages/core/package.json apps/mobile/app.json CHANGELOG.md
+          git -c core.hooksPath=/dev/null commit -m "chore(release): v$VERSION"
+          git push origin "$branch"
+          node scripts/release/release.mjs notes > "$RUNNER_TEMP/release-notes.md"
+          gh pr create --base test --head "$branch" --title "chore(release): v$VERSION" --body-file "$RUNNER_TEMP/release-notes.md"

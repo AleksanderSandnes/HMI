@@ -1,10 +1,9 @@
 "use client";
 
 import type { Locale } from "@hmi/core";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
-import { useState } from "react";
 
+import { AccountQueryProvider } from "@/lib/account-query-provider";
 import { LocaleProvider } from "@/lib/i18n";
 
 /**
@@ -13,28 +12,17 @@ import { LocaleProvider } from "@/lib/i18n";
  */
 export function Providers({
   initialLocale,
+  initialUserId,
   children,
 }: {
   initialLocale: Locale;
+  initialUserId: string | null;
   children: React.ReactNode;
 }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 60 * 1000,
-            refetchOnWindowFocus: false,
-            retry: 1,
-          },
-        },
-      }),
-  );
-
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <LocaleProvider initialLocale={initialLocale}>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <AccountQueryProvider initialUserId={initialUserId}>{children}</AccountQueryProvider>
       </LocaleProvider>
     </ThemeProvider>
   );

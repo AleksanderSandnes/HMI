@@ -9,7 +9,7 @@ import {
 } from "../../../src/components/settings/SettingsHubList";
 import { useLayoutMode } from "../../../src/lib/useLayoutMode";
 
-const SUB_ROUTES: SettingsSubRoute[] = ["profile", "password", "growatt", "weather"];
+const SUB_ROUTES: SettingsSubRoute[] = ["profile", "password", "growatt", "weather", "delete"];
 
 function activeSubRoute(pathname: string): SettingsSubRoute | undefined {
   const last = pathname.split("/").pop();

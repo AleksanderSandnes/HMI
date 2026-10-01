@@ -8,6 +8,7 @@ import {
   weatherConfig,
   LANGUAGES,
   type ApiSettingsResponse,
+  type AuthApi,
   type Locale,
   type Translator,
   type UserProfile,
@@ -28,6 +29,9 @@ import {
   Monitor,
   Moon,
   ShieldCheck,
+  FileText,
+  LifeBuoy,
+  Trash2,
   Sun,
   SunMedium,
   User,
@@ -127,6 +131,22 @@ function HubRow({
       {badge}
       <ChevronRight size={17} className="size-[1.0625rem] shrink-0 text-text-muted" />
     </button>
+  );
+}
+
+/** An external-link row inside a grouped card (legal pages). */
+function LinkRow({ icon: Icon, title, href }: { icon: LucideIcon; title: string; href: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition hover:bg-glass-fill"
+    >
+      <Icon size={18} className="size-[1.125rem] shrink-0 text-text-muted" />
+      <span className="min-w-0 flex-1 text-[0.84375rem] font-bold text-text-primary">{title}</span>
+      <ChevronRight size={17} className="size-[1.0625rem] shrink-0 text-text-muted" />
+    </a>
   );
 }
 
@@ -629,6 +649,77 @@ function PasswordPanel({ account }: { account: Core["account"] }) {
   );
 }
 
+function DeleteAccountPanel({ account }: { account: Core["account"] }) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function remove() {
+    setError(null);
+    setDeleting(true);
+    try {
+      await account.deleteAccount();
+      queryClient.clear();
+      router.replace("/login");
+      router.refresh();
+    } catch (e) {
+      setError(coreErrorMessage(e, t, t("error.accountDeletionFailed")));
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <GlassCard strong className="p-7">
+      <PanelHeader
+        icon={Trash2}
+        gradient="accent"
+        title={t("settings.deleteAccount")}
+        subtitle={t("settings.deleteAccountSubtitle")}
+      />
+      {error ? <StatusBanner kind="error" message={error} /> : null}
+      {confirming ? (
+        <div className="flex flex-col gap-4">
+          <p className="text-base font-bold text-text-primary">
+            {t("settings.deleteAccountConfirmTitle")}
+          </p>
+          <p className="text-sm text-text-secondary">{t("settings.deleteAccountConfirmBody")}</p>
+          <div className="flex flex-wrap justify-end gap-3">
+            <Button
+              label={t("common.cancel")}
+              variant="ghost"
+              onClick={() => setConfirming(false)}
+              disabled={deleting}
+              className="w-auto px-6"
+            />
+            <Button
+              label={t("settings.deleteAccountConfirm")}
+              variant="danger"
+              onClick={() => void remove()}
+              loading={deleting}
+              className="w-auto px-6"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-text-secondary">{t("settings.deleteAccountConfirmBody")}</p>
+          <div className="flex justify-end">
+            <Button
+              label={t("settings.deleteAccount")}
+              variant="danger"
+              onClick={() => setConfirming(true)}
+              className="w-auto px-6"
+            />
+          </div>
+        </div>
+      )}
+    </GlassCard>
+  );
+}
+
 function GrowattPanel({
   initialEmail,
   configured,
@@ -778,6 +869,55 @@ function WeatherPanel({
   );
 }
 
+function LegalLinks() {
+  const { t } = useI18n();
+  return (
+    <>
+      <GroupLabel>{t("settings.legal")}</GroupLabel>
+      <div className="overflow-hidden rounded-[18px] border border-glass-border-strong bg-glass-fill-strong backdrop-blur-xl">
+        <LinkRow icon={ShieldCheck} title={t("settings.privacyPolicy")} href="/privacy" />
+        <div className="ml-[3.25rem] h-px bg-glass-border" />
+        <LinkRow icon={FileText} title={t("settings.terms")} href="/terms" />
+        <div className="ml-[3.25rem] h-px bg-glass-border" />
+        <LinkRow icon={LifeBuoy} title={t("settings.support")} href="/support" />
+      </div>
+    </>
+  );
+}
+
+function AccountGroup({
+  effective,
+  onSelect,
+}: {
+  effective: Section;
+  onSelect: (s: Section) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <>
+      <GroupLabel>{t("settings.account")}</GroupLabel>
+      <div className="overflow-hidden rounded-[18px] border border-glass-border-strong bg-glass-fill-strong backdrop-blur-xl">
+        <HubRow
+          icon={ShieldCheck}
+          gradient="revenue"
+          title={t("settings.changePassword")}
+          active={effective === "password"}
+          onClick={() => onSelect("password")}
+        />
+        <div className="ml-[3.875rem] h-px bg-glass-border" />
+        <HubRow
+          icon={Trash2}
+          gradient="accent"
+          title={t("settings.deleteAccount")}
+          subtitle={t("settings.deleteAccountSubtitle")}
+          active={effective === "delete"}
+          onClick={() => onSelect("delete")}
+        />
+      </div>
+    </>
+  );
+}
+
 function SettingsList({
   section,
   onSelect,
@@ -809,16 +949,7 @@ function SettingsList({
         onClick={() => onSelect("profile")}
       />
 
-      <GroupLabel>{t("settings.account")}</GroupLabel>
-      <div className="overflow-hidden rounded-[18px] border border-glass-border-strong bg-glass-fill-strong backdrop-blur-xl">
-        <HubRow
-          icon={ShieldCheck}
-          gradient="revenue"
-          title={t("settings.changePassword")}
-          active={effective === "password"}
-          onClick={() => onSelect("password")}
-        />
-      </div>
+      <AccountGroup effective={effective} onSelect={onSelect} />
 
       <GroupLabel>{t("settings.integrations")}</GroupLabel>
       <div className="overflow-hidden rounded-[18px] border border-glass-border-strong bg-glass-fill-strong backdrop-blur-xl">
@@ -836,7 +967,7 @@ function SettingsList({
           icon={CloudSun}
           gradient="solar"
           title={t("settings.weatherStation")}
-          subtitle={wc.station ? `${wc.station} · Sandnes` : t("settings.notConfigured")}
+          subtitle={wc.station || t("settings.notConfigured")}
           badge={<ConfiguredBadge on={wc.configured} />}
           active={effective === "weather"}
           onClick={() => onSelect("weather")}
@@ -845,6 +976,8 @@ function SettingsList({
 
       <AppearanceCard />
       <LanguageCard />
+
+      <LegalLinks />
 
       <Button
         label={t("settings.signOut")}
@@ -857,6 +990,23 @@ function SettingsList({
   );
 }
 
+function useSignOut(auth: AuthApi) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  async function signOut() {
+    setError(null);
+    try {
+      await auth.logout();
+      router.replace("/login");
+      router.refresh();
+    } catch (error) {
+      setError(coreErrorMessage(error, t, t("error.signOutFailed")));
+    }
+  }
+  return { error, signOut };
+}
+
 function SettingsPageInner() {
   const { t } = useI18n();
   const router = useRouter();
@@ -866,6 +1016,7 @@ function SettingsPageInner() {
   const effective = section ?? "profile";
   const openSection = (s: Section) => router.push(`/settings?section=${s}`, { scroll: false });
   const { account, settings, auth } = useCore();
+  const { error: signOutError, signOut } = useSignOut(auth);
 
   const { data: profile } = useQuery<UserProfile>({
     queryKey: ["profile"],
@@ -883,12 +1034,6 @@ function SettingsPageInner() {
   const gc = growattConfig(api);
   const wc = weatherConfig(api);
 
-  async function signOut() {
-    await auth.logout();
-    router.replace("/login");
-    router.refresh();
-  }
-
   return (
     <div className="mx-auto flex w-full max-w-[68.75rem] flex-col gap-[1.375rem]">
       <div>
@@ -898,6 +1043,7 @@ function SettingsPageInner() {
         <p className="mt-1 text-sm font-medium text-text-muted">{t("settings.subtitle")}</p>
       </div>
 
+      {signOutError ? <StatusBanner kind="error" message={signOutError} /> : null}
       <div className="flex items-start gap-6">
         <SettingsList
           section={section}
@@ -922,7 +1068,10 @@ function SettingsPageInner() {
             <ChevronLeft size={16} className="size-[1rem]" />
             {t("settings.title")}
           </button>
-          {effective === "profile" ? <ProfilePanel profile={profile} account={account} /> : null}
+          {effective === "profile" ? (
+            // Remount once the profile loads so the form seeds from real values, not blanks.
+            <ProfilePanel key={profile?.id ?? "loading"} profile={profile} account={account} />
+          ) : null}
           {effective === "growatt" ? (
             <GrowattPanel
               key={gc.key}
@@ -942,6 +1091,7 @@ function SettingsPageInner() {
             />
           ) : null}
           {effective === "password" ? <PasswordPanel account={account} /> : null}
+          {effective === "delete" ? <DeleteAccountPanel account={account} /> : null}
         </div>
       </div>
     </div>

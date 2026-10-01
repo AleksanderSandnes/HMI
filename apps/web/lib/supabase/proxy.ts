@@ -9,6 +9,11 @@ const PROTECTED_PREFIXES = ["/dashboard", "/solar", "/weather", "/notifications"
 /** Auth pages an authenticated user should be redirected away from. */
 const AUTH_PAGES = ["/login", "/register"];
 
+function copyCookies(source: NextResponse, target: NextResponse): NextResponse {
+  source.cookies.getAll().forEach((cookie) => target.cookies.set(cookie));
+  return target;
+}
+
 /**
  * Refresh the Supabase session cookie on every request and enforce route guards.
  * Adapted from the @supabase/ssr Next.js pattern for Next 16 `proxy.ts`.
@@ -23,7 +28,7 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
       },
       setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        supabaseResponse = NextResponse.next({ request });
+        supabaseResponse = copyCookies(supabaseResponse, NextResponse.next({ request }));
         cookiesToSet.forEach(({ name, value, options }) =>
           supabaseResponse.cookies.set(name, value, options),
         );
@@ -45,14 +50,14 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirectTo", pathname);
-    return NextResponse.redirect(url);
+    return copyCookies(supabaseResponse, NextResponse.redirect(url));
   }
 
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";
-    return NextResponse.redirect(url);
+    return copyCookies(supabaseResponse, NextResponse.redirect(url));
   }
 
   return supabaseResponse;

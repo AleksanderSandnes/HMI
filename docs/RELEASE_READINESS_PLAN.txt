@@ -1,0 +1,456 @@
+CURRENT VERIFIED PROGRESS — 30 September 2026, updated through 22:10 Oslo — ACTIVE
+==================================================================
+This update supersedes the paused/undeployed status below. The full original plan
+is preserved and is NOT complete.
+
+Owner decisions: full permissions granted for continuing the plan; the remaining
+Pro-only leaked-password protection warning is explicitly accepted in BOTH
+projects and must not trigger a billing upgrade. Family keeps master. Production
+Git branches remain unchanged pending release gates.
+
+Supabase CLI login and linking verified for both projects. Direct Codex Supabase
+MCP at https://mcp.supabase.com/mcp is configured and OAuth-authenticated
+(codex mcp list confirms o_auth). The older app connector denied project access;
+CLI works and has performed verified live queries/deployments.
+
+HMI:
+- Verified registration task commit b1f6651. Task CI 36767240387 and PR CI 36767246382, Security, CodeQL,
+  Promotion Source all passed. PR #46 targets test:
+  https://github.com/AleksanderSandnes/HMI/pull/46
+- Fixed Node 22 release test discovery, isolated CI DB ports and deletion-test
+  act timing/cleanup. Six release-tooling tests and all npm checks/tests pass.
+- Live migrations 20260930104000, 20260930180000, 20260930190000 applied;
+  delete-account function deployed with JWT verification. Security warnings
+  reduced 9 -> 1 (accepted). Anonymous-key HTTP RPC/deletion smoke checks return401.
+- Fresh local migration replay + 23 real Auth/Storage/Vault deletion checks pass.
+- Registration now requires eight characters. Live Auth minimum=8, email OTP
+  expiry=600 seconds, read-back verified. Existing login passwords remain valid.
+- Registration confirmation implemented in web/mobile/shared Auth, with resend,
+  retry, English/Norwegian messages and a code email template. Nine real localhost
+  Auth/profile checks and local Mailpit delivery pass. Production still auto-
+  confirms until updated clients + verified SMTP/template are deployed.
+  Production redirect allow-list remains incomplete.
+
+Family:
+- Verified password-policy task commit f6003cb. PR #12 targets test:
+  https://github.com/AleksanderSandnes/The_family_app/pull/12
+- New ordered migrations: 20260930183127 function access, 183128 write guards,
+  183129 read guards, 183130 deletion, 183301 moderation, 184128 Vault webhook.
+  All applied live; db push dry-run reports up-to-date in both repos.
+- Deployed delete-account, push-on-message and daily-reminders with JWT verification.
+  New private webhook resolves existing server credential directly from Vault;
+  live trigger has zero credential arguments. Rotation of the old service-role
+  credential is STILL OPEN; moving it to Vault does not revoke it.
+- Security warnings reduced 24 -> 1 (accepted). Anonymous-key protected RPCs,
+  deletion and unauthenticated push requests are denied.
+- Fresh replay of live public schema: SQL isolation tests, 65 real private-media
+  HTTP checks, 30 deletion checks and rollback-only Vault transfer checks pass.
+- Latest Android checks pass: Spotless/detekt/lint/testDebugUnitTest/assembleDebug,
+  527 unit tests, zero failures. SwiftLint/SwiftFormat pass locally. Latest iOS
+  run passed 293 tests; macOS CI 36762743768 and Android CI 36762743761 are green. Claude Code Review has a pre-existing provider failure.
+- Registration/reset now require eight characters; existing six/seven-character
+  logins preserved. Live Auth minimum=8, OTP expiry=600, read-back verified.
+- Media buckets remain PUBLIC pending released signed-URL clients/minimum version.
+  Initial schema/Storage/Auth/Realtime/cron bootstrap still needs reconciliation.
+- Coverage remains far below target: iOS artifact 20.43% lines (5001/24482);
+  Android Kover is now measured: 13.20% overall / 43.72% logic. Gates still open. iOS job summary was fixed to avoid1MiB
+  overflow while retaining full artifacts.
+
+HMI full coverage now measured across all production files: web 53.26% after
+date-picker/session/dashboard behavior tests (153 web tests), mobile 36.26%, core100%. Family website home/privacy
+restored to HTTP 200 by rebuilding the same previous production source with the
+correct existing web root. New legal pages still need validation/publication.
+
+Remaining original scope: complete registration/SMTP/domain/app-link work, security
+rotation/dependency/platform audit, full coverage gates/UI/E2E tests, version and
+release/signing/submission pipelines, fictional seed/screenshots/store declarations,
+Android internal-track upload and iOS preparation. Continue the full plan; do not
+mark it complete based on advisor/CI fixes. Repo docs and Family Obsidian notes
+record the verified rollout and accepted warning. Main/master not merged; no
+store uploads, billing changes, DNS changes or bucket visibility changes performed.
+
+PREVIOUS HANDOVER / ORIGINAL PLAN — HISTORICAL
+============================================
+CURRENT PROGRESS — 30 September 2026 — PAUSED AT USER REQUEST
+===========================================================
+The original plan is preserved below and is NOT complete.
+Resume task/releaseReadiness in both GitHub repositories. Latest changes and
+handover are saved on those remote branches. Production main/master are unchanged.
+Handover: docs/HANDOVER.md (both repos), Downloads/release-readiness-handover.txt.
+
+A — PARTIAL: release tooling installed; original-machine authentication/linking
+verified. Docker/WSL repaired. Vercel deployment scope and Render remain unverified.
+B — PARTIAL: task/test workflow established; keep Family master by user decision.
+Branch protections and approved branch cleanup remain open.
+C — PARTIAL: scans, dependency upgrades, auth storage, safe redirects/cookies,
+account isolation, backend redaction and local Supabase hardening implemented.
+Live Supabase warnings remain (HMI 9 / Family 24). Production SQL/private media,
+Vault webhook rollout and approved credential rotation remain open.
+D — OPEN: domains/DNS, support/controller contact, SMTP and app association files.
+Family thefamilyapp.app is recorded, but deployment/ownership needs review.
+E — OPEN: deletion, legal links, moderation, store declarations and release flows
+need complete implementation/verification.
+F — PARTIAL: HMI core 100% coverage with per-file gates; 247 core / 115 web /
+84 mobile tests. Latest full-source web/mobile line coverage: 20.88% / 29.8%.
+Backend: 63 tests (one live-provider skip), 76.92% lines / 69.09% branches.
+Family: 502 Android / 251 iOS tests and four real Keystore emulator checks.
+Overall/logic gates, signing and version/release automation remain unfinished.
+G — PARTIAL: audit/readiness trackers, workflow rules and portable plan/handover
+saved. Contributor/release/environment docs and final legal pages remain open.
+H — OPEN: fictional store demo data, screenshot automation and final listing assets.
+I — OPEN: signed Android smoke tests and approved store uploads.
+J — PARTIAL: native iOS build/test route exists on GitHub macOS runners; signing,
+Apple account actions, TestFlight and submissions remain open. No Windows xcrun.
+
+Final backend checkpoint: redact cookies/raw failures; reject failed logins;
+replace stale session cookies; remember failed monthly reads within weekly charts.
+Required approvals: production merge, DNS, paid services, store submission,
+branch deletion and production secret rotation. Local fixes are not proof of rollout.
+
+ORIGINAL PLAN — PRESERVED IN FULL
+================================
+
+RELEASE-READINESS PLAN — HMI (web / tablet / mobile) + The_family_app (Android / iOS)
+=====================================================================================
+Use this file as the implementation prompt. Work through the phases in order.
+Android store release comes first (Play developer account already exists); iOS second.
+
+-------------------------------------------------------------------------------------
+0. CONTEXT (verified 2026-09-29)
+-------------------------------------------------------------------------------------
+Repo 1: D:\Dev\HMI  (github.com/AleksanderSandnes/HMI, default branch: main, has `test`)
+  - Turborepo: packages/core (@hmi/core), apps/web (Next.js on Vercel, currently
+    hmi-six.vercel.app), apps/mobile (Expo / RN, package com.sandnes.hmi, EAS project
+    c60946ae-..., owner "sandnes", version 4.0.0, versionCode 3), backend/growattAPI
+    (Spring Boot on Render), supabase/ (project ref xdttfrknoazcqcelieck).
+  - "HMI tablet" = apps/mobile with supportsTablet / tablet layout; also web on tablets.
+  - CI: .github/workflows/ci.yml (lint, test, format, typecheck on main/test). No release,
+    no version bump, no coverage gate, no build/deploy jobs, growattAPI not tested in CI.
+  - Tests: core/web Vitest, web Playwright config exists, mobile jest-expo.
+  - Many stale dependabot branches + old branches (dev/HAN_implementation,
+    implement/lightmode, task/implementGraylog, upgrade/*).
+
+Repo 2: D:\Dev\The_family_app  (github.com/AleksanderSandnes/The_family_app,
+  default branch: MASTER (not main), has `test`)
+  - android/ (Kotlin, Compose, applicationId com.sandnes.familyapp, versionCode 3,
+    versionName "2.1", R8 on), ios/ (SwiftUI, XcodeGen project.yml, FamilyAppTests),
+    supabase/ (schema.sql + ~45 loose *.sql files — NOT in supabase/migrations/ format),
+    maestro/ (E2E flows), web/ (index.html + privacy.html on Vercel), obsidian/ (vault =
+    source of truth, must be updated with changes).
+  - CI: android-lint.yml (spotless/detekt/lint/unit tests), swift-lint.yml,
+    claude.yml, claude-code-review.yml. No release, no version bump, no coverage gate,
+    no signed build job, no iOS build/test job.
+  - CLAUDE.md branch rules (feat/ fix/ chore/ from master) CONFLICT with the new rules
+    below — update CLAUDE.md to the new workflow.
+
+Tools installed: gh, eas, vercel, node, java (JDK 21 at E:\Dev\java jdk 21 — Android
+needs JDK 17 toolchain; verify Gradle toolchain resolves).
+Tools MISSING — install: supabase CLI, maestro, adb/Android platform-tools, bundletool.
+(fastlane optional; xcodegen/Xcode need macOS — see iOS constraint.)
+MCP available: Supabase (claude.ai connector + HMI .mcp.json read-only server),
+Vercel, Render (HMI .mcp.json). Prefer CLI/MCP over dashboards everywhere possible.
+
+-------------------------------------------------------------------------------------
+1. GLOBAL RULES FOR THE IMPLEMENTING AGENT
+-------------------------------------------------------------------------------------
+Git workflow (both repos, no exceptions):
+  1. For every piece of work: `git checkout main && git pull` then
+     `git checkout -b task/<descriptiveShortName>` (camelCase, e.g. task/securityAudit,
+     task/ciVersionBump, task/storeScreenshots). Commit with Conventional Commits
+     (feat:, fix:, chore:, docs:, test:, ci:, refactor:, perf:; `!` / BREAKING CHANGE for
+     majors) — the version bump depends on this. Push the task branch.
+  2. When a task is ready for testing: merge task/* into `test`, push `test`.
+  3. NEVER merge `test` into `main` unless the user explicitly says so. That merge
+     triggers the version bump + GitHub release bot.
+  4. Never commit directly to main or test (except the release bot's bump commit).
+  5. NEVER add "Co-Authored-By: Claude" (or any Claude attribution) to commits. Install
+     a commit-msg hook in both repos that rejects such trailers.
+  6. Before every commit: HMI `npm run check && npm run test`; Family app
+     `cd android && ./gradlew spotlessCheck detekt lint testDebugUnitTest assembleDebug`.
+     Do not commit if anything fails.
+  7. Family app: update obsidian/ vault notes alongside code changes.
+Ask the user before: renaming branches, deleting remote branches, changing DNS,
+buying domains, submitting to a store, rotating production secrets, anything paid.
+
+-------------------------------------------------------------------------------------
+2. PHASE A — TOOLING SETUP
+-------------------------------------------------------------------------------------
+  - winget install Supabase.CLI (or scoop), then `supabase login`, `supabase link` in
+    each repo's supabase/ dir (confirm project ref of the Family app project via
+    Supabase MCP list_projects).
+  - Install Android platform-tools (adb), bundletool, Maestro CLI (+ JDK 17 for Gradle).
+  - `gh auth status`, `eas whoami`, `vercel whoami` — ask the user to run interactive
+    logins via `! <command>` if needed.
+  - Verify Vercel/Render/Supabase MCP connections work.
+
+-------------------------------------------------------------------------------------
+3. PHASE B — BRANCH NORMALISATION (ask first)
+-------------------------------------------------------------------------------------
+  - Family app: rename default branch master -> main (`gh api -X POST
+    repos/AleksanderSandnes/The_family_app/branches/master/rename -f new_name=main`),
+    update local clones, workflows (`branches: [test, main]`), CLAUDE.md, docs.
+  - Ensure `test` exists and is up to date in both repos.
+  - List stale branches (merged ones and old dependabot branches); propose a cleanup
+    list to the user — delete only after approval. Merge or close open dependabot PRs
+    that are still relevant (via a task branch).
+  - Branch protection (gh api): main and test require CI green; main only accepts
+    merges from test; allow the release bot (GitHub App or fine-grained PAT) to push
+    the version-bump commit/tag.
+
+-------------------------------------------------------------------------------------
+4. PHASE C — SECURITY AUDIT (both repos) — fix everything found
+-------------------------------------------------------------------------------------
+Secrets & config
+  - Scan full git history for secrets (gitleaks or trufflehog). Known item: HMI
+    apps/mobile/eas.json "development-prod" hardcodes EXPO_PUBLIC_SUPABASE_URL/ANON_KEY.
+    The anon key is public by design, but move it to EAS environment variables
+    (`eas env:create`) for consistency; confirm NO service_role key, DB password,
+    Growatt credentials, keystore passwords, google-services secrets or API keys are
+    committed anywhere (including history). If any real secret is found: rotate it and
+    report it to the user.
+  - Verify .gitignore covers: .env*, local.properties, google-services.json,
+    GoogleService-Info.plist, release.keystore, *.jks, play-service-account.json,
+    ios/Config secrets xcconfig.
+  - Add gitleaks to CI + pre-commit.
+Supabase (both projects — use Supabase MCP get_advisors security + performance)
+  - Every table in exposed schemas has RLS ENABLED with correct policies; no
+    `using (true)` on sensitive tables; no anon write access; check SECURITY DEFINER
+    functions have `set search_path`; views are security_invoker.
+  - Storage buckets: private unless intentionally public; per-family/per-user path
+    policies (chat media, avatars, wish images, group images, family photo).
+  - Edge functions: verify JWT, validate input, no secrets in logs, CORS restricted.
+  - Auth: email confirmation on, leaked-password protection on, minimum password
+    length, rate limits, OTP expiry, redirect URL allow-list contains ONLY real
+    production domains + app schemes (familyapp://, hmi://) — no localhost in prod.
+  - Custom SMTP configured (default Supabase SMTP is rate-limited and not for prod).
+  - Family app: convert loose supabase/*.sql into ordered supabase/migrations/
+    (`supabase db pull` to baseline, keep diagnose_*.sql out of migrations), so the
+    schema is reproducible. HMI: check migrations are in sync (`supabase db diff`).
+Android (both apps)
+  - Release: minify/R8 + shrinkResources on, debuggable false, no cleartext traffic
+    (network_security_config), allowBackup=false or proper backup rules / data
+    extraction rules, exported components audited, deep-link intent filters validated
+    (familyapp://auth|chat|join|wishlist — treat all params as untrusted).
+  - Add verified App Links (https) for auth/join/wishlist links where possible
+    (assetlinks.json on the production domain) instead of relying only on custom
+    schemes that other apps can claim.
+  - Tokens stored in encrypted storage (DataStore + Keystore / EncryptedSharedPrefs;
+    Expo: expo-secure-store, not AsyncStorage for sessions).
+  - Permissions minimal and justified (location, camera, mic, photos, notifications);
+    background location only if truly needed (Play requires a declaration + video).
+  - No logging of PII/tokens in release (strip Log.* / console.* in release builds).
+  - Target SDK meets current Play requirement.
+iOS (both apps)
+  - ATS on, no arbitrary loads; Keychain for sessions; privacy usage strings for
+    every permission; PrivacyInfo.xcprivacy manifest (required-reason APIs); Universal
+    Links (apple-app-site-association) for the same links as Android.
+Web (HMI Next.js + Family web)
+  - Security headers via next.config/vercel.json: CSP, HSTS, X-Frame-Options/
+    frame-ancestors, X-Content-Type-Options, Referrer-Policy, Permissions-Policy.
+  - Auth cookies httpOnly/secure/sameSite; server-side route protection (proxy.ts);
+    no service keys in NEXT_PUBLIC_* vars; CSRF on mutations; input validation with
+    the shared @hmi/core schemas.
+  - Vercel: preview deployments protected, production env vars scoped correctly.
+Backend (HMI growattAPI on Render)
+  - CORS limited to production web domain(s); actuator exposes only health; auth on
+    all non-public endpoints; dependency updates (merge the Spring Boot dependabot
+    bump via task branch); DB connection over SSL (already sslmode=require).
+Dependencies
+  - `npm audit` (HMI), Gradle dependency check / `./gradlew dependencyUpdates`,
+    Swift package versions; fix high/critical. Enable Dependabot for all ecosystems
+    (npm, gradle, swift, github-actions, docker, maven) + CodeQL workflow.
+
+-------------------------------------------------------------------------------------
+5. PHASE D — DOMAIN SETUP (identify what's missing, propose to user, then configure)
+-------------------------------------------------------------------------------------
+  - HMI web runs on hmi-six.vercel.app; FRONTEND_URL in render.yaml points there.
+    Propose a custom domain (ask user which domain they own / want to buy — do not
+    buy without approval). Configure via Vercel MCP/CLI (add_project_domain), DNS
+    records, then update: Render FRONTEND_URL + CORS, Supabase Site URL + redirect
+    URLs, email templates, app configs, store listings.
+  - Family app web (web/ on Vercel: index.html landing + privacy.html) — same:
+    custom domain, HTTPS, used for privacy policy URL, terms URL, support URL,
+    account-deletion URL, assetlinks.json and apple-app-site-association.
+  - Email: sending domain for Supabase SMTP with SPF, DKIM, DMARC records; a support
+    contact address on the domain (stores require a support email/URL).
+  - Verify: `curl -I` all URLs return 200 over HTTPS with the security headers;
+    /.well-known/assetlinks.json served with application/json and correct SHA-256
+    of the Play App Signing key (get it from Play Console / `eas credentials`).
+
+-------------------------------------------------------------------------------------
+6. PHASE E — COMMON MISTAKES CHECKLIST (verify each, fix failures)
+-------------------------------------------------------------------------------------
+  [ ] Account deletion: in-app delete-account flow AND a public web URL to request
+      deletion (Play + App Store requirement). Deletes auth user + data + storage.
+  [ ] Privacy policy + terms reachable in-app (settings/about) and on the web.
+  [ ] Play Data Safety form and App Store privacy "nutrition label" match reality
+      (location, photos, messages, push tokens, email, name, crash data).
+  [ ] Content rating questionnaire; Family app has user-generated content (chat,
+      images) -> needs report/block mechanism + moderation statement (both stores
+      require for UGC); age rating not "for children" unless COPPA/Families policy met.
+  [ ] Location: foreground vs background justification; prominent disclosure screen
+      before requesting (Play policy).
+  [ ] Push notifications: FCM/APNs configured for production; notification
+      permission requested in context (Android 13+ POST_NOTIFICATIONS).
+  [ ] Release signing: Play App Signing enrolled; upload keystore backed up outside
+      repo; EAS credentials for HMI; keystore SHA-256 registered in Google Cloud /
+      Firebase / Maps API key restrictions.
+  [ ] Google Maps API key restricted by package name + SHA-1 and API.
+  [ ] versionCode strictly increasing and single source of truth (see Phase F).
+      HMI eas.json has appVersionSource "local" + autoIncrement — conflicts with a
+      git-driven bump. Choose: git bump owns version + versionCode; set
+      autoIncrement false.
+  [ ] App name, icon, adaptive icon, splash, dark mode, all screen sizes incl. tablet
+      (HMI tablet layout, Family app on tablets — Play asks for tablet screenshots if
+      you declare tablet support).
+  [ ] No debug menus, test accounts, hardcoded dev URLs, "TODO"/lorem text, or
+      EXPO_PUBLIC_DATA_MODE=development in production builds.
+  [ ] Crash reporting (Sentry or Firebase Crashlytics) in release builds.
+  [ ] Offline / no-network states, error states, empty states.
+  [ ] Accessibility: content descriptions, touch target sizes, dynamic font scale.
+  [ ] Localisation consistent (Norwegian/English) + store listing language.
+  [ ] Reviewer test account (demo, non-personal data) provided in store review notes.
+  [ ] iOS: Sign in with Apple required ONLY if third-party social login is offered.
+  [ ] iOS: export compliance (ITSAppUsesNonExemptEncryption = false if only HTTPS).
+
+-------------------------------------------------------------------------------------
+7. PHASE F — CI/CD, TESTS & AUTOMATIC VERSIONING
+-------------------------------------------------------------------------------------
+7.1 Unit tests & coverage ("full coverage" — enforce, don't just aim)
+  - HMI: Vitest coverage (v8) for core + web, jest-expo coverage for mobile, JUnit +
+    JaCoCo for growattAPI. Write missing tests until every non-UI module (core,
+    lib/, hooks, API factories, validators, services, viewmodels) is covered.
+    Enforce thresholds in config: core 100% lines/branches (pure TS), web/mobile
+    logic >= 90%, overall >= 80%; UI components get render/interaction tests for all
+    screens. Add Playwright E2E smoke for web login + main pages.
+  - Family app Android: JUnit/Kotest + MockK + Turbine for all ViewModels,
+    repositories (fake Supabase layer), mappers, utils; Kover or JaCoCo with
+    thresholds (>= 90% on viewmodel/repository/domain packages, >= 80% overall);
+    Compose UI tests for key screens; Maestro flows for E2E.
+  - Family app iOS: XCTest for all ViewModels/logic (tests already exist — extend),
+    coverage gate via xccov >= 90% logic / 80% overall.
+  - Report coverage in each PR (summary comment or job summary). Any coverage drop
+    fails CI.
+7.2 CI workflows (GitHub Actions) — run on push to task/**, test, main and on PRs
+  HMI:
+    - ci.yml: format, lint, typecheck, unit tests + coverage gate, build web (next
+      build), build core, growattAPI `mvn verify`, gitleaks, npm audit (high+).
+    - deploy: Vercel auto-deploy (test -> preview/staging, main -> production);
+      Render autodeploys main for growattAPI; Supabase migrations applied from main via
+      `supabase db push` job (with approval environment).
+    - mobile: on main release -> `eas build --platform android --profile production
+      --non-interactive` then `eas submit` to Play internal track (promote to
+      production manually). iOS added in Phase I.
+  Family app:
+    - android.yml: spotless, detekt, lint, unit tests + Kover gate, assembleRelease/
+      bundleRelease with signing from GitHub secrets (base64 keystore) on main,
+      upload AAB as artifact, deploy to Play internal track via
+      r0adkll/upload-google-play or Gradle Play Publisher (service account JSON in
+      secrets).
+    - ios.yml (macos-latest runner): xcodegen, swiftlint, xcodebuild test + coverage;
+      on main: archive + upload to TestFlight (fastlane match or App Store Connect
+      API key in secrets).
+    - maestro E2E on emulator (optional nightly).
+    - supabase migration check + deploy job.
+  Both: CodeQL, dependabot, concurrency cancel, cache, least-privilege `permissions:`.
+7.3 Automatic version bump + GitHub release (on push to main)
+  - Use semantic-release (or a small custom workflow) triggered on push to main:
+      a) compute next SemVer from Conventional Commits since last tag;
+      b) write version into ALL version files:
+         HMI: root + workspace package.json, apps/mobile/app.json expo.version and
+         android.versionCode (+ ios.buildNumber) — increment build number every release;
+         Family: android/app/build.gradle versionName + versionCode,
+         ios/project.yml MARKETING_VERSION + CURRENT_PROJECT_VERSION;
+      c) generate CHANGELOG.md;
+      d) commit "chore(release): vX.Y.Z [skip ci]" to main using the bot token
+         (NO Claude co-author), tag vX.Y.Z;
+      e) create GitHub Release with notes (+ attach AAB/APK artifacts when built);
+      f) back-merge main into test so test has the bumped version.
+  - Starting versions: HMI 4.0.0 / versionCode 3; Family 2.1(.0) / versionCode 3 —
+    first automated release must produce versionCode > what's already on Play.
+  - Test the pipeline on a throwaway branch/fork or with dry-run before relying on it.
+
+-------------------------------------------------------------------------------------
+8. PHASE G — DOCUMENTATION (create what's missing, both repos + public web)
+-------------------------------------------------------------------------------------
+  In repo:
+    - SECURITY.md (reporting vulnerabilities, supported versions, contact).
+    - README.md update (setup, env vars, scripts, architecture, release flow).
+    - CONTRIBUTING.md (task/* -> test -> main flow, Conventional Commits, checks).
+    - CHANGELOG.md (generated).
+    - docs/RELEASE.md (how releases, store submissions and rollbacks work).
+    - docs/ENVIRONMENTS.md (all env vars / secrets and where they live: GitHub, EAS,
+      Vercel, Render, Supabase — names only, never values).
+    - .github: PULL_REQUEST_TEMPLATE.md, ISSUE_TEMPLATE/, CODEOWNERS.
+    - LICENSE (ask user: proprietary/all rights reserved recommended).
+    - Family app: update CLAUDE.md branch rules + obsidian vault; HMI CLAUDE.md too.
+  Public (hosted on the web domains, linked in-app and in store listings):
+    - Privacy Policy (per app; GDPR — user is in Norway/EEA: controller, legal basis,
+      data categories, processors: Supabase, Vercel, Render, Google/Firebase, Apple,
+      Expo; retention, rights, contact, Datatilsynet complaint right).
+    - Terms of Service / User Agreement (EULA; acceptable use for chat/UGC).
+    - Account & data deletion page.
+    - Support / contact page.
+    - Cookie notice for web if non-essential cookies/analytics are used.
+  Keep text plain-language; mark anything legal-sensitive for the user to review.
+
+-------------------------------------------------------------------------------------
+9. PHASE H — STORE ASSETS (logged-in screenshots, no real data)
+-------------------------------------------------------------------------------------
+  - Create a dedicated DEMO account/family per app with fictional seed data (seed SQL
+    in supabase/seed_demo.sql, run against production only with approval, or against
+    a Supabase branch). Fictional names (e.g. "Emma", "Lars", "Nora", "Family
+    Nordmann"), fictional messages, meals, shopping items, events, birthdays,
+    wishlists, map location on a public landmark. HMI: demo solar/weather data.
+  - NEVER include the user's real name, family members, messages, email, photos or
+    real home location. Review every image before saving.
+  - Capture from logged-in state:
+      Android phone (1080x1920+ ; 2–8 shots), 7" and 10" tablet (HMI tablet
+      layout; family app if tablet declared) via emulator + adb/Maestro screenshot;
+      HMI web desktop/tablet via Playwright;
+      iOS 6.9"/6.7" iPhone and 13" iPad sizes (simulator on macOS/CI) later.
+  - Automate captures (Maestro flows / Playwright script) so they can be regenerated.
+  - Also produce: Play feature graphic 1024x500, hi-res icon 512x512, short (80) and
+    full (4000) descriptions, App Store subtitle/keywords/promo text — in the listing
+    language(s). Save under store/<platform>/ in each repo.
+
+-------------------------------------------------------------------------------------
+10. PHASE I — ANDROID PUBLISH (first)
+-------------------------------------------------------------------------------------
+  1. Build signed AAB (HMI: `eas build -p android --profile production`; Family:
+     `./gradlew bundleRelease`), install release build on device/emulator and smoke
+     test login, core flows, push, deep links, location.
+  2. Play Console (user does account-bound steps; agent prepares all text): app
+     entry, store listing, screenshots, privacy URL, Data Safety, content rating,
+     target audience, ads declaration, permissions declarations (location), account
+     deletion URL, app access (demo credentials), news-app / government = no.
+  3. If the developer account is a new personal account: 12+ testers for 14 days on
+     closed testing is required before production — plan for this early.
+  4. Upload to internal -> closed -> production via CI; staged rollout.
+
+-------------------------------------------------------------------------------------
+11. PHASE J — iOS PUBLISH (second)
+-------------------------------------------------------------------------------------
+  - Needs Apple Developer Program membership (user to enroll, 99 USD/yr).
+  - Constraint: this machine is Windows. HMI (Expo) can build/submit via EAS cloud
+    (`eas build -p ios`, `eas submit -p ios`). The Family app native Swift build needs
+    macOS: use GitHub Actions macos runners (xcodegen + xcodebuild + fastlane /
+    App Store Connect API key) or a Mac.
+  - Bundle IDs, capabilities (push, associated domains), APNs key, provisioning,
+    PrivacyInfo.xcprivacy, App Privacy answers, TestFlight beta, then review.
+
+-------------------------------------------------------------------------------------
+12. DELIVERABLES / DEFINITION OF DONE
+-------------------------------------------------------------------------------------
+  [ ] Security audit report per repo (docs/SECURITY_AUDIT.md) listing findings + fixes;
+      Supabase advisors show no security warnings.
+  [ ] All missing domains configured (or listed with exact steps awaiting user).
+  [ ] Common-mistakes checklist fully ticked.
+  [ ] CI green on test; coverage gates enforced and met.
+  [ ] Version bump + GitHub release verified on first main merge (after user OK).
+  [ ] Docs + public legal pages live and linked in-app.
+  [ ] Store screenshots + listing text in store/, containing only fictional data.
+  [ ] Android: both apps uploaded to Play (internal/closed track) ready for production.
+  [ ] iOS: pipeline ready; submission after Apple account is active.
+  [ ] Final summary to user: what was done, what needs their action (logins, Play/App
+      Store console steps, domain purchase, legal review, test->main merge).

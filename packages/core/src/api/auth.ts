@@ -50,15 +50,33 @@ export function createAuthApi(ctx: CoreApiContext) {
     if (error) throw error;
 
     if (!data.user) throw new CoreError("error.registrationNoUser");
-    // Email confirmation is disabled, so signUp returns a session immediately.
+    // A session may be absent while the user completes email confirmation.
     return toUser(data.session, data.user);
   }
 
-  async function logout(): Promise<void> {
-    await supabase.auth.signOut();
+  async function confirmRegistration(email: string, token: string): Promise<AuthUser> {
+    if (!token.trim()) throw new CoreError("auth.register.codeRequired");
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: token.trim(),
+      type: "email",
+    });
+    if (error) throw error;
+    if (!data.user || !data.session) throw new CoreError("auth.register.confirmFailed");
+    return toUser(data.session, data.user);
   }
 
-  return { loginUser, registerUser, logout };
+  async function resendConfirmation(email: string): Promise<void> {
+    const { error } = await supabase.auth.resend({ type: "signup", email: email.trim() });
+    if (error) throw error;
+  }
+
+  async function logout(): Promise<void> {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  }
+
+  return { loginUser, registerUser, confirmRegistration, resendConfirmation, logout };
 }
 
 export type AuthApi = ReturnType<typeof createAuthApi>;

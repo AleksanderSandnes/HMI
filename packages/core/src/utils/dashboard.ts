@@ -73,7 +73,7 @@ export function weatherNow(weatherData?: CurrentWeather) {
 /** Weekly average for each dashboard weather tile, derived from the week series. */
 export function dashboardWeekAverages(weekObs?: WeekObservations) {
   const obs = weekObs?.observations ?? [];
-  const avg = (key: string) => average(buildWeatherSeries(obs, key, "weekly").series[0] ?? []);
+  const avg = (key: string) => average(buildWeatherSeries(obs, key, "weekly").series[0]);
   return {
     temp: avg("temperature"),
     humidity: avg("humidity"),

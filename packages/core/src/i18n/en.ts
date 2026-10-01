@@ -40,6 +40,9 @@ export const en = {
   "weather.wind": "Wind",
   "weather.windSpeed": "Wind speed",
   "weather.windGust": "Wind gust",
+  "weather.windFrom": "from {direction}",
+  "weather.windDirectionUnavailable": "Direction n/a",
+  "weather.windGustValue": "gust {value}",
   "weather.precipitation": "Precipitation",
   "weather.accumTotal": "Accum. total",
   "weather.rate": "Rate",
@@ -182,6 +185,16 @@ export const en = {
   "auth.login.createOne": "Create one",
 
   // Auth — register
+  "auth.register.confirmTitle": "Confirm your email",
+  "auth.register.confirmSubtitle": "Enter the code sent to your email to continue.",
+  "auth.register.codeLabel": "Confirmation code",
+  "auth.register.codeHint": "The code expires after ten minutes. Check your spam folder if needed.",
+  "auth.register.confirm": "Confirm email",
+  "auth.register.resend": "Send a new code",
+  "auth.register.resent": "A new confirmation code has been sent.",
+  "auth.register.codeRequired": "Enter the confirmation code from your email.",
+  "auth.register.confirmFailed":
+    "Could not confirm your email. Check the code or request a new one.",
   "auth.register.stepAccount": "Account",
   "auth.register.stepSolar": "Solar",
   "auth.register.stepWeather": "Weather",
@@ -242,6 +255,16 @@ export const en = {
   "settings.notSet": "Not set",
   "settings.pushNotifications": "Push notifications",
   "settings.pushSubtitle": "Alerts on this device",
+  "settings.legal": "Legal & privacy",
+  "settings.privacyPolicy": "Privacy policy",
+  "settings.terms": "Terms of service",
+  "settings.support": "Support",
+  "settings.deleteAccount": "Delete account",
+  "settings.deleteAccountSubtitle": "Permanently remove your account and data",
+  "settings.deleteAccountConfirmTitle": "Delete your account?",
+  "settings.deleteAccountConfirmBody":
+    "This permanently deletes your profile, settings, stored Growatt and Weather.com credentials, notifications and avatar. It cannot be undone.",
+  "settings.deleteAccountConfirm": "Delete permanently",
   "settings.signOut": "Sign out",
   "settings.usernameLabel": "USERNAME",
   "settings.emailLabel": "EMAIL",
@@ -288,12 +311,15 @@ export const en = {
 
   // API errors (thrown as CoreError keys, translated at display time)
   "error.authRequired": "Authentication required. Please log in again.",
+  "error.accountDeletionFailed": "Could not delete your account. Please try again.",
+  "error.signOutFailed": "Could not sign out. Please try again.",
   "error.registrationNoUser": "Registration failed: no user returned.",
 
   // Validation (core yup schemas)
   "validation.emailRequired": "Email is required",
   "validation.emailInvalid": "Email must be a valid email",
   "validation.passwordRequired": "Password is required",
+  "validation.registrationPasswordMin": "Password must be at least 8 characters",
   "validation.passwordMin": "Password must be at least 4 characters",
   "validation.passwordsMustMatch": "Passwords must match",
   "validation.confirmPassword": "Please confirm your password",

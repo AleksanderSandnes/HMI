@@ -68,7 +68,7 @@ export function optimizeChartData(
 
   for (let i = 0; i < rangedData.length; i += samplingInterval) {
     sampledData.push(rangedData[i]);
-    sampledLabels.push(formatSampleLabel(rangedLabels[i], timespan, samplingInterval));
+    sampledLabels.push(formatSampleLabel(rangedLabels[i], timespan));
   }
 
   return {
@@ -78,7 +78,7 @@ export function optimizeChartData(
 }
 
 /** Clean hour-label formatting for a sampled chart point. */
-function formatSampleLabel(label: string, timespan: string, samplingInterval: number): string {
+function formatSampleLabel(label: string, timespan: string): string {
   const [hour, minute] = label.split(":");
   if (minute === "00") return `${hour}:00`;
 
@@ -87,7 +87,6 @@ function formatSampleLabel(label: string, timespan: string, samplingInterval: nu
     const displayHour = minute >= "30" ? parseInt(hour) + 1 : parseInt(hour);
     return `${displayHour.toString().padStart(2, "0")}:00`;
   }
-  if (minute === "30" && samplingInterval <= 6) return `${hour}:30`;
   return label;
 }
 

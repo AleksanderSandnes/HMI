@@ -1,0 +1,4 @@
+{
+  "production": "main",
+  "workflows": ["CI", "Security", "CodeQL", "Promotion Source"]
+}

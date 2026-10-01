@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(NoHandlerFoundException e) {
-        log.warn("Endpoint not found: {} {}", e.getHttpMethod(), e.getRequestURL());
+        log.warn("Endpoint not found");
         
         Map<String, Object> error = new HashMap<>();
         error.put("timestamp", LocalDateTime.now());
@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception e) {
-        log.error("Unexpected error occurred", e);
+        log.error("Unexpected error occurred ({})", e.getClass().getSimpleName());
         
         Map<String, Object> error = new HashMap<>();
         error.put("timestamp", LocalDateTime.now());
@@ -44,13 +44,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException e) {
-        log.warn("Invalid request parameter: {}", e.getMessage());
+        log.warn("Invalid request parameter");
         
         Map<String, Object> error = new HashMap<>();
         error.put("timestamp", LocalDateTime.now());
         error.put("status", HttpStatus.BAD_REQUEST.value());
         error.put("error", "Bad Request");
-        error.put("message", e.getMessage());
+        error.put("message", "Invalid request parameters");
         
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }

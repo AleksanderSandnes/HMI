@@ -18,6 +18,30 @@ describe("windCompass", () => {
     expect(windCompass(12)).toBe("NNE"); // > 11.25 → nearer NNE
   });
 
+  it("uses Norwegian compass abbreviations for every direction", () => {
+    const labels = [
+      "N",
+      "NNØ",
+      "NØ",
+      "ØNØ",
+      "Ø",
+      "ØSØ",
+      "SØ",
+      "SSØ",
+      "S",
+      "SSV",
+      "SV",
+      "VSV",
+      "V",
+      "VNV",
+      "NV",
+      "NNV",
+    ];
+    labels.forEach((label, index) => expect(windCompass(index * 22.5, "nb")).toBe(label));
+    expect(windCompass(null, "nb")).toBeNull();
+    expect(windCompass(225, "en")).toBe("SW");
+  });
+
   it("returns null for missing or non-numeric input", () => {
     expect(windCompass(null)).toBeNull();
     expect(windCompass(undefined)).toBeNull();

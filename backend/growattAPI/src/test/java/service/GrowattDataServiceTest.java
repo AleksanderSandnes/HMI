@@ -101,5 +101,9 @@ class GrowattDataServiceTest {
 		assertEquals(0.0, service.extractDayEnergy(month, 2)); // null entry
 		assertEquals(0.0, service.extractDayEnergy(month, 99)); // out of range
 		assertEquals(0.0, service.extractDayEnergy(new MonthResponse(1L, null), 1)); // null obj
+
+		assertEquals(0.0, service.extractDayEnergy(null, 1));
+		assertEquals(0.0, service.extractDayEnergy(new MonthResponse(1L, new MonthResponse.Obj(null)), 1));
+		assertEquals(0.0, service.extractDayEnergy(month, 0));
 	}
 }

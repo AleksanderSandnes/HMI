@@ -74,6 +74,12 @@ build/
 
 # Google Play service account key (eas submit)
 play-service-account.json
+local.properties
+google-services.json
+GoogleService-Info.plist
+*.keystore
+*.jks
+**/ios/Config/Secrets.xcconfig
 
 # Spring property files that may hold secrets. The committed application-local
 # and application-production profiles use env-var overrides + Supabase Vault, so
@@ -152,6 +158,7 @@ k8s-local/
 
 # Test coverage reports
 /coverage/
+**/coverage/
 *.lcov
 jacoco.exec
 
@@ -207,3 +214,7 @@ replay_pid*
 # Profiling files
 *.prof
 *.hprof
+
+# Python release-policy/test helpers
+__pycache__/
+*.pyc

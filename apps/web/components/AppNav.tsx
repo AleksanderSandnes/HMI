@@ -29,7 +29,7 @@ function NavWeatherWidget() {
       <span className="flex items-center gap-1.5">
         <Sun size={13} className="size-[0.8125rem] text-solar-light" />
         <span className="whitespace-nowrap text-[0.8125rem] font-bold text-text-secondary">
-          {temp != null ? `${Math.round(temp)}° · ${place || "Sandnes"}` : "—"}
+          {temp == null ? "—" : place ? `${Math.round(temp)}° · ${place}` : `${Math.round(temp)}°`}
         </span>
       </span>
       {solarStats ? (
