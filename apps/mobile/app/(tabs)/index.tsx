@@ -41,6 +41,9 @@ function SectionLabel({
   );
 }
 
+/** Portrait phone heights (dp) below this use the compact weather card. */
+const SHORT_PHONE_HEIGHT = 720;
+
 /**
  * Weather-card presentation for the current window. Landscape phones shrink
  * the card to fit the short viewport; wide portrait tablets (>= web md
@@ -51,8 +54,14 @@ function SectionLabel({
 function weatherCardFor(
   mode: LayoutMode,
   width: number,
+  height: number,
 ): { variant: WeatherSummaryVariant; dialSize?: number } {
   if (mode.isPhoneLandscape) return { variant: "compact" };
+  // Short portrait phones (e.g. 360x640 dp) cannot fit the 150 pt dial beside the stacked
+  // metrics above the stat row; without this the dial and metrics overlap the row.
+  if (!mode.isTablet && !mode.isLandscape && height < SHORT_PHONE_HEIGHT) {
+    return { variant: "compact" };
+  }
   if (!mode.isLandscape && width >= BREAKPOINTS.mobile) return { variant: "rich" };
   if (mode.isTablet) return { variant: "default", dialSize: mode.isLandscape ? 230 : 190 };
   return { variant: "default" };
@@ -71,9 +80,9 @@ export default function Dashboard() {
   const { account } = useCore();
   const { t } = useI18n();
   const mode = useLayoutMode();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const twoCol = mode.columns === 2;
-  const weatherCard = weatherCardFor(mode, width);
+  const weatherCard = weatherCardFor(mode, width, height);
   const model = useDashboardData();
   const { items, count, clearAll, dismiss } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);

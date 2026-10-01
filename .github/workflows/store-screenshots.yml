@@ -15,6 +15,9 @@ on:
       - apps/web/playwright.store-mobile.config.ts
       - supabase/seed_demo.sql
       - .github/workflows/store-screenshots.yml
+      # Mobile UI changes regenerate the screenshots, doubling as a visual check.
+      - apps/mobile/app/**
+      - apps/mobile/src/components/**
 
 concurrency:
   group: store-screenshots-${{ github.ref }}
