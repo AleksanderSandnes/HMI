@@ -1,0 +1,18 @@
+HMI er et grensesnitt for hjemmet som samler solproduksjon og lokalt vær på ett tydelig dashboard.
+
+DETTE SER DU
+• Live solproduksjon: se hva panelene dine produserer akkurat nå, dagens total og toppen for dagen.
+• Historikk: timer, uke, måned og år med toppmarkering.
+• Vær fra din egen stasjon: temperatur, vind, luftfuktighet, trykk, nedbør, solinnstråling og UV-indeks, med ukesgjennomsnitt.
+• Varsler: en rolig innboks for viktige hendelser fra anlegget ditt.
+• Layout for mobil og nettbrett, lyst og mørkt tema, norsk og engelsk.
+
+SLIK FUNGERER DET
+Koble til Growatt-kontoen og din personlige værstasjon under Innstillinger. HMI henter dataene dine og viser dem samlet. Innloggingsdetaljer lagres sikkert og vises aldri igjen etter lagring.
+
+PRIVAT FRA GRUNNEN AV
+Energi- og værdataene dine er bare synlige for deg. Du kan slette kontoen og alle tilhørende data i appen eller på nettsiden vår.
+
+HMI er en uavhengig app og er ikke tilknyttet eller godkjent av Growatt eller noen leverandor av værstasjoner. Growatt-konto og en støttet værstasjon kreves for å se data.
+
+Support: aleksandersandnes78@gmail.com

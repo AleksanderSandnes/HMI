@@ -1,0 +1,1 @@
+sol,growatt,energi,vær,dashboard,solcelle,vekselretter,hjem,overvåking,pv

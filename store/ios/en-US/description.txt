@@ -1,0 +1,18 @@
+HMI is a home management interface that puts your solar production and your local weather on one clear dashboard.
+
+WHAT YOU SEE
+• Live solar output: see what your panels are producing right now, today's total and the peak of the day.
+• History: hourly, weekly, monthly and yearly production charts with a peak highlight.
+• Weather from your own station: temperature, wind, humidity, pressure, precipitation, solar radiation and UV index, with weekly averages.
+• Notifications: a quiet inbox for important events from your system.
+• Phone and tablet layouts, light and dark themes, English and Norwegian.
+
+HOW IT WORKS
+Connect your Growatt account and your personal weather station in Settings. HMI reads your data and shows it in one place. Credentials are stored securely and are never shown again after saving.
+
+PRIVATE BY DESIGN
+Your energy and weather data is only visible to you. You can delete your account and all associated data from inside the app or on our website.
+
+HMI is an independent app and is not affiliated with or endorsed by Growatt or any weather-station provider. A Growatt account and a supported weather station are required to see data.
+
+Support: aleksandersandnes78@gmail.com

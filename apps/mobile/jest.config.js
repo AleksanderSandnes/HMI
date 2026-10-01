@@ -8,6 +8,8 @@
  */
 module.exports = {
   preset: "jest-expo",
+  // Screen tests mount heavy trees; the default 5s is too tight on shared CI runners.
+  testTimeout: 30000,
   setupFiles: ["<rootDir>/jest.setup.js"],
   testMatch: ["**/__tests__/**/*.test.[jt]s?(x)", "**/?(*.)+(test).[jt]s?(x)"],
   testPathIgnorePatterns: ["/node_modules/", "/backend/", "/.expo/", "/dist/"],
@@ -20,4 +22,6 @@ module.exports = {
     "!**/*.d.ts",
     "!**/__tests__/**",
   ],
+  // Release gate (plan 7.1): overall >= 80%. Do not lower or exclude files to pass.
+  coverageThreshold: { global: { lines: 80, statements: 80, functions: 80, branches: 80 } },
 };
