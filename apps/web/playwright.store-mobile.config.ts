@@ -20,6 +20,11 @@ export default defineConfig({
     contextOptions: { reducedMotion: "reduce" },
   },
   projects: [
+    // 2064 x 2752 — 13-inch iPad portrait. Expo web, not a native simulator capture.
+    {
+      name: "ipad-13",
+      use: { viewport: { width: 1032, height: 1376 }, deviceScaleFactor: 2, hasTouch: true },
+    },
     // 1080 x 1920 — Play phone.
     {
       name: "phone",

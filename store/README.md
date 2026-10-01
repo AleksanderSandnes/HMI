@@ -57,6 +57,11 @@ above and do not replace native iOS simulator captures or a signed-build smoke t
 
 ## Remaining native assets
 
+The Expo screenshot configuration also captures a 13-inch iPad viewport at
+1032x1376 points with 2x scale (2064x2752 pixels). These captures are stored under
+`store/screenshots/mobile/ipad-13/{en,nb}/` and are exported-to-web images;
+native iPad simulator screenshots remain a separate release task.
+
 - Native-app screenshots for iPhone 6.9"/6.7" and iPad 13" (needs the Expo build on a simulator).
 - Production reviewer account: create it in the hosted project with a secret password and give
   the credentials to the store consoles only — never commit them. Do not run `seed_demo.sql`
