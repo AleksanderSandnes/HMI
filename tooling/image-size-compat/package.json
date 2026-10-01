@@ -1,0 +1,11 @@
+{
+  "name": "image-size",
+  "version": "2.0.4-metro-compat.1",
+  "private": true,
+  "description": "Metro 0.83 expects the image-size v1 file-path API; this wraps the patched v2 parser.",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "image-size-v2": "npm:image-size@^2.0.4"
+  }
+}
