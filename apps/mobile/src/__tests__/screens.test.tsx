@@ -155,6 +155,13 @@ describe("Dashboard", () => {
     expect(tree.root.findAll((n) => n.props.accessibilityLabel === "bell")).toHaveLength(0);
   });
 
+  it("uses the compact card on short portrait phones", async () => {
+    mockWindow.height = 640;
+    const tree = mount(<Dashboard />);
+    await flush();
+    expect(json(tree)).toContain("weather:compact");
+  });
+
   it("omits captions when there is no device or observation time", async () => {
     mockModel.obs = undefined;
     mockModel.device = undefined as never;
