@@ -1,4 +1,29 @@
-# Release readiness handover — 30 September 2026
+# Release readiness handover — 1 October 2026
+
+## Store assets, bundling fix and coverage status — 1 October 2026
+
+- **Release blocker fixed (PR #52):** the `image-size ^2.0.4` security override broke every
+  Expo bundle (`expo export` / EAS) because Metro 0.83 calls the v1 file-path API. A nested
+  `metro > image-size` override now points at `tooling/image-size-compat`, which reads the
+  file and delegates to the patched v2 parser. Remove it once Metro supports image-size v2.
+- **Store screenshots (PR #50):** `npm run store:screenshots` starts the local Supabase
+  stack (refuses non-local URLs), applies the guarded `supabase/seed_demo.sql`, builds the web
+  app and captures phone / 7" / 10" / desktop screenshots in en + nb from fictional fixtures.
+  Results live in `store/screenshots/`; Play graphics in `store/android/graphics/`.
+- **Expo app screenshots (PR #51):** `.github/workflows/store-screenshots.yml` exports the
+  react-native-web build against a disposable seeded stack and uploads
+  `mobile-store-screenshots` for review.
+- **Bugs found while capturing:** hardcoded town-name fallback in the nav/settings, the
+  settings profile form staying empty (and saving blanks) when it mounted before the profile
+  loaded, untranslated wind-dial text, and the store-listing check failing on Windows paths.
+  The solar chart now honours `prefers-reduced-motion`.
+- **Coverage:** core 100%, web 83.45% lines, mobile 88.56% lines, backend 99% lines / 98%
+  branches with the 90% JaCoCo gate (the earlier 77% figure was stale).
+
+Still owner-gated: custom domain + DNS + Supabase SMTP sender, production reviewer account
+(create by hand; never run `seed_demo.sql` on production), service-role key rotation, EAS
+production build and Play upload, App Store account. `main` is unchanged until the owner
+approves the `test` → `main` PR.
 
 ## First release-proposal workflow verification — 30 September 2026
 
