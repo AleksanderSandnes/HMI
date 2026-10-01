@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import Svg, { Circle, Defs, G, LinearGradient, Path, Stop } from "react-native-svg";
 
 import { toNum } from "../../../lib/format";
+import { useI18n } from "../../../lib/i18n";
 import { useThemeColors } from "../../../lib/theme";
 import { GlassCard } from "../../ui/GlassCard";
 
@@ -24,6 +25,7 @@ interface WindDialProps {
  */
 export function WindDialFace({ degrees, speed, gust, unit = "km/h", size = SIZE }: WindDialProps) {
   const { colors } = useThemeColors();
+  const { t } = useI18n();
   const deg = toNum(degrees);
   const spd = toNum(speed);
   const gst = toNum(gust);
@@ -88,8 +90,8 @@ export function WindDialFace({ degrees, speed, gust, unit = "km/h", size = SIZE 
       </View>
 
       <Text className="text-[12px] font-semibold text-text-secondary">
-        {dir ? `from ${dir}` : "Direction n/a"}
-        {gst != null ? ` · gust ${Math.round(gst)}` : ""}
+        {dir ? t("weather.windFrom", { direction: dir }) : t("weather.windDirectionUnavailable")}
+        {gst != null ? ` · ${t("weather.windGustValue", { value: Math.round(gst) })}` : ""}
       </Text>
     </View>
   );
