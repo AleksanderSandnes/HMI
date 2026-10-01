@@ -42,7 +42,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npx expo serve --port 8090",
+    // Single-page export: rewrite unknown paths (/login, /solar, ...) to index.html.
+    command: "npx --yes serve@14 -s dist -l 8090",
     cwd: "../mobile",
     url: "http://localhost:8090",
     reuseExistingServer: false,
