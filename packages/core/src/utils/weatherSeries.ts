@@ -2,6 +2,7 @@
 // useHistoricalWeatherData). Pure: takes raw observations + metric + timespan and
 // returns x-axis labels + one number[] per series. No platform imports.
 import { BREAKPOINTS, WEEKDAY_ABBR } from "../constants";
+import type { Locale } from "../i18n";
 
 type Obs = Record<string, any>;
 
@@ -57,9 +58,15 @@ export function isPhoneWeekly(width: number, timespan: string): boolean {
 }
 
 /** Wind direction in degrees → 16-point compass label (e.g. 213 → "SSW"). */
-export function windCompass(deg: number | null | undefined): string | null {
+export function windCompass(deg: number | null | undefined, locale: Locale = "en"): string | null {
   if (deg == null || isNaN(Number(deg))) return null;
-  return COMPASS[Math.round((Number(deg) % 360) / 22.5) % 16];
+  const label = COMPASS[Math.round((Number(deg) % 360) / 22.5) % 16];
+  return compassLabel(label, locale);
+}
+
+/** Localise standard compass abbreviations for display. */
+export function compassLabel(label: string, locale: Locale): string {
+  return locale === "nb" ? label.replaceAll("E", "Ø").replaceAll("W", "V") : label;
 }
 
 export interface WeatherSeriesResult {
