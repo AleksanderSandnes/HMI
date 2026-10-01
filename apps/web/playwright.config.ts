@@ -30,6 +30,8 @@ const e2eSupabaseEnv: Record<string, string> =
 export default defineConfig({
   testDir: "./tests",
   testMatch: "**/*.spec.ts",
+  // Store screenshot specs need the local demo stack; they have their own configs.
+  testIgnore: ["**/store/**", "**/store-mobile/**"],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

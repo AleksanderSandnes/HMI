@@ -1,0 +1,77 @@
+name: Store screenshots
+
+# Regenerates Expo app store screenshots from fictional data only: a disposable local
+# Supabase stack seeded with supabase/seed_demo.sql, the app's react-native-web export
+# pointed at it, and Playwright answering every solar/weather call from fixtures. No
+# production data, credentials or services are involved. Review the artifact before
+# copying images into store/screenshots/mobile/.
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [test]
+    paths:
+      - apps/web/tests/store-mobile/**
+      - apps/web/tests/store/**
+      - apps/web/playwright.store-mobile.config.ts
+      - supabase/seed_demo.sql
+      - .github/workflows/store-screenshots.yml
+
+concurrency:
+  group: store-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - run: npm ci
+
+      - name: Start disposable Supabase stack and seed the demo account
+        env:
+          PGPASSWORD: postgres
+        run: |
+          supabase start --exclude imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
+          psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/seed_demo.sql
+
+      - name: Export the Expo app for web against the local stack
+        working-directory: apps/mobile
+        run: |
+          anon_key=$(supabase status -o env | sed -n 's/^ANON_KEY="\(.*\)"$/\1/p')
+          test -n "$anon_key"
+          EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 \
+          EXPO_PUBLIC_SUPABASE_ANON_KEY="$anon_key" \
+          EXPO_PUBLIC_DATA_MODE=production \
+          EXPO_PUBLIC_JAVA_API=http://127.0.0.1:3999 \
+            npx expo export --platform web --output-dir dist
+
+      - name: Capture screenshots
+        working-directory: apps/web
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright test -c playwright.store-mobile.config.ts
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-store-screenshots
+          path: |
+            store/screenshots/mobile
+            apps/web/test-results
+          retention-days: 14
+
+      - name: Stop Supabase stack
+        if: always()
+        run: supabase stop
