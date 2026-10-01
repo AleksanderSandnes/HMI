@@ -4,10 +4,14 @@
 
 PR #54 (compact weather card on short phones) merged into `test` after required
 checks passed. Eight reviewed Expo phone screenshots (1080x1920, English and
-Norwegian) are in `store/screenshots/mobile/phone/`, sourced from run 36857747095.
+Norwegian) are in `store/screenshots/mobile/phone/`, refreshed from run 36862228058.
 The shared compass formatter now uses Norwegian Ø/V abbreviations, including
-SV, on both web and mobile. Earlier captured screenshots retain the original
-English compass labels; regenerate them to show the localisation change.
+SV, on both web and mobile. The refreshed phone and iPad screenshots include
+the localisation change. Final chart time labels now stay inside the SVG bounds.
+Eight reviewed 2064x2752 Expo web captures are in
+`store/screenshots/mobile/ipad-13/{en,nb}/`, also from run 36862228058. Native
+iPad simulator captures and signed-release smoke tests remain separate tasks.
+Domain and SMTP choices are deferred until the owner is ready.
 
 Promotion PR #55 remains open for owner review; do not merge to `main` without
 explicit approval. Domain/DNS/SMTP configuration, signing identities, secret
