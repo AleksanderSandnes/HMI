@@ -39,10 +39,15 @@ databases that contain real accounts), builds the web app against it and runs
 54322 is taken by another local stack, prefix the command with `SUPABASE_DB_PORT=54422`.
 Review every image before committing.
 
+## Play graphics
+
+`store/android/graphics/feature-graphic.png` (1024x500) and `icon-512.png` (512x512) are
+rendered from the app icon, the en-US title/short description and the fictional phone
+dashboard screenshot: `node scripts/render-store-graphics.mjs` (run after the screenshots).
+
 ## Still to produce
 
 - Native-app screenshots for iPhone 6.9"/6.7" and iPad 13" (needs the Expo build on a simulator).
-- Play feature graphic (1024x500) and hi-res icon (512x512).
 - Production reviewer account: create it in the hosted project with a secret password and give
   the credentials to the store consoles only — never commit them. Do not run `seed_demo.sql`
   against production.
