@@ -51,11 +51,19 @@ dashboard screenshot: `node scripts/render-store-graphics.mjs` (run after the sc
 
 `store/screenshots/mobile/phone/{en,nb}/` contains four reviewed 1080x1920
 captures per language from the Expo app exported to web. Source: Store screenshots
-run 36857747095, artifact `mobile-store-screenshots`, 1 October 2026.
+run 36862228058, artifact `mobile-store-screenshots`, 1 October 2026.
 These use fictional demo data. They are separate from the Next.js screenshots
 above and do not replace native iOS simulator captures or a signed-build smoke test.
 
 ## Remaining native assets
+
+The Expo screenshot configuration also captures a 13-inch iPad viewport at
+1032x1376 points with 2x scale (2064x2752 pixels). These captures are stored under
+`store/screenshots/mobile/ipad-13/{en,nb}/` and are exported-to-web images;
+native iPad simulator screenshots remain a separate release task.
+Eight reviewed iPad images are committed from run 36862228058. The phone
+captures were refreshed from the same run to include Norwegian compass labels
+and the chart edge-label fix. All sixteen image dimensions were verified.
 
 - Native-app screenshots for iPhone 6.9"/6.7" and iPad 13" (needs the Expo build on a simulator).
 - Production reviewer account: create it in the hosted project with a secret password and give

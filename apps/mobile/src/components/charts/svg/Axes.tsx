@@ -67,7 +67,13 @@ export function Axes({ geo, xCount, yCount, xAt, formatX, formatY }: AxesProps) 
         </SvgText>
       ))}
       {xTicks.map((i) => (
-        <SvgText key={`x${i}`} x={xAt(i)} y={bounds.bottom + 16} textAnchor="middle" {...TEXT}>
+        <SvgText
+          key={`x${i}`}
+          x={xAt(i)}
+          y={bounds.bottom + 16}
+          textAnchor={i === count - 1 ? "end" : "middle"}
+          {...TEXT}
+        >
           {formatX(i)}
         </SvgText>
       ))}
