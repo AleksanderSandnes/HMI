@@ -50,7 +50,10 @@
     "@typescript-eslint/typescript-estree": {
       "minimatch": "9.0.9"
     },
-    "image-size": "^2.0.4"
+    "image-size": "^2.0.4",
+    "metro": {
+      "image-size": "file:../../tooling/image-size-compat"
+    }
   },
   "engines": {
     "node": ">=20"
