@@ -1,6 +1,6 @@
 "use client";
 
-import { windCompass } from "@hmi/core";
+import { compassLabel, windCompass } from "@hmi/core";
 import { useId } from "react";
 
 import { GlassCard } from "./GlassCard";
@@ -39,12 +39,12 @@ export function WindDialFace({
   size = 96,
   sizeClassName,
 }: WindDialFaceProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const gradientId = useId();
   const deg = toNum(degrees);
   const spd = toNum(speed);
   const gst = toNum(gust);
-  const dir = deg != null ? windCompass(deg) : null;
+  const dir = deg != null ? windCompass(deg, locale) : null;
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -77,7 +77,7 @@ export function WindDialFace({
               fontWeight="700"
               fill={c.fill}
             >
-              {c.label}
+              {compassLabel(c.label, locale)}
             </text>
           ))}
           {/* Arrow on the rim only, so the centre stays clear for the speed. */}

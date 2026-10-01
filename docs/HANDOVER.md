@@ -1,5 +1,20 @@
 # Release readiness handover — 1 October 2026
 
+## Reviewed mobile assets and compass localisation — 1 October 2026
+
+PR #54 (compact weather card on short phones) merged into `test` after required
+checks passed. Eight reviewed Expo phone screenshots (1080x1920, English and
+Norwegian) are in `store/screenshots/mobile/phone/`, sourced from run 36857747095.
+The shared compass formatter now uses Norwegian Ø/V abbreviations, including
+SV, on both web and mobile. Earlier captured screenshots retain the original
+English compass labels; regenerate them to show the localisation change.
+
+Promotion PR #55 remains open for owner review; do not merge to `main` without
+explicit approval. Domain/DNS/SMTP configuration, signing identities, secret
+rotation, reviewer accounts, signed native smoke tests, store submission and
+legal review remain owner-gated. Keep `tooling/image-size-compat` until the
+installed Metro supports image-size v2; its current file-path API still needs it.
+
 ## Store assets, bundling fix and coverage status — 1 October 2026
 
 - **Release blocker fixed (PR #52):** the `image-size ^2.0.4` security override broke every

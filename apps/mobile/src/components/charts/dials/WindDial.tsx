@@ -1,4 +1,4 @@
-import { windCompass } from "@hmi/core";
+import { compassLabel, windCompass } from "@hmi/core";
 import { View, Text } from "react-native";
 import Svg, { Circle, Defs, G, LinearGradient, Path, Stop } from "react-native-svg";
 
@@ -25,11 +25,11 @@ interface WindDialProps {
  */
 export function WindDialFace({ degrees, speed, gust, unit = "km/h", size = SIZE }: WindDialProps) {
   const { colors } = useThemeColors();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const deg = toNum(degrees);
   const spd = toNum(speed);
   const gst = toNum(gust);
-  const dir = deg != null ? windCompass(deg) : null;
+  const dir = deg != null ? windCompass(deg, locale) : null;
   const bigFont = Math.round(size * 0.29);
   const unitFont = Math.round(size * 0.1);
 
@@ -68,10 +68,10 @@ export function WindDialFace({ degrees, speed, gust, unit = "km/h", size = SIZE 
             S
           </Text>
           <Text className="absolute right-[7px] top-1/2 -mt-2 text-[8px] font-bold text-text-muted">
-            E
+            {compassLabel("E", locale)}
           </Text>
           <Text className="absolute left-[7px] top-1/2 -mt-2 text-[8px] font-bold text-text-muted">
-            W
+            {compassLabel("W", locale)}
           </Text>
         </View>
 

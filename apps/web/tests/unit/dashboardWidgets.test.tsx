@@ -4,10 +4,22 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { NotificationsOverlay } from "@/components/dashboard/NotificationsOverlay";
 import { DualBaro } from "@/components/ui/DualBaro";
 import { WindDial, WindDialFace } from "@/components/ui/WindDial";
+import { LocaleProvider } from "@/lib/i18n";
 
 afterEach(cleanup);
 
 describe("WindDialFace / WindDial", () => {
+  it("localises the compass rim and wind caption in Norwegian", () => {
+    render(
+      <LocaleProvider initialLocale="nb">
+        <WindDialFace degrees={225} speed={12} />
+      </LocaleProvider>,
+    );
+    expect(screen.getByText("Ø")).toBeInTheDocument();
+    expect(screen.getByText("V")).toBeInTheDocument();
+    expect(screen.getByText("fra SV")).toBeInTheDocument();
+  });
+
   it("shows rounded speed, compass direction and gust", () => {
     render(<WindDialFace degrees={90} speed={12.4} gust={20.6} unit="m/s" />);
     expect(screen.getByText("12")).toBeInTheDocument();

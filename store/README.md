@@ -47,6 +47,16 @@ dashboard screenshot: `node scripts/render-store-graphics.mjs` (run after the sc
 
 ## Still to produce
 
+## Expo phone screenshots
+
+`store/screenshots/mobile/phone/{en,nb}/` contains four reviewed 1080x1920
+captures per language from the Expo app exported to web. Source: Store screenshots
+run 36857747095, artifact `mobile-store-screenshots`, 1 October 2026.
+These use fictional demo data. They are separate from the Next.js screenshots
+above and do not replace native iOS simulator captures or a signed-build smoke test.
+
+## Remaining native assets
+
 - Native-app screenshots for iPhone 6.9"/6.7" and iPad 13" (needs the Expo build on a simulator).
 - Production reviewer account: create it in the hosted project with a secret password and give
   the credentials to the store consoles only — never commit them. Do not run `seed_demo.sql`
