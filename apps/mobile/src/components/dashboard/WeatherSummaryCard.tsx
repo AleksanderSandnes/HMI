@@ -249,7 +249,7 @@ function PrimaryStats({
 
 const CARD_CLS: Record<WeatherSummaryVariant, string> = {
   default: "gap-3 px-3.5 pb-6 pt-3.5",
-  compact: "gap-2.5 px-3.5 pb-3.5 pt-3",
+  compact: "gap-4 px-3.5 pb-3.5 pt-3",
   rich: "gap-5 px-6 pb-7 pt-5",
 };
 
