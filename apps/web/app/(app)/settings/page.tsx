@@ -967,7 +967,7 @@ function SettingsList({
           icon={CloudSun}
           gradient="solar"
           title={t("settings.weatherStation")}
-          subtitle={wc.station ? `${wc.station} · Sandnes` : t("settings.notConfigured")}
+          subtitle={wc.station || t("settings.notConfigured")}
           badge={<ConfiguredBadge on={wc.configured} />}
           active={effective === "weather"}
           onClick={() => onSelect("weather")}
@@ -1068,7 +1068,10 @@ function SettingsPageInner() {
             <ChevronLeft size={16} className="size-[1rem]" />
             {t("settings.title")}
           </button>
-          {effective === "profile" ? <ProfilePanel profile={profile} account={account} /> : null}
+          {effective === "profile" ? (
+            // Remount once the profile loads so the form seeds from real values, not blanks.
+            <ProfilePanel key={profile?.id ?? "loading"} profile={profile} account={account} />
+          ) : null}
           {effective === "growatt" ? (
             <GrowattPanel
               key={gc.key}

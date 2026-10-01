@@ -205,7 +205,7 @@ describe("AppNav", () => {
     expect(screen.getByText("—")).toBeInTheDocument();
   });
 
-  it("uses the Sandnes default when a reading has no neighbourhood", async () => {
+  it("shows only the temperature when a reading has no neighbourhood", async () => {
     fixture.core.weather.getCurrentWeatherData.mockResolvedValue({
       observations: [{ metric: { temp: 3 } }],
     });
@@ -214,7 +214,7 @@ describe("AppNav", () => {
         <AppNav />
       </NavStatsProvider>,
     );
-    await waitFor(() => expect(screen.getByText("3° · Sandnes")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("3°")).toBeInTheDocument());
   });
 
   it("shows solar stats published by a page", async () => {

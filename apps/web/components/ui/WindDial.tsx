@@ -6,6 +6,7 @@ import { useId } from "react";
 import { GlassCard } from "./GlassCard";
 
 import { toNum } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 /** Cardinal rim labels; N is solar-tinted, the rest muted. */
 const CARDINALS = [
@@ -38,6 +39,7 @@ export function WindDialFace({
   size = 96,
   sizeClassName,
 }: WindDialFaceProps) {
+  const { t } = useI18n();
   const gradientId = useId();
   const deg = toNum(degrees);
   const spd = toNum(speed);
@@ -97,8 +99,8 @@ export function WindDialFace({
         </div>
       </div>
       <p className="text-[0.75rem] font-semibold text-text-secondary">
-        {dir ? `from ${dir}` : "Direction n/a"}
-        {gst != null ? ` · gust ${Math.round(gst)}` : ""}
+        {dir ? t("weather.windFrom", { direction: dir }) : t("weather.windDirectionUnavailable")}
+        {gst != null ? ` · ${t("weather.windGustValue", { value: Math.round(gst) })}` : ""}
       </p>
     </div>
   );

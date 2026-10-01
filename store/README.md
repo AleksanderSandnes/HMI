@@ -21,11 +21,35 @@ store/
 
 `scripts/check-store-listing.mjs` enforces these limits and is run by the repository checks.
 
-## Still to produce (needs the running app or design tools)
+## Screenshots (regenerable, fictional data only)
 
-- Screenshots captured from a demo account with fictional data only (phone, 7" and 10" tablet,
-  iPhone 6.9"/6.7", iPad 13"). Review every image before committing.
-- Play feature graphic (1024x500) and hi-res icon (512x512).
-- Review notes with demo reviewer credentials (supplied to the store console, never committed).
+`store/screenshots/<device>/<locale>/*.png` — dashboard, solar, weather and settings for
+`phone` (1080x1920), `tablet-7` (1200x1920), `tablet-10` (1600x2560) and `desktop` (2880x1800),
+in `en` and `nb`. Regenerate with Docker running:
+
+```sh
+npm run store:screenshots
+```
+
+The script starts the **local** Supabase stack (it refuses any non-local URL), applies
+`supabase/seed_demo.sql` (fictional "Emma Nordmann" / `demo@example.com`; the seed refuses
+databases that contain real accounts), builds the web app against it and runs
+`apps/web/playwright.store.config.ts`. Every solar and weather request is answered from
+`apps/web/tests/store/fixtures.ts`, so no Growatt or Weather.com account is involved. If port
+54322 is taken by another local stack, prefix the command with `SUPABASE_DB_PORT=54422`.
+Review every image before committing.
+
+## Play graphics
+
+`store/android/graphics/feature-graphic.png` (1024x500) and `icon-512.png` (512x512) are
+rendered from the app icon, the en-US title/short description and the fictional phone
+dashboard screenshot: `node scripts/render-store-graphics.mjs` (run after the screenshots).
+
+## Still to produce
+
+- Native-app screenshots for iPhone 6.9"/6.7" and iPad 13" (needs the Expo build on a simulator).
+- Production reviewer account: create it in the hosted project with a secret password and give
+  the credentials to the store consoles only — never commit them. Do not run `seed_demo.sql`
+  against production.
 
 Legal-sensitive text (privacy claims, data-safety answers) must be reviewed by the owner before submission.
