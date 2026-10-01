@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Validates store listing text against Google Play / App Store length limits.
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(fileURLToPath(new URL("..", import.meta.url)), "store");
@@ -27,10 +27,7 @@ function* files(dir) {
 const problems = [];
 let checked = 0;
 for (const file of files(root)) {
-  const key = file
-    .split("/")
-    .pop()
-    .replace(/\.txt$/, "");
+  const key = basename(file, ".txt");
   const limit = LIMITS[key];
   if (limit === undefined) {
     problems.push(`${file}: unknown listing field "${key}"`);
